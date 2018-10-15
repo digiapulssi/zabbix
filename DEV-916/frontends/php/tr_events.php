@@ -173,6 +173,14 @@ if (CExternalService::$enabled) {
 	}
 }
 
+/*
+ * As show_messages in page_header was already called, but without external service errors,
+ * show external service errors separately in header of page.
+ */
+if (CExternalService::$media_active && !CExternalService::$enabled) {
+	show_error_message(_('External service error'));
+}
+
 $eventTab = (new CTable())
 	->addRow([
 		new CDiv([

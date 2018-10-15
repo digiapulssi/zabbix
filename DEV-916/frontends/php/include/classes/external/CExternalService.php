@@ -22,6 +22,13 @@
 class CExternalService {
 
 	/**
+	 * At least one external service media is active for current user.
+	 *
+	 * @var string
+	 */
+	public static $media_active = false;
+
+	/**
 	 * External service status.
 	 *
 	 * @var bool
@@ -61,12 +68,10 @@ class CExternalService {
 			return false;
 		}
 
-		$media_active = false;
-
 		foreach ($mediatypes as $mediatype) {
 			foreach ($mediatype['medias'] as $media) {
 				if ($media['userid'] == CWebUser::$data['userid'] && $media['active'] == MEDIA_TYPE_STATUS_ACTIVE) {
-					$media_active = true;
+					self::$media_active = true;
 					self::$severity = $media['severity'];
 					break 2;
 				}
@@ -74,7 +79,7 @@ class CExternalService {
 		}
 
 		// At least one media should be active.
-		if (!$media_active) {
+		if (!self::$media_active) {
 			return false;
 		}
 
@@ -89,13 +94,7 @@ class CExternalService {
 		self::$enabled = $zabbixServer->isRunning(CWebUser::getSessionCookie());
 
 		if (!self::$enabled) {
-			if (!CSession::keyExists('messageError')) {
-				CSession::setValue('messageError', _('Cannot start external service'));
-			}
-
-			if (!CSession::keyExists('messages')) {
-				CSession::setValue('messages', [['type' => 'error', 'message' => $zabbixServer->getError()]]);
-			}
+			error($zabbixServer->getError());
 		}
 
 		return self::$enabled;
@@ -132,7 +131,7 @@ class CExternalService {
 		$zabbixServerError = $zabbixServer->getError();
 
 		if ($zabbixServerError) {
-			CSession::setValue('messages', [['type' => 'error', 'message' => $zabbixServerError]]);
+			error($zabbixServerError);
 
 			self::$enabled = false;
 
@@ -142,7 +141,7 @@ class CExternalService {
 			$ticket = zbx_toHash($ticket, 'eventid');
 
 			if (array_key_exists('error', $ticket[$eventid]) && $ticket[$eventid]['error'] !== '') {
-				CSession::setValue('messages', [['type' => 'error', 'message' => $ticket[$eventid]['error']]]);
+				error($ticket[$eventid]['error']);
 
 				self::$enabled = false;
 
@@ -150,6 +149,9 @@ class CExternalService {
 			}
 			elseif ($ticket[$eventid]['externalid'] !== '') {
 				return self::getDetails($ticket[$eventid]);
+			}
+			else {
+				return [];
 			}
 		}
 	}
@@ -187,7 +189,7 @@ class CExternalService {
 		$zabbixServerError = $zabbixServer->getError();
 
 		if ($zabbixServerError) {
-			CSession::setValue('messages', [['type' => 'error', 'message' => $zabbixServerError]]);
+			error($zabbixServerError);
 
 			self::$enabled = false;
 
@@ -198,7 +200,7 @@ class CExternalService {
 			$eventid = $event['eventid'];
 
 			if (array_key_exists('error', $tickets[$eventid]) && $tickets[$eventid]['error'] !== '') {
-				CSession::setValue('messages', [['type' => 'error', 'message' => $tickets[$eventid]['error']]]);
+				error($tickets[$eventid]['error']);
 
 				self::$enabled = false;
 
@@ -218,7 +220,7 @@ class CExternalService {
 						$messageSuccess = _s('Ticket "%1$s" has been reopened.', $tickets[$eventid]['externalid']);
 				}
 
-				CSession::setValue('messages', [['type' => 'info', 'message' => $messageSuccess]]);
+				info($messageSuccess);
 
 				return self::getDetails($tickets[$eventid]);
 			}
