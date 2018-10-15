@@ -526,6 +526,8 @@ class CHostGroup extends CApiService {
 			'nopermissions' => $nopermissions
 		]);
 
+		$this->validateDeleteIntegrity($groupids);
+
 		foreach ($groupids as $groupid) {
 			if (!array_key_exists($groupid, $db_groups)) {
 				self::exception(ZBX_API_ERROR_PERMISSIONS,
@@ -1456,4 +1458,36 @@ class CHostGroup extends CApiService {
 			}
 		}
 	}
+
+	/**
+	 * Validates if may be deleted, due to various constraints.
+	 *
+	 * @throws APIException if a constraint failed
+	 *
+	 * @param array $groupids
+	 */
+	protected function validateDeleteIntegrity(array $groupids) {
+		$maintenances = API::Maintenance()->get([
+			'output' => ['name', 'maintenanceid'],
+			'selectHosts' => ['hostid', 'name'],
+			'selectGroups' => ['groupid', 'name'],
+			'groupids' => $groupids,
+			'nopermissions' => true
+		]);
+
+		foreach ($maintenances as $maintenance) {
+			if (count($maintenance['hosts'])) {
+				continue;
+			}
+
+			if (count($maintenance['groups']) == 1) {
+				self::exception(ZBX_API_ERROR_PARAMETERS, _s(
+					'Constrain with maintenance failed: host group "%1$s" is the only reference in the maintenance "%2$s", thus it may not be deleted',
+					$maintenance['groups'][0]['name'],
+					$maintenance['name']
+				));
+			}
+		}
+	}
+
 }

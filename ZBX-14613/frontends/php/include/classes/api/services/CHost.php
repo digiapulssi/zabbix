@@ -1148,6 +1148,39 @@ class CHost extends CHostGeneral {
 		}
 	}
 
+
+	/**
+	 * Validates if hosts may be deleted, due to various constraints.
+	 *
+	 * @throws APIException if a constraint failed
+	 *
+	 * @param array $hostids
+	 */
+	protected function validateDeleteIntegrity(array $hostids) {
+		$maintenances = API::Maintenance()->get([
+			'output' => ['name', 'maintenanceid'],
+			'selectHosts' => ['hostid', 'name'],
+			'selectGroups' => ['groupid', 'name'],
+			'hostids' => $hostids,
+			'nopermissions' => true
+		]);
+
+		foreach ($maintenances as $maintenance) {
+			if (count($maintenance['groups'])) {
+				continue;
+			}
+
+			if (count($maintenance['hosts']) == 1) {
+				self::exception(ZBX_API_ERROR_PARAMETERS, _s(
+					'Constrain with maintenance failed: host "%1$s" is the only reference in the maintenance "%2$s", thus it may not be deleted',
+					$maintenance['hosts'][0]['name'],
+					$maintenance['name']
+				));
+			}
+		}
+	}
+
+
 	/**
 	 * Delete Host.
 	 *
@@ -1158,6 +1191,7 @@ class CHost extends CHostGeneral {
 	 */
 	public function delete(array $hostIds, $nopermissions = false) {
 		$this->validateDelete($hostIds, $nopermissions);
+		$this->validateDeleteIntegrity($hostIds);
 
 		// delete the discovery rules first
 		$delRules = API::DiscoveryRule()->get([
