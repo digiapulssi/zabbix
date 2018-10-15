@@ -143,8 +143,16 @@ int	SYSTEM_STAT(AGENT_REQUEST *request, AGENT_RESULT *result)
 			SET_DBL_RESULT(result, collector->vmstat.cpu_pc);
 		else if (0 == strcmp(type, "ec"))
 			SET_DBL_RESULT(result, collector->vmstat.cpu_ec);
-		else if (0 == strcmp(type, "lbusy") && collector->vmstat.shared_enabled)
+		else if (0 == strcmp(type, "lbusy"))
+		{
+			if (0 == collector->vmstat.shared_enabled)
+			{
+				SET_MSG_RESULT(result, zbx_strdup(NULL, "logical partition type is not \"shared\"."));
+				return SYSINFO_RET_FAIL;
+			}
+
 			SET_DBL_RESULT(result, collector->vmstat.cpu_lbusy);
+		}
 		else if (0 == strcmp(type, "app"))
 		{
 			if (0 == collector->vmstat.shared_enabled)
