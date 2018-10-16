@@ -846,7 +846,7 @@ static int	vfs_dir_count(const AGENT_REQUEST *request, AGENT_RESULT *result)
 {
 	const char		*__function_name = "vfs_dir_count";
 	char			*dir = NULL;
-	int			types, max_depth, ret = SYSINFO_RET_FAIL;
+	int			types, max_depth, regex_mode, ret = SYSINFO_RET_FAIL;
 	zbx_uint64_t		count = 0;
 	zbx_vector_ptr_t	list;
 	zbx_stat_t		status;
@@ -856,12 +856,17 @@ static int	vfs_dir_count(const AGENT_REQUEST *request, AGENT_RESULT *result)
 	time_t			min_time = 0, max_time = 0x7fffffff;
 	zbx_vector_ptr_t	descriptors;
 
-	if (SUCCEED != prepare_count_parameters(request, result, &types, &min_size, &max_size, &min_time, &max_time))
+	if (SUCCEED != prepare_count_parameters(request, result, &types, &min_size, &max_size, &min_time, &max_time,
+			&regex_mode))
+	{
 		return ret;
+	}
 
 	if (SUCCEED != prepare_common_parameters(request, result, &regex_incl, &regex_excl, &max_depth, &dir, &status,
-			5, 10))
+			5, 11))
+	{
 		goto err1;
+	}
 
 	zbx_vector_ptr_create(&descriptors);
 	zbx_vector_ptr_create(&list);
@@ -919,7 +924,7 @@ static int	vfs_dir_count(const AGENT_REQUEST *request, AGENT_RESULT *result)
 
 		do
 		{
-			char	*path;
+			char	*path, *path_str;
 			int	match;
 
 			if (0 == wcscmp(data.cFileName, L".") || 0 == wcscmp(data.cFileName, L".."))
@@ -927,7 +932,15 @@ static int	vfs_dir_count(const AGENT_REQUEST *request, AGENT_RESULT *result)
 
 			name = zbx_unicode_to_utf8(data.cFileName);
 			path = zbx_dsprintf(NULL, "%s/%s", item->path, name);
-			match = filename_matches(name, regex_incl, regex_excl);
+
+			if (REGEX_MODE_FILE == regex_mode)
+				path_str = zbx_strdup(NULL, name);
+			else
+				path_str = zbx_strdup(NULL, path);
+
+			match = filename_matches(path_str, regex_incl, regex_excl);
+
+			zbx_free(path_str);
 
 			if (min_size > DW2UI64(data.nFileSizeHigh, data.nFileSizeLow))
 				match = 0;
