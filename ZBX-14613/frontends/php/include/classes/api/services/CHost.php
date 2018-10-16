@@ -1147,7 +1147,7 @@ class CHost extends CHostGeneral {
 			$this->checkPermissions($hostIds, _('No permissions to referred object or it does not exist!'));
 		}
 
-		$this->validateDeleteConstraints($hostIds);
+		$this->validateDeleteCheckMaintenances($hostIds);
 	}
 
 
@@ -1158,7 +1158,7 @@ class CHost extends CHostGeneral {
 	 *
 	 * @param array $hostids
 	 */
-	protected function validateDeleteConstraints(array $hostids) {
+	protected function validateDeleteCheckMaintenances(array $hostids) {
 		$maintenances = API::Maintenance()->get([
 			'output' => ['name', 'maintenanceid'],
 			'selectHosts' => ['hostid', 'name'],

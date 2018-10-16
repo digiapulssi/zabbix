@@ -526,7 +526,7 @@ class CHostGroup extends CApiService {
 			'nopermissions' => $nopermissions
 		]);
 
-		$this->validateDeleteConstraints($groupids);
+		$this->validateDeleteCheckMaintenances($groupids);
 
 		foreach ($groupids as $groupid) {
 			if (!array_key_exists($groupid, $db_groups)) {
@@ -1466,7 +1466,7 @@ class CHostGroup extends CApiService {
 	 *
 	 * @param array $groupids
 	 */
-	protected function validateDeleteConstraints(array $groupids) {
+	protected function validateDeleteCheckMaintenances(array $groupids) {
 		$maintenances = API::Maintenance()->get([
 			'output' => ['name', 'maintenanceid'],
 			'selectHosts' => ['hostid'],
