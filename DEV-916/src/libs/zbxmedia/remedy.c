@@ -296,6 +296,22 @@ static const char	*remedy_fields_get_value(zbx_remedy_field_t *fields, int field
 
 /******************************************************************************
  *                                                                            *
+ * Function: libxml_handle_error                                              *
+ *                                                                            *
+ * Purpose: libxml2 callback function for error handle                        *
+ *                                                                            *
+ * Parameters: user_data - [IN/OUT] the user context                          *
+ *             err       - [IN] the libxml2 error message                     *
+ *                                                                            *
+ ******************************************************************************/
+static void	libxml_handle_error(void *user_data, xmlErrorPtr err)
+{
+	ZBX_UNUSED(user_data);
+	ZBX_UNUSED(err);
+}
+
+/******************************************************************************
+ *                                                                            *
  * Function: remedy_init_connection                                           *
  *                                                                            *
  * Purpose: initializes connection to the Remedy service                      *
@@ -318,6 +334,8 @@ static int	remedy_init_connection(CURL **easyhandle, const struct curl_slist *he
 		const char *proxy, char **error)
 {
 	int	opt, timeout = CONFIG_REMEDY_SERVICE_TIMEOUT, ret = FAIL, err;
+
+	xmlSetStructuredErrorFunc(NULL, &libxml_handle_error);
 
 	if (NULL == (*easyhandle = curl_easy_init()))
 	{
