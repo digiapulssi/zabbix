@@ -21,7 +21,10 @@
 var cookie = {
 	cookies: [],
 	prefix:	null,
-	// Encoding valus separated by a comma (%2C), makes the cookie very large in size. A dot, however remains a dot.
+	/*
+	 * Encoding values separated by a comma (%2C), makes the cookie very large in size. A dot, however, remains a dot.
+	 * Must be synced with class.ctree.js for consistency.
+	 */
 	delimiter: '.',
 
 	init: function() {
