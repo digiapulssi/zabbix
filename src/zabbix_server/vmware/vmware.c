@@ -78,7 +78,7 @@ extern char		*CONFIG_SOURCE_IP;
 
 #define ZBX_VMWARE_CACHE_UPDATE_PERIOD	CONFIG_VMWARE_FREQUENCY
 #define ZBX_VMWARE_PERF_UPDATE_PERIOD	CONFIG_VMWARE_PERF_FREQUENCY
-#define ZBX_VMWARE_SERVICE_TTL		SEC_PER_DAY
+#define ZBX_VMWARE_SERVICE_TTL		SEC_PER_HOUR
 #define ZBX_XML_DATETIME		26
 
 static ZBX_MUTEX	vmware_lock = ZBX_MUTEX_NULL;
@@ -4523,7 +4523,7 @@ static void	vmware_service_remove(zbx_vmware_service_t *service)
 
 	zbx_vmware_lock();
 
-	if (FAIL != (index = zbx_vector_ptr_search(&vmware->services, &service, ZBX_DEFAULT_PTR_COMPARE_FUNC)))
+	if (FAIL != (index = zbx_vector_ptr_search(&vmware->services, service, ZBX_DEFAULT_PTR_COMPARE_FUNC)))
 	{
 		zbx_vector_ptr_remove(&vmware->services, index);
 		vmware_service_shared_free(service);
