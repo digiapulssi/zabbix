@@ -1146,21 +1146,23 @@ class CHost extends CHostGeneral {
 		if (!$nopermissions) {
 			$this->checkPermissions($hostIds, _('No permissions to referred object or it does not exist!'));
 		}
+
+		$this->validateDeleteConstraints($hostIds);
 	}
 
 
 	/**
 	 * Validates if hosts may be deleted, due to various constraints.
 	 *
-	 * @throws APIException if a constraint failed
+	 * @throws APIException if a constrain failed
 	 *
 	 * @param array $hostids
 	 */
-	protected function validateDeleteIntegrity(array $hostids) {
+	protected function validateDeleteConstraints(array $hostids) {
 		$maintenances = API::Maintenance()->get([
 			'output' => ['name', 'maintenanceid'],
 			'selectHosts' => ['hostid', 'name'],
-			'selectGroups' => ['groupid', 'name'],
+			'selectGroups' => ['groupid'],
 			'hostids' => $hostids,
 			'nopermissions' => true
 		]);
@@ -1172,7 +1174,7 @@ class CHost extends CHostGeneral {
 
 			if (count($maintenance['hosts']) == 1) {
 				self::exception(ZBX_API_ERROR_PARAMETERS, _s(
-					'Constrain with maintenance failed: host "%1$s" is the only reference in the maintenance "%2$s", thus it may not be deleted',
+					'Host "%1$s" is the only one used in maintenance "%2$s".',
 					$maintenance['hosts'][0]['name'],
 					$maintenance['name']
 				));
@@ -1191,7 +1193,6 @@ class CHost extends CHostGeneral {
 	 */
 	public function delete(array $hostIds, $nopermissions = false) {
 		$this->validateDelete($hostIds, $nopermissions);
-		$this->validateDeleteIntegrity($hostIds);
 
 		// delete the discovery rules first
 		$delRules = API::DiscoveryRule()->get([
