@@ -1174,7 +1174,7 @@ class CHost extends CHostGeneral {
 
 			if (count($maintenance['hosts']) == 1) {
 				self::exception(ZBX_API_ERROR_PARAMETERS, _s(
-					'Host "%1$s" is the only one used in maintenance "%2$s".',
+					'Cannot delete host "%1$s" as it is the only one used in maintenance "%2$s".',
 					$maintenance['hosts'][0]['name'],
 					$maintenance['name']
 				));

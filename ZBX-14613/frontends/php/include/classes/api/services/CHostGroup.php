@@ -1482,7 +1482,7 @@ class CHostGroup extends CApiService {
 
 			if (count($maintenance['groups']) == 1) {
 				self::exception(ZBX_API_ERROR_PARAMETERS, _s(
-					'Host group "%1$s" is the only one used in maintenance "%2$s".',
+					'Cannot delete host group "%1$s" as it is the only one used in maintenance "%2$s".',
 					$maintenance['groups'][0]['name'],
 					$maintenance['name']
 				));
