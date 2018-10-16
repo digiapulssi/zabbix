@@ -219,11 +219,13 @@ class CControllerWidgetGraphView extends CControllerWidget {
 
 					if ($new_dynamic) {
 						// Add destination host data required by CMacrosResolver::resolveGraphPositionalMacros().
-						$new_dynamic = reset($new_dynamic);
-						$new_dynamic['host'] = $host['name'];
-						$new_dynamic['hostid'] = $host['hostid'];
+						foreach ($new_dynamic as &$item) {
+							$item['host'] = $host['name'];
+							$item['hostid'] = $host['hostid'];
+						}
+						unset($item);
 
-						$graph['name'] = CMacrosResolverHelper::resolveGraphName($graph['name'], [$new_dynamic]);
+						$graph['name'] = CMacrosResolverHelper::resolveGraphName($graph['name'], $new_dynamic);
 					}
 					else {
 						$unavailable_object = true;
