@@ -167,7 +167,7 @@ class CControllerWidgetGraphView extends CControllerWidget {
 				$graph = API::Graph()->get([
 					'output' => API_OUTPUT_EXTEND,
 					'selectGraphItems' => API_OUTPUT_EXTEND,
-					'selectHosts' => ['hostid', 'name'],
+					'selectHosts' => ['hostid'],
 					'graphids' => $resourceid
 				]);
 				$graph = reset($graph);
