@@ -1433,6 +1433,7 @@ const char	*zbx_variant_value_desc(const zbx_variant_t *value);
 const char	*zbx_variant_type_desc(const zbx_variant_t *value);
 
 int	zbx_validate_value_dbl(double value);
+void	zbx_update_env(double time_now);
 
 #endif
 
