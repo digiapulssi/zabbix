@@ -760,7 +760,8 @@ ZBX_THREAD_ENTRY(poller_thread, args)
 
 	for (;;)
 	{
-		zbx_handle_log();
+		sec = zbx_time();
+		zbx_update_env(sec);
 
 		if (0 != sleeptime)
 		{
@@ -769,7 +770,6 @@ ZBX_THREAD_ENTRY(poller_thread, args)
 					old_total_sec);
 		}
 
-		sec = zbx_time();
 		processed += get_values(poller_type, &nextcheck);
 		total_sec += zbx_time() - sec;
 
@@ -796,10 +796,6 @@ ZBX_THREAD_ENTRY(poller_thread, args)
 		}
 
 		zbx_sleep_loop(sleeptime);
-
-#if !defined(_WINDOWS) && defined(HAVE_RESOLV_H)
-		zbx_update_resolver_conf();	/* handle /etc/resolv.conf update */
-#endif
 	}
 
 #undef STAT_INTERVAL
