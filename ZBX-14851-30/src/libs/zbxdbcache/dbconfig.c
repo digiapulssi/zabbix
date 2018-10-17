@@ -3767,8 +3767,8 @@ void	DCsync_configuration(unsigned char mode)
 		zabbix_log(LOG_LEVEL_DEBUG, "%s() strpoolfree: " ZBX_FS_DBL "%%", __function_name,
 				100 * ((double)strpool->mem_info->free_size / strpool->mem_info->orig_size));
 
-		zbx_mem_dump_stats(config_mem);
-		zbx_mem_dump_stats(strpool->mem_info);
+		zbx_mem_dump_stats(LOG_LEVEL_DEBUG, config_mem);
+		zbx_mem_dump_stats(LOG_LEVEL_DEBUG, strpool->mem_info);
 	}
 
 	FINISH_SYNC;
