@@ -1,6 +1,7 @@
 Changes for rsm1.1.0rc28
 
 Bug fixes:
+..F....... [420] removed unneeded differences between DNS and DNSSEC report calculation in aggregated details page (miks)
 
 --------------------------------------------------------------------------------
 Changes for rsm1.1.0rc27
