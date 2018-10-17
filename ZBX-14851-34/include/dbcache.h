@@ -156,7 +156,7 @@ typedef struct
 	unsigned char		status;
 	unsigned char		history;
 	unsigned char		trends;
-	char			key_orig[ITEM_KEY_LEN * 4 + 1], *key;
+	char			key_orig[ITEM_KEY_LEN * ZBX_MAX_BYTES_IN_UTF8_CHAR + 1], *key;
 	char			*units;
 	char			*delay;
 	int			history_sec;
