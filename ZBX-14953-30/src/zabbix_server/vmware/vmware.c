@@ -1511,6 +1511,53 @@ out:
 	return ret;
 }
 
+/******************************************************************************
+ *                                                                            *
+ * Function: vmware_service_logout                                            *
+ *                                                                            *
+ * Purpose: Close unused connection with vCenter                              *
+ *                                                                            *
+ * Parameters: service    - [IN] the vmware service                           *
+ *             easyhandle - [IN] the CURL handle                              *
+ *             error      - [OUT] the error message in the case of failure    *
+ *                                                                            *
+ ******************************************************************************/
+static int	vmware_service_logout(zbx_vmware_service_t *service, CURL *easyhandle, char **error)
+{
+#	define ZBX_POST_VMWARE_LOGOUT						\
+		ZBX_POST_VSPHERE_HEADER						\
+		"<ns0:Logout>"							\
+			"<ns0:_this type=\"SessionManager\">%s</ns0:_this>"	\
+		"</ns0:Logout>"							\
+		ZBX_POST_VSPHERE_FOOTER
+
+	const char	*__function_name = "vmware_service_logout";
+	char		tmp[MAX_STRING_LEN];
+	int		opt, err;
+
+	zbx_snprintf(tmp, sizeof(tmp), ZBX_POST_VMWARE_LOGOUT, vmware_service_objects[service->type].session_manager);
+	if (CURLE_OK != (err = curl_easy_setopt(easyhandle, opt = CURLOPT_POSTFIELDS, tmp)))
+	{
+		*error = zbx_dsprintf(*error, "Cannot set cURL option %d: %s.", opt, curl_easy_strerror(err));
+		return FAIL;
+	}
+
+	page.offset = 0;
+
+	if (CURLE_OK != (err = curl_easy_perform(easyhandle)))
+	{
+		*error = zbx_strdup(*error, curl_easy_strerror(err));
+		return FAIL;
+	}
+
+	zabbix_log(LOG_LEVEL_TRACE, "%s() SOAP response: %s", __function_name, page.data);
+
+	if (NULL != (*error = zbx_xml_read_value(page.data, ZBX_XPATH_FAULTSTRING())))
+		return FAIL;
+
+	return SUCCEED;
+}
+
 typedef struct
 {
 	const char	*property_collector;
@@ -3927,6 +3974,12 @@ static void	vmware_service_update(zbx_vmware_service_t *service)
 	else if (SUCCEED != vmware_service_get_maxquerymetrics(easyhandle, &data->max_query_metrics, &data->error))
 		goto clean;
 
+	if (SUCCEED != vmware_service_logout(service, easyhandle, &data->error))
+	{
+		zabbix_log(LOG_LEVEL_DEBUG, "Cannot close vmware connection: %s.", data->error);
+		zbx_free(data->error);
+	}
+
 	ret = SUCCEED;
 clean:
 	curl_slist_free_all(headers);
@@ -4467,6 +4520,12 @@ static void	vmware_service_update_perf(zbx_vmware_service_t *service)
 	vmware_service_retrieve_perf_counters(service, easyhandle, &entities, 0, &perfdata);
 	vmware_service_retrieve_perf_counters(service, easyhandle, &hist_entities, service->data->max_query_metrics,
 			&perfdata);
+
+	if (SUCCEED != vmware_service_logout(service, easyhandle, &error))
+	{
+		zabbix_log(LOG_LEVEL_DEBUG, "Cannot close vmware connection: %s.", error);
+		zbx_free(error);
+	}
 
 	ret = SUCCEED;
 clean:
