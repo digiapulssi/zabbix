@@ -128,7 +128,7 @@ foreach ($data['probes'] as $probe) {
 										->setHint($data['error_msgs'][$result])
 										->setAttribute('class', $is_dns_error ? ZBX_STYLE_RED : ZBX_STYLE_GREEN);
 								}
-								elseif ($data['type'] == RSM_DNS && $result > $data['udp_rtt']) {
+								elseif ($result > $data['udp_rtt']) {
 									$row[] = (new CSpan($result))
 										->setAttribute('class', ZBX_STYLE_RED);
 								}
