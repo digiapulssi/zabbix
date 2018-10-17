@@ -1152,33 +1152,32 @@ class CHost extends CHostGeneral {
 
 
 	/**
-	 * Validates if hosts may be deleted, due to various constraints.
+	 * Validates if hosts may be deleted, due to maintenance constrain.
 	 *
 	 * @throws APIException if a constrain failed
 	 *
 	 * @param array $hostids
 	 */
 	protected function validateDeleteCheckMaintenances(array $hostids) {
-		$maintenances = API::Maintenance()->get([
-			'output' => ['name', 'maintenanceid'],
-			'selectHosts' => ['hostid', 'name'],
-			'selectGroups' => ['groupid'],
-			'hostids' => $hostids,
-			'nopermissions' => true
-		]);
+		$sql = 'SELECT m.maintenanceid id, m.name FROM maintenances m'.
+			' WHERE NOT EXISTS ('.
+				'SELECT NULL FROM maintenances_hosts mh'.
+				' WHERE m.maintenanceid=mh.maintenanceid'.
+					' AND mh.hostid NOT IN ('.implode(',', $hostids).')'.
+			') AND NOT EXISTS ('.
+				'SELECT NULL FROM maintenances_groups mg'.
+				' WHERE m.maintenanceid=mg.maintenanceid);';
 
-		foreach ($maintenances as $maintenance) {
-			if (count($maintenance['groups'])) {
-				continue;
-			}
+		$res = DBselect($sql);
+		if ($res->num_rows) {
+			$maintenance = DBfetch($res);
 
-			if (count($maintenance['hosts']) == 1) {
-				self::exception(ZBX_API_ERROR_PARAMETERS, _s(
-					'Cannot delete host "%1$s" as it is the only one used in maintenance "%2$s".',
-					$maintenance['hosts'][0]['name'],
-					$maintenance['name']
-				));
-			}
+			self::exception(ZBX_API_ERROR_PARAMETERS, _n(
+				'Cannot delete host because maintenance "%1$s" must contain at least one host or host group.',
+				'Cannot delete selected hosts because maintenance "%1$s" must contain at least one host or host group.',
+				$maintenance['name'],
+				count($hostids)
+			));
 		}
 	}
 
