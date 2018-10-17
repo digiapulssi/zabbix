@@ -159,7 +159,7 @@ class CControllerWidgetGraphView extends CControllerWidget {
 				// get host
 				$hosts = API::Host()->get([
 					'hostids' => $dynamic_hostid,
-					'output' => ['hostid', 'name']
+					'output' => ['hostid', 'host', 'name']
 				]);
 				$host = reset($hosts);
 
@@ -167,7 +167,7 @@ class CControllerWidgetGraphView extends CControllerWidget {
 				$graph = API::Graph()->get([
 					'output' => API_OUTPUT_EXTEND,
 					'selectGraphItems' => API_OUTPUT_EXTEND,
-					'selectHosts' => ['hostid'],
+					'selectHosts' => [],
 					'graphids' => $resourceid
 				]);
 				$graph = reset($graph);
@@ -216,7 +216,7 @@ class CControllerWidgetGraphView extends CControllerWidget {
 					if ($new_dynamic) {
 						// Add destination host data required by CMacrosResolver::resolveGraphPositionalMacros().
 						foreach ($new_dynamic as &$item) {
-							$item['host'] = $host['name'];
+							$item['host'] = $host['host'];
 							$item['hostid'] = $host['hostid'];
 						}
 						unset($item);
