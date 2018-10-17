@@ -211,11 +211,7 @@ class CControllerWidgetGraphView extends CControllerWidget {
 					$graph['hosts'] = $hosts;
 
 					// Search if there are any items available for this dynamic host.
-					$new_dynamic = getSameGraphItemsForHost(
-						$graph['gitems'],
-						$dynamic_hostid,
-						false
-					);
+					$new_dynamic = getSameGraphItemsForHost($graph['gitems'], $dynamic_hostid, false);
 
 					if ($new_dynamic) {
 						// Add destination host data required by CMacrosResolver::resolveGraphPositionalMacros().
