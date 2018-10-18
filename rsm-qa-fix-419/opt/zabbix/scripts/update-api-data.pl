@@ -773,7 +773,7 @@ foreach (@server_keys)
 						my $result;
 
 						$result->{'tld'} = $tld;
-						$result->{'cycleCalculationDateTime'} = cycle_end($clock, $delay);
+						$result->{'cycleCalculationDateTime'} = cycle_start($clock, $delay);
 
 						# todo phase 1: make sure this uses avail valuemaps in phase1
 						# todo: later rewrite to use valuemap ID from item
