@@ -63,7 +63,7 @@ if (!empty($this->data['parent_discoveryid'])) {
 
 $expressionFormList->addRow(_('Item'), $item);
 
-$function_combobox = new CComboBox('function', $data['function'], 'submit()');
+$function_combobox = new CComboBox('function', $data['function']);
 
 foreach ($data['functions'] as $id => $function) {
 	$function_combobox->addItem($id, $function['description']);
@@ -92,12 +92,11 @@ if (array_key_exists('params', $data['functions'][$data['selectedFunction']])) {
 				if (array_key_exists('M', $param_function)) {
 					if (in_array($data['selectedFunction'], ['last', 'band', 'strlen'])) {
 						$param_type_element = $param_function['M'][PARAM_TYPE_COUNTS];
-						$expressionFormList->addItem((new CVar('paramtype', PARAM_TYPE_COUNTS))->removeId());
+						$expressionFormList->addItem(new CVar('paramtype', PARAM_TYPE_COUNTS, 'spec_paramtype'));
 					}
 					else {
-						$param_type_element = new CComboBox('paramtype',
-							$param_value === '' ? PARAM_TYPE_TIME : $data['paramtype'],
-							null, $param_function['M']
+						$param_type_element = new CComboBox('paramtype', $data['paramtype'], null,
+							$param_function['M']
 						);
 					}
 				}

@@ -14,6 +14,13 @@
 			jQuery(obj).val(value);
 		<?php } ?>
 	}
+
+	jQuery(function($) {
+		$('#function').change(function() {
+			$('#spec_paramtype').remove();
+			$(this).closest('form').submit();
+		});
+	});
 </script>
 
 <?php
