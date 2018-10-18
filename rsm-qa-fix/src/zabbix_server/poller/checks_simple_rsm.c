@@ -3232,13 +3232,13 @@ static inline size_t	curl_devnull(char *ptr, size_t size, size_t nmemb, void *us
 
 typedef enum
 {
-	PRE_STATUS_ERROR_INTERNAL,
-	PRE_STATUS_ERROR_TO,
-	PRE_STATUS_ERROR_ECON,
-	PRE_STATUS_ERROR_EHTTP,
-	PRE_STATUS_ERROR_EHTTPS,
-	PRE_STATUS_ERROR_NOCODE,
-	PRE_STATUS_ERROR_EMAXREDIRECTS
+	ZBX_EC_PRE_STATUS_ERROR_INTERNAL,
+	ZBX_EC_PRE_STATUS_ERROR_TO,
+	ZBX_EC_PRE_STATUS_ERROR_ECON,
+	ZBX_EC_PRE_STATUS_ERROR_EHTTP,
+	ZBX_EC_PRE_STATUS_ERROR_EHTTPS,
+	ZBX_EC_PRE_STATUS_ERROR_NOCODE,
+	ZBX_EC_PRE_STATUS_ERROR_EMAXREDIRECTS
 }
 pre_status_error_t;
 
@@ -3286,7 +3286,7 @@ static int	zbx_http_test(const char *host, const char *url, long timeout, long m
 	if (NULL == (easyhandle = curl_easy_init()))
 	{
 		ec_http->type = PRE_HTTP_STATUS_ERROR;
-		ec_http->error.pre_status_error = PRE_STATUS_ERROR_INTERNAL;
+		ec_http->error.pre_status_error = ZBX_EC_PRE_STATUS_ERROR_INTERNAL;
 
 		zbx_strlcpy(err, "cannot init cURL library", err_size);
 		goto out;
@@ -3296,7 +3296,7 @@ static int	zbx_http_test(const char *host, const char *url, long timeout, long m
 	if (NULL == (slist = curl_slist_append(slist, host_buf)))
 	{
 		ec_http->type = PRE_HTTP_STATUS_ERROR;
-		ec_http->error.pre_status_error = PRE_STATUS_ERROR_INTERNAL;
+		ec_http->error.pre_status_error = ZBX_EC_PRE_STATUS_ERROR_INTERNAL;
 
 		zbx_strlcpy(err, "cannot generate cURL list of HTTP headers", err_size);
 		goto out;
@@ -3313,7 +3313,7 @@ static int	zbx_http_test(const char *host, const char *url, long timeout, long m
 			CURLE_OK != (curl_err = curl_easy_setopt(easyhandle, opt = CURLOPT_WRITEFUNCTION, writefunction)))
 	{
 		ec_http->type = PRE_HTTP_STATUS_ERROR;
-		ec_http->error.pre_status_error = PRE_STATUS_ERROR_INTERNAL;
+		ec_http->error.pre_status_error = ZBX_EC_PRE_STATUS_ERROR_INTERNAL;
 
 		zbx_snprintf(err, err_size, "cannot set cURL option [%d] (%s)", (int)opt, curl_easy_strerror(curl_err));
 		goto out;
@@ -3326,19 +3326,19 @@ static int	zbx_http_test(const char *host, const char *url, long timeout, long m
 		switch (curl_err)
 		{
 			case CURLE_OPERATION_TIMEDOUT:
-				ec_http->error.pre_status_error = PRE_STATUS_ERROR_TO;
+				ec_http->error.pre_status_error = ZBX_EC_PRE_STATUS_ERROR_TO;
 				break;
 			case CURLE_COULDNT_CONNECT:
-				ec_http->error.pre_status_error = PRE_STATUS_ERROR_ECON;
+				ec_http->error.pre_status_error = ZBX_EC_PRE_STATUS_ERROR_ECON;
 				break;
 			case CURLE_TOO_MANY_REDIRECTS:
-				ec_http->error.pre_status_error = PRE_STATUS_ERROR_EMAXREDIRECTS;
+				ec_http->error.pre_status_error = ZBX_EC_PRE_STATUS_ERROR_EMAXREDIRECTS;
 				break;
 			default:
 				if (0 == strncmp(url, "http://", ZBX_CONST_STRLEN("http://")))
-					ec_http->error.pre_status_error = PRE_STATUS_ERROR_EHTTP;
+					ec_http->error.pre_status_error = ZBX_EC_PRE_STATUS_ERROR_EHTTP;
 				else	/* if (0 == strncmp(url, "https://", ZBX_CONST_STRLEN("https://"))) */
-					ec_http->error.pre_status_error = PRE_STATUS_ERROR_EHTTPS;
+					ec_http->error.pre_status_error = ZBX_EC_PRE_STATUS_ERROR_EHTTPS;
 		}
 
 		zbx_strlcpy(err, curl_easy_strerror(curl_err), err_size);
@@ -3348,7 +3348,7 @@ static int	zbx_http_test(const char *host, const char *url, long timeout, long m
 	if (CURLE_OK != (curl_err = curl_easy_getinfo(easyhandle, CURLINFO_RESPONSE_CODE, &response_code)))
 	{
 		ec_http->type = PRE_HTTP_STATUS_ERROR;
-		ec_http->error.pre_status_error = PRE_STATUS_ERROR_NOCODE;
+		ec_http->error.pre_status_error = ZBX_EC_PRE_STATUS_ERROR_NOCODE;
 
 		zbx_snprintf(err, err_size, "cannot get HTTP response code (%s)", curl_easy_strerror(curl_err));
 		goto out;
@@ -3367,7 +3367,7 @@ static int	zbx_http_test(const char *host, const char *url, long timeout, long m
 	if (CURLE_OK != (curl_err = curl_easy_getinfo(easyhandle, CURLINFO_TOTAL_TIME, &total_time)))
 	{
 		ec_http->type = PRE_HTTP_STATUS_ERROR;
-		ec_http->error.pre_status_error = PRE_STATUS_ERROR_INTERNAL;
+		ec_http->error.pre_status_error = ZBX_EC_PRE_STATUS_ERROR_INTERNAL;
 
 		zbx_snprintf(err, err_size, "cannot get HTTP request time (%s)", curl_easy_strerror(curl_err));
 		goto out;
@@ -3384,7 +3384,7 @@ out:
 		curl_easy_cleanup(easyhandle);
 #else
 	ec_http->type = PRE_HTTP_STATUS_ERROR;
-	ec_http->error.pre_status_error = PRE_STATUS_ERROR_INTERNAL;
+	ec_http->error.pre_status_error = ZBX_EC_PRE_STATUS_ERROR_INTERNAL;
 
 	zbx_strlcpy(err, "zabbix is not compiled with libcurl support (--with-libcurl)", err_size);
 #endif
@@ -3429,19 +3429,19 @@ static int	zbx_pre_status_error_to_ ## __rdds_interface (pre_status_error_t ec_p
 {												\
 	switch (ec_pre_status)									\
 	{											\
-		case PRE_STATUS_ERROR_INTERNAL:							\
+		case ZBX_EC_PRE_STATUS_ERROR_INTERNAL:						\
 			return ZBX_EC_INTERNAL;							\
-		case PRE_STATUS_ERROR_TO:							\
+		case ZBX_EC_PRE_STATUS_ERROR_TO:						\
 			return ZBX_EC_ ## __rdds_interface ## _TO;				\
-		case PRE_STATUS_ERROR_ECON:							\
+		case ZBX_EC_PRE_STATUS_ERROR_ECON:						\
 			return ZBX_EC_ ## __rdds_interface ## _ECON;				\
-		case PRE_STATUS_ERROR_EHTTP:							\
+		case ZBX_EC_PRE_STATUS_ERROR_EHTTP:						\
 			return ZBX_EC_ ## __rdds_interface ## _EHTTP;				\
-		case PRE_STATUS_ERROR_EHTTPS:							\
+		case ZBX_EC_PRE_STATUS_ERROR_EHTTPS:						\
 			return ZBX_EC_ ## __rdds_interface ## _EHTTPS;				\
-		case PRE_STATUS_ERROR_NOCODE:							\
+		case ZBX_EC_PRE_STATUS_ERROR_NOCODE:						\
 			return ZBX_EC_ ## __rdds_interface ## _NOCODE;				\
-		case PRE_STATUS_ERROR_EMAXREDIRECTS:						\
+		case ZBX_EC_PRE_STATUS_ERROR_EMAXREDIRECTS:					\
 			return ZBX_EC_ ## __rdds_interface ## _EMAXREDIRECTS;			\
 	}											\
 }
@@ -4243,7 +4243,7 @@ int	check_rsm_rdap(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 
 	zbx_rsm_infof(log_fd, "end test of \"%s\" (%s) (rtt:%d)", base_url, ZBX_NULL2STR(ip), rtt);
 out:
-	zbx_rsm_infof(log_fd, "END TEST");
+	zbx_rsm_info(log_fd, "END TEST");
 
 	if (0 != ISSET_MSG(result))
 		zbx_rsm_err(log_fd, result->msg);
