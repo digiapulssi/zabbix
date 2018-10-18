@@ -24,414 +24,461 @@ require_once dirname(__FILE__).'/../include/class.cwebtest.php';
  * @backup problem
  */
 class testPageOverview extends CWebTest {
-
 	// Check that no real host or template names displayed
 	public function testPageOverview_NoHostNames() {
 		$this->zbxTestLogin('overview.php');
 		$this->zbxTestCheckTitle('Overview [refreshed every 30 sec.]');
+		$this->zbxTestCheckHeader('Overview');
 		$this->zbxTestCheckNoRealHostnames();
 	}
 
-	public function getLayoutData() {
+	public function getFilterData() {
 		return [
-			// Overview check with type = 'Triggers'
+			// Overview check with type 'Triggers'.
 			[
 				[
-					'group' => 'all',
-					'type' => 'Triggers',
-					'result_hosts' =>
-					[
+					'main_filter' => [
+						'groupid' => 'all',
+						'type' => 'Triggers',
+						'view_style' => 'Left'
+					],
+					'result_hosts' => [
 						'Host-map-test-zbx6840', 'ЗАББИКС Сервер', '1_Host_to_check_Monitoring_Overview',
 						'3_Host_to_check_Monitoring_Overview', '4_Host_to_check_Monitoring_Overview'
 					],
-					'result_triggers' =>
-					[
+					'result_triggers' => [
 						'Trigger-map-test-zbx6840', '1_trigger_Average', '1_trigger_Disaster', '1_trigger_High',
-						'1_trigger_Information', '1_trigger_Not_classified', '1_trigger_Warning', '2_trigger_Average',
-						'2_trigger_Disaster', '2_trigger_High', '2_trigger_Information', '2_trigger_Not_classified',
-						'2_trigger_Warning', '3_trigger_Average'
+						'1_trigger_Not_classified', '1_trigger_Warning', '2_trigger_Information',
+						'3_trigger_Average', '4_trigger_Average'
 					]
 				]
 			],
 			[
 				[
-					'group' => 'Group to check Monitoring-> Overview',
-					'type' => 'Triggers',
-					'result_hosts' =>
-					[
-						'1_Host_to_check_Monitoring_Overview', '3_Host_to_check_Monitoring_Overview'
+					'main_filter' => [
+						'groupid' => 'Another group to check Monitoring-> Overview',
+						'type' => 'Triggers'
 					],
-					'result_triggers' =>
-					[
-						'1_trigger_Not_classified', '1_trigger_Information', '1_trigger_Warning', '1_trigger_Average',
-						'1_trigger_High', '1_trigger_Disaster', '2_trigger_Not_classified', '2_trigger_Information',
-						'2_trigger_Warning', '2_trigger_Average', '2_trigger_High', '2_trigger_Disaster',
-						'3_trigger_Average'
-					]
-				]
-			],
-			[
-				[
-					'group' => 'Group to check Monitoring-> Overview',
-					'type' => 'Triggers',
-					'show_severity' => 'Information',
-					'result_hosts' =>
-					[
-						'1_Host_to_check_Monitoring_Overview', '3_Host_to_check_Monitoring_Overview'
-					],
-					'result_triggers' =>
-					[
-						'1_trigger_Information', '1_trigger_Warning', '1_trigger_Average', '1_trigger_High',
-						'1_trigger_Disaster', '2_trigger_Information', '2_trigger_Warning', '2_trigger_Average',
-						'2_trigger_High', '2_trigger_Disaster', '3_trigger_Average'
-					]
-				]
-			],
-			[
-				[
-					'group' => 'Group to check Monitoring-> Overview',
-					'type' => 'Triggers',
-					'show_severity' => 'Warning',
-					'result_hosts' =>
-					[
-						'1_Host_to_check_Monitoring_Overview', '3_Host_to_check_Monitoring_Overview'
-					],
-					'result_triggers' =>
-					[
-						'1_trigger_Warning', '1_trigger_Average', '1_trigger_High', '1_trigger_Disaster',
-						'2_trigger_Warning', '2_trigger_Average', '2_trigger_High', '2_trigger_Disaster',
-						'3_trigger_Average'
-					]
-				]
-			],
-			[
-				[
-					'group' => 'Group to check Monitoring-> Overview',
-					'type' => 'Triggers',
-					'show_severity' => 'Average',
-					'result_hosts' =>
-					[
-						'1_Host_to_check_Monitoring_Overview', '3_Host_to_check_Monitoring_Overview'
-					],
-					'result_triggers' =>
-					[
-						'1_trigger_Average', '1_trigger_High', '1_trigger_Disaster', '2_trigger_Average',
-						'2_trigger_High', '2_trigger_Disaster', '3_trigger_Average'
-					]
-				]
-			],
-			[
-				[
-					'group' => 'Group to check Monitoring-> Overview',
-					'type' => 'Triggers',
-					'show_severity' => 'High',
-					'result_hosts' =>
-					[
-						'1_Host_to_check_Monitoring_Overview'
-					],
-					'result_triggers' =>
-					[
-						'1_trigger_High', '1_trigger_Disaster', '2_trigger_High', '2_trigger_Disaster'
-					]
-				]
-			],
-			[
-				[
-					'group' => 'Group to check Monitoring-> Overview',
-					'type' => 'Triggers',
-					'show_severity' => 'Disaster',
-					'result_hosts' =>
-					[
-						'1_Host_to_check_Monitoring_Overview'
-					],
-					'result_triggers' =>
-					[
-						'1_trigger_Disaster', '2_trigger_Disaster'
-					]
-				]
-			],
-			[
-				[
-					'type' => 'Triggers',
-					'applications' =>
-					[
-						'app_group' => 'Group to check Monitoring-> Overview',
-						'app_host' => '1_Host_to_check_Monitoring_Overview',
-						'application' => '1 application'
-					],
-					'result_hosts' =>
-					[
-						'1_Host_to_check_Monitoring_Overview'
-					],
-					'result_triggers' =>
-					[
-						'1_trigger_Not_classified', '1_trigger_Information', '1_trigger_Warning', '1_trigger_Average',
-						'1_trigger_High', '1_trigger_Disaster'
-					]
-				]
-			],
-			[
-				[
-					'type' => 'Triggers',
-					'applications' =>
-					[
-						'app_group' => 'Group to check Monitoring-> Overview',
-						'app_host' => '1_Host_to_check_Monitoring_Overview',
-						'application' => '2 application'
-					],
-					'result_hosts' =>
-					[
-						'1_Host_to_check_Monitoring_Overview'
-					],
-					'result_triggers' =>
-					[
-						'2_trigger_Not_classified', '2_trigger_Information', '2_trigger_Warning', '2_trigger_Average',
-						'2_trigger_High', '2_trigger_Disaster'
-					]
-				]
-			],
-			[
-				[
-					'group' => 'Group to check Monitoring-> Overview',
-					'type' => 'Triggers',
-					'name' => 'Warning',
-					'result_hosts' =>
-					[
-						'1_Host_to_check_Monitoring_Overview'
-					],
-					'result_triggers' =>
-					[
-						'1_trigger_Warning', '2_trigger_Warning'
-					]
-				]
-			],
-			[
-				[
-					'group' => 'Group to check Monitoring-> Overview',
-					'type' => 'Triggers',
-					'name' => '2_',
-					'result_hosts' =>
-					[
-						'1_Host_to_check_Monitoring_Overview'
-					],
-					'result_triggers' =>
-					[
-						'2_trigger_Not_classified', '2_trigger_Information', '2_trigger_Warning', '2_trigger_Average',
-						'2_trigger_High', '2_trigger_Disaster'
-					]
-				]
-			],
-			[
-				[
-					'group' => 'Group to check Monitoring-> Overview',
-					'type' => 'Triggers',
-					'name' => '9_',
-					'no_result' => 'No data found'
-				]
-			],
-			[
-				[
-					'group' => 'Group to check Monitoring-> Overview',
-					'type' => 'Triggers',
-					'ack_status' => 'With last event unacknowledged',
-					'result_hosts' =>
-					[
-						'1_Host_to_check_Monitoring_Overview'
-					],
-					'result_triggers' =>
-					[
-						'1_trigger_Not_classified', '1_trigger_Information', '1_trigger_Warning', '1_trigger_Average',
-						'1_trigger_High', '1_trigger_Disaster', '2_trigger_Not_classified', '2_trigger_Warning',
-						'2_trigger_Average', '2_trigger_High', '2_trigger_Disaster'
-					]
-				]
-			],
-			[
-				[
-					'group' => 'Group to check Monitoring-> Overview',
-					'type' => 'Triggers',
-					'ack_status' => 'With unacknowledged events',
-					'result_hosts' =>
-					[
-						'1_Host_to_check_Monitoring_Overview'
-					],
-					'result_triggers' =>
-					[
-						'1_trigger_Not_classified', '1_trigger_Information', '1_trigger_Warning', '1_trigger_Average',
-						'1_trigger_High', '1_trigger_Disaster', '2_trigger_Not_classified', '2_trigger_Warning',
-						'2_trigger_Average', '2_trigger_High', '2_trigger_Disaster'
-					]
-				]
-			],
-			[
-				[
-					'group' => 'Another group to check Monitoring-> Overview',
-					'type' => 'Triggers',
-					'result_hosts' =>
-					[
+					'result_hosts' => [
 						'4_Host_to_check_Monitoring_Overview'
 					],
-					'result_triggers' =>
-					[
+					'result_triggers' => [
 						'4_trigger_Average'
 					]
 				]
 			],
 			[
 				[
-					'group' => 'Another group to check Monitoring-> Overview',
-					'type' => 'Triggers',
-					'maintenance' => false,
-					'no_result' => 'No data found'
+					'main_filter' => [
+						'groupid' => 'Group to check Monitoring-> Overview',
+						'type' => 'Triggers',
+						'view_style' => 'Top'
+					],
+					'result_hosts' => [
+						'1_Host_to_check_Monitoring_Overview', '3_Host_to_check_Monitoring_Overview'
+					],
+					'result_triggers' => [
+						'1_trigger_Not_classified', '1_trigger_Warning', '1_trigger_Average', '1_trigger_High',
+						'1_trigger_Disaster', '2_trigger_Information', '3_trigger_Average'
+					]
+				]
+			],
+			// Severity option in filter.
+			[
+				[
+					'main_filter' => [
+						'groupid' => 'Group to check Monitoring-> Overview',
+						'type' => 'Triggers',
+						'view_style' => 'Left'
+					],
+					'show_severity' => 'Information',
+					'result_hosts' => [
+						'1_Host_to_check_Monitoring_Overview', '3_Host_to_check_Monitoring_Overview'
+					],
+					'result_triggers' => [
+						'1_trigger_Warning', '1_trigger_Average', '1_trigger_High',	'1_trigger_Disaster',
+						'2_trigger_Information', '3_trigger_Average'
+					]
 				]
 			],
 			[
 				[
-					'group' => 'Group to check Monitoring-> Overview',
-					'type' => 'Triggers',
-					'inventories' =>
-					[
-						'inventory_field' => 'Notes',
-						'inventory_value' => 'Notes'
+					'main_filter' => [
+						'groupid' => 'Group to check Monitoring-> Overview',
+						'type' => 'Triggers',
+						'view_style' => 'Top'
 					],
-					'result_hosts' =>
-					[
-						'3_Host_to_check_Monitoring_Overview'
+					'show_severity' => 'Warning',
+					'result_hosts' => [
+						'1_Host_to_check_Monitoring_Overview', '3_Host_to_check_Monitoring_Overview'
 					],
-					'result_triggers' =>
-					[
+					'result_triggers' => [
+						'1_trigger_Warning', '1_trigger_Average', '1_trigger_High', '1_trigger_Disaster',
 						'3_trigger_Average'
 					]
 				]
 			],
 			[
 				[
-					'group' => 'Group to check Monitoring-> Overview',
-					'type' => 'Triggers',
-					'age' => '1',
-					'no_result' => 'No data found'
+					'main_filter' => [
+						'groupid' => 'Group to check Monitoring-> Overview',
+						'type' => 'Triggers'
+					],
+					'show_severity' => 'Average',
+					'result_hosts' => [
+						'1_Host_to_check_Monitoring_Overview', '3_Host_to_check_Monitoring_Overview'
+					],
+					'result_triggers' => [
+						'1_trigger_Average', '1_trigger_High', '1_trigger_Disaster', '3_trigger_Average'
+					]
 				]
 			],
-			// TODO: after ZBX-14725 will be resolved
+			[
+				[
+					'main_filter' => [
+						'groupid' => 'Group to check Monitoring-> Overview',
+						'type' => 'Triggers'
+					],
+					'show_severity' => 'High',
+					'result_hosts' => [
+						'1_Host_to_check_Monitoring_Overview'
+					],
+					'result_triggers' => [
+						'1_trigger_High', '1_trigger_Disaster'
+					]
+				]
+			],
+			[
+				[
+					'main_filter' => [
+						'groupid' => 'Group to check Monitoring-> Overview',
+						'type' => 'Triggers'
+					],
+					'show_severity' => 'Disaster',
+					'result_hosts' => [
+						'1_Host_to_check_Monitoring_Overview'
+					],
+					'result_triggers' => [
+						'1_trigger_Disaster'
+					]
+				]
+			],
+			// Application option in filter.
+			[
+				[
+					'main_filter' => [
+						'groupid' => 'Group to check Monitoring-> Overview',
+						'type' => 'Triggers'
+					],
+					'applications' => [
+						'app_group' => 'Group to check Monitoring-> Overview',
+						'app_host' => '1_Host_to_check_Monitoring_Overview',
+						'application' => '1 application'
+					],
+					'result_hosts' => [
+						'1_Host_to_check_Monitoring_Overview'
+					],
+					'result_triggers' => [
+						'1_trigger_Not_classified', '1_trigger_Warning', '1_trigger_Average', '1_trigger_High',
+						'1_trigger_Disaster'
+					]
+				]
+			],
+			[
+				[
+					'main_filter' => [
+						'groupid' => 'Group to check Monitoring-> Overview',
+						'type' => 'Triggers'
+					],
+					'applications' => [
+						'application' => '2 application'
+					],
+					'result_hosts' => [
+						'1_Host_to_check_Monitoring_Overview'
+					],
+					'result_triggers' => [
+						'2_trigger_Information'
+					]
+				]
+			],
+			// Name option in filter.
+			[
+				[
+					'main_filter' => [
+						'groupid' => 'Group to check Monitoring-> Overview',
+						'type' => 'Triggers'
+					],
+					'name' => 'Warning',
+					'result_hosts' => [
+						'1_Host_to_check_Monitoring_Overview'
+					],
+					'result_triggers' => [
+						'1_trigger_Warning'
+					]
+				]
+			],
+			[
+				[
+					'main_filter' => [
+						'groupid' => 'Group to check Monitoring-> Overview',
+						'type' => 'Triggers'
+					],
+					'name' => '2_',
+					'result_hosts' => [
+						'1_Host_to_check_Monitoring_Overview'
+					],
+					'result_triggers' => [
+						'2_trigger_Information'
+					]
+				]
+			],
+			[
+				[
+					'main_filter' => [
+						'groupid' => 'Group to check Monitoring-> Overview',
+						'type' => 'Triggers'
+					],
+					'name' => 'Trigger-map-test-zbx6840'
+				]
+			],
+			// Acknowledge status option in filter.
+			[
+				[
+					'main_filter' => [
+						'groupid' => 'Group to check Monitoring-> Overview',
+						'type' => 'Triggers'
+					],
+					'ack_status' => 'With last event unacknowledged',
+					'result_hosts' => [
+						'1_Host_to_check_Monitoring_Overview'
+					],
+					'result_triggers' => [
+						'1_trigger_Not_classified', '1_trigger_Warning', '1_trigger_Average', '1_trigger_High',
+						'1_trigger_Disaster'
+					]
+				]
+			],
+			[
+				[
+					'main_filter' => [
+						'groupid' => 'Group to check Monitoring-> Overview',
+						'type' => 'Triggers'
+					],
+					'ack_status' => 'With unacknowledged events',
+					'result_hosts' => [
+						'1_Host_to_check_Monitoring_Overview'
+					],
+					'result_triggers' => [
+						'1_trigger_Not_classified', '1_trigger_Warning', '1_trigger_Average', '1_trigger_High',
+						'1_trigger_Disaster'
+					]
+				]
+			],
+			// Maintenance option in filter.
+			[
+				[
+					'main_filter' => [
+						'groupid' => 'Another group to check Monitoring-> Overview',
+						'type' => 'Triggers'
+					],
+					'maintenance' => false
+				]
+			],
+			// Host inventory option in filter.
+			[
+				[
+					'main_filter' => [
+						'groupid' => 'Group to check Monitoring-> Overview',
+						'type' => 'Triggers'
+					],
+					'inventories' => [
+						'inventory_field' => 'Notes',
+						'inventory_value' => 'Notes'
+					],
+					'result_hosts' => [
+						'3_Host_to_check_Monitoring_Overview'
+					],
+					'result_triggers' => [
+						'3_trigger_Average'
+					]
+				]
+			],
+			// Age less than option in filter.
+			[
+				[
+					'main_filter' => [
+						'groupid' => 'Group to check Monitoring-> Overview',
+						'type' => 'Triggers'
+					],
+					'age' => '1'
+				]
+			],
+			// All filter options.
+			[
+				[
+					'main_filter' => [
+						'groupid' => 'Group to check Monitoring-> Overview',
+						'type' => 'Triggers'
+					],
+					'show_severity' => 'High',
+					'triggers_status' => 'Any',
+					'applications' => [
+						'application' => '3 application'
+					],
+					'name' => '3_',
+					'age' => '365',
+					'inventories' => [
+						'inventory_field' => 'Notes',
+						'inventory_value' => 'Notes'
+					],
+					'maintenance' => false,
+					'result_hosts' => [
+						'3_Host_to_check_Monitoring_Overview'
+					],
+					'result_triggers' => [
+						'3_trigger_Disaster'
+					]
+				]
+			],
+//			// Triggers status option in filter.
+//			// TODO: after ZBX-14725 will be resolved
+//			// Make trigger in problem state.
 //			[
 //				[
-//					'group' => 'Group to check Monitoring-> Overview',
-//					'type' => 'Triggers',
-//					'show_triggers' => 'Recent problems',
-//					'problem' => 'open',
-//					'result_hosts' =>
-//					[
+//					'main_filter' => [
+//						'groupid' => 'Group to check Monitoring-> Overview',
+//						'type' => 'Triggers'
+//					],
+//					'triggers_status' => 'Recent problems',
+//					'problem' => ['3_trigger_Disaster' => TRIGGER_VALUE_TRUE],
+//					'result_hosts' => [
 //						'1_Host_to_check_Monitoring_Overview', '3_Host_to_check_Monitoring_Overview'
 //					],
-//					'result_triggers' =>
-//					[
-//						'1_trigger_Average', '1_trigger_Disaster', '1_trigger_High', '1_trigger_Information',
-//						'1_trigger_Not_classified', '1_trigger_Warning', '2_trigger_Average', '2_trigger_Disaster',
-//						'2_trigger_High', '2_trigger_Information', '2_trigger_Not_classified', '2_trigger_Warning',
+//					'result_triggers' => [
+//						'1_trigger_Average', '1_trigger_Disaster', '1_trigger_High', '1_trigger_Not_classified',
+//						'1_trigger_Warning', '2_trigger_Information',
 //						'3_trigger_Average', '3_trigger_Disaster'
 //					]
 //				]
 //			],
+//			// This test case depends from previous case, trigger should be in problem state.
 //			[
 //				[
-//					'group' => 'Group to check Monitoring-> Overview',
-//					'type' => 'Triggers',
-//					'show_triggers' => 'Problems',
-//					'problem' => 'resolve',
-//					'result_hosts' =>
-//					[
+//					'main_filter' => [
+//						'groupid' => 'Group to check Monitoring-> Overview',
+//						'type' => 'Triggers'
+//					],
+//					'triggers_status' => 'Problems',
+//					'result_hosts' => [
 //						'1_Host_to_check_Monitoring_Overview', '3_Host_to_check_Monitoring_Overview'
 //					],
-//					'result_triggers' =>
-//					[
-//						'1_trigger_Average', '1_trigger_Disaster', '1_trigger_High', '1_trigger_Information',
-//						'1_trigger_Not_classified', '1_trigger_Warning', '2_trigger_Average', '2_trigger_Disaster',
-//						'2_trigger_High', '2_trigger_Information', '2_trigger_Not_classified', '2_trigger_Warning',
+//					'result_triggers' => [
+//						'1_trigger_Average', '1_trigger_Disaster', '1_trigger_High', '1_trigger_Not_classified',
+//						'1_trigger_Warning', '2_trigger_Information',
+//						'3_trigger_Average', '3_trigger_Disaster'
+//					]
+//				]
+//			],
+//			// Make trigger in resolved state.
+//			[
+//				[
+//					'main_filter' => [
+//						'groupid' => 'Group to check Monitoring-> Overview',
+//						'type' => 'Triggers'
+//					],
+//					'triggers_status' => 'Problems',
+//					'problem' => ['3_trigger_Disaster' => TRIGGER_VALUE_FALSE],
+//					'result_hosts' => [
+//						'1_Host_to_check_Monitoring_Overview', '3_Host_to_check_Monitoring_Overview'
+//					],
+//					'result_triggers' => [
+//						'1_trigger_Average', '1_trigger_Disaster', '1_trigger_High', '1_trigger_Not_classified',
+//						'1_trigger_Warning', '2_trigger_Information',
 //						'3_trigger_Average'
 //					]
 //				]
 //			],
+//			// This test case depends from previous case, trigger should be resolved.
 //			[
 //				[
-//					'group' => 'Group to check Monitoring-> Overview',
-//					'type' => 'Triggers',
-//					'show_triggers' => 'Any',
-//					'result_hosts' =>
-//					[
+//					'main_filter' => [
+//						'groupid' => 'Group to check Monitoring-> Overview',
+//						'type' => 'Triggers'
+//					],
+//					'triggers_status' => 'Recent problems',
+//					'result_hosts' => [
 //						'1_Host_to_check_Monitoring_Overview', '3_Host_to_check_Monitoring_Overview'
 //					],
-//					'result_triggers' =>
-//					[
-//						'1_trigger_Average', '1_trigger_Disaster', '1_trigger_High', '1_trigger_Information',
-//						'1_trigger_Not_classified', '1_trigger_Warning', '2_trigger_Average', '2_trigger_Disaster',
-//						'2_trigger_High', '2_trigger_Information', '2_trigger_Not_classified', '2_trigger_Warning',
+//					'result_triggers' => [
+//						'1_trigger_Average', '1_trigger_Disaster', '1_trigger_High', '1_trigger_Not_classified',
+//						'1_trigger_Warning', '2_trigger_Information',
 //						'3_trigger_Average', '3_trigger_Disaster'
 //					]
 //				]
 //			],
-			// Overview check with type = 'Data'
+			// Overview check with type 'Data'.
 			[
 				[
-					'group' => 'Another group to check Monitoring-> Overview',
-					'type' => 'Data',
-					'result_hosts' =>
-					[
+					'main_filter' => [
+						'groupid' => 'Another group to check Monitoring-> Overview',
+						'type' => 'Data',
+						'view_style' => 'Top'
+					],
+					'result_hosts' => [
 						'4_Host_to_check_Monitoring_Overview'
 					],
-					'result_items' =>
-					[
+					'result_items' => [
 						'4_item'
 					]
 				]
 			],
 			[
 				[
-					'group' => 'Group to check Monitoring-> Overview',
-					'type' => 'Data',
-					'result_hosts' =>
-					[
+					'main_filter' => [
+						'groupid' => 'Group to check Monitoring-> Overview',
+						'type' => 'Data',
+						'view_style' => 'Left'
+					],
+					'result_hosts' => [
 						'1_Host_to_check_Monitoring_Overview', '3_Host_to_check_Monitoring_Overview'
 					],
-					'result_items' =>
-					[
+					'result_items' => [
 						'1_item', '2_item', '3_item'
 					]
 				]
 			],
 			[
 				[
-					'type' => 'Data',
-					'applications' =>
-					[
-						'app_group' => 'Group to check Monitoring-> Overview',
-						'app_host' => '1_Host_to_check_Monitoring_Overview',
+					'main_filter' => [
+						'groupid' => 'Group to check Monitoring-> Overview',
+						'type' => 'Data'
+					],
+					'applications' => [
 						'application' => '1 application'
 					],
-					'result_hosts' =>
-					[
+					'result_hosts' => [
 						'1_Host_to_check_Monitoring_Overview'
 					],
-					'result_items' =>
-					[
+					'result_items' => [
 						'1_item'
 					]
 				]
 			],
 			[
 				[
-					'type' => 'Data',
-					'applications' =>
-					[
+					'main_filter' => [
+						'groupid' => 'all',
+						'type' => 'Data'
+					],
+					'applications' => [
 						'app_group' => 'Group to check Monitoring-> Overview',
 						'app_host' => '3_Host_to_check_Monitoring_Overview',
 						'application' => '3 application'
 					],
-					'result_hosts' =>
-					[
+					'result_hosts' => [
 						'3_Host_to_check_Monitoring_Overview'
 					],
-					'result_items' =>
-					[
+					'result_items' => [
 						'3_item'
 					]
 				]
@@ -440,35 +487,29 @@ class testPageOverview extends CWebTest {
 	}
 
 	/**
-	 * @dataProvider getLayoutData
+	 * @dataProvider getFilterData
 	 */
-	public function testPageMonitoringOverview_Layout($data) {
+	public function testPageOverview_CheclFilterResults($data) {
 		$this->zbxTestLogin('overview.php');
 		$this->zbxTestClickButtonText('Reset');
+		$this->zbxTestWaitForPageToLoad();
 
-		if (array_key_exists('group', $data)) {
-			$this->zbxTestDropdownSelect('groupid', $data['group']);
-		}
-
-		if (array_key_exists('type', $data)) {
-			$this->zbxTestDropdownSelect('type', $data['type']);
-		}
-
-		if (array_key_exists('full_screen', $data) && $data['full_screen'] === true ) {
-			$this->zbxTestClickXpathWait('//button[@title="Fullscreen"]');
-			$this->zbxTestAssertElementNotPresentXpath('//div[@id="mmenu"][@class="top-nav-container"]');
-			$this->zbxTestAssertElementNotPresentXpath('//nav[@class="top-subnav-container"]');
-		}
-		else {
-			if ($this->zbxTestIsElementPresent('//button[@title="Normal view"]')) {
-				$this->zbxTestClickXpathWait('//button[@title="Normal view"]');
+		// Main filter options.
+		$fields = ['groupid', 'type', 'view_style'];
+		foreach ($fields as $field) {
+			if (array_key_exists($field, $data['main_filter'])) {
+				$main_filter = $data['main_filter'];
+				$this->zbxTestDropdownSelectWait($field, $main_filter[$field]);
+				$this->zbxTestWaitForPageToLoad();
 			}
-			$this->zbxTestAssertVisibleXpath('//div[@id="mmenu"][@class="top-nav-container"]');
-			$this->zbxTestAssertVisibleXpath('//nav[@class="top-subnav-container"]');
+			else {
+				$main_filter[$field] = $this->zbxTestGetSelectedLabel($field);
+			}
 		}
 
-		if (array_key_exists('show', $data)) {
-			$this->zbxTestClickXpath('//input[contains(@id,"show_triggers")]/../label[text()="'.$data['show'].'"]');
+		// Filter options.
+		if (array_key_exists('triggers_status', $data)) {
+			$this->zbxTestClickXpath('//ul[@id="show_triggers"]//label[text()="'.$data['triggers_status'].'"]');
 		}
 
 		if (array_key_exists('ack_status', $data)) {
@@ -481,29 +522,34 @@ class testPageOverview extends CWebTest {
 
 		if (array_key_exists('age', $data)) {
 			$this->zbxTestCheckboxSelect('status_change');
-			$this->zbxTestInputType('status_change_days', $data['age']);
+			$this->zbxTestInputTypeOverwrite('status_change_days', $data['age']);
 		}
 
 		if (array_key_exists('name', $data)) {
 			$this->zbxTestInputType('txt_select', $data['name']);
 		}
 
-		if (array_key_exists('applications', $data)){
-			$this->zbxTestClick('application_name');
-			$this->zbxTestLaunchOverlayDialog('Applications');
-			foreach ($data['applications'] as $key => $value) {
-				switch ($key) {
-					case 'app_group':
-						$this->zbxTestDropdownSelect('groupid', $value);
-						break;
-
-					case 'app_host':
-						$this->zbxTestDropdownSelect('hostid', $value);
-						break;
-
-					case 'application':
-						$this->zbxTestClickLinkTextWait($value);
-						break;
+		if (array_key_exists('applications', $data)) {
+			if (!array_key_exists('app_group', $data['applications']) && !array_key_exists('app_host', $data['applications'])) {
+				$this->zbxTestInputType('application', $data['applications']['application']);
+			}
+			else {
+				$this->zbxTestClick('application_name');
+				$this->zbxTestLaunchOverlayDialog('Applications');
+				foreach ($data['applications'] as $key => $value) {
+					switch ($key) {
+						case 'app_group':
+							$this->zbxTestClickXpathWait('//div[@id="overlay_dialogue"]//select[@name="groupid"]'.
+									'//option[text()="'.$value.'"]');
+							break;
+						case 'app_host':
+							$this->zbxTestClickXpathWait('//div[@id="overlay_dialogue"]//select[@name="hostid"]'.
+									'//option[text()="'.$value.'"]');
+							break;
+						case 'application':
+							$this->zbxTestClickLinkTextWait($value);
+							break;
+					}
 				}
 			}
 		}
@@ -511,11 +557,9 @@ class testPageOverview extends CWebTest {
 		if (array_key_exists('inventories', $data)) {
 			foreach ($data['inventories'] as $key => $value) {
 				switch ($key) {
-
 					case 'inventory_field':
 						$this->zbxTestDropdownSelect('inventory_0_field', $value);
 						break;
-
 					case 'inventory_value':
 						$this->zbxTestInputType('inventory_0_value', $value);
 						break;
@@ -523,140 +567,175 @@ class testPageOverview extends CWebTest {
 			}
 		}
 
-		if (array_key_exists('maintenance', $data) && $data['maintenance'] === true) {
-			$this->zbxTestCheckboxSelect('show_maintenance');
-		}
-		elseif (array_key_exists('maintenance', $data) && $data['maintenance'] === false) {
-			$this->zbxTestCheckboxSelect('show_maintenance', false);
+		if (array_key_exists('maintenance', $data)) {
+			$this->zbxTestCheckboxSelect('show_maintenance', $data['maintenance']);
 		}
 
-		if (array_key_exists('problem', $data) && $data['problem'] === 'open') {
-			CTestDbHelper::setTriggerProblem('3_trigger_Disaster', TRIGGER_VALUE_TRUE, ['clock' => 1534231699, 'ns' => 726692807]);
-		}
-		elseif (array_key_exists('problem', $data) && $data['problem'] === 'resolve') {
-			CTestDbHelper::setTriggerProblem('3_trigger_Disaster', TRIGGER_VALUE_FALSE, ['clock' => 1534231699, 'ns' => 726692807]);
-		}
-
-		if (array_key_exists('show_triggers', $data)) {
-			if ($data['show_triggers'] === 'Recent problems') {
-				$this->zbxTestClickXpath('//label[@for="show_triggers_0"]');
+		// Make trigger in problem or resolved state.
+		if (array_key_exists('problem', $data)) {
+			foreach ($data['problem'] as $trigger => $state) {
+				CTestDbHelper::setTriggerProblem($trigger, $state);
 			}
-			elseif ($data['show_triggers'] === 'Problems') {
-				$this->zbxTestClickXpath('//label[@for="show_triggers_1"]');
-			}
-			else {
-				$this->zbxTestClickXpath('//label[@for="show_triggers_2"]');
-			}
-			$this->putBreak();
 		}
 
+		// Wait till table id will change after filter apply.
+		$tabel_id = $this->zbxTestGetAttributeValue('//table[@class="list-table"]', 'id');
 		$this->zbxTestClickButtonText('Apply');
+		$this->zbxTestWaitForPageToLoad();
+		$this->zbxTestWaitUntilElementPresent(WebDriverBy::xpath('//table[@class="list-table"][not(@id="'.$tabel_id.'")]'));
 
-		if (array_key_exists('no_result', $data)) {
+		// Check  the result in frontend.
+		$this->zbxTestDropdownAssertSelected('type', $main_filter['type']);
+		$this->zbxTestDropdownAssertSelected('view_style', $main_filter['view_style']);
+		if (!array_key_exists('result_hosts', $data)) {
+			$this->zbxTestWaitUntilElementVisible(WebDriverBy::xpath('//tr[@class="nothing-to-show"]'));
 			$this->zbxTestAssertElementPresentXpath('//tr[@class="nothing-to-show"]/td[text()="No data found."]');
 		}
-		// Check results for type='Triggers'
-		elseif ($this->zbxTestGetSelectedLabel('type') === 'Triggers') {
-			$this->zbxTestDropdownSelect('view_style', 'Top');
-			// Check output for location='Top'
-			$this->zbxTestAssertElementPresentXpath('//th[text()="Triggers"]');
-			foreach ($data['result_hosts'] as $host) {
-				$this->zbxTestAssertElementPresentXpath('//th[@class="vertical_rotation"][@title="'.$host.'"]');
+		elseif ($main_filter['type'] === 'Triggers') {
+			// Check output for host location as 'Top'.
+			if ($main_filter['view_style'] === 'Top') {
+				$this->zbxTestAssertElementPresentXpath('//th[text()="Triggers"]');
+				$this->checkResultsInTable($main_filter['view_style'], $data['result_hosts'], $data['result_triggers']);
 			}
-			foreach ($data['result_triggers'] as $trigger) {
-				$this->zbxTestAssertElementPresentXpath('//td[1][text()="'.$trigger.'"]');
-			}
-			// Check output for location='Left'
-			$this->zbxTestDropdownSelect('view_style', 'Left');
-			$this->zbxTestAssertElementPresentXpath('//th[text()="Host"]');
-			foreach ($data['result_hosts'] as $host) {
-				$this->zbxTestAssertElementPresentXpath('//td[1]/a[text()="'.$host.'"]');
-			}
-			foreach ($data['result_triggers'] as $trigger) {
-				$this->zbxTestAssertElementPresentXpath('//div[@class="vertical_rotation_inner"][text()="'.$trigger.'"]');
+			// Check output for host location as 'Left'.
+			else {
+				$this->zbxTestAssertElementPresentXpath('//th[text()="Host"]');
+				$this->checkResultsInTable($main_filter['view_style'], $data['result_triggers'], $data['result_hosts']);
 			}
 		}
-		// Check results for type='Data'
-		elseif ($this->zbxTestGetSelectedLabel('type') === 'Data') {
-			// Check output for location='Top'
-			if ($this->zbxTestGetSelectedLabel('view_style') === 'Top') {
+		elseif ($main_filter['type'] === 'Data') {
+			if ($main_filter['view_style'] === 'Top') {
 				$this->zbxTestAssertElementPresentXpath('//th[text()="Items"]');
-				foreach ($data['result_hosts'] as $host) {
-					$this->zbxTestAssertElementPresentXpath('//th[@class="vertical_rotation"][@title="'.$host.'"]');
-				}
-				foreach ($data['result_items'] as $item) {
-					$this->zbxTestAssertElementPresentXpath('//td[1][text()="'.$item.'"]');
-				}
+				$this->checkResultsInTable($main_filter['view_style'], $data['result_hosts'], $data['result_items']);
 			}
-			// Check output for location='Left'
-			elseif($this->zbxTestDropdownAssertSelected('view_style', 'Left')) {
-				$this->zbxTestAssertElementPresentXpath('//th[text()="Host"]');
-				foreach ($data['result_items'] as $item) {
-					$this->zbxTestAssertElementPresentXpath('//th[@class="vertical_rotation"][@title="'.$item.'"]');
-				}
-				foreach ($data['result_hosts'] as $host) {
-					$this->zbxTestAssertElementPresentXpath('//td[1][text()="'.$host.'"]');
-				}
+			else {
+				$this->zbxTestAssertElementPresentXpath('//th[text()="Hosts"]');
+				$this->checkResultsInTable($main_filter['view_style'], $data['result_items'], $data['result_hosts']);
 			}
 		}
 	}
 
-	public function testPageMonitoringOverview_Links() {
+	private function checkResultsInTable($location, $thead, $tbody) {
+		foreach ($thead as $column) {
+			$this->zbxTestAssertElementPresentXpath('//th//div[@class="vertical_rotation_inner"][text()="'.$column.'"]');
+		}
+		foreach ($tbody as $row) {
+			if ($location === 'Top') {
+				$this->zbxTestAssertElementPresentXpath('//table[@class="list-table"]//td[1][text()="'.$row.'"]');
+			}
+			else {
+				$this->zbxTestAssertElementPresentXpath('//table[@class="list-table"]//td[1]/a[text()="'.$row.'"]');
+			}
+		}
+
+		// Count rows and columns to compare with expected number of results.
+		$rows = $this->webDriver->findElements(WebDriverBy::xpath('//th//div[@class="vertical_rotation_inner"]'));;
+		$columns = $this->webDriver->findElements(WebDriverBy::xpath('//table[@class="list-table"]//td[1]'));;
+		$this->assertEquals(count($thead), count($rows));
+		$this->assertEquals(count($tbody), count($columns));
+	}
+
+	public function getContextMenu() {
+		return [
+			[
+				[
+					'type' => 'Triggers',
+					'links' => [
+						'zabbix.php?action=problem.view&filter_triggerids',
+						'action=acknowledge.edit&eventids',
+						'triggers.php?form=update&triggerid',
+						'action=showgraph&itemid'
+					],
+					'links_text' => ['Problems', 'Acknowledge', 'Description', 'Configuration', '1_item']
+				]
+			],
+			[
+				[
+					'type' => 'Data',
+					'links' => [
+						'action=showgraph&period=3600',
+						'action=showgraph&period=604800',
+						'action=showgraph&period=2678400',
+						'action=showvalues&period=3600'
+					],
+					'links_text' => ['Last hour graph', 'Last week graph', 'Last month graph', 'Latest values']
+				]
+			]
+		];
+	}
+
+	/**
+	 * @dataProvider getContextMenu
+	 */
+	public function testPageOverview_ContextMenuLinks($data) {
 		$this->zbxTestLogin('overview.php');
-		$this->zbxTestCheckTitle('Overview [refreshed every 30 sec.]');
 		$this->zbxTestCheckHeader('Overview');
 		$this->zbxTestClickButtonText('Reset');
-		$this->zbxTestDropdownSelect('type', 'Triggers');
-		$this->zbxTestClickXpath('//tbody//td[contains(@class, "cursor-pointer")]');
 
-		$this->zbxTestAssertElementPresentXpath('//h3[text()="Trigger"]');
-		$this->zbxTestAssertElementPresentXpath('//a[contains(@class, "action-menu-item")][@aria-label="Trigger, Problems"]'
-			. '[contains(@href, "zabbix.php?action=problem.view&filter_triggerids")][text()="Problems"]');
-		$this->zbxTestAssertElementPresentXpath('//a[contains(@class, "action-menu-item")][@aria-label="Trigger, Acknowledge"]'
-			. '[contains(@href, "action=acknowledge.edit&eventids")][text()="Acknowledge"]');
-		$this->zbxTestAssertElementPresentXpath('//a[contains(@class, "action-menu-item")][@aria-label="Trigger, Description"]'
-			. '[text()="Description"]');
-		$this->zbxTestAssertElementPresentXpath('//a[contains(@class, "action-menu-item")][@aria-label="Trigger, Configuration"]'
-			. '[contains(@href, "triggers.php?form=update&triggerid")][text()="Configuration"]');
-		$this->zbxTestAssertElementPresentXpath('//h3[text()="History"]');
-		$this->zbxTestAssertElementPresentXpath('//a[contains(@class, "action-menu-item")][@aria-label="History, 1_item"]'
-			. '[contains(@href, "action=showgraph&itemid")]');
+		// Select type and open context menu.
+		$this->zbxTestDropdownSelectWait('type', $data['type']);
+		$this->zbxTestWaitForPageToLoad();
+		$this->zbxTestClickXpathWait('//tbody//td[contains(@class, "cursor-pointer")]');
 
-		$this->zbxTestDropdownSelect('type', 'Data');
-		$this->zbxTestClickXpath('//tbody//td[contains(@class, "cursor-pointer")]');
-		$this->zbxTestAssertElementPresentXpath('//h3[text()="History"]');
-		$this->zbxTestAssertElementPresentXpath('//a[contains(@class, "action-menu-item")][@aria-label="Last hour graph"]'
-			. '[contains(@href, "action=showgraph&period=3600")][text()="Last hour graph"]');
-		$this->zbxTestAssertElementPresentXpath('//a[contains(@class, "action-menu-item")][@aria-label="Last week graph"]'
-			. '[contains(@href, "action=showgraph&period=604800")][text()="Last week graph"]');
-		$this->zbxTestAssertElementPresentXpath('//a[contains(@class, "action-menu-item")][@aria-label="Last month graph"]'
-			. '[contains(@href, "action=showgraph&period=2678400")][text()="Last month graph"]');
-		$this->zbxTestAssertElementPresentXpath('//a[contains(@class, "action-menu-item")][@aria-label="Latest values"]'
-			. '[contains(@href, "action=showvalues&period=3600")][text()="Latest values"]');
+		// Check context menu links text and url.
+		$this->zbxTestAssertElementPresentXpath('//ul[contains(@class, "action-menu")]//h3[text()="History"]');
+		if ($data['type'] === 'Triggers') {
+			$this->zbxTestAssertElementPresentXpath('//ul[contains(@class, "action-menu")]//h3[text()="Trigger"]');
+		}
+
+		$get_links_text = [];
+		$elements = $this->webDriver->findElements(WebDriverBy::xpath('//ul[contains(@class, "action-menu")]//a'));
+		foreach ($elements as $element) {
+			$get_links_text[] = $element->getText();
+		}
+		$this->assertEquals($data['links_text'], $get_links_text);
+
+		foreach ($data['links'] as $link) {
+			$this->zbxTestAssertElementPresentXpath('//ul[contains(@class, "action-menu")]//a[contains(@href, "'.$link.'")]');
+		}
 	}
 
-	private function getSeverity($host, $trigger) {
-		$sql = 'SELECT priority'.
-				' FROM triggers'.
-				' WHERE description='.$trigger.
-				' AND triggerid IN ('.
-					'SELECT triggerid'.
-					' FROM functions'.
-					' WHERE itemid IN ('.
-						'SELECT itemid'.
-						' FROM items'.
-						' WHERE hostid IN ('.
-							'SELECT hostid'.
-							' FROM hosts'.
-							' WHERE name='.$host.
-						')'.
-					')'.
-				')';
-
-		$severity_number = DBfetch(DBselect($sql));
-		$severities = ['na', 'info', 'warning', 'average','high', 'disaster'];
-		$trigger_severity = $severities[$severity_number].'-bg';
-
-		return $trigger_severity;
-	}
+//	// TODO: uncomment after update to the latest trunk
+//	public function testPageOverview_FullScreenKioskMode() {
+//		try {
+//			$this->zbxTestLogin('overview.php');
+//			$this->zbxTestCheckHeader('Overview');
+//			$this->zbxTestAssertElementPresentXpath("//header");
+//			$this->zbxTestAssertAttribute("//button[contains(@class, 'btn-max')]", 'title', 'Fullscreen');
+//
+//			$this->zbxTestClickXpathWait("//button[contains(@class, 'btn-max')]");
+//			$this->zbxTestWaitForPageToLoad();
+//			$this->zbxTestWaitUntilElementPresent(WebDriverBy::xpath('//button[@title="Kiosk mode"]'));
+//			$this->zbxTestCheckHeader('Overview');
+//			$this->zbxTestAssertElementNotPresentXpath("//header");
+//			$this->zbxTestAssertElementPresentXpath("//div[@class='header-title table']");
+//			$this->zbxTestAssertElementPresentXpath("//ul[contains(@class, 'filter-breadcrumb')]");
+//			$this->zbxTestAssertElementNotPresentXpath('//div[@id="mmenu"][@class="top-nav-container"]');
+//			$this->zbxTestAssertElementNotPresentXpath('//nav[@class="top-subnav-container"]');
+//			$this->zbxTestAssertAttribute("//button[contains(@class, 'btn-kiosk')]", 'title', 'Kiosk mode');
+//
+//			$this->zbxTestClickXpathWait("//button[contains(@class, 'btn-kiosk')]");
+//			$this->zbxTestWaitForPageToLoad();
+//			$this->zbxTestWaitUntilElementPresent(WebDriverBy::xpath('//button[@title="Normal view"]'));
+//			$this->zbxTestAssertElementNotPresentXpath("//header");
+//			$this->zbxTestAssertElementNotPresentXpath("//div[@class='header-title table']");
+//			$this->zbxTestAssertElementNotPresentXpath("//ul[contains(@class, 'filter-breadcrumb')]");
+//			$this->zbxTestAssertAttribute("//button[contains(@class, 'btn-min')]", 'title', 'Normal view');
+//
+//			$this->webDriver->executeScript('arguments[0].click();', [$this->webDriver->findElement(WebDriverBy::className('btn-min'))]);
+//			$this->zbxTestWaitForPageToLoad();
+//			$this->zbxTestWaitUntilElementPresent(WebDriverBy::xpath("//button[contains(@class, 'btn-max')]"));
+//			$this->zbxTestAssertAttribute("//button[contains(@class, 'btn-max')]", 'title', 'Fullscreen');
+//			$this->zbxTestAssertElementPresentXpath("//header");
+//			$this->zbxTestAssertElementPresentXpath("//div[@class='header-title table']");
+//			$this->zbxTestAssertElementPresentXpath("//ul[contains(@class, 'filter-breadcrumb')]");
+//			$this->zbxTestCheckFatalErrors();
+//		}
+//		catch (Exception $e) {
+//			// Reset fullscreen/kiosk mode.
+//			$this->zbxTestLogin('overview.php?fullscreen=0');
+//			$this->zbxTestCheckHeader('Overview');
+//			throw $e;
+//		}
+//	}
 }
