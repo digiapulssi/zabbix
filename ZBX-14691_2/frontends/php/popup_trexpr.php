@@ -413,7 +413,8 @@ if (isset($_REQUEST['expression']) && $_REQUEST['dstfld1'] == 'expr_temp') {
 			// determine param type
 			$params = $functionMacroToken['data']['functionParams'];
 			$paramNumber = in_array($function, ['regexp', 'iregexp', 'str']) ? 1 : 0;
-			if (isset($params[$paramNumber][0]) && $params[$paramNumber][0] == '#') {
+			if (isset($params[$paramNumber][0]) && $params[$paramNumber][0] == '#'
+					&& !in_array($function, ['fuzzytime', 'nodata'])) {
 				$paramType = PARAM_TYPE_COUNTS;
 				$params[$paramNumber] = substr($params[$paramNumber], 1);
 			}
