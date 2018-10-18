@@ -86,8 +86,9 @@ if (array_key_exists('params', $data['functions'][$data['selectedFunction']])) {
 			$param_type_element = null;
 
 			if (in_array($param_name, ['last'])) {
-				if ($data['paramtype'] == PARAM_TYPE_COUNTS) {
-					$param_value = str_replace('#', '', $param_value);
+				if ($data['paramtype'] == PARAM_TYPE_COUNTS && $param_value !== null && $param_value !== ''
+						&& $param_value[0] === '#') {
+					$param_value = substr($param_value, 1);
 				}
 				if (array_key_exists('M', $param_function)) {
 					if (in_array($data['selectedFunction'], ['last', 'band', 'strlen'])) {
