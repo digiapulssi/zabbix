@@ -880,7 +880,7 @@ class CWidgetHelper {
 									'reference' => 'name',
 									'multiselect' => 1,
 									'dstfrm' => $form_name
-								]) . ', {dstfld1: jQuery(this).siblings("textarea").attr("name")}), null, this);'
+								]).', {dstfld1: jQuery(this).siblings("textarea").attr("name")}), null, this);'
 							)
 					]))->addClass(ZBX_STYLE_COLUMN_50),
 					(new CDiv([
@@ -904,7 +904,7 @@ class CWidgetHelper {
 									'with_webitems' => 1,
 									'orig_names' => 1,
 									'dstfrm' => $form_name
-								]) . ', {dstfld1: jQuery(this).siblings("textarea").attr("name")}), null, this);'
+								]).', {dstfld1: jQuery(this).siblings("textarea").attr("name")}), null, this);'
 							)
 					]))->addClass(ZBX_STYLE_COLUMN_50),
 				]))
@@ -972,8 +972,7 @@ class CWidgetHelper {
 									->setMax(10)
 							)
 						)
-					)
-						->addClass(ZBX_STYLE_COLUMN_50),
+					)->addClass(ZBX_STYLE_COLUMN_50),
 
 					// Right column fields.
 					(new CDiv(
@@ -1003,8 +1002,7 @@ class CWidgetHelper {
 									->setAttribute('placeholder', _('none'))
 									->setWidth(ZBX_TEXTAREA_TINY_WIDTH)
 							)
-					))
-						->addClass(ZBX_STYLE_COLUMN_50),
+					))->addClass(ZBX_STYLE_COLUMN_50),
 				]))
 					->addClass(ZBX_STYLE_COLUMNS)
 					->addClass(ZBX_STYLE_COLUMN_95)
