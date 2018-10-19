@@ -49,6 +49,19 @@ class testPageHosts extends CWebTest {
 		$this->zbxTestTextPresent('Simple form test host');
 		$this->zbxTestTextNotPresent('ZBX6648 All Triggers Host');
 
+		// Check Filter fields.
+		$this->zbxTestAssertElementPresentId('filter_host');
+		$this->zbxTestAssertElementPresentId('filter_templates__ms');
+		$this->zbxTestAssertElementPresentId('filter_monitored_by');
+		$this->zbxTestAssertElementPresentId('filter_proxyids_');
+		// Check that proxy field is disabled.
+		$this->zbxTestAssertElementPresentXpath('//div[@id="filter_proxyids_"]//ul[contains(@class, "disabled")]');
+		$this->zbxTestAssertElementPresentXpath('//div[@class="multiselect-button"]/button[@disabled]');
+
+		$this->zbxTestAssertElementPresentId('filter_dns');
+		$this->zbxTestAssertElementPresentId('filter_ip');
+		$this->zbxTestAssertElementPresentId('filter_port');
+
 		$this->zbxTestAssertElementPresentXpath("//thead//th/a[text()='Name']");
 		$this->zbxTestAssertElementPresentXpath("//thead//th[contains(text(),'Applications')]");
 		$this->zbxTestAssertElementPresentXpath("//thead//th[contains(text(),'Items')]");
@@ -223,6 +236,36 @@ class testPageHosts extends CWebTest {
 		$this->zbxTestTextNotPresent('Displaying 0 of 0 found');
 	}
 
+	public function testPageHosts_FilterByTemplates() {
+		$this->zbxTestLogin('hosts.php');
+		$this->zbxTestDropdownSelectWait('groupid', 'all');
+		$this->zbxTestClickButtonText('Reset');
+		$this->zbxTestClickButtonMultiselect('filter_templates_');
+		$this->zbxTestLaunchOverlayDialog('Templates');
+		$this->zbxTestClickXpathWait('//select/option[text()="Templates"]');
+		$this->zbxTestClickXpathWait('//a[@onclick and text()="Form test template"]');
+		$this->zbxTestClickButtonText('Apply');
+		$this->zbxTestAssertElementPresentXpath("//tbody//a[text()='Simple form test host']");
+		$this->zbxTestAssertElementPresentXpath("//div[@class='table-stats'][text()='Displaying 1 of 1 found']");
+	}
+
+	public function testPageHosts_FilterByProxy() {
+		$this->zbxTestLogin('hosts.php');
+		$this->zbxTestDropdownSelectWait('groupid', 'all');
+		$this->zbxTestClickButtonText('Reset');
+		$this->zbxTestClickXpathWait('//label[text()="Proxy"]');
+		$this->zbxTestClickButtonText('Apply');
+		$this->zbxTestAssertElementPresentXpath("//tbody//a[text()='Host_1 with proxy']");
+		$this->zbxTestAssertElementPresentXpath("//tbody//a[text()='Host_2 with proxy']");
+		$this->zbxTestAssertElementPresentXpath("//div[@class='table-stats'][text()='Displaying 2 of 2 found']");
+		$this->zbxTestClickButtonMultiselect('filter_proxyids_');
+		$this->zbxTestLaunchOverlayDialog('Proxies');
+		$this->zbxTestClickLinkText('Proxy_1 for filter');
+		$this->zbxTestClickButtonText('Apply');
+		$this->zbxTestAssertElementPresentXpath("//tbody//a[text()='Host_1 with proxy']");
+		$this->zbxTestAssertElementPresentXpath("//div[@class='table-stats'][text()='Displaying 1 of 1 found']");
+	}
+
 	public function testPageHosts_FilterNone() {
 		$this->zbxTestLogin('hosts.php');
 		$this->zbxTestDropdownSelectWait('groupid', 'all');
@@ -236,6 +279,7 @@ class testPageHosts extends CWebTest {
 
 	public function testPageHosts_FilterByAllFields() {
 		$this->zbxTestLogin('hosts.php');
+		$this->zbxTestClickButtonText('Reset');
 		$this->zbxTestDropdownSelectWait('groupid', $this->HostGroup);
 		$this->zbxTestInputTypeOverwrite('filter_host', $this->HostName);
 		$this->zbxTestInputTypeOverwrite('filter_ip', $this->HostIp);

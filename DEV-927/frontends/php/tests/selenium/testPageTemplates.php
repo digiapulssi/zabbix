@@ -34,6 +34,8 @@ class testPageTemplates extends CWebTest {
 		$this->zbxTestCheckHeader('Templates');
 		$this->zbxTestDropdownSelectWait('groupid', 'Templates');
 		$this->zbxTestTextPresent($this->templateName);
+		$this->zbxTestAssertElementPresentId('filter_name');
+		$this->zbxTestAssertElementPresentId('filter_templates__ms');
 		$this->zbxTestAssertElementPresentXpath("//thead//th/a[text()='Name']");
 		$this->zbxTestAssertElementPresentXpath("//thead//th[contains(text(),'Applications')]");
 		$this->zbxTestAssertElementPresentXpath("//thead//th[contains(text(),'Items')]");
@@ -92,12 +94,26 @@ class testPageTemplates extends CWebTest {
 		$this->assertEquals($oldHashTriggers, DBhash($sqlTriggers));
 	}
 
-	public function testPageTemplates_FilterTemplate() {
+	public function testPageTemplates_FilterTemplateByName() {
 		$this->zbxTestLogin('templates.php');
 		$this->zbxTestDropdownSelectWait('groupid', 'Templates');
 		$this->zbxTestInputTypeOverwrite('filter_name', $this->templateName);
 		$this->zbxTestClickButtonText('Apply');
 		$this->zbxTestAssertElementPresentXpath("//tbody//a[text()='$this->templateName']");
+		$this->zbxTestAssertElementPresentXpath("//div[@class='table-stats'][text()='Displaying 2 of 2 found']");
+	}
+
+	public function testPageTemplates_FilterTemplateByTemplate() {
+		$this->zbxTestLogin('templates.php');
+		$this->zbxTestDropdownSelectWait('groupid', 'Templates');
+		$this->zbxTestClickButtonText('Reset');
+		$this->zbxTestClickButtonMultiselect('filter_templates_');
+		$this->zbxTestLaunchOverlayDialog('Templates');
+		$this->zbxTestClickXpathWait('//select/option[text()="Templates"]');
+		$this->zbxTestClickXpathWait('//a[@onclick and text()="Template Module ICMP Ping"]');
+		$this->zbxTestClickButtonText('Apply');
+		$this->zbxTestAssertElementPresentXpath("//tbody//a[text()='Template Module Generic SNMPv1']");
+		$this->zbxTestAssertElementPresentXpath("//tbody//a[text()='Template Module Generic SNMPv2']");
 		$this->zbxTestAssertElementPresentXpath("//div[@class='table-stats'][text()='Displaying 2 of 2 found']");
 	}
 
