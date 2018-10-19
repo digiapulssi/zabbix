@@ -1077,7 +1077,7 @@ sub get_rollweek_bounds
 
 	$till--;
 
-	return ($from, $till, $till - 59);
+	return ($from, $till, truncate_from($till));
 }
 
 # todo phase 1: old name of this function was 'get_curmon_bounds'

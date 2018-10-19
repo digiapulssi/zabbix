@@ -1,8 +1,8 @@
 Changes for rsm1.1.0rc28
 
 Bug fixes:
-..F....... [414] removed 6 obsoleted HTTP status code errors and added 2 new ones related to hitting max redirects in RDDS and RDAP tests (dimir)
 ....I..... [419] fixed timestamp calculation in slv scripts (yurii)
+..F....... [414] removed 6 obsoleted HTTP status code errors and added 2 new ones related to hitting max redirects in RDDS and RDAP tests (dimir)
 ..F....... [420] removed unneeded differences between DNS and DNSSEC report calculation in aggregated details page (miks)
 
 --------------------------------------------------------------------------------
