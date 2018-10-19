@@ -3079,7 +3079,7 @@ static void	zbx_set_rdds_values(const char *ip43, int rtt43, int upd43, const ch
 
 /* maps HTTP status codes ommitting status 200 and unassigned according to   */
 /* http://www.iana.org/assignments/http-status-codes/http-status-codes.xhtml */
-static int	zbx_map_http_code(long http_code)
+static int	map_http_code(long http_code)
 {
 #if ZBX_HTTP_RESPONSE_OK != 200L
 #	error "Mapping of HTTP statuses to error codes is based on assumption that status 200 is not an error."
@@ -3118,12 +3118,7 @@ static int	zbx_map_http_code(long http_code)
 			return 12;
 		case 300L:	/* Multiple Choices */
 			return 13;
-		case 301L:	/* Moved Permanently */
-			return 14;
-		case 302L:	/* Found */
-			return 15;
-		case 303L:	/* See Other */
-			return 16;
+		/* 17.10.2018: 301, 302 and 303 were obsoleted because we follow redirects */
 		case 304L:	/* Not Modified */
 			return 17;
 		case 305L:	/* Use Proxy */
@@ -3235,12 +3230,46 @@ static inline size_t	curl_devnull(char *ptr, size_t size, size_t nmemb, void *us
 	return size * nmemb;
 }
 
+typedef enum
+{
+	ZBX_EC_PRE_STATUS_ERROR_INTERNAL,
+	ZBX_EC_PRE_STATUS_ERROR_TO,
+	ZBX_EC_PRE_STATUS_ERROR_ECON,
+	ZBX_EC_PRE_STATUS_ERROR_EHTTP,
+	ZBX_EC_PRE_STATUS_ERROR_EHTTPS,
+	ZBX_EC_PRE_STATUS_ERROR_NOCODE,
+	ZBX_EC_PRE_STATUS_ERROR_EMAXREDIRECTS
+}
+pre_status_error_t;
+
+typedef enum
+{
+	PRE_HTTP_STATUS_ERROR,
+	HTTP_STATUS_ERROR
+}
+zbx_http_error_type_t;
+
+typedef union
+{
+	pre_status_error_t	pre_status_error;
+	long			response_code;
+}
+zbx_http_error_data_t;
+
+typedef struct
+{
+	zbx_http_error_type_t type;
+	zbx_http_error_data_t error;
+}
+zbx_http_error_t;
+
 /* Helper function for Web-based RDDS80 and RDAP checks. Adds host to header, connects to URL obeying timeout and */
 /* max redirect settings, stores web page contents using provided callback, checks for OK response and calculates */
 /* round-trip time. When function succeeds it returns RTT in milliseconds. When function fails it returns source  */
 /* of error in provided RTT parameter. Does not verify certificates.                                              */
-static int	zbx_http_test(const char *host, const char *url, long timeout, long maxredirs, int *rtt,
-		void *writedata, size_t (*writefunction)(char *, size_t, size_t, void *), char *err, size_t err_size)
+static int	zbx_http_test(const char *host, const char *url, long timeout, long maxredirs, zbx_http_error_t *ec_http,
+		int *rtt, void *writedata, size_t (*writefunction)(char *, size_t, size_t, void *),
+		char *err, size_t err_size)
 {
 #ifdef HAVE_LIBCURL
 	CURL			*easyhandle;
@@ -3256,7 +3285,9 @@ static int	zbx_http_test(const char *host, const char *url, long timeout, long m
 #ifdef HAVE_LIBCURL
 	if (NULL == (easyhandle = curl_easy_init()))
 	{
-		*rtt = ZBX_EC_INTERNAL;
+		ec_http->type = PRE_HTTP_STATUS_ERROR;
+		ec_http->error.pre_status_error = ZBX_EC_PRE_STATUS_ERROR_INTERNAL;
+
 		zbx_strlcpy(err, "cannot init cURL library", err_size);
 		goto out;
 	}
@@ -3264,7 +3295,9 @@ static int	zbx_http_test(const char *host, const char *url, long timeout, long m
 	zbx_snprintf(host_buf, sizeof(host_buf), "Host: %s", host);
 	if (NULL == (slist = curl_slist_append(slist, host_buf)))
 	{
-		*rtt = ZBX_EC_INTERNAL;
+		ec_http->type = PRE_HTTP_STATUS_ERROR;
+		ec_http->error.pre_status_error = ZBX_EC_PRE_STATUS_ERROR_INTERNAL;
+
 		zbx_strlcpy(err, "cannot generate cURL list of HTTP headers", err_size);
 		goto out;
 	}
@@ -3279,49 +3312,63 @@ static int	zbx_http_test(const char *host, const char *url, long timeout, long m
 			CURLE_OK != (curl_err = curl_easy_setopt(easyhandle, opt = CURLOPT_WRITEDATA, writedata)) ||
 			CURLE_OK != (curl_err = curl_easy_setopt(easyhandle, opt = CURLOPT_WRITEFUNCTION, writefunction)))
 	{
-		*rtt = ZBX_EC_INTERNAL;
+		ec_http->type = PRE_HTTP_STATUS_ERROR;
+		ec_http->error.pre_status_error = ZBX_EC_PRE_STATUS_ERROR_INTERNAL;
+
 		zbx_snprintf(err, err_size, "cannot set cURL option [%d] (%s)", (int)opt, curl_easy_strerror(curl_err));
 		goto out;
 	}
 
 	if (CURLE_OK != (curl_err = curl_easy_perform(easyhandle)))
 	{
+		ec_http->type = PRE_HTTP_STATUS_ERROR;
+
 		switch (curl_err)
 		{
 			case CURLE_OPERATION_TIMEDOUT:
-				*rtt = ZBX_EC_HTTP_TO;
+				ec_http->error.pre_status_error = ZBX_EC_PRE_STATUS_ERROR_TO;
 				break;
 			case CURLE_COULDNT_CONNECT:
-				*rtt = ZBX_EC_HTTP_ECON;
+				ec_http->error.pre_status_error = ZBX_EC_PRE_STATUS_ERROR_ECON;
+				break;
+			case CURLE_TOO_MANY_REDIRECTS:
+				ec_http->error.pre_status_error = ZBX_EC_PRE_STATUS_ERROR_EMAXREDIRECTS;
 				break;
 			default:
 				if (0 == strncmp(url, "http://", ZBX_CONST_STRLEN("http://")))
-					*rtt = ZBX_EC_HTTP_EHTTP;
+					ec_http->error.pre_status_error = ZBX_EC_PRE_STATUS_ERROR_EHTTP;
 				else	/* if (0 == strncmp(url, "https://", ZBX_CONST_STRLEN("https://"))) */
-					*rtt = ZBX_EC_HTTP_EHTTPS;
+					ec_http->error.pre_status_error = ZBX_EC_PRE_STATUS_ERROR_EHTTPS;
 		}
+
 		zbx_strlcpy(err, curl_easy_strerror(curl_err), err_size);
 		goto out;
 	}
 
 	if (CURLE_OK != (curl_err = curl_easy_getinfo(easyhandle, CURLINFO_RESPONSE_CODE, &response_code)))
 	{
-		*rtt = ZBX_EC_HTTP_NOCODE;
+		ec_http->type = PRE_HTTP_STATUS_ERROR;
+		ec_http->error.pre_status_error = ZBX_EC_PRE_STATUS_ERROR_NOCODE;
+
 		zbx_snprintf(err, err_size, "cannot get HTTP response code (%s)", curl_easy_strerror(curl_err));
 		goto out;
 	}
 
 	if (ZBX_HTTP_RESPONSE_OK != response_code)
 	{
-		*rtt = ZBX_EC_HTTP_BASE - zbx_map_http_code(response_code);
-		zbx_snprintf(err, err_size, "invalid HTTP response code (%ld), expected %ld", response_code,
-				ZBX_HTTP_RESPONSE_OK);
+		ec_http->type = HTTP_STATUS_ERROR;
+		ec_http->error.response_code = response_code;
+
+		zbx_snprintf(err, err_size, "invalid HTTP response code, expected %ld, got %ld", ZBX_HTTP_RESPONSE_OK,
+				response_code);
 		goto out;
 	}
 
 	if (CURLE_OK != (curl_err = curl_easy_getinfo(easyhandle, CURLINFO_TOTAL_TIME, &total_time)))
 	{
-		*rtt = ZBX_EC_INTERNAL;
+		ec_http->type = PRE_HTTP_STATUS_ERROR;
+		ec_http->error.pre_status_error = ZBX_EC_PRE_STATUS_ERROR_INTERNAL;
+
 		zbx_snprintf(err, err_size, "cannot get HTTP request time (%s)", curl_easy_strerror(curl_err));
 		goto out;
 	}
@@ -3336,7 +3383,9 @@ out:
 	if (NULL != easyhandle)
 		curl_easy_cleanup(easyhandle);
 #else
-	*rtt = ZBX_EC_INTERNAL;
+	ec_http->type = PRE_HTTP_STATUS_ERROR;
+	ec_http->error.pre_status_error = ZBX_EC_PRE_STATUS_ERROR_INTERNAL;
+
 	zbx_strlcpy(err, "zabbix is not compiled with libcurl support (--with-libcurl)", err_size);
 #endif
 	return ret;
@@ -3375,26 +3424,43 @@ static void	zbx_vector_str_clean_and_destroy(zbx_vector_str_t *v)
 
 /* maps generic HTTP errors to RDDS interface specific ones */
 
-#define ZBX_DEFINE_HTTP_ERROR_TO(__rdds_interface)								\
-static int	zbx_http_error_to_ ## __rdds_interface (int ec_http)						\
-{														\
-	switch (ec_http)											\
-	{													\
-		case ZBX_EC_INTERNAL:										\
-			return ZBX_EC_INTERNAL;									\
-		case ZBX_EC_HTTP_TO:										\
-			return ZBX_EC_ ## __rdds_interface ## _TO;						\
-		case ZBX_EC_HTTP_ECON:										\
-			return ZBX_EC_ ## __rdds_interface ## _ECON;						\
-		case ZBX_EC_HTTP_EHTTP:										\
-			return ZBX_EC_ ## __rdds_interface ## _EHTTP;						\
-		case ZBX_EC_HTTP_EHTTPS:									\
-			return ZBX_EC_ ## __rdds_interface ## _EHTTPS;						\
-		case ZBX_EC_HTTP_NOCODE:									\
-			return ZBX_EC_ ## __rdds_interface ## _NOCODE;						\
-		default:											\
-			return ZBX_EC_ ## __rdds_interface ## _HTTP_BASE + (ec_http - ZBX_EC_HTTP_BASE);	\
-	}													\
+#define ZBX_DEFINE_HTTP_PRE_STATUS_ERROR_TO(__rdds_interface)					\
+static int	zbx_pre_status_error_to_ ## __rdds_interface (pre_status_error_t ec_pre_status)	\
+{												\
+	switch (ec_pre_status)									\
+	{											\
+		case ZBX_EC_PRE_STATUS_ERROR_INTERNAL:						\
+			return ZBX_EC_INTERNAL;							\
+		case ZBX_EC_PRE_STATUS_ERROR_TO:						\
+			return ZBX_EC_ ## __rdds_interface ## _TO;				\
+		case ZBX_EC_PRE_STATUS_ERROR_ECON:						\
+			return ZBX_EC_ ## __rdds_interface ## _ECON;				\
+		case ZBX_EC_PRE_STATUS_ERROR_EHTTP:						\
+			return ZBX_EC_ ## __rdds_interface ## _EHTTP;				\
+		case ZBX_EC_PRE_STATUS_ERROR_EHTTPS:						\
+			return ZBX_EC_ ## __rdds_interface ## _EHTTPS;				\
+		case ZBX_EC_PRE_STATUS_ERROR_NOCODE:						\
+			return ZBX_EC_ ## __rdds_interface ## _NOCODE;				\
+		case ZBX_EC_PRE_STATUS_ERROR_EMAXREDIRECTS:					\
+			return ZBX_EC_ ## __rdds_interface ## _EMAXREDIRECTS;			\
+	}											\
+}
+
+ZBX_DEFINE_HTTP_PRE_STATUS_ERROR_TO(RDDS80)
+ZBX_DEFINE_HTTP_PRE_STATUS_ERROR_TO(RDAP)
+
+#undef ZBX_DEFINE_HTTP_PRE_STATUS_ERROR_TO
+
+#define ZBX_DEFINE_HTTP_ERROR_TO(__rdds_interface)									\
+static int	zbx_http_error_to_ ## __rdds_interface (zbx_http_error_t ec_http)					\
+{															\
+	switch (ec_http.type)												\
+	{														\
+		case PRE_HTTP_STATUS_ERROR:										\
+			return zbx_pre_status_error_to_ ## __rdds_interface (ec_http.error.pre_status_error);		\
+		case HTTP_STATUS_ERROR:											\
+			return ZBX_EC_ ## __rdds_interface ## _HTTP_BASE - map_http_code(ec_http.error.response_code);	\
+	}														\
 }
 
 ZBX_DEFINE_HTTP_ERROR_TO(RDDS80)
@@ -3485,8 +3551,9 @@ int	check_rsm_rdds(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 	size_t			i, items_num = 0;
 	time_t			ts, now;
 	unsigned int		extras;
+	zbx_http_error_t	ec_http;
 	int			rtt43 = ZBX_NO_VALUE, upd43 = ZBX_NO_VALUE, rtt80 = ZBX_NO_VALUE, rtt_limit,
-				ipv4_enabled, ipv6_enabled, ipv_flags = 0, rdds_enabled, epp_enabled, maxredirs, ec_http,
+				ipv4_enabled, ipv6_enabled, ipv_flags = 0, rdds_enabled, epp_enabled, maxredirs,
 				ret = SYSINFO_RET_FAIL;
 
 	if (3 != request->nparam)
@@ -3808,14 +3875,12 @@ int	check_rsm_rdds(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 	else
 		zbx_snprintf(testname, sizeof(testname), "http://[%s]", ip80);
 
-	if (SUCCEED != zbx_http_test(random_host, testname, ZBX_RSM_TCP_TIMEOUT, maxredirs, &ec_http, NULL, curl_devnull,
-			err, sizeof(err)))
+	if (SUCCEED != zbx_http_test(random_host, testname, ZBX_RSM_TCP_TIMEOUT, maxredirs, &ec_http, &rtt80, NULL,
+			curl_devnull, err, sizeof(err)))
 	{
 		rtt80 = zbx_http_error_to_RDDS80(ec_http);
-		zbx_rsm_errf(log_fd, "RDDS80 of \"%s\" (%s) failed: %s", random_host, ip80, err);
+		zbx_rsm_errf(log_fd, "RDDS80 of \"%s\" (%s) failed: %s (%d)", random_host, ip80, err, rtt80);
 	}
-	else
-		rtt80 = ec_http;
 
 	zbx_rsm_infof(log_fd, "end RDDS80 test (rtt:%d)", rtt80);
 out:
@@ -3946,8 +4011,9 @@ int	check_rsm_rdap(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 	const char		*ip = NULL;
 	size_t			value_alloc = 0;
 	unsigned int		extras;
+	zbx_http_error_t	ec_http;
 	int			maxredirs, rtt_limit, tld_enabled, probe_enabled, ipv4_enabled, ipv6_enabled,
-				ipv_flags = 0, ec_http, port, rtt = ZBX_NO_VALUE, ret = SYSINFO_RET_FAIL;
+				ipv_flags = 0, port, rtt = ZBX_NO_VALUE, ret = SYSINFO_RET_FAIL;
 
 	if (10 != request->nparam)
 	{
@@ -4141,13 +4207,14 @@ int	check_rsm_rdap(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 	else
 		full_url = zbx_dsprintf(full_url, "%s%s:%d%s%s/%s", proto, ip, port, prefix, rdap_prefix, test_domain);
 
-	zbx_rsm_infof(log_fd, "the domain in base URL \"%s\" was resolved to %s, using full URL \"%s\".", base_url, ip, full_url);
+	zbx_rsm_infof(log_fd, "the domain in base URL \"%s\" was resolved to %s, using full URL \"%s\".",
+			base_url, ip, full_url);
 
-	if (SUCCEED != zbx_http_test(domain_part, full_url, ZBX_RSM_TCP_TIMEOUT, maxredirs, &ec_http, &data, curl_memory,
-			err, sizeof(err)))
+	if (SUCCEED != zbx_http_test(domain_part, full_url, ZBX_RSM_TCP_TIMEOUT, maxredirs, &ec_http, &rtt, &data,
+			curl_memory, err, sizeof(err)))
 	{
 		rtt = zbx_http_error_to_RDAP(ec_http);
-		zbx_rsm_errf(log_fd, "test of \"%s\" (%s) failed: %s", base_url, ip, err);
+		zbx_rsm_errf(log_fd, "test of \"%s\" (%s) failed: %s (%d)", base_url, ip, err, rtt);
 		goto out;
 	}
 
@@ -4173,8 +4240,6 @@ int	check_rsm_rdap(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 		zbx_rsm_errf(log_fd, "ldhName member doesn't match query in response of \"%s\" (%s)", base_url, ip);
 		goto out;
 	}
-
-	rtt = ec_http;
 
 	zbx_rsm_infof(log_fd, "end test of \"%s\" (%s) (rtt:%d)", base_url, ZBX_NULL2STR(ip), rtt);
 out:

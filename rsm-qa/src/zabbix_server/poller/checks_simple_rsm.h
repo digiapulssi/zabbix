@@ -25,14 +25,6 @@
 /* internal */
 #define ZBX_EC_INTERNAL			-1	/* general internal error */
 #define ZBX_EC_INTERNAL_IP_UNSUP	-2	/* IP version not supported by Probe */
-/* auxiliary generic HTTP error codes */
-#define ZBX_EC_HTTP_TO			-3
-#define ZBX_EC_HTTP_ECON		-4
-#define ZBX_EC_HTTP_EHTTP		-5
-#define ZBX_EC_HTTP_EHTTPS		-6
-#define ZBX_EC_HTTP_NOCODE		-7
-#define ZBX_EC_HTTP_BASE		-8
-/* Code ZBX_EC_HTTP_BASE - zbx_map_http_code(xxx) means we got HTTP status code xxx */
 /* DNS UDP */
 #define ZBX_EC_DNS_UDP_NS_NOREPLY	-200	/* DNS UDP - No reply from name server */
 #define ZBX_EC_DNS_UDP_CLASS_CHAOS	-207	/* DNS UDP - Expecting DNS CLASS IN but got CHAOS */
@@ -168,9 +160,8 @@
 #define ZBX_EC_RDDS80_ECON		-256	/* RDDS80 - Error opening connection to server */
 #define ZBX_EC_RDDS80_EHTTP		-257	/* RDDS80 - Error in HTTP protocol */
 #define ZBX_EC_RDDS80_EHTTPS		-258	/* RDDS80 - Error in HTTPS protocol */
-#define ZBX_EC_RDDS80_HTTP_BASE		-300
-/* Code ZBX_EC_RDDS80_HTTP_BASE - zbx_map_http_code(xxx) means */
-						/* RDDS80 - Expecting HTTP status code 200 but got xxx */
+#define ZBX_EC_RDDS80_EMAXREDIRECTS	-259	/* RDDS80 - Maximum HTTP redirects were hit while trying to connect */
+#define ZBX_EC_RDDS80_HTTP_BASE		-300	/* RDDS80 - Expecting HTTP status code 200 but got xxx */
 /* RDAP */
 #define ZBX_EC_RDAP_NOTLISTED		-100	/* The TLD is not listed in the Bootstrap Service Registry for Domain Name Space */
 #define ZBX_EC_RDAP_NOHTTPS		-101	/* The RDAP base URL obtained from Bootstrap Service Registry for Domain Name Space does not use HTTPS */
@@ -186,9 +177,8 @@
 #define ZBX_EC_RDAP_ENAME		-209	/* RDAP - ldhName member doesn't match query in response */
 #define ZBX_EC_RDAP_EHTTP		-213	/* RDAP - Error in HTTP protocol */
 #define ZBX_EC_RDAP_EHTTPS		-214	/* RDAP - Error in HTTPS protocol */
-#define ZBX_EC_RDAP_HTTP_BASE		-250
-/* Code ZBX_EC_RDAP_HTTP_BASE - zbx_map_http_code(xxx) means */
-						/* RDAP - Expecting HTTP status code 200 but got xxx */
+#define ZBX_EC_RDAP_EMAXREDIRECTS	-215	/* RDAP - Maximum HTTP redirects were hit while trying to connect to RDAP server */
+#define ZBX_EC_RDAP_HTTP_BASE		-250	/* RDAP - Expecting HTTP status code 200 bug got xxx */
 /* EPP */
 #define ZBX_EC_EPP_NO_IP		-200	/* IP is missing for EPP server */
 #define ZBX_EC_EPP_CONNECT		-201	/* cannot connect to EPP server */

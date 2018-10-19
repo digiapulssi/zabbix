@@ -1385,6 +1385,7 @@ ROW   |13022    |130       |-255 |RDDS80 - Timeout                              
 ROW   |13023    |130       |-256 |RDDS80 - Error opening connection to server                                                                     |
 ROW   |13024    |130       |-257 |RDDS80 - Error in HTTP protocol                                                                                 |
 ROW   |13025    |130       |-258 |RDDS80 - Error in HTTPS protocol                                                                                |
+ROW   |13576    |130       |-259 |RDDS80 - Maximum HTTP redirects were hit while trying to connect to RDAP server                                 |
 -- Error code for every assigned HTTP status code (with the exception of HTTP/200)
 -- as per: http://www.iana.org/assignments/http-status-codes/http-status-codes.xhtml
 ROW   |13026    |130       |-300 |RDDS80 - Expecting HTTP status code 200 but got 100                                                             |
@@ -1401,9 +1402,10 @@ ROW   |13036    |130       |-310 |RDDS80 - Expecting HTTP status code 200 but go
 ROW   |13037    |130       |-311 |RDDS80 - Expecting HTTP status code 200 but got 208                                                             |
 ROW   |13038    |130       |-312 |RDDS80 - Expecting HTTP status code 200 but got 226                                                             |
 ROW   |13039    |130       |-313 |RDDS80 - Expecting HTTP status code 200 but got 300                                                             |
-ROW   |13040    |130       |-314 |RDDS80 - Expecting HTTP status code 200 but got 301                                                             |
-ROW   |13041    |130       |-315 |RDDS80 - Expecting HTTP status code 200 but got 302                                                             |
-ROW   |13042    |130       |-316 |RDDS80 - Expecting HTTP status code 200 but got 303                                                             |
+-- 17.10.2018: 301, 302 and 303 were obsoleted because we follow redirects
+--ROW |13040    |130       |-314 |RDDS80 - Expecting HTTP status code 200 but got 301                                                             |
+--ROW |13041    |130       |-315 |RDDS80 - Expecting HTTP status code 200 but got 302                                                             |
+--ROW |13042    |130       |-316 |RDDS80 - Expecting HTTP status code 200 but got 303                                                             |
 ROW   |13043    |130       |-317 |RDDS80 - Expecting HTTP status code 200 but got 304                                                             |
 ROW   |13044    |130       |-318 |RDDS80 - Expecting HTTP status code 200 but got 305                                                             |
 ROW   |13045    |130       |-319 |RDDS80 - Expecting HTTP status code 200 but got 306                                                             |
@@ -1463,6 +1465,7 @@ ROW   |13511    |135       |-208 |RDAP - ldhName member not found in response   
 ROW   |13512    |135       |-209 |RDAP - ldhName member doesn't match query in response                                                           |
 ROW   |13513    |135       |-213 |RDAP - Error in HTTP protocol                                                                                   |
 ROW   |13514    |135       |-214 |RDAP - Error in HTTPS protocol                                                                                  |
+ROW   |13577    |135       |-215 |RDAP - Maximum HTTP redirects were hit while trying to connect to RDAP server                                   |
 -- Error code for every assigned HTTP status code (with the exception of HTTP/200)
 -- as per: http://www.iana.org/assignments/http-status-codes/http-status-codes.xhtml
 ROW   |13515    |135       |-250 |RDAP - Expecting HTTP status code 200 but got 100                                                               |
@@ -1479,9 +1482,10 @@ ROW   |13525    |135       |-260 |RDAP - Expecting HTTP status code 200 but got 
 ROW   |13526    |135       |-261 |RDAP - Expecting HTTP status code 200 but got 208                                                               |
 ROW   |13527    |135       |-262 |RDAP - Expecting HTTP status code 200 but got 226                                                               |
 ROW   |13528    |135       |-263 |RDAP - Expecting HTTP status code 200 but got 300                                                               |
-ROW   |13529    |135       |-264 |RDAP - Expecting HTTP status code 200 but got 301                                                               |
-ROW   |13530    |135       |-265 |RDAP - Expecting HTTP status code 200 but got 302                                                               |
-ROW   |13531    |135       |-266 |RDAP - Expecting HTTP status code 200 but got 303                                                               |
+-- 17.10.2018: 301, 302 and 303 were obsoleted because we follow redirects
+--ROW |13529    |135       |-264 |RDAP - Expecting HTTP status code 200 but got 301                                                               |
+--ROW |13530    |135       |-265 |RDAP - Expecting HTTP status code 200 but got 302                                                               |
+--ROW |13531    |135       |-266 |RDAP - Expecting HTTP status code 200 but got 303                                                               |
 ROW   |13532    |135       |-267 |RDAP - Expecting HTTP status code 200 but got 304                                                               |
 ROW   |13533    |135       |-268 |RDAP - Expecting HTTP status code 200 but got 305                                                               |
 ROW   |13534    |135       |-269 |RDAP - Expecting HTTP status code 200 but got 306                                                               |

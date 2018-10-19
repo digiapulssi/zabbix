@@ -2181,18 +2181,9 @@ out:
 	return ret;
 }
 
-static int	DBpatch_3000218(void)
+static int	add_mappings(const char *const data[])
 {
-	/* this is just a direct paste from data.tmpl, with each line quoted and properly indented */
-	static const char	*const data[] = {
-		"ROW   |12053    |120       |-408 |DNS UDP - Querying for a non existent domain - No NSEC/NSEC3 RRs were found in the authority section            |",
-		"ROW   |12107    |120       |-808 |DNS TCP - Querying for a non existent domain - No NSEC/NSEC3 RRs were found in the authority section            |",
-		NULL
-	};
-	int			i;
-
-	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
-		return SUCCEED;
+	int	i;
 
 	for (i = 0; NULL != data[i]; i++)
 	{
@@ -2233,6 +2224,23 @@ static int	DBpatch_3000218(void)
 		zbx_free(value_esc);
 		zbx_free(newvalue_esc);
 	}
+
+	return SUCCEED;
+}
+
+static int	DBpatch_3000218(void)
+{
+	/* this is just a direct paste from data.tmpl, with each line quoted and properly indented */
+	static const char	*const data[] = {
+		"ROW   |12053    |120       |-408 |DNS UDP - Querying for a non existent domain - No NSEC/NSEC3 RRs were found in the authority section            |",
+		"ROW   |12107    |120       |-808 |DNS TCP - Querying for a non existent domain - No NSEC/NSEC3 RRs were found in the authority section            |",
+		NULL
+	};
+
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	return add_mappings(data);
 }
 
 static int	DBpatch_3000219(void)
@@ -2420,6 +2428,26 @@ static int	DBpatch_3000220(void)
 	return SUCCEED;
 }
 
+static int	DBpatch_3000221(void)
+{
+	/* this is just a direct paste from data.tmpl, with each line quoted and properly indented */
+	static const char	*const data[] = {
+		"ROW   |13576    |130       |-259 |RDDS80 - Maximum HTTP redirects were hit while trying to connect to RDAP server                                 |",
+		"ROW   |13577    |135       |-215 |RDAP - Maximum HTTP redirects were hit while trying to connect to RDAP server                                   |",
+		NULL
+	};
+
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	if (ZBX_DB_OK > DBexecute("delete from mappings where mappingid in (13040,13041,13042,13529,13530,13531)"))
+	{
+		return FAIL;
+	}
+
+	return add_mappings(data);
+}
+
 #endif
 
 DBPATCH_START(3000)
@@ -2487,5 +2515,6 @@ DBPATCH_ADD(3000217, 0, 0)	/* add macro {$RDAP.TLD.ENABLED}=0 and item rdds.enab
 DBPATCH_ADD(3000218, 0, 0)	/* add value mappings for new DNS error codes: -408, -808 */
 DBPATCH_ADD(3000219, 0, 0)	/* add item dnssec.enabled to all "Template <TLD>" and hosts it is linked to */
 DBPATCH_ADD(3000220, 0, 0)	/* remove 'ms' units from item rdap.rtt */
+DBPATCH_ADD(3000221, 0, 0)	/* remove 6 obsoleted value mappings add 2 new errors related to hitting max HTTP redirects */
 
 DBPATCH_END()

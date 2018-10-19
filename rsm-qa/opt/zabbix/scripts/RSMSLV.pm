@@ -66,8 +66,6 @@ use constant PROBE_ONLINE_SHIFT		=> 120;	# seconds (must be divisible by 60) to 
 use constant AVAIL_SHIFT_BACK		=> 120;	# seconds (must be divisible by 60) to go back for Service Availability calculation
 use constant ROLLWEEK_SHIFT_BACK	=> 180;	# seconds (must be divisible by 60) to go back for Rolling Week calculation
 
-use constant RESULT_TIMESTAMP_SHIFT => 29; # seconds (shift back from upper time bound of the period for the value timestamp)
-
 use constant PROBE_ONLINE_STR => 'Online';
 use constant PROBE_OFFLINE_STR => 'Offline';
 use constant PROBE_NORESULT_STR => 'No result';
@@ -79,7 +77,7 @@ our %OPTS; # specified command-line options
 our @EXPORT = qw($result $dbh $tld $server_key
 		SUCCESS E_FAIL E_ID_NONEXIST E_ID_MULTIPLE UP DOWN RDDS_UP SLV_UNAVAILABILITY_LIMIT MIN_LOGIN_ERROR
 		UP_INCONCLUSIVE_NO_DATA PROTO_UDP PROTO_TCP
-		MAX_LOGIN_ERROR MIN_INFO_ERROR MAX_INFO_ERROR RESULT_TIMESTAMP_SHIFT PROBE_ONLINE_STR PROBE_OFFLINE_STR
+		MAX_LOGIN_ERROR MIN_INFO_ERROR MAX_INFO_ERROR PROBE_ONLINE_STR PROBE_OFFLINE_STR
 		PROBE_NORESULT_STR AVAIL_SHIFT_BACK PROBE_ONLINE_SHIFT
 		ONLINE OFFLINE
 		get_macro_minns get_macro_dns_probe_online get_macro_rdds_probe_online get_macro_dns_rollweek_sla
@@ -1051,7 +1049,7 @@ sub get_interval_bounds
 	my $from = truncate_from($clock, $delay);
 	my $till = $from + $delay - 1;
 
-	return ($from, $till, $till - RESULT_TIMESTAMP_SHIFT);
+	return ($from, $till, $from);
 }
 
 # Get time bounds of the rolling week, shift back to guarantee all probe results.
@@ -1079,7 +1077,7 @@ sub get_rollweek_bounds
 
 	$till--;
 
-	return ($from, $till, $till - RESULT_TIMESTAMP_SHIFT);
+	return ($from, $till, truncate_from($till));
 }
 
 # todo phase 1: old name of this function was 'get_curmon_bounds'
@@ -1095,7 +1093,7 @@ sub get_downtime_bounds
 	$dt->truncate('to' => 'month');
 	my $from = $dt->epoch;
 
-	return ($from, $till, $till - RESULT_TIMESTAMP_SHIFT);
+	return ($from, $till, $from);
 }
 
 # maximum timestamp for calculation of service availability
@@ -2748,7 +2746,7 @@ sub ts_str
 	# sec, min, hour, mday, mon, year, wday, yday, isdst
 	my ($sec, $min, $hour, $mday, $mon, $year) = localtime($ts);
 
-	return sprintf("%.4d-%.2d-%.2d %.2d:%.2d:%.2d", $year + 1900, $mon + 1, $mday, $hour, $min, $sec);
+	return sprintf("%.4d%.2d%.2d %.2d%.2d%.2d", $year + 1900, $mon + 1, $mday, $hour, $min, $sec);
 }
 
 sub ts_full

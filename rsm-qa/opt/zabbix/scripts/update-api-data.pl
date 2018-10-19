@@ -75,7 +75,6 @@ set_slv_config($config);
 
 my @server_keys = (opt('server-key') ? getopt('server-key') : get_rsm_server_keys($config));
 
-db_connect();
 
 my $opt_from = getopt('from');
 
@@ -119,7 +118,9 @@ my $cfg_dns_minns;
 my $cfg_dns_valuemaps;
 
 # todo phase 1: changed from get_statusmaps('dns')
+db_connect();
 my $cfg_avail_valuemaps = get_avail_valuemaps();
+db_disconnect();
 
 my $now = time();
 
@@ -222,6 +223,7 @@ if ($check_till > $max_till)
 	slv_exit(SUCCESS);
 }
 
+db_connect();
 foreach my $service (keys(%services))
 {
 	if ($service eq 'dns' || $service eq 'dnssec')
@@ -271,6 +273,7 @@ foreach my $service (keys(%services))
 
 	dbg("$service delay: ", $services{$service}{'delay'});
 }
+db_disconnect();
 
 my ($from, $till) = get_real_services_period(\%services, $check_from, $check_till, 1);	# consider last cycle
 
@@ -773,7 +776,7 @@ foreach (@server_keys)
 						my $result;
 
 						$result->{'tld'} = $tld;
-						$result->{'cycleCalculationDateTime'} = cycle_end($clock, $delay);
+						$result->{'cycleCalculationDateTime'} = cycle_start($clock, $delay);
 
 						# todo phase 1: make sure this uses avail valuemaps in phase1
 						# todo: later rewrite to use valuemap ID from item

@@ -1,6 +1,16 @@
+Changes for rsm1.1.0rc28
+
+Bug fixes:
+....I..... [sub-401] fixed handling of falsePositive file in SLA API (yurii)
+....I..... [423] removed unneeded characters from log date/time string (yurii)
+....I..... [419] fixed timestamp calculation in slv scripts (yurii)
+..F....... [414] removed 6 obsoleted HTTP status code errors and added 2 new ones related to hitting max redirects in RDDS and RDAP tests (dimir)
+..F....... [420] removed unneeded differences between DNS and DNSSEC report calculation in aggregated details page (miks)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.1.0rc27
 
-merged latest changes from rsm_prod into rsm_qa, resolved conflicts (yurii, miks, dimir)
+.......... merged latest changes from rsm_prod into rsm_qa, resolved conflicts (yurii, miks, dimir)
 
 --------------------------------------------------------------------------------
 Changes for rsm1.1.0rc26
