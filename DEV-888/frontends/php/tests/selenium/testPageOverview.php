@@ -340,82 +340,77 @@ class testPageOverview extends CWebTest {
 					]
 				]
 			],
-//			// Triggers status option in filter.
-//			// TODO: after ZBX-14725 will be resolved
-//			// Make trigger in problem state.
-//			[
-//				[
-//					'main_filter' => [
-//						'groupid' => 'Group to check Monitoring-> Overview',
-//						'type' => 'Triggers'
-//					],
-//					'triggers_status' => 'Recent problems',
-//					'problem' => ['3_trigger_Disaster' => TRIGGER_VALUE_TRUE],
-//					'result_hosts' => [
-//						'1_Host_to_check_Monitoring_Overview', '3_Host_to_check_Monitoring_Overview'
-//					],
-//					'result_triggers' => [
-//						'1_trigger_Average', '1_trigger_Disaster', '1_trigger_High', '1_trigger_Not_classified',
-//						'1_trigger_Warning', '2_trigger_Information',
-//						'3_trigger_Average', '3_trigger_Disaster'
-//					]
-//				]
-//			],
-//			// This test case depends from previous case, trigger should be in problem state.
-//			[
-//				[
-//					'main_filter' => [
-//						'groupid' => 'Group to check Monitoring-> Overview',
-//						'type' => 'Triggers'
-//					],
-//					'triggers_status' => 'Problems',
-//					'result_hosts' => [
-//						'1_Host_to_check_Monitoring_Overview', '3_Host_to_check_Monitoring_Overview'
-//					],
-//					'result_triggers' => [
-//						'1_trigger_Average', '1_trigger_Disaster', '1_trigger_High', '1_trigger_Not_classified',
-//						'1_trigger_Warning', '2_trigger_Information',
-//						'3_trigger_Average', '3_trigger_Disaster'
-//					]
-//				]
-//			],
-//			// Make trigger in resolved state.
-//			[
-//				[
-//					'main_filter' => [
-//						'groupid' => 'Group to check Monitoring-> Overview',
-//						'type' => 'Triggers'
-//					],
-//					'triggers_status' => 'Problems',
-//					'problem' => ['3_trigger_Disaster' => TRIGGER_VALUE_FALSE],
-//					'result_hosts' => [
-//						'1_Host_to_check_Monitoring_Overview', '3_Host_to_check_Monitoring_Overview'
-//					],
-//					'result_triggers' => [
-//						'1_trigger_Average', '1_trigger_Disaster', '1_trigger_High', '1_trigger_Not_classified',
-//						'1_trigger_Warning', '2_trigger_Information',
-//						'3_trigger_Average'
-//					]
-//				]
-//			],
-//			// This test case depends from previous case, trigger should be resolved.
-//			[
-//				[
-//					'main_filter' => [
-//						'groupid' => 'Group to check Monitoring-> Overview',
-//						'type' => 'Triggers'
-//					],
-//					'triggers_status' => 'Recent problems',
-//					'result_hosts' => [
-//						'1_Host_to_check_Monitoring_Overview', '3_Host_to_check_Monitoring_Overview'
-//					],
-//					'result_triggers' => [
-//						'1_trigger_Average', '1_trigger_Disaster', '1_trigger_High', '1_trigger_Not_classified',
-//						'1_trigger_Warning', '2_trigger_Information',
-//						'3_trigger_Average', '3_trigger_Disaster'
-//					]
-//				]
-//			],
+			// Triggers status option in filter.
+			// Make trigger in problem state.
+			[
+				[
+					'main_filter' => [
+						'groupid' => 'Group to check Monitoring-> Overview',
+						'type' => 'Triggers'
+					],
+					'triggers_status' => 'Recent problems',
+					'problem' => ['3_trigger_Disaster' => TRIGGER_VALUE_TRUE],
+					'result_hosts' => [
+						'1_Host_to_check_Monitoring_Overview', '3_Host_to_check_Monitoring_Overview'
+					],
+					'result_triggers' => [
+						'1_trigger_Average', '1_trigger_Disaster', '1_trigger_High', '1_trigger_Not_classified',
+						'1_trigger_Warning', '2_trigger_Information', '3_trigger_Average', '3_trigger_Disaster'
+					]
+				]
+			],
+			// This test case depends from previous case, trigger should be in problem state.
+			[
+				[
+					'main_filter' => [
+						'groupid' => 'Group to check Monitoring-> Overview',
+						'type' => 'Triggers'
+					],
+					'triggers_status' => 'Problems',
+					'result_hosts' => [
+						'1_Host_to_check_Monitoring_Overview', '3_Host_to_check_Monitoring_Overview'
+					],
+					'result_triggers' => [
+						'1_trigger_Average', '1_trigger_Disaster', '1_trigger_High', '1_trigger_Not_classified',
+						'1_trigger_Warning', '2_trigger_Information', '3_trigger_Average', '3_trigger_Disaster'
+					]
+				]
+			],
+			// Make trigger in resolved state.
+			[
+				[
+					'main_filter' => [
+						'groupid' => 'Group to check Monitoring-> Overview',
+						'type' => 'Triggers'
+					],
+					'triggers_status' => 'Problems',
+					'problem' => ['3_trigger_Disaster' => TRIGGER_VALUE_FALSE],
+					'result_hosts' => [
+						'1_Host_to_check_Monitoring_Overview', '3_Host_to_check_Monitoring_Overview'
+					],
+					'result_triggers' => [
+						'1_trigger_Average', '1_trigger_Disaster', '1_trigger_High', '1_trigger_Not_classified',
+						'1_trigger_Warning', '2_trigger_Information', '3_trigger_Average'
+					]
+				]
+			],
+			// This test case depends from previous case, trigger should be resolved.
+			[
+				[
+					'main_filter' => [
+						'groupid' => 'Group to check Monitoring-> Overview',
+						'type' => 'Triggers'
+					],
+					'triggers_status' => 'Recent problems',
+					'result_hosts' => [
+						'1_Host_to_check_Monitoring_Overview', '3_Host_to_check_Monitoring_Overview'
+					],
+					'result_triggers' => [
+						'1_trigger_Average', '1_trigger_Disaster', '1_trigger_High', '1_trigger_Not_classified',
+						'1_trigger_Warning', '2_trigger_Information', '3_trigger_Average', '3_trigger_Disaster'
+					]
+				]
+			],
 			// Overview check with type 'Data'.
 			[
 				[

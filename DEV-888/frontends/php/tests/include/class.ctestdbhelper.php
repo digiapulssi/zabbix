@@ -85,7 +85,7 @@ class CTestDbHelper {
 	 * @param array $event_fields
 	 */
 	public static function setTriggerProblem($trigger_name, $value = TRIGGER_VALUE_TRUE, $event_fields = []) {
-		$trigger = DB::find('triggers', ['description' => $trigger_name ]);
+		$trigger = DB::find('triggers', ['description' => $trigger_name]);
 
 		if ($trigger) {
 			$trigger = $trigger[0];
@@ -102,6 +102,7 @@ class CTestDbHelper {
 				'objectid' => $trigger['triggerid'],
 				'value' => $value,
 				'name' => $trigger['description'],
+				'severity' => $trigger['priority'],
 				'clock' => array_key_exists('clock', $event_fields) ? $event_fields['clock'] : time(),
 				'ns' => array_key_exists('ns', $event_fields) ? $event_fields['ns'] : 0,
 				'acknowledged' => array_key_exists('acknowledged', $event_fields)
@@ -116,7 +117,15 @@ class CTestDbHelper {
 
 				if ($value == TRIGGER_VALUE_TRUE) {
 					DB::insert('problem', [$fields], false);
-				} else {
+					DB::update('triggers', [
+						'values' => [
+							'value' => TRIGGER_VALUE_TRUE,
+							'lastchange' => array_key_exists('clock', $event_fields) ? $event_fields['clock'] : time(),
+						],
+						'where' => ['triggerid' => $trigger['triggerid']]
+					]);
+				}
+				else {
 					$problems = DBfetchArray(DBselect(
 						'SELECT *'.
 						' FROM problem'.
@@ -125,6 +134,13 @@ class CTestDbHelper {
 					));
 
 					if ($problems) {
+						DB::update('triggers', [
+							'values' => [
+								'value' => TRIGGER_VALUE_FALSE,
+								'lastchange' => array_key_exists('clock', $event_fields) ? $event_fields['clock'] : time(),
+							],
+							'where' => ['triggerid' => $trigger['triggerid']]
+						]);
 						DB::update('problem', [
 							'values' => [
 								'r_eventid' => $fields['eventid'],
