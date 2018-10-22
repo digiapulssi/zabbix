@@ -27,11 +27,10 @@ class CWidgetFormSvgGraph extends CWidgetForm {
 		$this->data = self::convertDottedKeys($this->data);
 
 		// API doesn't guarantee fields to be retrieved in same order as stored.
-		if (array_key_exists('or', $this->data)) {
-			ksort($this->data['or']);
-		}
-		if (array_key_exists('ds', $this->data)) {
-			ksort($this->data['ds']);
+		foreach (['or', 'ds'] as $field) {
+			if (array_key_exists($field, $this->data)) {
+				ksort($this->data[$field]);
+			}
 		}
 
 		/**
@@ -158,7 +157,8 @@ class CWidgetFormSvgGraph extends CWidgetForm {
 		]))
 			->setDefault(SVG_GRAPH_AXIS_UNITS_AUTO)
 			->setAction('jQuery("#lefty_static_units")'.
-							'.prop("disabled", (jQuery(this).val() != "'.SVG_GRAPH_AXIS_UNITS_STATIC.'"))');
+				'.prop("disabled", (jQuery(this).val() != "'.SVG_GRAPH_AXIS_UNITS_STATIC.'"))'
+			);
 
 		if ($field_lefty->getValue() != SVG_GRAPH_AXIS_SHOW) {
 			$field_lefty_units->setFlags(CWidgetField::FLAG_DISABLED);
@@ -230,7 +230,8 @@ class CWidgetFormSvgGraph extends CWidgetForm {
 		]))
 			->setDefault(SVG_GRAPH_AXIS_UNITS_AUTO)
 			->setAction('jQuery("#righty_static_units")'.
-							'.prop("disabled", (jQuery(this).val() != "'.SVG_GRAPH_AXIS_UNITS_STATIC.'"))');
+				'.prop("disabled", (jQuery(this).val() != "'.SVG_GRAPH_AXIS_UNITS_STATIC.'"))'
+			);
 
 		if ($field_righty->getValue() != SVG_GRAPH_AXIS_SHOW) {
 			$field_righty_units->setFlags(CWidgetField::FLAG_DISABLED);
@@ -273,7 +274,7 @@ class CWidgetFormSvgGraph extends CWidgetForm {
 		// Show legend.
 		$field_legend = (new CWidgetFieldCheckBox('legend', _('Show legend')))
 			->setAction('jQuery("[name=legend_lines]").rangeControl('.
-				'jQuery(this).is(":checked") ? "enable" : "disable"'.
+					'jQuery(this).is(":checked") ? "enable" : "disable"'.
 			');')
 			->setDefault(SVG_GRAPH_LEGEND_TYPE_SHORT);
 
@@ -286,8 +287,7 @@ class CWidgetFormSvgGraph extends CWidgetForm {
 		// Number of lines.
 		$field_legend_lines = (new CWidgetFieldRangeControl('legend_lines', _('Number of rows'),
 			SVG_GRAPH_LEGEND_LINES_MIN, SVG_GRAPH_LEGEND_LINES_MAX
-		))
-			->setDefault(SVG_GRAPH_LEGEND_LINES_MIN);
+		))->setDefault(SVG_GRAPH_LEGEND_LINES_MIN);
 
 		if ($field_legend->getValue() == SVG_GRAPH_LEGEND_TYPE_NONE) {
 			$field_legend_lines->setFlags(CWidgetField::FLAG_DISABLED);
