@@ -4169,6 +4169,7 @@ static void	DCsync_item_preproc(zbx_dbsync_t *sync)
 			}
 		}
 
+		zbx_strpool_release(op->params);
 		zbx_hashset_remove_direct(&config->preprocops, op);
 	}
 
