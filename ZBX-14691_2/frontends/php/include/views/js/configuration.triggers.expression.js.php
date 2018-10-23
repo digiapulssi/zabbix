@@ -20,6 +20,19 @@
 			$('#spec_paramtype').remove();
 			$(this).closest('form').submit();
 		});
+		$.valHooks.input = {
+			get: function(elem) {
+				return elem.value;
+			},
+			set: function(elem, value) {
+				var tmp = elem.value;
+				elem.value = value;
+				"description" === elem.id && tmp !== value && $(elem).trigger("change")
+			}
+		};
+		$('#description').change(function() {
+			$(this).closest('form').submit();
+		});
 	});
 </script>
 
