@@ -377,46 +377,88 @@ class testInheritanceHostPrototype extends CWebTest {
 					'host' => 'Host for inheritance host prototype tests',
 					'host_prototype' => 'Host prototype for Clone {#TEST}',
 					'discovery' => 'Discovery rule for host prototype test',
-					'cloned_name' => 'New Host prototype for Clone {#TEST}',
-					'cloned_visible_name' => 'New Visible name of Host prototype for clone {#TEST}',
-					'checkbox' => true,
+					'cloned_name' => 'Cloned host prototype without macro',
+					'error' => 'Cannot add host prototype',
+					'error_detail' => 'Invalid parameter "/1/host": must contain at least one low-level discovery macro.'
+				]
+			],
+			[
+				[
+					'host' => 'Host for inheritance host prototype tests',
+					'host_prototype' => 'Host prototype for Clone {#TEST}',
+					'discovery' => 'Discovery rule for host prototype test',
+					'cloned_name' => ' ',
+					'error' => 'Page received incorrect data',
+					'error_detail' => 'Incorrect value for field "Host name": cannot be empty.'
+				]
+			],
+			[
+				[
+					'host' => 'Host for inheritance host prototype tests',
+					'host_prototype' => 'Host prototype for Clone {#TEST}',
+					'discovery' => 'Discovery rule for host prototype test',
+					'error' => 'Cannot add host prototype',
+					'error_detail' => 'Host prototype with host name "Host prototype for Clone {#TEST}" already exists in discovery rule "Discovery rule for host prototype test".'
+				]
+			],
+			[
+				[
+					'host' => 'Host for inheritance host prototype tests',
+					'host_prototype' => 'Host prototype for Clone {#TEST}',
+					'discovery' => 'Discovery rule for host prototype test',
+					'cloned_name' => 'Cloned host prototype with minimum changed fields {#TEST}',
+				]
+			],
+			[
+				[
+					'host' => 'Host for inheritance host prototype tests',
+					'host_prototype' => 'Host prototype for Clone {#TEST}',
+					'discovery' => 'Discovery rule for host prototype test',
+					'cloned_name' => 'Cloned host prototype {#TEST}',
+					'cloned_visible_name' => 'Visible name of Cloned host prototype {#TEST}',
+					'create_enabled' => true,
 					'hostgroup' => 'Hypervisors',
 					'group_prototype' => 'Clone group prototype {#CLONE_GROUP_PROTO}',
 					'template' => 'Template OS Mac OS X',
-					'inventory' => 'Manual'
+					'inventory' => 'Manual',
+					'check_form' => true
 				]
 			]
 		];
 	}
 
 	/**
-	 * Clone host templated host prototype on host.
+	 * Clone templated host prototype on host.
 	 *
 	 * @dataProvider getCloneData
 	 */
 	public function testInheritanceHostPrototype_Clone($data) {
 		$this->selectHostPrototypeForUpdate('host', $data);
+		$this->zbxTestClickWait('clone');
 
-		$this->zbxTestClick('clone');
-		$this->zbxTestInputTypeOverwrite('host', $data['cloned_name']);
-		$this->zbxTestInputTypeOverwrite('name', $data['cloned_visible_name']);
-
-		if (array_key_exists('checkbox', $data)) {
-			$this->zbxTestCheckboxSelect('status', $data['checkbox']);
+		if (array_key_exists('cloned_name', $data)) {
+			$this->zbxTestInputTypeOverwrite('host', $data['cloned_name']);
+		}
+		if (array_key_exists('cloned_visible_name', $data)) {
+			$this->zbxTestInputTypeOverwrite('name', $data['cloned_visible_name']);
+		}
+		if (array_key_exists('create_enabled', $data)) {
+			$this->zbxTestCheckboxSelect('status', $data['create_enabled']);
 		}
 
-		$this->zbxTestTabSwitch('Groups');
-		// Change host group.
-		if (array_key_exists('hostgroup', $data)) {
-			$this->zbxTestClickXpathWait('//span[@class="subfilter-disable-btn"]');
-			$this->zbxTestMultiselectClear('group_links_');
-			$this->zbxTestClickButtonMultiselect('group_links_');
-			$this->zbxTestLaunchOverlayDialog('Host groups');
-			$this->zbxTestClickLinkText($data['hostgroup']);
-		}
-		// Change host group prototype.
-		if (array_key_exists('group_prototype', $data)) {
-			$this->zbxTestInputClearAndTypeByXpath('//*[@name="group_prototypes[0][name]"]', $data['group_prototype']);
+		// Change groups.
+		if (array_key_exists('hostgroup', $data) || array_key_exists('group_prototype', $data)) {
+			$this->zbxTestTabSwitch('Groups');
+			if (array_key_exists('hostgroup', $data)) {
+				$this->zbxTestClickXpathWait('//span[@class="subfilter-disable-btn"]');
+				$this->zbxTestMultiselectClear('group_links_');
+				$this->zbxTestClickButtonMultiselect('group_links_');
+				$this->zbxTestLaunchOverlayDialog('Host groups');
+				$this->zbxTestClickLinkTextWait($data['hostgroup']);
+			}
+			if (array_key_exists('group_prototype', $data)) {
+				$this->zbxTestInputClearAndTypeByXpath('//*[@name="group_prototypes[0][name]"]', $data['group_prototype']);
+			}
 		}
 
 		// Change template.
@@ -425,8 +467,8 @@ class testInheritanceHostPrototype extends CWebTest {
 			$this->zbxTestClickButtonMultiselect('add_templates_');
 			$this->zbxTestLaunchOverlayDialog('Templates');
 			$this->zbxTestDropdownSelectWait('groupid', 'Templates');
-			$this->zbxTestClickLinkText($data['template']);
-			$this->zbxTestClickXpath('//div[@id="templateTab"]//button[text()="Add"]');
+			$this->zbxTestClickLinkTextWait($data['template']);
+			$this->zbxTestClickXpathWait('//div[@id="templateTab"]//button[text()="Add"]');
 		}
 
 		// Change inventory mode.
@@ -437,14 +479,39 @@ class testInheritanceHostPrototype extends CWebTest {
 
 		$this->zbxTestClick('add');
 
-		$this->zbxTestWaitUntilMessageTextPresent('msg-good', 'Host prototype added');
-		$this->zbxTestCheckFatalErrors();
+		if (array_key_exists('error', $data)) {
+			$this->zbxTestWaitUntilMessageTextPresent('msg-bad', $data['error']);
+			$this->zbxTestTextPresent($data['error_detail']);
+		}
+		else {
+			$this->zbxTestWaitUntilMessageTextPresent('msg-good', 'Host prototype added');
+			$this->zbxTestCheckFatalErrors();
 
-		$this->zbxTestTextPresent($data['host_prototype']);
-		$this->zbxTestTextPresent($data['cloned_name']);
+			$this->zbxTestTextPresent($data['host_prototype']);
+			if (array_key_exists('cloned_visible_name', $data)) {
+				$this->zbxTestTextPresent($data['cloned_visible_name']);
+			}
+			else {
+				$this->zbxTestTextPresent($data['cloned_name']);
+			}
 
-		$this->assertEquals(2, DBcount('SELECT NULL FROM hosts WHERE host = '.zbx_dbstr($data['host_prototype'])));
-		$this->assertEquals(1, DBcount('SELECT NULL FROM hosts WHERE host = '.zbx_dbstr($data['cloned_name'])));
+			$this->assertEquals(2, DBcount('SELECT NULL FROM hosts WHERE host = '.zbx_dbstr($data['host_prototype'])));
+			$this->assertEquals(1, DBcount('SELECT NULL FROM hosts WHERE host = '.zbx_dbstr($data['cloned_name'])));
+
+			if (array_key_exists('check_form', $data)) {
+				$this->zbxTestClickLinkTextWait($data['cloned_visible_name']);
+				$this->zbxTestAssertElementValue('host', $data['cloned_name']);
+				$this->zbxTestAssertElementValue('name', $data['cloned_visible_name']);
+				$this->zbxTestCheckboxSelected('status');
+				$this->zbxTestTabSwitch('Groups');
+				$this->zbxTestMultiselectAssertSelected('group_links_', $data['hostgroup']);
+				$this->zbxTestAssertAttribute('//*[@name="group_prototypes[0][name]"]', 'value' , $data['group_prototype']);
+				$this->zbxTestTabSwitch('Templates');
+				$this->zbxTestAssertElementText('//div[@id="templateTab"]//a', $data['template']);
+				$this->zbxTestTabSwitch('Host inventory');
+				$this->zbxTestAssertAttribute('//label[text()="'.$data['inventory'].'"]/../input', 'checked');
+			}
+		}
 	}
 
 	public static function getDeleteData() {

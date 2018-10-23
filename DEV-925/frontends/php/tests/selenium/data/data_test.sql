@@ -1715,12 +1715,12 @@ INSERT INTO hosts (hostid, host, name, status, description, templateid, flags) V
 INSERT INTO group_prototype (group_prototypeid, hostid, name, groupid, templateid) VALUES (1015, 99010, '', 15, 1004);
 INSERT INTO host_discovery (hostid, parent_hostid, parent_itemid, host, lastcheck, ts_delete) VALUES (99010, NULL, 99084, '', 0, 0);
 
-INSERT INTO hosts (hostid, host, name, status, description, flags) VALUES (99054, 'Host prototype for Clone {#TEST}', 'Visible name of Host prototype for clone {#TEST}', 1, '', 2);
+INSERT INTO hosts (hostid, host, name, status, description, flags) VALUES (99054, 'Host prototype for Clone {#TEST}', 'Host prototype for Clone {#TEST}', 1, '', 2);
 INSERT INTO group_prototype (group_prototypeid, hostid, name, groupid, templateid) VALUES (1023, 99054, '', 15, NULL);
 INSERT INTO group_prototype (group_prototypeid, hostid, name, groupid, templateid) VALUES (1024, 99054, '{#GROUP_PROTO}',NULL, NULL);
 INSERT INTO host_discovery (hostid, parent_hostid, parent_itemid, host, lastcheck, ts_delete) VALUES (99054, NULL, 99083, '', 0, 0);
 
-INSERT INTO hosts (hostid, host, name, status, description, templateid, flags) VALUES (99055, 'Host prototype for Clone {#TEST}', 'Visible name of Host prototype for clone {#TEST}', 1, '', 99054, 2);
+INSERT INTO hosts (hostid, host, name, status, description, templateid, flags) VALUES (99055, 'Host prototype for Clone {#TEST}', 'Host prototype for Clone {#TEST}', 1, '', 99054, 2);
 INSERT INTO group_prototype (group_prototypeid, hostid, name, groupid, templateid) VALUES (1025, 99055, '', 15, 1024);
 INSERT INTO group_prototype (group_prototypeid, hostid, name, groupid, templateid) VALUES (1026, 99055, '{#GROUP_PROTO}',NULL, 1023);
 INSERT INTO host_discovery (hostid, parent_hostid, parent_itemid, host, lastcheck, ts_delete) VALUES (99055, NULL, 99084, '', 0, 0);
