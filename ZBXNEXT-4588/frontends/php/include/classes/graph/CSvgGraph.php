@@ -774,7 +774,8 @@ class CSvgGraph extends CSvg {
 				 */
 				$in_range = ($max_value >= $point && $min_value <= $point);
 				if ($in_range || $metric['options']['type'] != SVG_GRAPH_TYPE_POINTS) {
-					$x = $this->canvas_x + $this->canvas_width - $this->canvas_width * ($this->time_till - $clock + $timeshift) / $time_range;
+					$x = $this->canvas_x + $this->canvas_width
+						- $this->canvas_width * ($this->time_till - $clock + $timeshift) / $time_range;
 					$y = $this->canvas_y + $this->canvas_height * ($max_value - $point) / $value_diff;
 					$paths[$path_num][] = [$x, $y, convert_units([
 						'value' => $point,
@@ -937,8 +938,10 @@ class CSvgGraph extends CSvg {
 			// If problem is never recovered, it will be drown till the end of graph or till current time.
 			$time_to =  ($problem['r_clock'] == 0) ? min($this->time_till, time()) : $problem['r_clock'];
 			$time_range = $this->time_till - $this->time_from;
-			$x1 = $this->canvas_x + $this->canvas_width - $this->canvas_width * ($this->time_till - $problem['clock']) / $time_range;
-			$x2 = $this->canvas_x + $this->canvas_width - $this->canvas_width * ($this->time_till - $time_to) / $time_range;
+			$x1 = $this->canvas_x + $this->canvas_width
+				- $this->canvas_width * ($this->time_till - $problem['clock']) / $time_range;
+			$x2 = $this->canvas_x + $this->canvas_width
+				- $this->canvas_width * ($this->time_till - $time_to) / $time_range;
 
 			if ($this->canvas_x > $x1) {
 				$x1 = $this->canvas_x;
