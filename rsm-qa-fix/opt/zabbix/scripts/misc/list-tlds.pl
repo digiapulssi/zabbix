@@ -51,7 +51,8 @@ foreach (@server_keys)
 
 	if (opt('verbose'))
 	{
-		foreach my $tld (sort {($a =~ /(\d+)/)[0] <=> ($b =~ /(\d+)/)[0]} (@{$tlds_ref}))
+		# sort alphabetically ('abc' cmp 'xyz'), then numerically (tld1 <=> tld2)
+		foreach my $param (sort {(($a =~ /(\d+)/)[0] || 0) <=> (($b =~ /(\d+)/)[0] || 0)} (sort {$a cmp $b} @ARGV))
 		{
 			print("    $tld\n");
 		}
