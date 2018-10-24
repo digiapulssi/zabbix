@@ -2923,6 +2923,7 @@ static void	DCsync_triggers(zbx_dbsync_t *sync)
 
 			zbx_strpool_release(trigger->description);
 			zbx_strpool_release(trigger->expression);
+			zbx_strpool_release(trigger->recovery_expression);
 			zbx_strpool_release(trigger->error);
 			zbx_strpool_release(trigger->correlation_tag);
 
