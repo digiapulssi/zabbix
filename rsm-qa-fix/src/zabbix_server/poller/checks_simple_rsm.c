@@ -2966,8 +2966,6 @@ static int	zbx_resolver_resolve_host(ldns_resolver *res, unsigned int extras, co
 		zbx_vector_str_sort(ips, ZBX_DEFAULT_STR_COMPARE_FUNC);
 		zbx_vector_str_uniq(ips, ZBX_DEFAULT_STR_COMPARE_FUNC);
 	}
-	else
-		zbx_snprintf(err, err_size, "no IPs of host \"%s\" returned from resolver", host);
 
 	ret = SUCCEED;
 out:
