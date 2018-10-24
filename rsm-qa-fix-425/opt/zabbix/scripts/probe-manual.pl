@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl
 
 BEGIN
 {
@@ -8,11 +8,12 @@ use lib $MYDIR;
 
 use strict;
 use warnings;
+
 use RSM;
+use RSMSLV;
 use TLD_constants qw(:api);
 use Data::Dumper;
 use Pusher qw(push_to_trapper);
-use RSMSLV;
 
 # todo phase 1: use these 3 from RSMSLV.pm, e. g. create function there that will do what's done in this script
 use constant PROBE_KEY_MANUAL => 'rsm.probe.status[manual]';
