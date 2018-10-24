@@ -473,6 +473,29 @@ static void	zbx_tls_cert_error_msg(unsigned int flags, char **error)
 
 /******************************************************************************
  *                                                                            *
+ * Function: zbx_tls_get_version                                              *
+ *                                                                            *
+ * Purpose:                                                                   *
+ *     return version of TLS protocol used                                    *
+ *                                                                            *
+ * Parameters:                                                                *
+ *     tls_version_msg  - [OUT] message with information about compiled and   *
+ *                              running TLS protocol version                  *
+ *                                                                            *
+ ******************************************************************************/
+void	zbx_tls_get_version(char **tls_version_msg)
+{
+#if defined(HAVE_GNUTLS)
+	*tls_version_msg = zbx_dsprintf(*tls_version_msg, "\nCompiled with GnuTLS %s\nRunning with GnuTLS %s\n",
+			GNUTLS_VERSION, gnutls_check_version(NULL));
+#elif defined(HAVE_OPENSSL)
+	*tls_version_msg = zbx_dsprintf(*tls_version_msg, "\nCompiled with %s\nRunning with %s\n",
+			OPENSSL_VERSION_TEXT, OpenSSL_version(OPENSSL_VERSION));
+#endif
+}
+
+/******************************************************************************
+ *                                                                            *
  * Function: zbx_tls_parameter_name                                           *
  *                                                                            *
  * Purpose:                                                                   *
