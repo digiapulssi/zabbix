@@ -43,7 +43,7 @@ foreach (@server_keys)
 
 	db_connect($server_key);
 
-	my $tlds_ref = get_tlds(getopt('service'));
+	my $tlds_ref = get_tlds(opt('service') ? getopt('service') : 'dns');
 
 	my $tlds = scalar(@{$tlds_ref});
 
@@ -51,7 +51,8 @@ foreach (@server_keys)
 
 	if (opt('verbose'))
 	{
-		foreach my $tld (@{$tlds_ref})
+		# sort alphabetically ('abc' cmp 'xyz'), then numerically (tld1 <=> tld2)
+		foreach my $param (sort {(($a =~ /(\d+)/)[0] || 0) <=> (($b =~ /(\d+)/)[0] || 0)} (sort {$a cmp $b} @ARGV))
 		{
 			print("    $tld\n");
 		}

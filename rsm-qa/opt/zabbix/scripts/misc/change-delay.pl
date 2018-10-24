@@ -1,4 +1,4 @@
-#!/usr/bin/env perl
+#!/usr/bin/perl
 
 BEGIN
 {
@@ -10,9 +10,9 @@ use lib $MYDIR2;
 
 use strict;
 use warnings;
+
 use RSM;
 use RSMSLV;
-use Getopt::Long;
 
 set_slv_config(get_rsm_config());
 
