@@ -1,10 +1,13 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl
 
 BEGIN
 {
 	our $MYDIR = $0; $MYDIR =~ s,(.*)/.*,$1,; $MYDIR = '.' if ($MYDIR eq $0);
 }
 use lib $MYDIR;
+
+use strict;
+use warnings;
 
 use RSM;
 use RSMSLV;
