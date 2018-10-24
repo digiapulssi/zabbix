@@ -64,7 +64,7 @@
 #define ZBX_EC_DNS_UDP_RES_NOADBIT	-401	/* DNS UDP - No AD bit from local resolver */
 #define ZBX_EC_DNS_UDP_RES_SERVFAIL	-402	/* DNS UDP - Expecting NOERROR RCODE but got SERVFAIL from local resolver */
 #define ZBX_EC_DNS_UDP_RES_NXDOMAIN	-403	/* DNS UDP - Expecting NOERROR RCODE but got NXDOMAIN from local resolver */
-#define ZBX_EC_DNS_UDP_RES_CATCHALL	-404	/* DNS UDP - Expecting NOERROR RCODE but got unexpected from local resolver */
+#define ZBX_EC_DNS_UDP_RES_CATCHALL	-404	/* DNS UDP - Expecting NOERROR RCODE but got unexpecting from local resolver */
 #define ZBX_EC_DNS_UDP_ALGO_UNKNOWN	-405	/* DNS UDP - Unknown cryptographic algorithm */
 #define ZBX_EC_DNS_UDP_ALGO_NOT_IMPL	-406	/* DNS UDP - Cryptographic algorithm not implemented */
 #define ZBX_EC_DNS_UDP_RRSIG_NONE	-407	/* DNS UDP - No RRSIGs where found in any section, and the TLD has the DNSSEC flag enabled */
@@ -123,7 +123,7 @@
 #define ZBX_EC_DNS_TCP_RES_NOADBIT	-801	/* DNS TCP - No AD bit from local resolver */
 #define ZBX_EC_DNS_TCP_RES_SERVFAIL	-802	/* DNS TCP - Expecting NOERROR RCODE but got SERVFAIL from local resolver */
 #define ZBX_EC_DNS_TCP_RES_NXDOMAIN	-803	/* DNS TCP - Expecting NOERROR RCODE but got NXDOMAIN from local resolver */
-#define ZBX_EC_DNS_TCP_RES_CATCHALL	-804	/* DNS TCP - Expecting NOERROR RCODE but got unexpected from local resolver */
+#define ZBX_EC_DNS_TCP_RES_CATCHALL	-804	/* DNS TCP - Expecting NOERROR RCODE but got unexpecting from local resolver */
 #define ZBX_EC_DNS_TCP_ALGO_UNKNOWN	-805	/* DNS TCP - Unknown cryptographic algorithm */
 #define ZBX_EC_DNS_TCP_ALGO_NOT_IMPL	-806	/* DNS TCP - Cryptographic algorithm not implemented */
 #define ZBX_EC_DNS_TCP_RRSIG_NONE	-807	/* DNS TCP - No RRSIGs where found in any section, and the TLD has the DNSSEC flag enabled */
@@ -160,7 +160,7 @@
 #define ZBX_EC_RDDS80_ECON		-256	/* RDDS80 - Error opening connection to server */
 #define ZBX_EC_RDDS80_EHTTP		-257	/* RDDS80 - Error in HTTP protocol */
 #define ZBX_EC_RDDS80_EHTTPS		-258	/* RDDS80 - Error in HTTPS protocol */
-#define ZBX_EC_RDDS80_EMAXREDIRECTS	-259	/* RDDS80 - Maximum HTTP redirects were hit while trying to connect to RDDS server */
+#define ZBX_EC_RDDS80_EMAXREDIRECTS	-259	/* RDDS80 - Maximum HTTP redirects were hit while trying to connect */
 #define ZBX_EC_RDDS80_HTTP_BASE		-300	/* RDDS80 - Expecting HTTP status code 200 but got xxx */
 /* RDAP */
 #define ZBX_EC_RDAP_NOTLISTED		-100	/* The TLD is not listed in the Bootstrap Service Registry for Domain Name Space */

@@ -598,9 +598,6 @@ define('SCREEN_MAX_SIZE', 100);
 
 define('DEFAULT_LATEST_ISSUES_CNT', 20);
 
-// See comment in profile.php why it was introduced.
-define('DEFAULT_LATEST_DATA_SEARCH_LIMIT', 1000);
-
 // alignments
 define('HALIGN_DEFAULT',	0);
 define('HALIGN_CENTER',		0);

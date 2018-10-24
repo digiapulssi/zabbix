@@ -1697,7 +1697,7 @@ sub __get_dns_test_values
 				fail("internal error: Name Server,IP of item $key (itemid:$itemid) not found");
 			}
 
-			$result->{$probe}->{$nsip}->{$clock} = $value;
+			$result->{$probe}->{$nsip}->{$clock} = get_detailed_result($services{'dns'}{'valuemaps'}, $value);
 		}
 	}
 
@@ -1826,7 +1826,7 @@ sub __get_rdds_test_values
 			fail("unknown RDDS port in item (id:$itemid)");
 		}
 
-		$pre_result{$probe}->{$interface}->{$clock}->{$type} = ($type eq 'rtt' ? $value : int($value));
+		$pre_result{$probe}->{$interface}->{$clock}->{$type} = ($type eq 'rtt') ? get_detailed_result($services{'rdds'}{$interface}{'valuemaps'}, $value) : int($value);
 	}
 
 	my $str_rows_ref = db_select("select itemid,value,clock from history_str where itemid in ($str_itemids_str) and " . sql_time_condition($start, $end). " order by clock");
@@ -1953,7 +1953,7 @@ sub __get_epp_test_values
 
 		my $type = __get_epp_dbl_type($key);
 
-		$result{$probe}->{$clock}->{$type} = $value;
+		$result{$probe}->{$clock}->{$type} = get_detailed_result($services{'epp'}{'valuemaps'}, $value);
 	}
 
 	my $str_rows_ref = db_select("select itemid,value,clock from history_str where itemid in ($str_itemids_str) and " . sql_time_condition($start, $end). " order by clock");

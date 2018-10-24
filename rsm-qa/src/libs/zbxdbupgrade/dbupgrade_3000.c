@@ -2448,40 +2448,6 @@ static int	DBpatch_3000221(void)
 	return add_mappings(data);
 }
 
-static int	DBpatch_3000222(void)
-{
-	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
-		return SUCCEED;
-
-	if (ZBX_DB_OK > DBexecute("update mappings set newvalue='DNS UDP - Expecting NOERROR RCODE but got unexpected"
-			" from local resolver' where mappingid=" ZBX_FS_UI64, 12042))
-	{
-		return FAIL;
-	}
-
-	if (ZBX_DB_OK > DBexecute("update mappings set newvalue='DNS TCP - Expecting NOERROR RCODE but got unexpected"
-			" from local resolver' where mappingid=" ZBX_FS_UI64, 12096))
-	{
-		return FAIL;
-	}
-
-	return SUCCEED;
-}
-
-static int	DBpatch_3000223(void)
-{
-	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
-		return SUCCEED;
-
-	if (ZBX_DB_OK > DBexecute("update mappings set newvalue='RDDS80 - Maximum HTTP redirects were hit while trying"
-			" to connect to RDDS server' where mappingid=" ZBX_FS_UI64, 13576))
-	{
-		return FAIL;
-	}
-
-	return SUCCEED;
-}
-
 #endif
 
 DBPATCH_START(3000)
@@ -2550,7 +2516,5 @@ DBPATCH_ADD(3000218, 0, 0)	/* add value mappings for new DNS error codes: -408, 
 DBPATCH_ADD(3000219, 0, 0)	/* add item dnssec.enabled to all "Template <TLD>" and hosts it is linked to */
 DBPATCH_ADD(3000220, 0, 0)	/* remove 'ms' units from item rdap.rtt */
 DBPATCH_ADD(3000221, 0, 0)	/* remove 6 obsoleted value mappings add 2 new errors related to hitting max HTTP redirects */
-DBPATCH_ADD(3000222, 0, 0)	/* fix value mapping typo 'unexpecting' => 'unexpected' */
-DBPATCH_ADD(3000223, 0, 0)	/* fix value mapping typo 'RDAP' => 'RDDS' */
 
 DBPATCH_END()

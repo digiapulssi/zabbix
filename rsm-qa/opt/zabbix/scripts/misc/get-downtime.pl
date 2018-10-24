@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -w
 
 BEGIN
 {
@@ -7,9 +7,6 @@ BEGIN
 }
 use lib $MYDIR;
 use lib $MYDIR2;
-
-use strict;
-use warnings;
 
 use RSM;
 use RSMSLV;

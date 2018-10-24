@@ -1,8 +1,7 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -w
 
 use strict;
 use warnings;
-
 use Getopt::Long;
 use JSON::XS;
 use Path::Tiny qw(path);

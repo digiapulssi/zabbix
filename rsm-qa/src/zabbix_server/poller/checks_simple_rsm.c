@@ -2966,6 +2966,8 @@ static int	zbx_resolver_resolve_host(ldns_resolver *res, unsigned int extras, co
 		zbx_vector_str_sort(ips, ZBX_DEFAULT_STR_COMPARE_FUNC);
 		zbx_vector_str_uniq(ips, ZBX_DEFAULT_STR_COMPARE_FUNC);
 	}
+	else
+		zbx_snprintf(err, err_size, "no IPs of host \"%s\" returned from resolver", host);
 
 	ret = SUCCEED;
 out:
@@ -3749,7 +3751,7 @@ int	check_rsm_rdds(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 		if (0 == ips43.values_num)
 		{
 			rtt43 = ZBX_EC_INTERNAL_IP_UNSUP;
-			zbx_rsm_errf(log_fd, "RDDS43 \"%s\": IP address(es) of host not supported by the Probe",
+			zbx_rsm_errf(log_fd, "RDDS43 \"%s\": IP address(es) of host not supported by this probe",
 					random_host);
 		}
 	}
@@ -3853,7 +3855,7 @@ int	check_rsm_rdds(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 	if (0 == ips80.values_num)
 	{
 		rtt80 = ZBX_EC_INTERNAL_IP_UNSUP;
-		zbx_rsm_errf(log_fd, "RDDS80 \"%s\": IP address(es) of host not supported by the Probe", random_host);
+		zbx_rsm_errf(log_fd, "RDDS80 \"%s\": IP address(es) of host not supported by this probe", random_host);
 		goto out;
 	}
 
@@ -4177,7 +4179,7 @@ int	check_rsm_rdap(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 	if (0 == ips.values_num)
 	{
 		rtt = ZBX_EC_INTERNAL_IP_UNSUP;
-		zbx_rsm_errf(log_fd, "RDAP \"%s\": IP address(es) of host \"%s\" are not supported by the Probe",
+		zbx_rsm_errf(log_fd, "RDAP \"%s\": IP address(es) of host \"%s\" are not supported by this probe",
 				base_url, domain_part);
 		goto out;
 	}

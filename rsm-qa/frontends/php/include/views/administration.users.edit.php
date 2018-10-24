@@ -190,10 +190,6 @@ $userFormList
 		(new CNumericBox('rows_per_page', $this->data['rows_per_page'], 6))
 			->setWidth(ZBX_TEXTAREA_NUMERIC_STANDARD_WIDTH)
 	)
-	->addRow(_('Latest data search limit'),
-		(new CNumericBox('search_limit_latest', $this->data['search_limit_latest'], 6))
-			->setWidth(ZBX_TEXTAREA_NUMERIC_STANDARD_WIDTH)
-	)
 	->addRow(_('URL (after login)'),
 		(new CTextBox('url', $this->data['url']))->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
 	);

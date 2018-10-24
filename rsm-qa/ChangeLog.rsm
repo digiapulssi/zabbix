@@ -1,13 +1,3 @@
-Changes for rsm1.1.0rc29
-
-Bug fixes:
-....I..... [417] removed error code description from SLA API measurement files (dimir)
-..F....... [425] implemented customizable search limit for latest data items list (miks)
-....I..... [422] fixed unspecified service error in list-tlds.pl (dimir)
-....I..PS. [sub-414] fixed typo in value mapping of max redirects error (dimir)
-....I..... [sub-423] added missing colon to SLV log message timestamp (yurii)
-
---------------------------------------------------------------------------------
 Changes for rsm1.1.0rc28
 
 Bug fixes:

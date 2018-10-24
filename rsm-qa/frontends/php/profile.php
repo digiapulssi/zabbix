@@ -51,7 +51,6 @@ $fields = [
 	'url' =>				[T_ZBX_STR, O_OPT, null, null, 'isset({update})'],
 	'refresh' => [T_ZBX_INT, O_OPT, null, BETWEEN(0, SEC_PER_HOUR), 'isset({update})', _('Refresh (in seconds)')],
 	'rows_per_page' => [T_ZBX_INT, O_OPT, null, BETWEEN(1, 999999), 'isset({update})', _('Rows per page')],
-	'search_limit_latest' => [T_ZBX_INT, O_OPT, null, BETWEEN(1, 10000), 'isset({update})', _('Latest data search limit)')],
 	'change_password' =>	[T_ZBX_STR, O_OPT, null, null, null],
 	'user_medias' =>		[T_ZBX_STR, O_OPT, null, NOT_EMPTY, null],
 	'user_medias_to_del' =>	[T_ZBX_STR, O_OPT, null, null, null],
@@ -151,23 +150,6 @@ elseif (hasRequest('update')) {
 		DBstart();
 		updateMessageSettings($messages);
 
-		/**
-		 * This is introduced as part of ICA-425 to solve performance issue in latest data page. At the moment of
-		 * development there was ~640K items that script tried to fetch from database, making page unusable.
-		 *
-		 * To fix that, there is a new profile value introduced that serves only for latest data page as search limit.
-		 *
-		 * Some aspects that was considered preferring this solution:
-		 * - Global search limit wasn't appropriate here because it was larger than recommended;
-		 * - New config field demands changes in database schema (new profile doesn't);
-		 * - Pagination is not appropriate in latest data since it requests items and than groups them for hosts.
-		 *   Pagination would distribute single host items between multiple pages, affecting usability in bad way.
-		 */
-		if (hasRequest('search_limit_latest')) {
-			CProfile::update('web.latest.php.search_limit', (int) getRequest('search_limit_latest'), PROFILE_TYPE_INT);
-			CProfile::flush();
-		}
-
 		$result = API::User()->updateProfile($user);
 
 		if ($result && CwebUser::$data['type'] > USER_TYPE_ZABBIX_USER) {
@@ -214,7 +196,6 @@ $data['alias'] = CWebUser::$data['alias'];
 $data['form'] = getRequest('form');
 $data['form_refresh'] = getRequest('form_refresh', 0);
 $data['autologout'] = getRequest('autologout');
-$data['search_limit_latest'] = CProfile::get('web.latest.php.search_limit', DEFAULT_LATEST_DATA_SEARCH_LIMIT);
 
 // render view
 $usersView = new CView('administration.users.edit', $data);
