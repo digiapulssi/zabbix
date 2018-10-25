@@ -121,7 +121,11 @@ my $POD2USAGE_FILE;	# usage message file
 
 my ($_global_sql, $_global_sql_bind_values, $_lock_fh);
 
+my $get_stats = 0;
 my $start_time;
+my $sql_start;
+my $sql_end;
+my $sql_send;
 my $sql_time = 0.0;
 my $sql_count = 0;
 
@@ -699,6 +703,35 @@ sub tld_service_enabled
 	return tld_interface_enabled($tld, $service, $from, $till);
 }
 
+# Collect the itemids of 'enabled' items in one SQL to improve performance of the function
+#
+# {
+#     'rdds.enabled' => {
+#         'tld1' => [
+#             itemid1,
+#             itemid2,
+#             ...
+#         ],
+#         'tld2' => [
+#             ...
+#         ]
+#     },
+#     'dnssec.enabled' => [
+#         'tld1' => [
+#             itemid1,
+#             itemid2,
+#             ...
+#         ],
+#         'tld2' => [
+#             ...
+#         ]
+#         ...
+#     },
+#     ...
+# }
+
+my %service_itemids;
+
 sub tld_interface_enabled
 {
 	my $tld = shift;
@@ -721,31 +754,92 @@ sub tld_interface_enabled
 		$item_key = lc($interface) . ".enabled";
 	}
 
-	my $rows_ref = db_select(
-		"select max(hi.value)".
-		" from hosts h,items i,history_uint hi".
-		" where h.hostid=i.hostid".
-			" and i.itemid=hi.itemid".
-			" and h.status=0".
-			" and h.host like '$tld %'".
-			" and i.key_='$item_key'".
-			" and ".sql_time_condition($from, $till, "hi.clock"));
+	if (!defined($service_itemids{$item_key}))
+	{
+		$service_itemids{$item_key} = {};
 
-	return $rows_ref->[0]->[0] if (defined($rows_ref->[0]->[0]));
+		my $tlds_ref = get_tlds('dns');	# filter from all
 
-	$rows_ref = db_select(
-		"select max(hi.value)".
-		" from hosts h,items i,history_uint hi".
-		" where h.hostid=i.hostid".
-			" and i.itemid=hi.itemid".
-			" and h.status=0".
-			" and h.host like '$tld %'".
-			" and i.key_='$item_key'".
-			" and hi.clock>$from");
+		if (scalar(@{$tlds_ref}) != 0)
+		{
+			my @host_patterns;
 
-	return $rows_ref->[0]->[0] if (defined($rows_ref->[0]->[0]));
+			map {push(@host_patterns, "'$_ %'")} (@{$tlds_ref});
 
-	# no item values, look for current macro value
+			my $rows_ref = db_select(
+				"select hostid,substring_index(host, ' ', 1)".
+				" from hosts".
+				" where host like " . join(' or host like ', @host_patterns));
+
+			my %hostid_to_tld;	# hostid => 'tld'
+
+			map {$hostid_to_tld{$_->[0]} = $_->[1]} (@{$rows_ref});
+
+			$rows_ref = db_select(
+				"select itemid,hostid".
+				" from items".
+				" where key_='$item_key'".
+					" and hostid in (" . join(',', keys(%hostid_to_tld)) . ")");
+
+			foreach my $row_ref (@{$rows_ref})
+			{
+				my $itemid = $row_ref->[0];
+				my $hostid = $row_ref->[1];
+
+				my $_tld = $hostid_to_tld{$hostid};
+
+				push(@{$service_itemids{$item_key}{$_tld}}, $itemid);
+			}
+		}
+	}
+
+	if (scalar(@{$service_itemids{$item_key}{$tld}}) != 0)
+	{
+		# find the latest value but make sure to specify time bounds, relatively to $till
+
+		my @conditions = (
+			[sql_time_condition($till - 0 * 3600 -  1 * 60 + 1, $till), "desc"],	# go back 1 minute
+			[sql_time_condition($till - 0 * 3600 - 30 * 60 + 1, $till), "desc"],	# go back 30 minutes
+			[sql_time_condition($till - 6 * 3600 -  0 * 60 + 1, $till), "desc"],	# go back 6 hours
+			[sql_time_condition($till + 1, $till + 24 * 3600), "asc"]		# go forward 1 day
+		);
+
+		my $condition_index = 0;
+
+		while ($condition_index < scalar(@conditions))
+		{
+			my $condition = $conditions[$condition_index]->[0];
+			my $order = $conditions[$condition_index]->[1];
+
+			my $rows_ref = db_select_binds(
+				"select value".
+				" from history_uint".
+				" where itemid=?".
+					" and $condition".
+				" order by clock $order".
+				" limit 1",
+				$service_itemids{$item_key}{$tld});
+
+			my $found = 0;
+
+			foreach my $row_ref (@{$rows_ref})
+			{
+				if (defined($row_ref->[0]))
+				{
+					$found = 1;
+
+					return 1 if ($row_ref->[0]);
+				}
+			}
+
+			return 0 if ($found);
+
+			$condition_index++;
+		}
+	}
+
+	# try the Template macro
+
 	my $host = "Template $tld";
 
 	my $macro;
@@ -763,16 +857,19 @@ sub tld_interface_enabled
 		$macro = '{$RSM.TLD.' . uc($interface) . '.ENABLED}';
 	}
 
-	$rows_ref = db_select(
+	my $rows_ref = db_select(
 		"select hm.value".
 		" from hosts h,hostmacro hm".
 		" where h.hostid=hm.hostid".
 			" and h.host='$host'".
 			" and hm.macro='$macro'");
 
-	return $rows_ref->[0]->[0] if (scalar(@{$rows_ref}) != 0);
+	if (scalar(@{$rows_ref}) != 0)
+	{
+		return $rows_ref->[0]->[0];
+	}
 
-	wrn("macro \"$macro\" does not exist at \"$host\", assuming disabled");
+	wrn("macro \"$macro\" does not exist at \"$host\", assuming $interface disabled");
 
 	return 0;
 }
@@ -864,10 +961,9 @@ sub db_select
 
 	undef($_global_sql_bind_values);
 
-	my $sec;
-	if (opt('stats'))
+	if ($get_stats)
 	{
-		$sec = Time::HiRes::time();
+		$sql_start = Time::HiRes::time();
 	}
 
 	my $sth = $dbh->prepare($_global_sql)
@@ -875,33 +971,27 @@ sub db_select
 
 	dbg("[$_global_sql]");
 
-	my ($start, $exe, $fetch, $total);
-	if (opt('warnslow'))
-	{
-		$start = Time::HiRes::time();
-	}
-
 	$sth->execute()
 		or fail("cannot execute [$_global_sql]: ", $sth->errstr);
 
 	if (opt('warnslow'))
 	{
-		$exe = Time::HiRes::time();
+		$sql_send = Time::HiRes::time();
 	}
 
 	my $rows_ref = $sth->fetchall_arrayref();
 
-	if (opt('warnslow'))
+	if ($get_stats)
 	{
-		my $now = Time::HiRes::time();
-		$total = $now - $start;
+		$sql_end = Time::HiRes::time();
+		$sql_time += ($sql_end - $sql_start);
+		$sql_count++;
+	}
 
-		if ($total > getopt('warnslow'))
-		{
-			$fetch = $now - $exe;
-			$exe = $exe - $start;
-			wrn("slow query: [$_global_sql] took ", sprintf("%.3f seconds (execute:%.3f fetch:%.3f)", $total, $exe, $fetch));
-		}
+	if (opt('warnslow') && (($sql_end - $sql_start) > getopt('warnslow')))
+	{
+		wrn("slow query: [$_global_sql] took ", sprintf("%.3f seconds (execute:%.3f fetch:%.3f)",
+			($sql_end - $sql_start), ($sql_send - $sql_start), ($sql_end - $sql_send)));
 	}
 
 	if (opt('debug'))
@@ -914,12 +1004,6 @@ sub db_select
 		{
 			dbg(scalar(@{$rows_ref}), " rows");
 		}
-	}
-
-	if (opt('stats'))
-	{
-		$sql_time += Time::HiRes::time() - $sec;
-		$sql_count++;
 	}
 
 	return $rows_ref;
@@ -936,14 +1020,14 @@ sub db_select_binds
 
 	dbg("[$_global_sql] ", join(',', @{$_global_sql_bind_values}));
 
-	my ($start, $exe, $fetch, $total);
+	my ($total);
 
 	my @rows;
 	foreach my $bind_value (@{$_global_sql_bind_values})
 	{
-		if (opt('warnslow'))
+		if (opt('stats'))
 		{
-			$start = time();
+			$sql_start = Time::HiRes::time();
 		}
 
 		$sth->execute($bind_value)
@@ -951,7 +1035,7 @@ sub db_select_binds
 
 		if (opt('warnslow'))
 		{
-			$exe = time();
+			$sql_send = Time::HiRes::time();
 		}
 
 		while (my @row = $sth->fetchrow_array())
@@ -959,18 +1043,17 @@ sub db_select_binds
 			push(@rows, \@row);
 		}
 
-		if (opt('warnslow'))
+		if ($get_stats)
 		{
-			my $now = time();
-			$total = $now - $start;
+			$sql_end = Time::HiRes::time();
+			$sql_time += ($sql_end - $sql_start);
+			$sql_count++;
+		}
 
-			if ($total > getopt('warnslow'))
-			{
-				$fetch = $now - $exe;
-				$exe = $exe - $start;
-
-				wrn("slow query: [$_global_sql], bind values: [", join(',', @{$_global_sql_bind_values}), "] took ", sprintf("%.3f seconds (execute:%.3f fetch:%.3f)", $total, $exe, $fetch));
-			}
+		if (opt('warnslow') && (($sql_end - $sql_start) > getopt('warnslow')))
+		{
+			wrn("slow query: [$_global_sql] took ", sprintf("%.3f seconds (execute:%.3f fetch:%.3f)",
+				($sql_end - $sql_start), ($sql_send - $sql_start), ($sql_end - $sql_send)));
 		}
 	}
 
@@ -978,7 +1061,7 @@ sub db_select_binds
 	{
 		if (scalar(@rows) == 1)
 		{
-			dbg(join(',', map {$_ // 'UNDEF'} ($rows[0])));
+			dbg(join(',', map {$_ // 'UNDEF'} (@{$rows[0]})));
 		}
 		else
 		{
@@ -994,10 +1077,9 @@ sub db_exec
 {
 	$_global_sql = shift;
 
-	my $sec;
-	if (opt('stats'))
+	if ($get_stats)
 	{
-		$sec = time();
+		$sql_start = Time::HiRes::time();
 	}
 
 	my $sth = $dbh->prepare($_global_sql)
@@ -1005,29 +1087,22 @@ sub db_exec
 
 	dbg("[$_global_sql]");
 
-	my ($start, $total);
-	if (opt('warnslow'))
-	{
-		$start = time();
-	}
+	my ($total);
 
 	$sth->execute()
 		or fail("cannot execute [$_global_sql]: ", $sth->errstr);
 
-	if (opt('warnslow'))
+	if ($get_stats)
 	{
-		$total = time() - $start;
-
-		if ($total > getopt('warnslow'))
-		{
-			wrn("slow query: [$_global_sql] took ", sprintf("%.3f seconds", $total));
-		}
+		$sql_end = Time::HiRes::time();
+		$sql_time += ($sql_end - $sql_start);
+		$sql_count++;
 	}
 
-	if (opt('stats'))
+	if (opt('warnslow') && (($sql_end - $sql_start) > getopt('warnslow')))
 	{
-		$sql_time += time() - $sec;
-		$sql_count++;
+		wrn("slow query: [$_global_sql] took ", sprintf("%.3f seconds (execute:%.3f)",
+			($sql_end - $sql_start), ($sql_send - $sql_start)));
 	}
 
 	return $sth->{mysql_insertid};
@@ -1932,12 +2007,6 @@ sub get_downtime
 	my $count = 0;
 	my $downtime = 0;
 
-	my $sec;
-	if (opt('stats'))
-	{
-		$sec = time();
-	}
-
 	my $fetches = 0;
 
 	foreach (@$incidents)
@@ -1960,7 +2029,7 @@ sub get_downtime
 			"select value,clock".
 			" from history_uint".
 			" where itemid=$itemid".
-				" and clock between $period_from and $period_till".
+				" and " . sql_time_condition($period_from, $period_till).
 			" order by clock");
 
 		my $is_down = 0;	# 1 if service is "Down"
@@ -1995,14 +2064,6 @@ sub get_downtime
 
 	$downtime = int($downtime / 60);	# minutes;
 
-	if (opt('stats'))
-	{
-		my $sec_cur = time() - $sec;
-		$sql_time += $sec_cur;
-
-		info(sprintf("down:%dm time:%.3fs fetches:%d", $downtime, $sec_cur, $fetches));
-	}
-
 	return $downtime;
 }
 
@@ -2015,18 +2076,18 @@ sub get_downtime_prepare
 			" and clock between ? and ?".
 		" order by clock";
 
-	my $sec;
-	if (opt('stats'))
+	if ($get_stats)
 	{
-		$sec = time();
+		$sql_start = Time::HiRes::time();
 	}
 
 	my $sth = $dbh->prepare($query)
 		or fail("cannot prepare [$query]: ", $dbh->errstr);
 
-	if (opt('stats'))
+	if ($get_stats)
 	{
-		$sql_time += time() - $sec;
+		$sql_end = Time::HiRes::time();
+		$sql_time += ($sql_end - $sql_start);
 	}
 
 	dbg("[$query]");
@@ -2062,12 +2123,6 @@ sub get_downtime_execute
 	my $count = 0;
 	my $downtime = 0;
 
-	my $sec;
-	if (opt('stats'))
-	{
-		$sec = time();
-	}
-
 	my $fetches = 0;
 
 	foreach (@$incidents)
@@ -2083,6 +2138,11 @@ sub get_downtime_execute
 
 		next if ($false_positive != 0);
 
+		if ($get_stats)
+		{
+			$sql_start = Time::HiRes::time();
+		}
+
 		$sth->bind_param(1, $itemid);
 		$sth->bind_param(2, $period_from);
 		$sth->bind_param(3, $period_till);
@@ -2092,6 +2152,13 @@ sub get_downtime_execute
 
 		my ($value, $clock);
 		$sth->bind_columns(\$value, \$clock);
+
+		if ($get_stats)
+		{
+			$sql_end = Time::HiRes::time();
+			$sql_time += ($sql_end - $sql_start);
+			$sql_count++;
+		}
 
 		my $is_down = 0;	# 1 if service is "Down"
 					# 0 if it is "Up", "Up-inconclusive-no-data" or "Up-inconclusive-no-probes"
@@ -2123,14 +2190,6 @@ sub get_downtime_execute
 	}
 
 	$downtime = int($downtime / 60);	# minutes;
-
-	if (opt('stats'))
-	{
-		my $sec_cur = time() - $sec;
-		$sql_time += $sec_cur;
-
-		info(sprintf("down:%dm time:%.3fs fetches:%d", $downtime, $sec_cur, $fetches));
-	}
 
 	return $downtime;
 }
@@ -2691,6 +2750,8 @@ sub parse_opts
 	setopt('nolog') if (opt('dry-run') || opt('debug'));
 
 	$start_time = time() if (opt('stats'));
+
+	$get_stats = 1 if (opt('stats') || opt('warnslow'));
 }
 
 sub parse_avail_opts
