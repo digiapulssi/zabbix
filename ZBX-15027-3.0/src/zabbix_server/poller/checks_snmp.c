@@ -2155,7 +2155,15 @@ out:
 
 void	zbx_init_snmp(void)
 {
+	sigset_t	mask, orig_mask;
+
+	sigemptyset(&mask);
+	sigaddset(&mask, SIGTERM);
+	sigprocmask(SIG_BLOCK, &mask, &orig_mask);
+
 	init_snmp(progname);
+
+	sigprocmask(SIG_SETMASK, &orig_mask, NULL);
 }
 
 #endif	/* HAVE_NETSNMP */
