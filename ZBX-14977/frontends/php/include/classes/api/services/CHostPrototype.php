@@ -196,7 +196,10 @@ class CHostPrototype extends CHostBase {
 				]),
 				'inventory' => new CSchemaValidator([
 					'validators' => [
-						'inventory_mode' => null,
+						'inventory_mode' => new CLimitedSetValidator([
+							'values' => [HOST_INVENTORY_DISABLED, HOST_INVENTORY_MANUAL, HOST_INVENTORY_AUTOMATIC],
+							'messageInvalid' => _('Unsupported inventory mode "%2$s" for host prototype "%1$s".')
+						])
 					],
 					'messageUnsupported' => _('Unsupported parameter "%2$s" for host prototype %1$s host inventory.'),
 				]),
