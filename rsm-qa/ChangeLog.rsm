@@ -1,3 +1,9 @@
+Changes for rsm1.1.0rc30
+
+Bug fixes:
+....I..... [424] fixed performance issue in rolling week calculation script that was taking more than a minute (dimir)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.1.0rc29
 
 Bug fixes:
