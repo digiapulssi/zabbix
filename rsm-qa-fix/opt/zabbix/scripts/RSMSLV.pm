@@ -781,6 +781,8 @@ sub tld_interface_enabled
 				" where key_='$item_key'".
 					" and hostid in (" . join(',', keys(%hostid_to_tld)) . ")");
 
+			map {$service_itemids{$item_key}{$_} = []} (@{$tlds_ref});
+
 			foreach my $row_ref (@{$rows_ref})
 			{
 				my $itemid = $row_ref->[0];
