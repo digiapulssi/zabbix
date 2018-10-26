@@ -65,7 +65,7 @@ my $rdap_items = get_templated_items_like("RDAP", $cfg_rdap_key_in);;
 
 while ($period > 0)
 {
-	my ($period_from, $period_till, $value_ts) = get_interval_bounds($delay, $from);
+	my ($period_from, $period_till, $value_ts) = get_cycle_bounds($delay, $from);
 
 	dbg("selecting period ", selected_period($period_from, $period_till), " (value_ts:", ts_str($value_ts), ")");
 
