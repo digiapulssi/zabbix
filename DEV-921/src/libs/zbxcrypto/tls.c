@@ -473,24 +473,20 @@ static void	zbx_tls_cert_error_msg(unsigned int flags, char **error)
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_tls_get_version                                              *
+ * Function: zbx_tls_version                                                  *
  *                                                                            *
- * Purpose:                                                                   *
- *     return version of TLS protocol used                                    *
- *                                                                            *
- * Parameters:                                                                *
- *     tls_version_msg  - [OUT] message with information about compiled and   *
- *                              running TLS protocol version                  *
+ * Purpose: print tls library version on stdout by application request with   *
+ *          parameter '-V'                                                    *
  *                                                                            *
  ******************************************************************************/
-void	zbx_tls_get_version(char **tls_version_msg)
+void	zbx_tls_version(void)
 {
 #if defined(HAVE_GNUTLS)
-	*tls_version_msg = zbx_dsprintf(*tls_version_msg, "\nCompiled with GnuTLS %s\nRunning with GnuTLS %s\n",
-			GNUTLS_VERSION, gnutls_check_version(NULL));
+	printf("Compiled with GnuTLS %s\nRunning with GnuTLS %s\n", GNUTLS_VERSION, gnutls_check_version(NULL));
 #elif defined(HAVE_OPENSSL)
-	*tls_version_msg = zbx_dsprintf(*tls_version_msg, "\nCompiled with %s\nRunning with %s\n",
-			OPENSSL_VERSION_TEXT, OpenSSL_version(OPENSSL_VERSION));
+	printf("This product includes software developed by the OpenSSL Project for use\n"
+			"in the OpenSSL Toolkit (http://www.openssl.org/).\n\n");
+	printf("Compiled with %s\nRunning with %s\n", OPENSSL_VERSION_TEXT, OpenSSL_version(OPENSSL_VERSION));
 #endif
 }
 
