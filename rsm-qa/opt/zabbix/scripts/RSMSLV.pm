@@ -89,7 +89,7 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		get_itemid_by_hostid get_itemid_like_by_hostid get_itemids_by_host_and_keypart get_lastclock get_tlds
 		get_probes get_nsips get_nsip_items tld_exists tld_service_enabled db_connect db_disconnect
 		get_templated_nsips db_exec tld_interface_enabled
-		db_select db_select_binds set_slv_config get_interval_bounds get_rollweek_bounds get_downtime_bounds
+		db_select db_select_binds set_slv_config get_cycle_bounds get_rollweek_bounds get_downtime_bounds
 		max_avail_time get_probe_times probe_offline_at probes2tldhostids
 		get_probe_online_key_itemid
 		init_values push_value send_values get_nsip_from_key is_service_error get_templated_items_like
@@ -781,6 +781,8 @@ sub tld_interface_enabled
 				" where key_='$item_key'".
 					" and hostid in (" . join(',', keys(%hostid_to_tld)) . ")");
 
+			map {$service_itemids{$item_key}{$_} = []} (@{$tlds_ref});
+
 			foreach my $row_ref (@{$rows_ref})
 			{
 				my $itemid = $row_ref->[0];
@@ -1114,7 +1116,7 @@ sub set_slv_config
 }
 
 # Get time bounds of the last test guaranteed to have all probe results.
-sub get_interval_bounds
+sub get_cycle_bounds
 {
 	my $delay = shift;
 	my $clock = shift;
@@ -1168,7 +1170,7 @@ sub get_downtime_bounds
 	$dt->truncate('to' => 'month');
 	my $from = $dt->epoch;
 
-	return ($from, $till, $from);
+	return ($from, $till, truncate_from($till));
 }
 
 # maximum timestamp for calculation of service availability

@@ -1,3 +1,12 @@
+Changes for rsm1.1.0rc31
+
+Bug fixes:
+....I..... [sub-424] fixed check for existing value in downtime calculation scripts (dimir)
+....I..PS. [418] added dbpatch that links "Template RDAP" to probe hosts that are missing it (yurii)
+....I..... [426] fixed handling --dry-run option in change-macro.pl script (dimir)
+....I..... [427] fixed undefined value error when calling SLA API script (dimir)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.1.0rc30
 
 Bug fixes:

@@ -2482,6 +2482,57 @@ static int	DBpatch_3000223(void)
 	return SUCCEED;
 }
 
+static int	template_is_linked_to_host(const char* templateid, const char* hostid)
+{
+	DB_RESULT	result;
+	DB_ROW		row;
+
+	result = DBselect("select * from hosts_templates where templateid=%s and hostid=%s", templateid, hostid);
+
+	int i=0;
+	while (NULL != (row = DBfetch(result)))
+		i++;
+
+	return (0 < i ? SUCCEED : FAIL);
+}
+
+static int	DBpatch_3000224(void)
+{
+	DB_RESULT	result;
+	DB_ROW		row;
+	int		ret = SUCCEED;
+
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	result = DBselect("select h.hostid from hosts_groups hg,hosts h where hg.hostid=h.hostid and hg.groupid=190");
+
+	if (NULL == result)
+		return FAIL;
+
+	while (NULL != (row = DBfetch(result)) && SUCCEED == ret)
+	{
+		if (SUCCEED == template_is_linked_to_host("99980", row[0]))
+			continue; /* already linked */
+
+		zbx_uint64_t		hostid;
+		zbx_vector_uint64_t	templateids;
+
+		ZBX_STR2UINT64(hostid, row[0]);			/* hostid of probe host */
+		zbx_vector_uint64_create(&templateids);
+		zbx_vector_uint64_reserve(&templateids, 1);
+		zbx_vector_uint64_append(&templateids, 99980);	/* hostid of "Template RDAP" */
+
+		ret = DBcopy_template_elements(hostid, &templateids);
+
+		zbx_vector_uint64_destroy(&templateids);
+	}
+
+	DBfree_result(result);
+
+	return ret;
+}
+
 #endif
 
 DBPATCH_START(3000)
@@ -2552,5 +2603,6 @@ DBPATCH_ADD(3000220, 0, 0)	/* remove 'ms' units from item rdap.rtt */
 DBPATCH_ADD(3000221, 0, 0)	/* remove 6 obsoleted value mappings add 2 new errors related to hitting max HTTP redirects */
 DBPATCH_ADD(3000222, 0, 0)	/* fix value mapping typo 'unexpecting' => 'unexpected' */
 DBPATCH_ADD(3000223, 0, 0)	/* fix value mapping typo 'RDAP' => 'RDDS' */
+DBPATCH_ADD(3000224, 0, 0)	/* link "Template RDAP" template to all probe hosts */
 
 DBPATCH_END()
