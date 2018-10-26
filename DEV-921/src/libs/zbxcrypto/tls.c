@@ -481,7 +481,9 @@ static void	zbx_tls_cert_error_msg(unsigned int flags, char **error)
  ******************************************************************************/
 void	zbx_tls_version(void)
 {
-#if defined(HAVE_GNUTLS)
+#if defined(HAVE_POLARSSL)
+	printf("Compiled with mbed TLS %s\n", POLARSSL_VERSION_STRING_FULL);
+#elif defined(HAVE_GNUTLS)
 	printf("Compiled with GnuTLS %s\nRunning with GnuTLS %s\n", GNUTLS_VERSION, gnutls_check_version(NULL));
 #elif defined(HAVE_OPENSSL)
 	printf("This product includes software developed by the OpenSSL Project for use\n"
