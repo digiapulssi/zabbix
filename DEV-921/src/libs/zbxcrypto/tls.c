@@ -486,8 +486,8 @@ void	zbx_tls_version(void)
 #elif defined(HAVE_GNUTLS)
 	printf("Compiled with GnuTLS %s\nRunning with GnuTLS %s\n", GNUTLS_VERSION, gnutls_check_version(NULL));
 #elif defined(HAVE_OPENSSL)
-	printf("This product includes software developed by the OpenSSL Project for use\n"
-			"in the OpenSSL Toolkit (http://www.openssl.org/).\n\n");
+	printf("This product includes software developed by the OpenSSL Project\n"
+			"for use in the OpenSSL Toolkit (http://www.openssl.org/).\n\n");
 	printf("Compiled with %s\nRunning with %s\n", OPENSSL_VERSION_TEXT, OpenSSL_version(OPENSSL_VERSION));
 #endif
 }
