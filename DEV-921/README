@@ -16,8 +16,8 @@ General Public License for more details.
 Exception for linking with OpenSSL
 
 In addition, as a special exception, we give permission to link the code
-of Zabbix with the OpenSSL project's "OpenSSL" library (or with modified
-versions of it that use the same license as the "OpenSSL" library), and
+of Zabbix with the OpenSSL project OpenSSL library (or with modified
+versions of it that use the same license as the OpenSSL library), and
 distribute the linked executables.
 
 Please see http://www.zabbix.com/ for detailed information about Zabbix.
