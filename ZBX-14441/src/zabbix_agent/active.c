@@ -1312,8 +1312,13 @@ static int	process_eventlog_check(char *server, unsigned short port, ZBX_ACTIVE_
 	}
 out:
 	free_request(&request);
-
-#endif	/* _WINDOWS */
+#else	/* not _WINDOWS */
+	ZBX_UNUSED(server);
+	ZBX_UNUSED(port);
+	ZBX_UNUSED(metric);
+	ZBX_UNUSED(lastlogsize_sent);
+	ZBX_UNUSED(error);
+#endif
 	return ret;
 }
 
