@@ -1,3 +1,9 @@
+Changes for rsm1.1.0rc32
+
+Bug fixes:
+....I..... [sub-417] fixed handling of measurements file integers in SLA API script (dimir)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.1.0rc31
 
 Bug fixes:
