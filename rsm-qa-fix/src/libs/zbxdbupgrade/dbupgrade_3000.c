@@ -2482,18 +2482,17 @@ static int	DBpatch_3000223(void)
 	return SUCCEED;
 }
 
-static int	template_is_linked_to_host(const char* templateid, const char* hostid)
+static int	template_is_linked_to_host(const char *templateid, const char *hostid)
 {
 	DB_RESULT	result;
 	DB_ROW		row;
 
-	result = DBselect("select * from hosts_templates where templateid=%s and hostid=%s", templateid, hostid);
+	result = DBselect("select 1 from hosts_templates where templateid=%s and hostid=%s", templateid, hostid);
 
-	int i=0;
 	while (NULL != (row = DBfetch(result)))
-		i++;
+		return SUCCEED;
 
-	return (0 < i ? SUCCEED : FAIL);
+	return FAIL;
 }
 
 static int	DBpatch_3000224(void)
