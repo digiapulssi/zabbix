@@ -18,22 +18,17 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-require_once dirname(__FILE__) . '/../include/class.cwebtest.php';
+require_once dirname(__FILE__).'/../include/class.cwebtest.php';
 
 /**
  * @backup drules
  */
 class testFormConfigDiscovery extends CWebTest {
+
 	public static function getCreateData() {
 		return [
 			[
 				[
-					'proxy' => 'Active proxy 1',
-					'range' => '192.168.0.1-25',
-					'delay' => '1m',
-					'checks' => [
-						['check_action' => 'add', 'type' => 'HTTP', 'ports' => '7555']
-					],
 					'error' => 'Incorrect value for field "name": cannot be empty.',
 					'check_db' => false
 				]
@@ -45,19 +40,27 @@ class testFormConfigDiscovery extends CWebTest {
 					'range' => '192.168.0.1-25',
 					'delay' => '1m',
 					'checks' => [
-						['check_action' => 'add', 'type' => 'HTTP', 'ports' => '7555']
+						['check_action' => 'New', 'type' => 'HTTP', 'ports' => '7555']
 					],
 					'error' => 'Incorrect value for field "name": cannot be empty.'
 				]
 			],
 			[
 				[
-					'name' => 'Discovery rule with empty IP range',
-					'proxy' => 'Active proxy 1',
-					'range' => ' ',
-					'delay' => '1m',
+					'name' => 'Local network',
 					'checks' => [
-						['check_action' => 'add', 'type' => 'HTTP', 'ports' => '7555']
+						['check_action' => 'New', 'type' => 'HTTPS', 'ports' => '447']
+					],
+					'error' => 'Discovery rule "Local network" already exists.',
+					'check_db' => false
+				]
+			],
+			[
+				[
+					'name' => 'Discovery rule with empty IP range',
+					'range' => ' ',
+					'checks' => [
+						['check_action' => 'New', 'type' => 'FTP', 'ports' => '22']
 					],
 					'error' => 'Incorrect value for field "iprange": cannot be empty.'
 				]
@@ -69,7 +72,7 @@ class testFormConfigDiscovery extends CWebTest {
 					'range' => 'text',
 					'delay' => '1m',
 					'checks' => [
-						['check_action' => 'add', 'type' => 'HTTP', 'ports' => '7555']
+						['check_action' => 'New', 'type' => 'HTTP', 'ports' => '7555']
 					],
 					'error' => 'Incorrect value for field "iprange": invalid address range "text".'
 				]
@@ -80,49 +83,84 @@ class testFormConfigDiscovery extends CWebTest {
 					'proxy' => 'Active proxy 1',
 					'delay' => '1G',
 					'checks' => [
-						['check_action' => 'add', 'type' => 'HTTP', 'ports' => '7555']
+						['check_action' => 'New', 'type' => 'HTTP', 'ports' => '7555']
 					],
 					'error' => 'Field "Update interval" is not correct: a time unit is expected'
 				]
 			],
+			// Error in checks.
 			[
 				[
 					'name' => 'Discovery rule without checks',
 					'proxy' => 'Active proxy 3',
 					'range' => '192.168.0.1-25',
 					'delay' => '1m',
-					'error' => 'Cannot save discovery rule without checks.',
-					'check_db' => false
+					'error' => 'Cannot save discovery rule without checks.'
 				]
 			],
 			[
 				[
-					'name' => 'Local network',
+					'name' => 'Discovery rule without checks, add check and then remove it',
 					'checks' => [
-						['check_action' => 'add', 'type' => 'HTTPS', 'ports' => '447']
+						['check_action' => 'New', 'type' => 'POP'],
+						['check_action' => 'Remove']
 					],
-					'error' => 'Discovery rule "Local network" already exists.',
-					'check_db' => false
+					'error' => 'Cannot save discovery rule without checks.'
 				]
 			],
 			[
 				[
 					'name' => 'Discovery rule with incorrect port range',
 					'checks' => [
-						['check_action' => 'add', 'type' => 'POP', 'ports' => 'abc']
+						['check_action' => 'New', 'type' => 'POP', 'ports' => 'abc']
 					],
-					'error_in_checks' => true
+					'error_in_checks' => ['Incorrect port range.']
 				]
 			],
 			[
 				[
-					'name' => 'Discovery rule 1',
-					'proxy' => 'Active proxy 1',
-					'range' => '192.168.0.1-25',
-					'delay' => '1m',
+					'name' => 'Discovery rule with existen check',
 					'checks' => [
-						[ 'check_action' => 'add', 'type' => 'HTTP', 'ports' => '7555']
+						['check_action' => 'New', 'type' => 'ICMP ping'],
+						['check_action' => 'New', 'type' => 'ICMP ping']
+					],
+					'error_in_checks' => ['Check already exists.']
+				]
+			],
+			[
+				[
+					'name' => 'Discovery rule with incorrect Zabbix agent check',
+					'checks' => [
+						['check_action' => 'New', 'type' => 'Zabbix agent']
+					],
+					'error_in_checks' => ['Invalid key "": key is empty.']
+				]
+			],
+			[
+				[
+					'name' => 'Discovery rule with incorrect SNMP',
+					'checks' => [
+						['check_action' => 'New', 'type' => 'SNMPv1 agent']
+					],
+					'error_in_checks' => ['Incorrect SNMP community.', 'Incorrect SNMP OID.']
+				]
+			],
+			// Successful discovery creation.
+			[
+				[
+					'name' => 'Discovery rule with HTTP check',
+					'checks' => [
+						['check_action' => 'New', 'type' => 'HTTP', 'ports' => '7555']
 					]
+				]
+			],
+			[
+				[
+					'name' => 'Discovery rule with Zabbix agent',
+					'checks' => [
+						['check_action' => 'New', 'type' => 'Zabbix agent', 'key' => 'ping']
+					],
+					'criteria' => 'Zabbix agent "ping"'
 				]
 			],
 			[
@@ -132,17 +170,69 @@ class testFormConfigDiscovery extends CWebTest {
 					'range' => '192.168.0.1-25',
 					'delay' => '1m',
 					'checks' => [
-						[ 'check_action' => 'add', 'type' => 'ICMP ping'],
-						[ 'check_action' => 'add', 'type' => 'IMAP', 'ports' => '144'],
 						[
-							'check_action' => 'add',
+							'check_action' => 'New',
+							'type' => 'FTP'
+						],
+						[
+							'check_action' => 'New',
+							'type' => 'HTTP'
+						],
+						[
+							'check_action' => 'New',
+							'type' => 'HTTPS'
+						],
+						[
+							'check_action' => 'New',
+							'type' => 'ICMP ping'
+						],
+						[
+							'check_action' => 'New',
+							'type' => 'IMAP',
+							'ports' => '144'
+						],
+						[
+							'check_action' => 'New',
+							'type' => 'LDAP'
+						],
+						[
+							'check_action' => 'New',
+							'type' => 'NNTP'
+						],
+						[
+							'check_action' => 'New',
+							'type' => 'POP'
+						],
+						[
+							'check_action' => 'New',
+							'type' => 'SMTP'
+						],
+						[
+							'check_action' => 'New',
+							'type' => 'SSH'
+						],
+						[
+							'check_action' => 'New',
+							'type' => 'TCP'
+						],
+						[
+							'check_action' => 'New',
+							'type' => 'Telnet'
+						],
+						[
+							'check_action' => 'New',
+							'type' => 'Zabbix agent',
+							'key' => 'ping'
+						],
+						[
+							'check_action' => 'New',
 							'type' => 'SNMPv1 agent',
 							'port' => '156',
 							'community' => '1',
 							'snmp_oid' => '1'
 						],
 						[
-							'check_action' => 'add',
+							'check_action' => 'New',
 							'type' => 'SNMPv3 agent',
 							'port' => '157',
 							'snmp_oid' => '1',
@@ -151,7 +241,7 @@ class testFormConfigDiscovery extends CWebTest {
 							'security_level' => 'noAuthNoPriv'
 						],
 						[
-							'check_action' => 'add',
+							'check_action' => 'New',
 							'type' => 'SNMPv3 agent',
 							'port' => '158',
 							'snmp_oid' => '2',
@@ -162,7 +252,7 @@ class testFormConfigDiscovery extends CWebTest {
 							'auth_passphrase' => '2'
 						],
 						[
-							'check_action' => 'add',
+							'check_action' => 'New',
 							'type' => 'SNMPv3 agent',
 							'port' => '159',
 							'snmp_oid' => '3',
@@ -172,8 +262,10 @@ class testFormConfigDiscovery extends CWebTest {
 							'auth_protocol' => 'MD5',
 							'auth_passphrase' => '3',
 							'priv_protocol' => 'AES',
-							'priv_passphrase' => '3']
-					]
+							'priv_passphrase' => '3'
+						]
+					],
+					'criteria' => 'SNMPv1 agent "1"'
 				]
 			]
 		];
@@ -187,8 +279,11 @@ class testFormConfigDiscovery extends CWebTest {
 		$this->zbxTestClickButtonText('Create discovery rule');
 		$this->FillInFields($data);
 
-		if (array_key_exists('error_in_checks', $data) && $data['error_in_checks'] === true) {
-			$this->zbxTestAssertElementPresentXpath('//div[@class="overlay-dialogue-body"]//span[text()="Incorrect port range."]');
+		if (array_key_exists('error_in_checks', $data)) {
+			$this->zbxTestLaunchOverlayDialog('Discovery check error');
+			foreach ($data['error_in_checks'] as $error) {
+				$this->zbxTestAssertElementPresentXpath("//div[@class='overlay-dialogue-body']//span[text()='".$error."']");
+			}
 			$this->zbxTestClickXpath('//div[@class="overlay-dialogue-footer"]/button[text()="Cancel"]');
 			return;
 		}
@@ -201,12 +296,16 @@ class testFormConfigDiscovery extends CWebTest {
 		if (array_key_exists('error', $data)) {
 			$this->zbxTestWaitUntilMessageTextPresent('msg-bad', $data['error']);
 			if (!array_key_exists('check_db', $data) || $data['check_db'] === true) {
-					$this->assertEquals(0, DBcount($sql));
+				$this->assertEquals(0, DBcount($sql));
 			}
 		}
 		else {
 			$this->zbxTestWaitUntilMessageTextPresent('msg-good', 'Discovery rule created');
 			$this->assertEquals(1, DBcount($sql));
+			$cheks = 'SELECT NULL FROM dchecks WHERE druleid IN ('.
+					'SELECT druleid FROM drules WHERE name='.zbx_dbstr($data['name']).
+					')';
+			$this->assertEquals(count($data['checks']), DBcount($cheks));
 		}
 	}
 
@@ -237,21 +336,44 @@ class testFormConfigDiscovery extends CWebTest {
 				[
 					'old_name' => 'Discovery rule for update',
 					'checks' => [
-						['check_action' => 'remove']
+						['check_action' => 'Remove']
 					],
 					'error' => 'Cannot save discovery rule without checks.'
 				]
 			],
 			[
 				[
+					'old_name' => 'Local network',
+					'checks' => [
+						['check_action' => 'New', 'type' => 'Zabbix agent', 'key' => 'system.uname']
+					],
+					'error_in_checks' => ['Check already exists.']
+				]
+			],
+			[
+				[
+					'old_name' => 'Local network',
+					'checks' => [
+						['check_action' => 'Edit', 'ports' => 'abc']
+					],
+					'error_in_checks' => ['Incorrect port range.']
+				]
+			],
+			// Successful discovery update.
+			[
+				[
 					'old_name' => 'Discovery rule for update',
-					'status' => 'Disabled'
+					'status' => false
 				]
 			],
 			[
 				[
 					'old_name' => 'Disabled discovery rule for update',
-					'status' => 'Enabled'
+					'checks' => [
+						['check_action' => 'Remove'],
+						['check_action' => 'New', 'type' => 'HTTP', 'ports' => '10500']
+					],
+					'enabled' => true
 				]
 			],
 			[
@@ -264,8 +386,8 @@ class testFormConfigDiscovery extends CWebTest {
 				[
 					'old_name' => 'Local network',
 					'checks' => [
-						['check_action' => 'add', 'type' => 'POP', 'ports' => '111']
-					],
+						['check_action' => 'New', 'type' => 'POP', 'ports' => '111']
+					]
 				]
 			],
 			[
@@ -276,7 +398,7 @@ class testFormConfigDiscovery extends CWebTest {
 					'range' => '1.1.0.1-25',
 					'delay' => '30s',
 					'checks' => [
-						['check_action' => 'update', 'type' => 'TCP', 'ports' => '9']
+						['check_action' => 'Edit', 'type' => 'TCP', 'ports' => '9']
 					]
 				]
 			]
@@ -291,59 +413,82 @@ class testFormConfigDiscovery extends CWebTest {
 		$this->zbxTestClickLinkText($data['old_name']);
 		$this->FillInFields($data);
 
-		// Counter of rows at discovery page.
-		$dchecks_page = count($this->webDriver->findElements(WebDriverBy::xpath('//div[@id="dcheckList"]//tr'))) - 1;
+		if (array_key_exists('error_in_checks', $data)) {
+			$this->zbxTestLaunchOverlayDialog('Discovery check error');
+			foreach ($data['error_in_checks'] as $error) {
+				$this->zbxTestAssertElementPresentXpath("//div[@class='overlay-dialogue-body']//span[text()='".$error."']");
+			}
+			return;
+		}
+
+		// Get amount of check rows in discovery form.
+		$checks_on_page = count($this->webDriver->findElements(WebDriverBy::xpath('//div[@id="dcheckList"]'.
+								'//tr[not(@id="dcheckListFooter")]')));
 
 		$this->zbxTestClick('update');
 
 		if (array_key_exists('error', $data)) {
 			$this->zbxTestWaitUntilMessageTextPresent('msg-bad', $data['error']);
+			$this->zbxTestCheckFatalErrors();
 		}
 		else {
 			$this->zbxTestWaitUntilMessageTextPresent('msg-good', 'Discovery rule updated');
 			$this->zbxTestCheckTitle('Configuration of discovery rules');
 			$this->zbxTestCheckHeader('Discovery rules');
 			$this->zbxTestCheckFatalErrors();
-			// DB check table drules
+
 			if (!array_key_exists('name', $data)) {
 				$data['name'] = $data['old_name'];
 			}
 
+			// Check the results in DB after update.
 			$proxy = DBfetch(DBselect('SELECT proxy_hostid FROM drules WHERE name='.zbx_dbstr($data['name'])));
 			if ($proxy['proxy_hostid']) {
-				$drules_after = DBdata('SELECT druleid, hosts.host AS proxy_name, drules.name, iprange, delay, nextcheck, drules.status'.
+				$discovery_db_data = DBdata('SELECT hosts.host AS proxy, drules.name, iprange AS "range", delay'.
 						' FROM drules'.
 						' JOIN hosts ON drules.proxy_hostid=hostid'.
-						' WHERE drules.name='.zbx_dbstr($data['name'])
-					, false);
+						' WHERE drules.name='.zbx_dbstr($data['name']), false);
 			}
 			else {
-				$drules_after = DBdata('SELECT druleid, name, iprange, delay, nextcheck, status'.
-						' FROM drules'.
-						' WHERE name='.zbx_dbstr($data['name'])
-					,false);
+				$discovery_db_data = DBdata('SELECT name, iprange, delay FROM drules WHERE name='.zbx_dbstr($data['name']), false);
 			}
+			$discovery_db_data = $discovery_db_data[0][0];
 
-			$drules_after = $drules_after[0][0];
-
-			$fields = [
-				'name' => 'name',
-				'proxy' => 'proxy_name',
-				'range' => 'iprange',
-				'delay' => 'delay'
-			];
-
-			foreach ($fields as $data_key => $db_key) {
-				if (array_key_exists($data_key, $data)) {
-					$this->assertEquals($data[$data_key], $drules_after[$db_key]);
+			$fields = ['name', 'proxy', 'range', 'delay'];
+			foreach ($fields as $field) {
+				if (array_key_exists($field, $data)) {
+					$this->assertEquals($data[$field], $discovery_db_data[$field]);
 				}
 			}
 
-			// DB check table dchecks.
-			$dchecks_db = DBcount('SELECT dcheckid FROM dchecks WHERE druleid IN ( SELECT druleid FROM drules WHERE name='
+			// Compare amount of checks on page and in DB.
+			$checks_db = DBcount('SELECT dcheckid FROM dchecks WHERE druleid IN ( SELECT druleid FROM drules WHERE name='
 					.zbx_dbstr($data['name']).')');
-			$this->assertEquals($dchecks_db, $dchecks_page);
+			$this->assertEquals($checks_db, $checks_on_page);
 		}
+	}
+
+	/**
+	 * Test update without any modification of discovery rule data.
+	 */
+	public function testFormConfigDiscovery_SimpleUpdate() {
+		$sql_drules = 'SELECT * FROM drules ORDER BY druleid';
+		$old_drules = DBhash($sql_drules);
+		$sql_dchecks = 'SELECT * FROM dchecks ORDER BY druleid, dcheckid';
+		$old_dchecks = DBhash($sql_dchecks);
+
+		$this->zbxTestLogin('discoveryconf.php');
+		foreach (DBdata("SELECT name FROM drules LIMIT 3", false) as $discovery) {
+			$discovery = $discovery[0];
+			$this->zbxTestClickLinkTextWait($discovery['name']);
+			$this->zbxTestClickWait('update');
+			// Check the results in frontend.
+			$this->zbxTestWaitUntilMessageTextPresent('msg-good', 'Discovery rule updated');
+			$this->zbxTestCheckFatalErrors();
+		}
+
+		$this->assertEquals($old_drules, DBhash($sql_drules));
+		$this->assertEquals($old_dchecks, DBhash($sql_dchecks));
 	}
 
 	private function FillInFields($data) {
@@ -364,97 +509,68 @@ class testFormConfigDiscovery extends CWebTest {
 		}
 
 		if (array_key_exists('checks', $data)) {
-
 			foreach ($data['checks'] as $check) {
 				foreach ($check as $key => $value) {
 					switch ($key) {
-
 						case 'check_action':
 							$action = $value;
-							if ($value === 'add') {
-								$this->zbxTestClick('newCheck');
-							}
-							elseif ($value === 'update') {
-								$this->zbxTestClickButtonText('Edit');
-							}
-							else {
-								$this->zbxTestClickButtonText('Remove');
-							}
+							$this->zbxTestClickButtonText($action);
 							break;
-
 						case 'type':
 							$this->zbxTestDropdownSelectWait('type', $value);
 							break;
-
 						case 'ports':
 							$this->zbxTestInputTypeOverwrite('ports', $value);
 							break;
-
 						case 'key':
 							$this->zbxTestInputTypeOverwrite('key_', $value);
 							break;
-
 						case 'community':
 							$this->zbxTestInputTypeOverwrite('snmp_community', $value);
 							break;
-
 						case 'snmp_oid':
 							$this->zbxTestInputTypeOverwrite('snmp_oid', $value);
 							break;
-
 						case 'context_name':
 							$this->zbxTestInputTypeOverwrite('snmpv3_contextname', $value);
 							break;
-
 						case 'security_name':
 							$this->zbxTestInputTypeOverwrite('snmpv3_securityname', $value);
 							break;
-
 						case 'security_level':
 							$this->zbxTestDropdownSelect('snmpv3_securitylevel', $value);
 							break;
-
 						case 'auth_protocol':
 							$this->zbxTestClickXpathWait('//input[@name="snmpv3_authprotocol"]/../label[text()="'.$value.'"]');
 							break;
-
 						case 'auth_passphrase':
 							$this->zbxTestInputTypeOverwrite('snmpv3_authpassphrase', $value);
 							break;
-
 						case 'priv_protocol':
 							$this->zbxTestClickXpathWait('//input[@name="snmpv3_privprotocol"]/../label[text()="'.$value.'"]');
 							break;
-
 						case 'priv_passphrase':
 							$this->zbxTestInputTypeOverwrite('snmpv3_privpassphrase', $value);
 							break;
 					}
 				}
-			}
-			if ($action === 'add' || $action === 'update') {
-				$this->zbxTestClick('add_new_dcheck');
+				if ($action === 'New' || $action === 'Edit') {
+					$this->zbxTestClick('add_new_dcheck');
+				}
 			}
 		}
 
-		if (array_key_exists('status', $data) && $data['status'] === 'Disabled') {
-			if ($this->zbxTestCheckboxSelected('status')) {
-				$this->zbxTestCheckboxSelect('status', false);
-			}
-		}
-		elseif (array_key_exists('status', $data) && $data['status'] === 'Enabled') {
-			if (!$this->zbxTestCheckboxSelected('status')) {
-				$this->zbxTestCheckboxSelect('status', true);
-			}
+		if (array_key_exists('enabled', $data)) {
+			$this->zbxTestCheckboxSelect('status', $data['enabled']);
 		}
 
 		if (array_key_exists('criteria', $data)) {
-			$this->zbxTestClickXpath('//label[text()=\''.$data['criteria'].'\']');
+			$this->zbxTestClickXpathWait('//label[text()=\''.$data['criteria'].'\']');
 		}
 	}
 
 	public function testFormConfigDiscovery_Delete() {
-		$name='Discovery rule to check delete';
+		$name = 'Discovery rule to check delete';
 		$this->zbxTestLogin('discoveryconf.php');
 		$this->zbxTestClickLinkTextWait($name);
 		$this->zbxTestWaitForPageToLoad();
@@ -475,13 +591,13 @@ class testFormConfigDiscovery extends CWebTest {
 			$this->zbxTestClickLinkTextWait($drule['name']);
 			$this->zbxTestWaitForPageToLoad();
 			$this->zbxTestClickWait('clone');
-			$this->zbxTestInputType('name','CLONE: '.$drule['name']);
+			$this->zbxTestInputType('name', 'CLONE: '.$drule['name']);
 			$this->zbxTestClickWait('add');
 
 			$sql_drules = [];
 			$sql_dchecks = [];
 
-			$names=[($drule['name']),'CLONE: '.$drule['name']];
+			$names = [($drule['name']), 'CLONE: '.$drule['name']];
 			foreach ($names as $name) {
 				$sql_drules[] = DBhash('SELECT proxy_hostid, iprange, delay, nextcheck, status'.
 						' FROM drules'.
@@ -489,13 +605,13 @@ class testFormConfigDiscovery extends CWebTest {
 						' ORDER BY druleid'
 				);
 
-				$sql_dchecks[] = DBhash('SELECT type,key_, snmp_community, ports, snmpv3_securityname, snmpv3_securitylevel'.
+				$sql_dchecks[] = DBhash('SELECT type, key_, snmp_community, ports, snmpv3_securityname, snmpv3_securitylevel'.
 						' snmpv3_authpassphrase, uniq, snmpv3_authprotocol, snmpv3_privprotocol, snmpv3_contextname'.
 						' FROM dchecks'.
 						' WHERE druleid IN ('.
-							'SELECT druleid'.
-							' FROM drules'.
-							' WHERE name='.zbx_dbstr($name).
+						'SELECT druleid'.
+						' FROM drules'.
+						' WHERE name='.zbx_dbstr($name).
 						')'.
 						' ORDER BY type, key_'
 				);
@@ -506,53 +622,77 @@ class testFormConfigDiscovery extends CWebTest {
 		}
 	}
 
-	/**
-	 * Function check cancel functionality.
-	 * array $actions contain button names in discovery form.
-	 * 'update' - simple update, 'create' - cancel creation, 'cancel' - cancel update, 'delete' - cancel delete,
-	 * 'clone' - cancel clone
-	 */
-	public function testFormConfigDiscovery_Cancel() {
-		$actions = ['update', 'create', 'cancel', 'delete', 'clone'];
-			foreach ($actions as $action) {
-				$this->Cancel($action);
-			}
+	public function testFormConfigDiscovery_CancelCreation() {
+		$this->executeCancelAction('create');
 	}
 
-	private function Cancel($action) {
+	public function testFormConfigDiscovery_CancelUpdating() {
+		$this->executeCancelAction('update');
+	}
+
+	public function testFormConfigDiscovery_CancelCloning() {
+		$this->executeCancelAction('clone');
+	}
+
+	public function testFormConfigDiscovery_CancelDelete() {
+		$this->executeCancelAction('delete');
+	}
+
+	/**
+	 * Cancel updating, cloning or deleting of discovery rule.
+	 */
+	private function executeCancelAction($action) {
 		$sql_drules = 'SELECT * FROM drules ORDER BY druleid';
 		$old_drules = DBhash($sql_drules);
 		$sql_dchecks = 'SELECT * FROM dchecks ORDER BY druleid, dcheckid';
 		$old_dchecks = DBhash($sql_dchecks);
 
 		$this->zbxTestLogin('discoveryconf.php');
+
 		if ($action === 'create') {
+			$discovery = [
+				'name' => 'Discovery rule Cancel creation',
+				'checks' => [
+					['check_action' => 'New', 'type' => 'ICMP ping']
+				]
+			];
 			$this->zbxTestClickButtonText('Create discovery rule');
-			$this->zbxTestInputType('name','New discovery rule to check cancel creation');
-			$this->zbxTestClick('newCheck');
-			$this->zbxTestDropdownSelect('type', 'IMAP');
-			$this->zbxTestClickWait('cancel');
+			$this->FillInFields($discovery);
 		}
 		else {
-			foreach (DBdata("SELECT name FROM drules", false) as $drule) {
-				$drule = $drule[0];
-				$this->zbxTestClickLinkTextWait($drule['name']);
-				$this->zbxTestWaitForPageToLoad();
-				$this->zbxTestClickWait($action);
-				if ($action === 'update') {
-					$this->zbxTestWaitUntilMessageTextPresent('msg-good', 'Discovery rule updated');
-				}
-				elseif ($action === 'delete') {
-					$this->webDriver->switchTo()->alert()->dismiss();
-					$this->zbxTestClickWait('cancel');
-				}
-				elseif ($action === 'clone') {
-					$this->zbxTestClickWait('cancel');
+			foreach (DBdata("SELECT name FROM drules LIMIT 1", false) as $discovery) {
+				$discovery = $discovery[0];
+				$name = $discovery['name'];
+				$this->zbxTestClickLinkTextWait($name);
+
+				switch ($action) {
+					case 'update':
+						$name .= ' (updated)';
+						$this->zbxTestInputTypeOverwrite('name', $name);
+						break;
+
+					case 'clone':
+						$name .= ' (cloned)';
+						$this->zbxTestClickWait('clone');
+						$this->zbxTestInputTypeOverwrite('name', $name);
+						break;
+
+					case 'delete':
+						$this->zbxTestClickWait('delete');
+						$this->webDriver->switchTo()->alert()->dismiss();
+						break;
 				}
 			}
 		}
+		$this->zbxTestClickWait('cancel');
+
+		// Check the results in frontend.
+		$this->zbxTestCheckTitle('Configuration of discovery rules');
+		$this->zbxTestCheckHeader('Discovery rules');
+		$this->zbxTestCheckFatalErrors();
 
 		$this->assertEquals($old_drules, DBhash($sql_drules));
 		$this->assertEquals($old_dchecks, DBhash($sql_dchecks));
 	}
+
 }
