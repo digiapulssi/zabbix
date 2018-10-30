@@ -52,7 +52,7 @@ foreach (@server_keys)
 	if (opt('verbose'))
 	{
 		# sort alphabetically ('abc' cmp 'xyz'), then numerically (tld1 <=> tld2)
-		foreach my $param (sort {(($a =~ /(\d+)/)[0] || 0) <=> (($b =~ /(\d+)/)[0] || 0)} (sort {$a cmp $b} @ARGV))
+		foreach my $tld (sort {(($a =~ /(\d+)/)[0] || 0) <=> (($b =~ /(\d+)/)[0] || 0)} (sort {$a cmp $b} (@{$tlds_ref})))
 		{
 			print("    $tld\n");
 		}
