@@ -20,6 +20,9 @@
 
 require_once dirname(__FILE__).'/../include/class.cwebtest.php';
 
+/**
+ * @backup profiles
+ */
 class testPageDashboard extends CWebTest {
 
 	public $graphCpu = 'CPU load';
@@ -36,33 +39,28 @@ class testPageDashboard extends CWebTest {
 		foreach ($users as $user) {
 			switch ($user) {
 				case 'super-admin' :
-					$this->zbxTestLogin('zabbix.php?action=dashboard.view');
-					$this->zbxTestCheckTitle('Dashboard');
-					$this->zbxTestCheckHeader('Dashboard');
+					$this->authenticateUser('09e7d4286dfdca4ba7be15e0f3b2b55b', 1);
+					$this->zbxTestOpen('zabbix.php?action=dashboard.view');
 					$this->zbxTestCheckNoRealHostnames();
 					break;
 				case 'admin' :
 					$this->authenticateUser('09e7d4286dfdca4ba7be15e0f3b2b55c', 4);
 					$this->zbxTestOpen('zabbix.php?action=dashboard.view');
-					$this->zbxTestCheckTitle('Dashboard');
-					$this->zbxTestCheckHeader('Dashboard');
 					$this->zbxTestAssertElementText("//div[@class='dashbrd-grid-widget-container']/div[8]//a[@href='zabbix.php?action=discovery.view&druleid=3']", 'External network');
 					break;
 				case 'user';
 					$this->authenticateUser('09e7d4286dfdca4ba7be15e0f3b2b55d', 5);
 					$this->zbxTestOpen('zabbix.php?action=dashboard.view');
-					$this->zbxTestCheckTitle('Dashboard');
-					$this->zbxTestCheckHeader('Dashboard');
 					$this->zbxTestAssertElementText("//div[@class='dashbrd-grid-widget-container']/div[8]//tr[@class='nothing-to-show']/td", 'No permissions to referred object or it does not exist!');
 					break;
 				case 'guest';
 					$this->authenticateUser('09e7d4286dfdca4ba7be15e0f3b2b55e', 2);
 					$this->zbxTestOpen('zabbix.php?action=dashboard.view');
-					$this->zbxTestCheckTitle('Dashboard');
-					$this->zbxTestCheckHeader('Dashboard');
 					$this->zbxTestAssertElementText("//div[@class='dashbrd-grid-widget-container']/div[8]//tr[@class='nothing-to-show']/td", 'No permissions to referred object or it does not exist!');
 					break;
 			}
+			$this->zbxTestCheckTitle('Dashboard');
+			$this->zbxTestCheckHeader('Dashboard');
 			if ($user != 'super-admin'){
 				$this->zbxTestAssertElementText("//div[@class='dashbrd-grid-widget-container']/div[3]//tr[@class='nothing-to-show']/td", 'No graphs added.');
 				$this->zbxTestAssertElementText("//div[@class='dashbrd-grid-widget-container']/div[4]//tr[@class='nothing-to-show']/td", 'No screens added.');
@@ -81,6 +79,11 @@ class testPageDashboard extends CWebTest {
 			$this->zbxTestAssertElementText("//div[@class='dashbrd-grid-widget-container']/div[9]//h4", 'Host status');
 			$this->zbxTestAssertElementText("//div[@class='dashbrd-grid-widget-container']/div[10]//h4", 'System status');
 			$this->zbxTestAssertElementText("//div[@class='dashbrd-grid-widget-container']/div[11]//h4", 'Status of Zabbix');
+
+			// Logout.
+			$this->zbxTestLogout();
+			$this->zbxTestWaitForPageToLoad();
+			$this->webDriver->manage()->deleteAllCookies();
 		}
 	}
 

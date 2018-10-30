@@ -2126,7 +2126,8 @@ static int	process_db_escalations(int now, int *nextcheck, zbx_vector_ptr_t *esc
 
 		event = (DB_EVENT *)events.values[index];
 
-		if (EVENT_SOURCE_TRIGGERS == event->source && 0 == event->trigger.triggerid)
+		if ((EVENT_SOURCE_TRIGGERS == event->source || EVENT_SOURCE_INTERNAL == event->source) &&
+				EVENT_OBJECT_TRIGGER == event->object && 0 == event->trigger.triggerid)
 		{
 			error = zbx_dsprintf(error, "trigger id:" ZBX_FS_UI64 " deleted.", event->objectid);
 			goto cancel_warning;
@@ -2530,7 +2531,8 @@ ZBX_THREAD_ENTRY(escalator_thread, args)
 
 	for (;;)
 	{
-		zbx_handle_log();
+		sec = zbx_time();
+		zbx_update_env(sec);
 
 		if (0 != sleeptime)
 		{
@@ -2539,7 +2541,6 @@ ZBX_THREAD_ENTRY(escalator_thread, args)
 					process_num, old_escalations_count, old_total_sec);
 		}
 
-		sec = zbx_time();
 		nextcheck = time(NULL) + CONFIG_ESCALATOR_FREQUENCY;
 		escalations_count += process_escalations(time(NULL), &nextcheck, ZBX_ESCALATION_SOURCE_TRIGGER);
 		escalations_count += process_escalations(time(NULL), &nextcheck, ZBX_ESCALATION_SOURCE_ITEM);
@@ -2574,9 +2575,5 @@ ZBX_THREAD_ENTRY(escalator_thread, args)
 		}
 
 		zbx_sleep_loop(sleeptime);
-
-#if !defined(_WINDOWS) && defined(HAVE_RESOLV_H)
-		zbx_update_resolver_conf();	/* handle /etc/resolv.conf update */
-#endif
 	}
 }
