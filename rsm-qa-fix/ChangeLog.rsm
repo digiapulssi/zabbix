@@ -1,6 +1,7 @@
 Changes for rsm1.1.0rc32
 
 Bug fixes:
+..F....... [403] fixed probe status historical value selection in 'details of particular test' screen (miks)
 ....I..... [sub-417] fixed handling of measurements file integers in SLA API script (dimir)
 
 --------------------------------------------------------------------------------

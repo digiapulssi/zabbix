@@ -528,8 +528,8 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 		while ($item = DBfetch($items)) {
 			$itemValue = API::History()->get([
 				'itemids' => $item['itemid'],
-				'time_from' => $testTimeFrom - $macroTime + 59,
-				'time_till' => $testTimeFrom + 59,
+				'time_from' => $testTimeFrom,
+				'time_till' => $testTimeTill,
 				'history' => $item['value_type'],
 				'output' => API_OUTPUT_EXTEND
 			]);
