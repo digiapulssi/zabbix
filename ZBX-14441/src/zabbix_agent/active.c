@@ -1183,12 +1183,7 @@ static int	process_eventlog_check(char *server, unsigned short port, ZBX_ACTIVE_
 	AGENT_REQUEST	request;
 	const char	*filename, *pattern, *maxlines_persec, *key_severity, *key_source, *key_logeventid, *skip;
 	int		rate;
-	zbx_uint64_t	lastlogsize;
 	OSVERSIONINFO	versionInfo;
-	EVT_HANDLE	eventlog6_render_context = NULL;
-	EVT_HANDLE	eventlog6_query = NULL;
-	zbx_uint64_t	eventlog6_firstid = 0;
-	zbx_uint64_t	eventlog6_lastid = 0;
 
 	init_request(&request);
 
@@ -1276,8 +1271,6 @@ static int	process_eventlog_check(char *server, unsigned short port, ZBX_ACTIVE_
 		goto out;
 	}
 
-	lastlogsize = metric->lastlogsize;
-
 	versionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
 	GetVersionEx(&versionInfo);
 
@@ -1285,6 +1278,11 @@ static int	process_eventlog_check(char *server, unsigned short port, ZBX_ACTIVE_
 	{
 		__try
 		{
+			zbx_uint64_t	lastlogsize = metric->lastlogsize;
+			EVT_HANDLE	eventlog6_render_context = NULL;
+			EVT_HANDLE	eventlog6_query = NULL;
+			zbx_uint64_t	eventlog6_firstid = 0;
+			zbx_uint64_t	eventlog6_lastid = 0;
 
 			if (SUCCEED != initialize_eventlog6(filename, &lastlogsize, &eventlog6_firstid,
 					&eventlog6_lastid, &eventlog6_render_context, &eventlog6_query, error))
