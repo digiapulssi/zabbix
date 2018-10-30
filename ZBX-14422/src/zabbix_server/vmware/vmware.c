@@ -78,7 +78,7 @@ extern char		*CONFIG_SOURCE_IP;
 
 #define ZBX_VMWARE_CACHE_UPDATE_PERIOD	CONFIG_VMWARE_FREQUENCY
 #define ZBX_VMWARE_PERF_UPDATE_PERIOD	CONFIG_VMWARE_PERF_FREQUENCY
-#define ZBX_VMWARE_SERVICE_TTL		SEC_PER_DAY
+#define ZBX_VMWARE_SERVICE_TTL		SEC_PER_HOUR
 #define ZBX_XML_DATETIME		26
 
 static ZBX_MUTEX	vmware_lock = ZBX_MUTEX_NULL;
@@ -349,7 +349,6 @@ static size_t	curl_write_cb(void *ptr, size_t size, size_t nmemb, void *userdata
 {
 	size_t	r_size = size * nmemb;
 
-	ZBX_UNUSED(ptr);
 	ZBX_UNUSED(userdata);
 
 	zbx_strncpy_alloc(&page.data, &page.alloc, &page.offset, ptr, r_size);
@@ -2298,7 +2297,8 @@ static zbx_vmware_vm_t	*vmware_service_create_vm(zbx_vmware_service_t *service, 
 	vm->uuid = value;
 	vm->id = zbx_strdup(NULL, id);
 
-	vm->props = xml_read_props(details, vm_propmap, ZBX_VMWARE_VMPROPS_NUM);
+	if (NULL == (vm->props = xml_read_props(details, vm_propmap, ZBX_VMWARE_VMPROPS_NUM)))
+		goto out;
 
 	vmware_vm_get_nic_devices(vm, details);
 	vmware_vm_get_disk_devices(vm, details);
@@ -2602,7 +2602,8 @@ static int	vmware_service_init_hv(zbx_vmware_service_t *service, CURL *easyhandl
 	if (SUCCEED != vmware_service_get_hv_data(service, easyhandle, id, &details, error))
 		goto out;
 
-	hv->props = xml_read_props(details, hv_propmap, ZBX_VMWARE_HVPROPS_NUM);
+	if (NULL == (hv->props = xml_read_props(details, hv_propmap, ZBX_VMWARE_HVPROPS_NUM)))
+		goto out;
 
 	if (NULL == hv->props[ZBX_VMWARE_HVPROP_HW_UUID])
 		goto out;
@@ -3614,7 +3615,10 @@ static int	vmware_service_get_maxquerymetrics(CURL *easyhandle, int *max_qm, cha
 	zabbix_log(LOG_LEVEL_TRACE, "%s() SOAP response: %s", __function_name, page.data);
 
 	if (NULL != (*error = zbx_xml_read_value(page.data, ZBX_XPATH_FAULTSTRING())))
-		goto out;
+	{
+		zabbix_log(LOG_LEVEL_WARNING, "Error of query maxQueryMetrics: %s.", *error);
+		zbx_free(*error);
+	}
 
 	if (NULL == (val = zbx_xml_read_value(page.data, ZBX_XPATH_MAXQUERYMETRICS())))
 	{
@@ -4519,7 +4523,7 @@ static void	vmware_service_remove(zbx_vmware_service_t *service)
 
 	zbx_vmware_lock();
 
-	if (FAIL != (index = zbx_vector_ptr_search(&vmware->services, &service, ZBX_DEFAULT_PTR_COMPARE_FUNC)))
+	if (FAIL != (index = zbx_vector_ptr_search(&vmware->services, service, ZBX_DEFAULT_PTR_COMPARE_FUNC)))
 	{
 		zbx_vector_ptr_remove(&vmware->services, index);
 		vmware_service_shared_free(service);
