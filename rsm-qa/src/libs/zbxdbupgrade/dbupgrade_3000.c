@@ -2482,18 +2482,20 @@ static int	DBpatch_3000223(void)
 	return SUCCEED;
 }
 
-static int	template_is_linked_to_host(const char* templateid, const char* hostid)
+static int	template_is_linked_to_host(const char *templateid, const char *hostid)
 {
 	DB_RESULT	result;
 	DB_ROW		row;
+	int		ret = FAIL;
 
-	result = DBselect("select * from hosts_templates where templateid=%s and hostid=%s", templateid, hostid);
+	result = DBselect("select 1 from hosts_templates where templateid=%s and hostid=%s", templateid, hostid);
 
-	int i=0;
-	while (NULL != (row = DBfetch(result)))
-		i++;
+	if (NULL != (row = DBfetch(result)))
+		ret = SUCCEED;
 
-	return (0 < i ? SUCCEED : FAIL);
+	DBfree_result(result);
+
+	return ret;
 }
 
 static int	DBpatch_3000224(void)
@@ -2513,7 +2515,7 @@ static int	DBpatch_3000224(void)
 	while (NULL != (row = DBfetch(result)) && SUCCEED == ret)
 	{
 		if (SUCCEED == template_is_linked_to_host("99980", row[0]))
-			continue; /* already linked */
+			continue;	/* already linked */
 
 		zbx_uint64_t		hostid;
 		zbx_vector_uint64_t	templateids;
@@ -2531,6 +2533,64 @@ static int	DBpatch_3000224(void)
 	DBfree_result(result);
 
 	return ret;
+}
+
+static int	DBpatch_3000225(void)
+{
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	/* "Zabbix Server" host macro {$MAX_PROCESSES} */
+	if (ZBX_DB_OK > DBexecute("update hostmacro set value='1500' where hostmacroid=3"))
+		return FAIL;
+
+	return SUCCEED;
+}
+
+static int	DBpatch_3000226(void)
+{
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	/* disable 'rdap[%' items on hosts where RDAP disabled on a TLD level */
+	if (ZBX_DB_OK > DBexecute(
+			"update items"
+			" set status=1"
+			" where key_ like 'rdap[%%'"
+				" and hostid in ("
+					"select hostid"
+					" from hosts_templates"
+					" where templateid in ("
+						"select hostid"
+						" from hostmacro"
+						" where macro='{$RDAP.TLD.ENABLED}'"
+							" and value=0"
+						")"
+					")"))
+	{
+		return FAIL;
+	}
+
+	/* disable 'rdap[%' items on hosts where RDAP disabled on a Probe level */
+	if (ZBX_DB_OK > DBexecute(
+			"update items"
+			" set status=1"
+			" where key_ like 'rdap[%%'"
+				" and hostid in ("
+					"select hostid"
+					" from hosts_templates"
+					" where templateid in ("
+						"select hostid"
+						" from hostmacro"
+						" where macro='{$RSM.RDDS.ENABLED}'"
+							" and value=0"
+						")"
+					")"))
+	{
+		return FAIL;
+	}
+
+	return SUCCEED;
 }
 
 #endif
@@ -2604,5 +2664,7 @@ DBPATCH_ADD(3000221, 0, 0)	/* remove 6 obsoleted value mappings add 2 new errors
 DBPATCH_ADD(3000222, 0, 0)	/* fix value mapping typo 'unexpecting' => 'unexpected' */
 DBPATCH_ADD(3000223, 0, 0)	/* fix value mapping typo 'RDAP' => 'RDDS' */
 DBPATCH_ADD(3000224, 0, 0)	/* link "Template RDAP" template to all probe hosts */
+DBPATCH_ADD(3000225, 0, 0)	/* change "Zabbix server" macro value {$MAX_PROCESSES}=1500 (was 300) */
+DBPATCH_ADD(3000226, 0, 0)	/* disable "RDAP availability" items on hosts where RDAP is disabled */
 
 DBPATCH_END()

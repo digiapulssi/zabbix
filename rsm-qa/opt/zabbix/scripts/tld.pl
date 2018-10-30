@@ -993,10 +993,14 @@ sub create_main_template {
 		really(create_macro('{$RDAP.BASE.URL}', $OPTS{'rdap-base-url'}, $templateid, 1));
 		really(create_macro('{$RDAP.TEST.DOMAIN}', $OPTS{'rdap-test-domain'}, $templateid, 1));
 		really(create_macro('{$RDAP.TLD.ENABLED}', 1, $templateid, 1));
+
+		update_rdap_items($tld, 1);
 	}
 	else
 	{
 		really(create_macro('{$RDAP.TLD.ENABLED}', 0, $templateid, 1));
+
+		update_rdap_items($tld, 0);
 	}
 
     if ($OPTS{'epp-servers'})
@@ -1896,4 +1900,33 @@ sub really($)
 	pfail($api_result->{'data'}) if (check_api_error($api_result) == true);
 
 	return $api_result;
+}
+
+sub update_rdap_items($$)
+{
+	my $tld = shift;
+	my $enable = shift;
+
+	my $template = 'Template ' . $tld;
+	my $result = get_template($template, false, true);	# do not select macros, select hosts
+
+	pfail("$tld template \"$template\" does not exist") if (keys(%{$result}) == 0);
+
+	foreach my $host_ref (@{$result->{'hosts'}})
+	{
+		my $hostid = $host_ref->{'hostid'};
+
+		my $result2 = really(get_items_like($hostid, 'rdap[', false));	# not a template
+
+		my @items = keys(%{$result2});
+
+		if ($enable)
+		{
+			enable_items(\@items);
+		}
+		else
+		{
+			disable_items(\@items);
+		}
+	}
 }

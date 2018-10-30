@@ -1,3 +1,12 @@
+Changes for rsm1.1.0rc32
+
+Bug fixes:
+....I..... [432] fixed RDAP simple check items stuck in queue of hosts where RDAP is disabled on a TLD or Probe level (dimir)
+....I..... [412] changed Zabbix server host macro {$MAX_PROCESSES}=1500 and number of proxy and unreachable pollers in Zabbix server configuration (dimir)
+..F....... [sub-403] fixed probe status historical value selection in 'details of particular test' screen (miks)
+....I..... [sub-417] fixed handling of measurements file integers in SLA API script (dimir)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.1.0rc31
 
 Bug fixes:
@@ -48,13 +57,13 @@ Bug fixes:
 Changes for rsm1.1.0rc25
 
 Bug fixes:
-..F....... [403] fixed time shifts for value selection in incident details and particular test data pages for DNS and DNSSEC services (miks)
+..F....... [sub-403] fixed time shifts for value selection in incident details and particular test data pages for DNS and DNSSEC services (miks)
 
 --------------------------------------------------------------------------------
 Changes for rsm1.1.0rc24
 
 Bug fixes:
-..F....... [403] fixed time shifts for value selection in incident details and particular test data pages (miks)
+..F....... [sub-403] fixed time shifts for value selection in incident details and particular test data pages (miks)
 
 --------------------------------------------------------------------------------
 Changes for rsm1.1.0rc23
