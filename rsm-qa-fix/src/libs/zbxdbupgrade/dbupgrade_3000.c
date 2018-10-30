@@ -2486,13 +2486,16 @@ static int	template_is_linked_to_host(const char *templateid, const char *hostid
 {
 	DB_RESULT	result;
 	DB_ROW		row;
+	int		ret = FAIL;
 
 	result = DBselect("select 1 from hosts_templates where templateid=%s and hostid=%s", templateid, hostid);
 
-	while (NULL != (row = DBfetch(result)))
-		return SUCCEED;
+	if (NULL != (row = DBfetch(result)))
+		ret = SUCCEED;
 
-	return FAIL;
+	DBfree_result(result);
+
+	return ret;
 }
 
 static int	DBpatch_3000224(void)
@@ -2512,7 +2515,7 @@ static int	DBpatch_3000224(void)
 	while (NULL != (row = DBfetch(result)) && SUCCEED == ret)
 	{
 		if (SUCCEED == template_is_linked_to_host("99980", row[0]))
-			continue; /* already linked */
+			continue;	/* already linked */
 
 		zbx_uint64_t		hostid;
 		zbx_vector_uint64_t	templateids;
@@ -2530,6 +2533,18 @@ static int	DBpatch_3000224(void)
 	DBfree_result(result);
 
 	return ret;
+}
+
+static int	DBpatch_3000225(void)
+{
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	/* "Zabbix Server" host macro {$MAX_PROCESSES} */
+	if (ZBX_DB_OK > DBexecute("update hostmacro set value='1500' where hostmacroid=3"))
+		return FAIL;
+
+	return SUCCEED;
 }
 
 #endif
@@ -2603,5 +2618,6 @@ DBPATCH_ADD(3000221, 0, 0)	/* remove 6 obsoleted value mappings add 2 new errors
 DBPATCH_ADD(3000222, 0, 0)	/* fix value mapping typo 'unexpecting' => 'unexpected' */
 DBPATCH_ADD(3000223, 0, 0)	/* fix value mapping typo 'RDAP' => 'RDDS' */
 DBPATCH_ADD(3000224, 0, 0)	/* link "Template RDAP" template to all probe hosts */
+DBPATCH_ADD(3000225, 0, 0)	/* change "Zabbix server" macro value {$MAX_PROCESSES}=1500 (was 300) */
 
 DBPATCH_END()
