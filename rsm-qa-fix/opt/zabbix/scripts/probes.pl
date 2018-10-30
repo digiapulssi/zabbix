@@ -129,6 +129,7 @@ sub add_probe($$$$$$$$$$)
 	my $probe_tmpl = create_probe_template($probe_name, $epp, $ipv4, $ipv6, $rdds, $resolver);
 	is_not_empty($probe_tmpl, true);
 
+
     ########## Creating Probe status template
 
 	print("Creating '$probe_name' probe status template: ");
@@ -251,6 +252,19 @@ sub add_probe($$$$$$$$$$)
 		is_not_empty($tld_host, false);
 	}
 
+    ########## Updating RDAP items status
+
+	print("Updating RDAP items status...\n");
+
+	if ($rdds)
+	{
+		update_rdap_items($probe_name, 1);
+	}
+	else
+	{
+		update_rdap_items($probe_name, 0);
+	}
+
     ##########
 
 	print("The probe has been added successfully\n");
@@ -342,7 +356,7 @@ sub delete_probe($) {
 	my $host_name = $probe_host_mon->{'host'};
 	my $hostid = $probe_host_mon->{'hostid'};
 
-	print "Trying to delete '$host_name' host: ";
+	print "Trying to remove '$host_name' host: ";
 
 	$result = remove_hosts( [ $hostid ] );
 
@@ -590,6 +604,35 @@ sub is_not_empty($$) {
 
 ##############
 
+sub update_rdap_items($$)
+{
+	my $probe = shift;
+	my $enable = shift;
+
+	my $template = 'Template ' . $probe;
+	my $result = get_template($template, false, true);	# do not select macros, select hosts
+
+	pfail("$probe template \"$template\" does not exist") if (keys(%{$result}) == 0);
+
+	foreach my $host_ref (@{$result->{'hosts'}})
+	{
+		my $hostid = $host_ref->{'hostid'};
+
+		my $result2 = get_items_like($hostid, 'rdap[', false);	# not a template
+
+		my @items = keys(%{$result2});
+
+		if ($enable)
+		{
+			enable_items(\@items);
+		}
+		else
+		{
+			disable_items(\@items);
+		}
+	}
+}
+
 sub usage {
     my ($opt_name, $opt_value) = @_;
 
@@ -685,10 +728,15 @@ sub validate_input
 		$OPTS{'resolver'} //= '127.0.0.1';
 		$OPTS{'psk-identity'} //= $OPTS{'probe'} if (defined($OPTS{'psk'}));
 
+		my @service_list;
 		foreach my $option (('epp', 'rdds', 'ipv4', 'ipv6'))
 		{
 			$OPTS{$option} //= 0;
+
+			push(@service_list, uc($option) . ":" . ($OPTS{$option} ? "on" : "off"));
 		}
+
+		print(join(', ', @service_list), "\n");
 	}
 	elsif (defined($OPTS{'rename'}))
 	{

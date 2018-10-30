@@ -13,6 +13,7 @@ our @EXPORT = qw(zbx_connect check_api_error get_proxies_list
 		create_passive_proxy probe_exists get_host_group get_template get_probe get_host
 		remove_templates remove_hosts remove_hostgroups remove_probes remove_items
 		disable_host disable_hosts
+		enable_items
 		disable_items disable_triggers
 		rename_host rename_proxy rename_template rename_hostgroup
 		macro_value get_global_macro_value get_host_macro
@@ -191,18 +192,31 @@ sub remove_probes($) {
     return $result;
 }
 
+sub update_items_status($$) {
+	my $items = shift;
+	my $status = shift;
+
+	return unless scalar(@{$items});
+
+	my $result;
+
+	foreach my $itemid (@{$items}) {
+		$result->{$itemid} = $zabbix->update('item', {'itemid' => $itemid, 'status' => $status});
+	}
+
+	return $result;
+}
+
+sub enable_items($) {
+    my $items = shift;
+
+    return update_items_status($items, ITEM_STATUS_ACTIVE);
+}
+
 sub disable_items($) {
     my $items = shift;
 
-    return unless scalar(@{$items});
-
-    my $result;
-
-    foreach my $itemid (@{$items}) {
-	$result->{$itemid} = $zabbix->update('item', {'itemid' => $itemid, 'status' => ITEM_STATUS_DISABLED});
-    }
-
-    return $result;
+    return update_items_status($items, ITEM_STATUS_DISABLED);
 }
 
 sub disable_triggers($) {
@@ -504,7 +518,7 @@ sub create_macro {
 sub get_host_macro {
     my $templateid = shift;
     my $name = shift;
-    
+
     my $result;
 
     $result = $zabbix->get('usermacro',{'hostids' => $templateid, 'output' => 'extend', 'filter' => {'macro' => $name}});
@@ -523,7 +537,7 @@ sub create_passive_proxy($$$$$) {
 
     if (defined($probe->{'proxyid'})) {
 	my $vars = {'proxyid' => $probe->{'proxyid'}, 'status' => HOST_STATUS_PROXY_PASSIVE};
-	
+
 	if (defined($probe->{'interface'}) and 'HASH' eq ref($probe->{'interface'})) {
 		$vars->{'interface'} = {'interfaceid' => $probe->{'interface'}->{'interfaceid'},
 					'ip' => $probe_ip, 'dns' => '', 'useip' => true, 'port' => $probe_port};
