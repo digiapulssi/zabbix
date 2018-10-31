@@ -55,6 +55,29 @@ static int	regexp_compile(const char *pattern, int flags, zbx_regexp_t **regexp,
 {
 	int	error_offset = -1;
 
+#ifdef PCRE_NO_AUTO_CAPTURE
+	if (0 != (flags & PCRE_NO_AUTO_CAPTURE))
+	{
+		const char	*pstart = pattern, *offset;
+
+		while (NULL != (offset = strchr(pstart, '\\')))
+		{
+			offset++;
+
+			if (*offset >= '0' && *offset <= '9')
+			{
+				flags ^= PCRE_NO_AUTO_CAPTURE;
+				break;
+			}
+
+			if (*offset == '\\')
+				offset++;
+
+			pstart = offset;
+		}
+	}
+#endif
+
 	pcre*	pcre_regexp = pcre_compile(pattern, flags, error, &error_offset, NULL);
 	if(NULL == pcre_regexp)
 		return FAIL;
