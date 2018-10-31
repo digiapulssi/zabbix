@@ -2595,6 +2595,14 @@ static int	DBpatch_3000226(void)
 
 static int	DBpatch_3000227(void)
 {
+	/* this is just a direct paste from data.tmpl, with each line quoted and properly indented */
+	static const char	*const data[] = {
+		"ROW   |13018    |130       |-2   |RDDS - IP addresses for the hostname are not supported by the IP versions supported by the probe node           |",
+		"ROW   |13578    |135       |-2   |RDAP - IP addresses for the hostname are not supported by the IP versions supported by the probe node           |",
+		"ROW   |15013    |150       |-2   |EPP - IP addresses for the hostname are not supported by the IP versions supported by the probe node            |",
+		NULL
+	};
+
 	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
 		return SUCCEED;
 
@@ -2630,6 +2638,73 @@ static int	DBpatch_3000227(void)
 	/* DNS TCP -802 */
 	if (ZBX_DB_OK > DBexecute("update mappings set newvalue='DNS TCP - No AD bit from local resolver'"
 			" where mappingid=12094"))
+	{
+		return FAIL;
+	}
+
+	/* RDDS -2, RDAP -2, EPP -2 */
+	if (SUCCEED != add_mappings(data))
+		return FAIL;
+
+	return SUCCEED;
+}
+
+static int	DBpatch_3000228(void)
+{
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	/* DNS UDP -404 => -2 */
+	if (ZBX_DB_OK > DBexecute("update mappings set value='-2' where mappingid=12042"))
+		return FAIL;
+
+	/* DNS TCP -804 => -3 */
+	if (ZBX_DB_OK > DBexecute("update mappings set value='-3' where mappingid=12096"))
+		return FAIL;
+
+	/* RDDS43 - => -226 => -3 */
+	if (ZBX_DB_OK > DBexecute("update mappings set value='-3' where mappingid=13013"))
+		return FAIL;
+
+	/* RDDS80 - => -254 => -4 */
+	if (ZBX_DB_OK > DBexecute("update mappings set value='-4' where mappingid=13021"))
+		return FAIL;
+
+	/* RDAP - => -204 => -5 */
+	if (ZBX_DB_OK > DBexecute("update mappings set value='-5' where mappingid=13507"))
+		return FAIL;
+
+	/* DNS UDP -400 */
+	if (ZBX_DB_OK > DBexecute("update mappings set newvalue='DNS UDP - No server could be reached by local resolver'"
+			" where mappingid=12038"))
+	{
+		return FAIL;
+	}
+
+	/* DNS TCP -800 */
+	if (ZBX_DB_OK > DBexecute("update mappings set newvalue='DNS TCP - No server could be reached by local resolver'"
+			" where mappingid=12092"))
+	{
+		return FAIL;
+	}
+
+	/* RDDS43 -222 */
+	if (ZBX_DB_OK > DBexecute("update mappings set newvalue='RDDS43 - No server could be reached by local resolver'"
+			" where mappingid=13009"))
+	{
+		return FAIL;
+	}
+
+	/* RDDS80 -250 */
+	if (ZBX_DB_OK > DBexecute("update mappings set newvalue='RDDS80 - No server could be reached by local resolver'"
+			" where mappingid=13017"))
+	{
+		return FAIL;
+	}
+
+	/* RDAP -200 */
+	if (ZBX_DB_OK > DBexecute("update mappings set newvalue='RDAP - No server could be reached by local resolver'"
+			" where mappingid=13503"))
 	{
 		return FAIL;
 	}
@@ -2710,6 +2785,7 @@ DBPATCH_ADD(3000223, 0, 0)	/* fix value mapping typo 'RDAP' => 'RDDS' */
 DBPATCH_ADD(3000224, 0, 0)	/* link "Template RDAP" template to all probe hosts */
 DBPATCH_ADD(3000225, 0, 0)	/* change "Zabbix server" macro value {$MAX_PROCESSES}=1500 (was 300) */
 DBPATCH_ADD(3000226, 0, 0)	/* disable "RDAP availability" items on hosts where RDAP is disabled */
-DBPATCH_ADD(3000227, 0, 0)	/* reorganize error codes */
+DBPATCH_ADD(3000227, 0, 0)	/* reorganize error codes: part 1 */
+DBPATCH_ADD(3000228, 0, 0)	/* reorganize error codes: part 2 */
 
 DBPATCH_END()
