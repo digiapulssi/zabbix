@@ -23,7 +23,7 @@ require_once dirname(__FILE__).'/../include/class.cwebtest.php';
 /**
  * @backup drules
  */
-class testFormConfigDiscovery extends CWebTest {
+class testFormNetworkDiscovery extends CWebTest {
 
 	public static function getCreateData() {
 		return [
@@ -274,7 +274,7 @@ class testFormConfigDiscovery extends CWebTest {
 	/**
 	 * @dataProvider getCreateData
 	 */
-	public function testFormConfigDiscovery_Create($data) {
+	public function testFormNetworkDiscovery_Create($data) {
 		$this->zbxTestLogin('discoveryconf.php');
 		$this->zbxTestClickButtonText('Create discovery rule');
 		$this->FillInFields($data);
@@ -408,7 +408,7 @@ class testFormConfigDiscovery extends CWebTest {
 	/**
 	 * @dataProvider getUpdateData
 	 */
-	public function testFormConfigDiscovery_Update($data) {
+	public function testFormNetworkDiscovery_Update($data) {
 		$this->zbxTestLogin('discoveryconf.php');
 		$this->zbxTestClickLinkText($data['old_name']);
 		$this->FillInFields($data);
@@ -471,7 +471,7 @@ class testFormConfigDiscovery extends CWebTest {
 	/**
 	 * Test update without any modification of discovery rule data.
 	 */
-	public function testFormConfigDiscovery_SimpleUpdate() {
+	public function testFormNetworkDiscovery_SimpleUpdate() {
 		$sql_drules = 'SELECT * FROM drules ORDER BY druleid';
 		$old_drules = DBhash($sql_drules);
 		$sql_dchecks = 'SELECT * FROM dchecks ORDER BY druleid, dcheckid';
@@ -569,7 +569,7 @@ class testFormConfigDiscovery extends CWebTest {
 		}
 	}
 
-	public function testFormConfigDiscovery_Delete() {
+	public function testFormNetworkDiscovery_Delete() {
 		$name = 'Discovery rule to check delete';
 		$this->zbxTestLogin('discoveryconf.php');
 		$this->zbxTestClickLinkTextWait($name);
@@ -584,7 +584,7 @@ class testFormConfigDiscovery extends CWebTest {
 		$this->assertEquals(0, DBcount($sql));
 	}
 
-	public function testFormConfigDiscovery_Clone() {
+	public function testFormNetworkDiscovery_Clone() {
 		$this->zbxTestLogin('discoveryconf.php');
 		foreach (DBdata("SELECT name FROM drules WHERE druleid IN (2,3)", false) as $drule) {
 			$drule = $drule[0];
@@ -622,19 +622,19 @@ class testFormConfigDiscovery extends CWebTest {
 		}
 	}
 
-	public function testFormConfigDiscovery_CancelCreation() {
+	public function testFormNetworkDiscovery_CancelCreation() {
 		$this->executeCancelAction('create');
 	}
 
-	public function testFormConfigDiscovery_CancelUpdating() {
+	public function testFormNetworkDiscovery_CancelUpdating() {
 		$this->executeCancelAction('update');
 	}
 
-	public function testFormConfigDiscovery_CancelCloning() {
+	public function testFormNetworkDiscovery_CancelCloning() {
 		$this->executeCancelAction('clone');
 	}
 
-	public function testFormConfigDiscovery_CancelDelete() {
+	public function testFormNetworkDiscovery_CancelDelete() {
 		$this->executeCancelAction('delete');
 	}
 

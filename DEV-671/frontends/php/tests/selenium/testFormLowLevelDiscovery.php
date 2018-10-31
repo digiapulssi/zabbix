@@ -24,7 +24,7 @@ require_once dirname(__FILE__).'/../../include/items.inc.php';
 /**
  * @backup items
  */
-class testFormDiscoveryRule extends CWebTest {
+class testFormLowLevelDiscovery extends CWebTest {
 
 	/**
 	 * The name of the test host created in the test data set.
@@ -220,7 +220,7 @@ class testFormDiscoveryRule extends CWebTest {
 	/**
 	 * @dataProvider layout
 	 */
-	public function testFormDiscoveryRule_CheckLayout($data) {
+	public function testFormLowLevelDiscovery_CheckLayout($data) {
 
 		if (isset($data['template'])) {
 			$this->zbxTestLogin('templates.php');
@@ -663,7 +663,7 @@ class testFormDiscoveryRule extends CWebTest {
 	/**
 	 * @dataProvider update
 	 */
-	public function testFormDiscoveryRule_SimpleUpdate($data) {
+	public function testFormLowLevelDiscovery_SimpleUpdate($data) {
 		$name = $data['name'];
 
 		$sqlDiscovery = 'select itemid, hostid, name, key_, delay from items order by itemid';
@@ -1590,7 +1590,7 @@ class testFormDiscoveryRule extends CWebTest {
 	/**
 	 * @dataProvider create
 	 */
-	public function testFormDiscoveryRule_SimpleCreate($data) {
+	public function testFormLowLevelDiscovery_SimpleCreate($data) {
 		$this->zbxTestLogin('hosts.php');
 		$this->zbxTestCheckTitle('Configuration of hosts');
 		$this->zbxTestCheckHeader('Hosts');
