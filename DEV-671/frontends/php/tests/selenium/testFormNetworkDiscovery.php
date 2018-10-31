@@ -25,7 +25,7 @@ require_once dirname(__FILE__).'/../include/class.cwebtest.php';
  */
 class testFormNetworkDiscovery extends CWebTest {
 
-	public static function getCreateData() {
+	public function getCreateValidationData() {
 		return [
 			[
 				[
@@ -144,8 +144,42 @@ class testFormNetworkDiscovery extends CWebTest {
 					],
 					'error_in_checks' => ['Incorrect SNMP community.', 'Incorrect SNMP OID.']
 				]
-			],
-			// Successful discovery creation.
+			]
+		];
+	}
+
+	/**
+	 * @dataProvider getCreateValidationData
+	 */
+	public function testFormNetworkDiscovery_CreateValidation($data) {
+		$this->zbxTestLogin('discoveryconf.php');
+		$this->zbxTestClickButtonText('Create discovery rule');
+		$this->FillInFields($data);
+
+		if (array_key_exists('error_in_checks', $data)) {
+			$this->zbxTestLaunchOverlayDialog('Discovery check error');
+			foreach ($data['error_in_checks'] as $error) {
+				$this->zbxTestAssertElementPresentXpath("//div[@class='overlay-dialogue-body']//span[text()='".$error."']");
+			}
+			$this->zbxTestClickXpath('//div[@class="overlay-dialogue-footer"]/button[text()="Cancel"]');
+			return;
+		}
+
+		$this->zbxTestClick('add');
+		if (array_key_exists('name', $data)) {
+			$sql = 'SELECT NULL FROM drules WHERE name='.zbx_dbstr($data['name']);
+		}
+
+		if (array_key_exists('error', $data)) {
+			$this->zbxTestWaitUntilMessageTextPresent('msg-bad', $data['error']);
+			if (!array_key_exists('check_db', $data) || $data['check_db'] === true) {
+				$this->assertEquals(0, DBcount($sql));
+			}
+		}
+	}
+
+	public static function getCreateData() {
+		return [
 			[
 				[
 					'name' => 'Discovery rule with HTTP check',
@@ -279,37 +313,20 @@ class testFormNetworkDiscovery extends CWebTest {
 		$this->zbxTestClickButtonText('Create discovery rule');
 		$this->FillInFields($data);
 
-		if (array_key_exists('error_in_checks', $data)) {
-			$this->zbxTestLaunchOverlayDialog('Discovery check error');
-			foreach ($data['error_in_checks'] as $error) {
-				$this->zbxTestAssertElementPresentXpath("//div[@class='overlay-dialogue-body']//span[text()='".$error."']");
-			}
-			$this->zbxTestClickXpath('//div[@class="overlay-dialogue-footer"]/button[text()="Cancel"]');
-			return;
-		}
-
 		$this->zbxTestClick('add');
 		if (array_key_exists('name', $data)) {
 			$sql = 'SELECT NULL FROM drules WHERE name='.zbx_dbstr($data['name']);
 		}
 
-		if (array_key_exists('error', $data)) {
-			$this->zbxTestWaitUntilMessageTextPresent('msg-bad', $data['error']);
-			if (!array_key_exists('check_db', $data) || $data['check_db'] === true) {
-				$this->assertEquals(0, DBcount($sql));
-			}
-		}
-		else {
-			$this->zbxTestWaitUntilMessageTextPresent('msg-good', 'Discovery rule created');
-			$this->assertEquals(1, DBcount($sql));
-			$cheks = 'SELECT NULL FROM dchecks WHERE druleid IN ('.
-					'SELECT druleid FROM drules WHERE name='.zbx_dbstr($data['name']).
-					')';
-			$this->assertEquals(count($data['checks']), DBcount($cheks));
-		}
+		$this->zbxTestWaitUntilMessageTextPresent('msg-good', 'Discovery rule created');
+		$this->assertEquals(1, DBcount($sql));
+		$cheks = 'SELECT NULL FROM dchecks WHERE druleid IN ('.
+				'SELECT druleid FROM drules WHERE name='.zbx_dbstr($data['name']).
+				')';
+		$this->assertEquals(count($data['checks']), DBcount($cheks));
 	}
 
-	public static function getUpdateData() {
+	public function getUpdateValidationData() {
 		return [
 			[
 				[
@@ -358,7 +375,40 @@ class testFormNetworkDiscovery extends CWebTest {
 					],
 					'error_in_checks' => ['Incorrect port range.']
 				]
-			],
+			]
+		];
+	}
+
+	/**
+	 * @dataProvider getUpdateValidationData
+	 */
+	public function testFormNetworkDiscovery_UpdateValidation($data) {
+		$this->zbxTestLogin('discoveryconf.php');
+		$this->zbxTestClickLinkText($data['old_name']);
+		$this->FillInFields($data);
+
+		if (array_key_exists('error_in_checks', $data)) {
+			$this->zbxTestLaunchOverlayDialog('Discovery check error');
+			foreach ($data['error_in_checks'] as $error) {
+				$this->zbxTestAssertElementPresentXpath("//div[@class='overlay-dialogue-body']//span[text()='".$error."']");
+			}
+			return;
+		}
+
+		// Get amount of check rows in discovery form.
+		$checks_on_page = count($this->webDriver->findElements(WebDriverBy::xpath('//div[@id="dcheckList"]'.
+								'//tr[not(@id="dcheckListFooter")]')));
+
+		$this->zbxTestClick('update');
+
+		if (array_key_exists('error', $data)) {
+			$this->zbxTestWaitUntilMessageTextPresent('msg-bad', $data['error']);
+			$this->zbxTestCheckFatalErrors();
+		}
+	}
+
+	public static function getUpdateData() {
+		return [
 			// Successful discovery update.
 			[
 				[
@@ -413,59 +463,45 @@ class testFormNetworkDiscovery extends CWebTest {
 		$this->zbxTestClickLinkText($data['old_name']);
 		$this->FillInFields($data);
 
-		if (array_key_exists('error_in_checks', $data)) {
-			$this->zbxTestLaunchOverlayDialog('Discovery check error');
-			foreach ($data['error_in_checks'] as $error) {
-				$this->zbxTestAssertElementPresentXpath("//div[@class='overlay-dialogue-body']//span[text()='".$error."']");
-			}
-			return;
-		}
-
 		// Get amount of check rows in discovery form.
 		$checks_on_page = count($this->webDriver->findElements(WebDriverBy::xpath('//div[@id="dcheckList"]'.
 								'//tr[not(@id="dcheckListFooter")]')));
 
 		$this->zbxTestClick('update');
 
-		if (array_key_exists('error', $data)) {
-			$this->zbxTestWaitUntilMessageTextPresent('msg-bad', $data['error']);
-			$this->zbxTestCheckFatalErrors();
+		$this->zbxTestWaitUntilMessageTextPresent('msg-good', 'Discovery rule updated');
+		$this->zbxTestCheckTitle('Configuration of discovery rules');
+		$this->zbxTestCheckHeader('Discovery rules');
+		$this->zbxTestCheckFatalErrors();
+
+		if (!array_key_exists('name', $data)) {
+			$data['name'] = $data['old_name'];
+		}
+
+		// Check the results in DB after update.
+		$proxy = DBfetch(DBselect('SELECT proxy_hostid FROM drules WHERE name='.zbx_dbstr($data['name'])));
+		if ($proxy['proxy_hostid']) {
+			$discovery_db_data = DBdata('SELECT hosts.host AS proxy, drules.name, iprange AS "range", delay'.
+					' FROM drules'.
+					' JOIN hosts ON drules.proxy_hostid=hostid'.
+					' WHERE drules.name='.zbx_dbstr($data['name']), false);
 		}
 		else {
-			$this->zbxTestWaitUntilMessageTextPresent('msg-good', 'Discovery rule updated');
-			$this->zbxTestCheckTitle('Configuration of discovery rules');
-			$this->zbxTestCheckHeader('Discovery rules');
-			$this->zbxTestCheckFatalErrors();
-
-			if (!array_key_exists('name', $data)) {
-				$data['name'] = $data['old_name'];
-			}
-
-			// Check the results in DB after update.
-			$proxy = DBfetch(DBselect('SELECT proxy_hostid FROM drules WHERE name='.zbx_dbstr($data['name'])));
-			if ($proxy['proxy_hostid']) {
-				$discovery_db_data = DBdata('SELECT hosts.host AS proxy, drules.name, iprange AS "range", delay'.
-						' FROM drules'.
-						' JOIN hosts ON drules.proxy_hostid=hostid'.
-						' WHERE drules.name='.zbx_dbstr($data['name']), false);
-			}
-			else {
-				$discovery_db_data = DBdata('SELECT name, iprange, delay FROM drules WHERE name='.zbx_dbstr($data['name']), false);
-			}
-			$discovery_db_data = $discovery_db_data[0][0];
-
-			$fields = ['name', 'proxy', 'range', 'delay'];
-			foreach ($fields as $field) {
-				if (array_key_exists($field, $data)) {
-					$this->assertEquals($data[$field], $discovery_db_data[$field]);
-				}
-			}
-
-			// Compare amount of checks on page and in DB.
-			$checks_db = DBcount('SELECT dcheckid FROM dchecks WHERE druleid IN ( SELECT druleid FROM drules WHERE name='
-					.zbx_dbstr($data['name']).')');
-			$this->assertEquals($checks_db, $checks_on_page);
+			$discovery_db_data = DBdata('SELECT name, iprange, delay FROM drules WHERE name='.zbx_dbstr($data['name']), false);
 		}
+		$discovery_db_data = $discovery_db_data[0][0];
+
+		$fields = ['name', 'proxy', 'range', 'delay'];
+		foreach ($fields as $field) {
+			if (array_key_exists($field, $data)) {
+				$this->assertEquals($data[$field], $discovery_db_data[$field]);
+			}
+		}
+
+		// Compare amount of checks on page and in DB.
+		$checks_db = DBcount('SELECT dcheckid FROM dchecks WHERE druleid IN ( SELECT druleid FROM drules WHERE name='
+				.zbx_dbstr($data['name']).')');
+		$this->assertEquals($checks_db, $checks_on_page);
 	}
 
 	/**
