@@ -87,7 +87,7 @@ if (array_key_exists('params', $data['functions'][$data['selectedFunction']])) {
 
 			if (in_array($param_name, ['last'])) {
 				if ($data['paramtype'] == PARAM_TYPE_COUNTS && $param_value !== null && $param_value !== ''
-						&& $param_value[0] === '#') {
+						&& $param_value[0] === '#' && !array_key_exists('failed', $data)) {
 					$param_value = substr($param_value, 1);
 				}
 				if (array_key_exists('M', $param_function)) {

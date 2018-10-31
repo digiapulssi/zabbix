@@ -383,7 +383,8 @@ $fields = [
 	'hostid' =>				[T_ZBX_INT, O_OPT, null,	null,		null],
 	'groupid' =>			[T_ZBX_INT, O_OPT, null,	null,		null]
 ];
-check_fields($fields);
+
+$validation = check_fields($fields);
 
 $dstfrm = getRequest('dstfrm', 0);
 $dstfld1 = getRequest('dstfld1', '');
@@ -523,6 +524,10 @@ $data = [
 	'groupid' => getRequest('groupid'),
 	'hostid' => getRequest('hostid')
 ];
+
+if (!$validation) {
+	$data['failed'] = true;
+}
 
 // check if submitted function is usable with selected item
 foreach ($data['functions'] as $id => $f) {
