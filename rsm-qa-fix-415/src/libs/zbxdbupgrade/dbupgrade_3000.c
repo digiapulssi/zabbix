@@ -2593,6 +2593,36 @@ static int	DBpatch_3000226(void)
 	return SUCCEED;
 }
 
+static int	DBpatch_3000227(void)
+{
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	/* DNS UDP -428 */
+	if (ZBX_DB_OK > DBexecute("delete from mappings where mappingid=12059"))
+		return FAIL;
+
+	/* DNS UDP -401 */
+	if (ZBX_DB_OK > DBexecute("update mappings set newvalue='DNS UDP - The TLD is configured as DNSSEC-enabled, but"
+			" no DNSKEY was found in the apex' where mappingid=12039"))
+	{
+		return FAIL;
+	}
+
+	/* DNS TCP -828 */
+	if (ZBX_DB_OK > DBexecute("delete from mappings where mappingid=12113"))
+		return FAIL;
+
+	/* DNS TCP -801 */
+	if (ZBX_DB_OK > DBexecute("update mappings set newvalue='DNS TCP - The TLD is configured as DNSSEC-enabled, but"
+			" no DNSKEY was found in the apex' where mappingid=12093"))
+	{
+		return FAIL;
+	}
+
+	return SUCCEED;
+}
+
 #endif
 
 DBPATCH_START(3000)
@@ -2666,5 +2696,6 @@ DBPATCH_ADD(3000223, 0, 0)	/* fix value mapping typo 'RDAP' => 'RDDS' */
 DBPATCH_ADD(3000224, 0, 0)	/* link "Template RDAP" template to all probe hosts */
 DBPATCH_ADD(3000225, 0, 0)	/* change "Zabbix server" macro value {$MAX_PROCESSES}=1500 (was 300) */
 DBPATCH_ADD(3000226, 0, 0)	/* disable "RDAP availability" items on hosts where RDAP is disabled */
+DBPATCH_ADD(3000227, 0, 0)	/* delete obsoleted mappings */
 
 DBPATCH_END()

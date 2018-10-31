@@ -1286,7 +1286,7 @@ ROW   |12035    |120       |-268 |DNS UDP - Querying for a non existent domain -
 ROW   |12036    |120       |-269 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADCOOKIE                       |
 ROW   |12037    |120       |-270 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got unexpected                      |
 ROW   |12038    |120       |-400 |DNS UDP - No reply from local resolver                                                                          |
-ROW   |12039    |120       |-401 |DNS UDP - No AD bit from local resolver                                                                         |
+ROW   |12039    |120       |-401 |DNS UDP - The TLD is configured as DNSSEC-enabled, but no DNSKEY was found in the apex                          |
 ROW   |12040    |120       |-402 |DNS UDP - Expecting NOERROR RCODE but got SERVFAIL from local resolver                                          |
 ROW   |12041    |120       |-403 |DNS UDP - Expecting NOERROR RCODE but got NXDOMAIN from local resolver                                          |
 ROW   |12042    |120       |-404 |DNS UDP - Expecting NOERROR RCODE but got unexpected from local resolver                                        |
@@ -1305,7 +1305,6 @@ ROW   |12054    |120       |-422 |DNS UDP - RR not covered by the given NSEC RRs
 ROW   |12055    |120       |-423 |DNS UDP - Wildcard not covered by the given NSEC RRs                                                            |
 ROW   |12056    |120       |-425 |DNS UDP - The RRSIG has too few RDATA fields                                                                    |
 ROW   |12058    |120       |-427 |DNS UDP - Malformed DNSSEC response                                                                             |
-ROW   |12059    |120       |-428 |DNS UDP - The TLD is configured as DNSSEC-enabled, but no DNSKEY was found in the apex                          |
 ROW   |12060    |120       |-600 |DNS TCP - Timeout reply from name server                                                                        |
 ROW   |12061    |120       |-601 |DNS TCP - Error opening connection to name server                                                               |
 ROW   |12062    |120       |-607 |DNS TCP - Expecting DNS CLASS IN but got CHAOS                                                                  |
@@ -1341,7 +1340,7 @@ ROW   |12089    |120       |-668 |DNS TCP - Querying for a non existent domain -
 ROW   |12090    |120       |-669 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADCOOKIE                       |
 ROW   |12091    |120       |-670 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got unexpected                      |
 ROW   |12092    |120       |-800 |DNS TCP - No reply from local resolver                                                                          |
-ROW   |12093    |120       |-801 |DNS TCP - No AD bit from local resolver                                                                         |
+ROW   |12093    |120       |-801 |DNS TCP - The TLD is configured as DNSSEC-enabled, but no DNSKEY was found in the apex                          |
 ROW   |12094    |120       |-802 |DNS TCP - Expecting NOERROR RCODE but got SERVFAIL from local resolver                                          |
 ROW   |12095    |120       |-803 |DNS TCP - Expecting NOERROR RCODE but got NXDOMAIN from local resolver                                          |
 ROW   |12096    |120       |-804 |DNS TCP - Expecting NOERROR RCODE but got unexpected from local resolver                                        |
@@ -1360,7 +1359,6 @@ ROW   |12108    |120       |-822 |DNS TCP - RR not covered by the given NSEC RRs
 ROW   |12109    |120       |-823 |DNS TCP - Wildcard not covered by the given NSEC RRs                                                            |
 ROW   |12110    |120       |-825 |DNS TCP - The RRSIG has too few RDATA fields                                                                    |
 ROW   |12112    |120       |-827 |DNS TCP - Malformed DNSSEC response                                                                             |
-ROW   |12113    |120       |-828 |DNS TCP - The TLD is configured as DNSSEC-enabled, but no DNSKEY was found in the apex                          |
 ROW   |13000    |130       |-1   |Internal error                                                                                                  |
 ROW   |13001    |130       |-200 |No reply from RDDS43 server (obsolete)                                                                          |
 ROW   |13002    |130       |-201 |Whois server returned no NS                                                                                     |

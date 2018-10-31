@@ -110,7 +110,6 @@ typedef enum
 {
 	ZBX_DNSKEYS_INTERNAL,
 	ZBX_DNSKEYS_NOREPLY,
-	ZBX_DNSKEYS_NOADBIT,
 	ZBX_DNSKEYS_SERVFAIL,
 	ZBX_DNSKEYS_NXDOMAIN,
 	ZBX_DNSKEYS_CATCHALL,
@@ -790,8 +789,6 @@ static int	zbx_dnskeys_error_to_ ## __protocol (zbx_dnskeys_error_t err)	\
 			return ZBX_EC_INTERNAL;					\
 		case ZBX_DNSKEYS_NOREPLY:					\
 			return ZBX_EC_DNS_ ## __protocol ## _RES_NOREPLY;	\
-		case ZBX_DNSKEYS_NOADBIT:					\
-			return ZBX_EC_DNS_ ## __protocol ## _RES_NOADBIT;	\
 		case ZBX_DNSKEYS_SERVFAIL:					\
 			return ZBX_EC_DNS_ ## __protocol ## _RES_SERVFAIL;	\
 		case ZBX_DNSKEYS_NXDOMAIN:					\
@@ -1730,7 +1727,7 @@ static int	zbx_get_dnskeys(ldns_resolver *res, const char *domain, const char *r
 	{
 		zbx_snprintf(err, err_size, "AD bit not present in the answer of \"%s\" from resolver \"%s\"",
 				domain, resolver);
-		*ec = ZBX_DNSKEYS_NOADBIT;
+		*ec = ZBX_DNSKEYS_NONE;
 		goto out;
 	}
 

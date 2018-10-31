@@ -60,8 +60,8 @@
 #define ZBX_EC_DNS_UDP_RCODE_BADCOOKIE	-269	/* DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADCOOKIE */
 #define ZBX_EC_DNS_UDP_RCODE_CATCHALL	-270	/* DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got unexpected */
 #define ZBX_EC_DNS_UDP_RES_NOREPLY	-400	/* DNS UDP - No reply from local resolver */
-/* -401 to -428: DNSSEC errors */
-#define ZBX_EC_DNS_UDP_RES_NOADBIT	-401	/* DNS UDP - No AD bit from local resolver */
+/* -401 to -427: DNSSEC errors */
+#define ZBX_EC_DNS_UDP_DNSKEY_NONE	-401	/* DNS UDP - The TLD is configured as DNSSEC-enabled, but no DNSKEY was found in the apex */
 #define ZBX_EC_DNS_UDP_RES_SERVFAIL	-402	/* DNS UDP - Expecting NOERROR RCODE but got SERVFAIL from local resolver */
 #define ZBX_EC_DNS_UDP_RES_NXDOMAIN	-403	/* DNS UDP - Expecting NOERROR RCODE but got NXDOMAIN from local resolver */
 #define ZBX_EC_DNS_UDP_RES_CATCHALL	-404	/* DNS UDP - Expecting NOERROR RCODE but got unexpected from local resolver */
@@ -82,7 +82,6 @@
 #define ZBX_EC_DNS_UDP_RRSIG_MISS_RDATA	-425	/* DNS UDP - The RRSIG has too few RDATA fields */
 /* obsoleted #define ZBX_EC_DNS_UDP_KEY_MISS_RDATA	-426	/\* DNS UDP - The DNSKEY has too few RDATA fields *\/ */
 #define ZBX_EC_DNS_UDP_DNSSEC_CATCHALL	-427	/* DNS UDP - Malformed DNSSEC response */
-#define ZBX_EC_DNS_UDP_DNSKEY_NONE	-428	/* DNS UDP - The TLD is configured as DNSSEC-enabled, but no DNSKEY was found in the apex */
 /* DNS TCP */
 #define ZBX_EC_DNS_TCP_NS_TO		-600	/* DNS TCP - DNS TCP - Timeout reply from name server */
 #define ZBX_EC_DNS_TCP_NS_ECON		-601	/* DNS TCP - Error opening connection to name server */
@@ -119,8 +118,8 @@
 #define ZBX_EC_DNS_TCP_RCODE_BADCOOKIE	-669	/* DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADCOOKIE */
 #define ZBX_EC_DNS_TCP_RCODE_CATCHALL	-670	/* DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got unexpected */
 #define ZBX_EC_DNS_TCP_RES_NOREPLY	-800	/* DNS TCP - No reply from local resolver */
-/* -801 to -828: DNSSEC errors */
-#define ZBX_EC_DNS_TCP_RES_NOADBIT	-801	/* DNS TCP - No AD bit from local resolver */
+/* -801 to -827: DNSSEC errors */
+#define ZBX_EC_DNS_TCP_DNSKEY_NONE	-801	/* DNS TCP - The TLD is configured as DNSSEC-enabled, but no DNSKEY was found in the apex */
 #define ZBX_EC_DNS_TCP_RES_SERVFAIL	-802	/* DNS TCP - Expecting NOERROR RCODE but got SERVFAIL from local resolver */
 #define ZBX_EC_DNS_TCP_RES_NXDOMAIN	-803	/* DNS TCP - Expecting NOERROR RCODE but got NXDOMAIN from local resolver */
 #define ZBX_EC_DNS_TCP_RES_CATCHALL	-804	/* DNS TCP - Expecting NOERROR RCODE but got unexpected from local resolver */
@@ -141,7 +140,6 @@
 #define ZBX_EC_DNS_TCP_RRSIG_MISS_RDATA	-825	/* DNS TCP - The RRSIG has too few RDATA fields */
 /* obsoleted #define ZBX_EC_DNS_TCP_KEY_MISS_RDATA	-826	/\* DNS TCP - The DNSKEY has too few RDATA fields *\/ */
 #define ZBX_EC_DNS_TCP_DNSSEC_CATCHALL	-827	/* DNS TCP - Malformed DNSSEC response */
-#define ZBX_EC_DNS_TCP_DNSKEY_NONE	-828	/* DNS TCP - The TLD is configured as DNSSEC-enabled, but no DNSKEY was found in the apex */
 /* RDDS */
 #define ZBX_EC_RDDS43_NONS		-201	/* Whois server returned no NS */
 #define ZBX_EC_RDDS80_NOCODE		-206	/* no HTTP status code */
