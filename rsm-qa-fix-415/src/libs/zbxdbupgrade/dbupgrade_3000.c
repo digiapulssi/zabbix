@@ -2620,6 +2620,20 @@ static int	DBpatch_3000227(void)
 		return FAIL;
 	}
 
+	/* DNS UDP -402 */
+	if (ZBX_DB_OK > DBexecute("update mappings set newvalue='DNS UDP - No AD bit from local resolver'"
+			" where mappingid=12040"))
+	{
+		return FAIL;
+	}
+
+	/* DNS TCP -802 */
+	if (ZBX_DB_OK > DBexecute("update mappings set newvalue='DNS TCP - No AD bit from local resolver'"
+			" where mappingid=12094"))
+	{
+		return FAIL;
+	}
+
 	return SUCCEED;
 }
 
@@ -2696,6 +2710,6 @@ DBPATCH_ADD(3000223, 0, 0)	/* fix value mapping typo 'RDAP' => 'RDDS' */
 DBPATCH_ADD(3000224, 0, 0)	/* link "Template RDAP" template to all probe hosts */
 DBPATCH_ADD(3000225, 0, 0)	/* change "Zabbix server" macro value {$MAX_PROCESSES}=1500 (was 300) */
 DBPATCH_ADD(3000226, 0, 0)	/* disable "RDAP availability" items on hosts where RDAP is disabled */
-DBPATCH_ADD(3000227, 0, 0)	/* delete obsoleted mappings */
+DBPATCH_ADD(3000227, 0, 0)	/* reorganize error codes */
 
 DBPATCH_END()

@@ -62,7 +62,7 @@
 #define ZBX_EC_DNS_UDP_RES_NOREPLY	-400	/* DNS UDP - No reply from local resolver */
 /* -401 to -427: DNSSEC errors */
 #define ZBX_EC_DNS_UDP_DNSKEY_NONE	-401	/* DNS UDP - The TLD is configured as DNSSEC-enabled, but no DNSKEY was found in the apex */
-#define ZBX_EC_DNS_UDP_RES_SERVFAIL	-402	/* DNS UDP - Expecting NOERROR RCODE but got SERVFAIL from local resolver */
+#define ZBX_EC_DNS_UDP_DNSKEY_NOADBIT	-402	/* DNS UDP - No AD bit from local resolver */
 #define ZBX_EC_DNS_UDP_RES_NXDOMAIN	-403	/* DNS UDP - Expecting NOERROR RCODE but got NXDOMAIN from local resolver */
 #define ZBX_EC_DNS_UDP_RES_CATCHALL	-404	/* DNS UDP - Expecting NOERROR RCODE but got unexpected from local resolver */
 #define ZBX_EC_DNS_UDP_ALGO_UNKNOWN	-405	/* DNS UDP - Unknown cryptographic algorithm */
@@ -120,7 +120,7 @@
 #define ZBX_EC_DNS_TCP_RES_NOREPLY	-800	/* DNS TCP - No reply from local resolver */
 /* -801 to -827: DNSSEC errors */
 #define ZBX_EC_DNS_TCP_DNSKEY_NONE	-801	/* DNS TCP - The TLD is configured as DNSSEC-enabled, but no DNSKEY was found in the apex */
-#define ZBX_EC_DNS_TCP_RES_SERVFAIL	-802	/* DNS TCP - Expecting NOERROR RCODE but got SERVFAIL from local resolver */
+#define ZBX_EC_DNS_TCP_DNSKEY_NOADBIT	-802	/* DNS TCP - No AD bit from local resolver */
 #define ZBX_EC_DNS_TCP_RES_NXDOMAIN	-803	/* DNS TCP - Expecting NOERROR RCODE but got NXDOMAIN from local resolver */
 #define ZBX_EC_DNS_TCP_RES_CATCHALL	-804	/* DNS TCP - Expecting NOERROR RCODE but got unexpected from local resolver */
 #define ZBX_EC_DNS_TCP_ALGO_UNKNOWN	-805	/* DNS TCP - Unknown cryptographic algorithm */

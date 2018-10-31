@@ -100,7 +100,6 @@ typedef enum
 	ZBX_RESOLVER_INTERNAL,
 	ZBX_RESOLVER_NOREPLY,
 	ZBX_RESOLVER_NOADBIT,
-	ZBX_RESOLVER_SERVFAIL,
 	ZBX_RESOLVER_NXDOMAIN,
 	ZBX_RESOLVER_CATCHALL
 }
@@ -110,10 +109,10 @@ typedef enum
 {
 	ZBX_DNSKEYS_INTERNAL,
 	ZBX_DNSKEYS_NOREPLY,
-	ZBX_DNSKEYS_SERVFAIL,
+	ZBX_DNSKEYS_NONE,
+	ZBX_DNSKEYS_NOADBIT,
 	ZBX_DNSKEYS_NXDOMAIN,
-	ZBX_DNSKEYS_CATCHALL,
-	ZBX_DNSKEYS_NONE
+	ZBX_DNSKEYS_CATCHALL
 }
 zbx_dnskeys_error_t;
 
@@ -758,8 +757,6 @@ static int	zbx_resolver_error_to_ ## __interface (zbx_resolver_error_t err)	\
 			return ZBX_EC_ ## __interface ## _RES_NOREPLY;			\
 		case ZBX_RESOLVER_NOADBIT:						\
 			return ZBX_EC_ ## __interface ## _RES_NOADBIT;			\
-		case ZBX_RESOLVER_SERVFAIL:						\
-			return ZBX_EC_ ## __interface ## _RES_SERVFAIL;			\
 		case ZBX_RESOLVER_NXDOMAIN:						\
 			return ZBX_EC_ ## __interface ## _RES_NXDOMAIN;			\
 		case ZBX_RESOLVER_CATCHALL:						\
@@ -789,14 +786,14 @@ static int	zbx_dnskeys_error_to_ ## __protocol (zbx_dnskeys_error_t err)	\
 			return ZBX_EC_INTERNAL;					\
 		case ZBX_DNSKEYS_NOREPLY:					\
 			return ZBX_EC_DNS_ ## __protocol ## _RES_NOREPLY;	\
-		case ZBX_DNSKEYS_SERVFAIL:					\
-			return ZBX_EC_DNS_ ## __protocol ## _RES_SERVFAIL;	\
+		case ZBX_DNSKEYS_NONE:						\
+			return ZBX_EC_DNS_ ## __protocol ## _DNSKEY_NONE;	\
+		case ZBX_DNSKEYS_NOADBIT:					\
+			return ZBX_EC_DNS_ ## __protocol ## _DNSKEY_NOADBIT;	\
 		case ZBX_DNSKEYS_NXDOMAIN:					\
 			return ZBX_EC_DNS_ ## __protocol ## _RES_NXDOMAIN;	\
 		case ZBX_DNSKEYS_CATCHALL:					\
 			return ZBX_EC_DNS_ ## __protocol ## _RES_CATCHALL;	\
-		case ZBX_DNSKEYS_NONE:						\
-			return ZBX_EC_DNS_ ## __protocol ## _DNSKEY_NONE;	\
 		default:							\
 			THIS_SHOULD_NEVER_HAPPEN;				\
 			return ZBX_EC_INTERNAL;					\
@@ -1727,7 +1724,7 @@ static int	zbx_get_dnskeys(ldns_resolver *res, const char *domain, const char *r
 	{
 		zbx_snprintf(err, err_size, "AD bit not present in the answer of \"%s\" from resolver \"%s\"",
 				domain, resolver);
-		*ec = ZBX_DNSKEYS_NONE;
+		*ec = ZBX_DNSKEYS_NOADBIT;
 		goto out;
 	}
 
@@ -1741,9 +1738,6 @@ static int	zbx_get_dnskeys(ldns_resolver *res, const char *domain, const char *r
 
 		switch (rcode)
 		{
-			case LDNS_RCODE_SERVFAIL:
-				*ec = ZBX_DNSKEYS_SERVFAIL;
-				break;
 			case LDNS_RCODE_NXDOMAIN:
 				*ec = ZBX_DNSKEYS_NXDOMAIN;
 				break;
@@ -2928,9 +2922,6 @@ static int	zbx_resolver_resolve_host(ldns_resolver *res, unsigned int extras, co
 
 			switch (rcode)
 			{
-				case LDNS_RCODE_SERVFAIL:
-					*ec_res = ZBX_RESOLVER_SERVFAIL;
-					break;
 				case LDNS_RCODE_NXDOMAIN:
 					*ec_res = ZBX_RESOLVER_NXDOMAIN;
 					break;
