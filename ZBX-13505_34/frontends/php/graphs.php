@@ -390,9 +390,8 @@ $pageFilter = new CPageFilter([
 ]);
 
 if (empty($_REQUEST['parent_discoveryid'])) {
-	if ($pageFilter->hostid > 0) {
-		$hostId = $pageFilter->hostid;
-	}
+	$groupId = $pageFilter->groupid;
+	$hostId = $pageFilter->hostid;
 }
 
 if (hasRequest('action') && getRequest('action') == 'graph.masscopyto' && hasRequest('group_graphid')) {
