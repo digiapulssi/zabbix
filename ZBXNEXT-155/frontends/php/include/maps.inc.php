@@ -84,14 +84,6 @@ function getActionsBySysmap(array $sysmap, array $options = []) {
 		if ($selement['elementtype'] == SYSMAP_ELEMENT_TYPE_HOST) {
 			$hostid = $selement['elements'][0]['hostid'];
 			$hostids[$hostid] = $hostid;
-
-			/*
-			 * Expanding host URL macros again as some hosts were added from hostgroup areas and automatic expanding
-			 * only happens for elements that are defined for map in DB.
-			 */
-			foreach ($selement['urls'] as $urlid => $url) {
-				$selement['urls'][$urlid]['url'] = str_replace('{HOST.ID}', $hostid, $url['url']);
-			}
 		}
 		elseif ($selement['elementtype'] == SYSMAP_ELEMENT_TYPE_TRIGGER) {
 			foreach ($selement['elements'] as $element) {
@@ -187,7 +179,6 @@ function getActionsBySysmap(array $sysmap, array $options = []) {
 					'sysmapid' => $elem['elements'][0]['sysmapid'],
 					'severity_min' => isset($options['severity_min']) ? $options['severity_min'] : null
 				];
-
 				break;
 
 			case SYSMAP_ELEMENT_TYPE_TRIGGER:
@@ -224,6 +215,13 @@ function getActionsBySysmap(array $sysmap, array $options = []) {
 					$gotos['show_suppressed'] = true;
 				}
 				break;
+		}
+
+		// Unset URLs with empty name or value.
+		foreach ($elem['urls'] as $url_nr => $url) {
+			if ($url['name'] === '' || $url['url'] === '') {
+				unset($elem['urls'][$url_nr]);
+			}
 		}
 
 		order_result($elem['urls'], 'name');
@@ -1674,7 +1672,16 @@ function populateFromMapAreas(array &$map, array $theme) {
 				$selement['selementid'] = -$new_selementid;
 
 				$area['selementids'][$new_selementid] = $new_selementid;
-				$map['selements'][$new_selementid] = $selement;
+
+				// Expanding host URL macros.
+				$selement_urls = [];
+				foreach ($selement['urls'] as $url) {
+					$selement_urls[] = CMacrosResolverHelper::resolveMapElementUrl($url,
+						['elementid' => $host['hostid']] + $selement
+					);
+				}
+
+				$map['selements'][$new_selementid] = ['urls' => $selement_urls] + $selement;
 			}
 
 			$areas[] = $area;

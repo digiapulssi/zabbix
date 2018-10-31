@@ -954,7 +954,7 @@ class CMap extends CMapElement {
 						);
 					}
 
-					if (!CHtmlUrlValidator::validate($url['url'], false)) {
+					if (!CHtmlUrlValidator::validate($url['url'], false, true)) {
 						self::exception(ZBX_API_ERROR_PARAMETERS, _('Wrong value for url field.'));
 					}
 
@@ -1414,7 +1414,7 @@ class CMap extends CMapElement {
 						);
 					}
 
-					if (!CHtmlUrlValidator::validate($url['url'], false)) {
+					if (!CHtmlUrlValidator::validate($url['url'], false, true)) {
 						self::exception(ZBX_API_ERROR_PARAMETERS, _('Wrong value for url field.'));
 					}
 
@@ -2258,35 +2258,6 @@ class CMap extends CMapElement {
 		return ['sysmapids' => $sysmapids];
 	}
 
-	private function expandUrlMacro($url, $selement) {
-		switch ($selement['elementtype']) {
-			case SYSMAP_ELEMENT_TYPE_HOST_GROUP:
-				$macro = '{HOSTGROUP.ID}';
-				break;
-
-			case SYSMAP_ELEMENT_TYPE_TRIGGER:
-				$macro = '{TRIGGER.ID}';
-				break;
-
-			case SYSMAP_ELEMENT_TYPE_MAP:
-				$macro = '{MAP.ID}';
-				break;
-
-			case SYSMAP_ELEMENT_TYPE_HOST:
-				$macro = '{HOST.ID}';
-				break;
-
-			default:
-				$macro = false;
-		}
-
-		if ($macro) {
-			$url['url'] = str_replace($macro, $selement['elementid'], $url['url']);
-		}
-
-		return $url;
-	}
-
 	protected function addRelatedObjects(array $options, array $result) {
 		$result = parent::addRelatedObjects($options, $result);
 
@@ -2301,6 +2272,29 @@ class CMap extends CMapElement {
 				'filter' => ['sysmapid' => $sysmapIds],
 				'preservekeys' => true
 			]);
+
+			// Temporary fix for problem reported in ZBX-15083.
+			$trigger_selements = [];
+			foreach ($selements as $selement) {
+				if ($selement['elementtype'] == SYSMAP_ELEMENT_TYPE_TRIGGER) {
+					$trigger_selements[$selement['selementid']] = true;
+				}
+			}
+			$trigger_selements = $trigger_selements
+				? API::getApiService()->select('sysmap_element_trigger', [
+					'output' => ['selementid', 'triggerid'],
+					'filter' => ['selementid' => array_keys($trigger_selements)]
+				])
+				: [];
+
+			// Are multiple rows supported?
+			foreach ($trigger_selements as $tr_sel) {
+				if ($selements[$tr_sel['selementid']]['elementid'] == 0) {
+					$selements[$tr_sel['selementid']]['elementid'] = [];
+				}
+				$selements[$tr_sel['selementid']]['elementid'][] = $tr_sel['triggerid'];
+			}
+
 			$relation_map = $this->createRelationMap($selements, 'sysmapid', 'selementid');
 
 			// add selement URLs
@@ -2325,7 +2319,8 @@ class CMap extends CMapElement {
 											|| ($selement['elementsubtype'] == SYSMAP_ELEMENT_SUBTYPE_HOST_GROUP_ELEMENTS
 													&& $mapUrl['elementtype'] == SYSMAP_ELEMENT_TYPE_HOST)
 										)) {
-								$selements[$snum]['urls'][] = $this->expandUrlMacro($mapUrl, $selement);
+								$selements[$snum]['urls'][]
+									= CMacrosResolverHelper::resolveMapElementUrl($mapUrl, $selement);
 							}
 						}
 					}
@@ -2339,7 +2334,7 @@ class CMap extends CMapElement {
 				while ($selementUrl = DBfetch($dbSelementUrls)) {
 					$selements[$selementUrl['selementid']]['urls'][] = is_null($options['expandUrls'])
 						? $selementUrl
-						: $this->expandUrlMacro($selementUrl, $selements[$selementUrl['selementid']]);
+						: CMacrosResolverHelper::resolveMapElementUrl($selementUrl, $selements[$selementUrl['selementid']]);
 				}
 			}
 

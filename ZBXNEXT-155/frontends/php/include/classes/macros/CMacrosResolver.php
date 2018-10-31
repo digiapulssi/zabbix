@@ -1747,115 +1747,165 @@ class CMacrosResolver extends CMacrosResolverGeneral {
 	 * Resolve all kinds of macros in map labels.
 	 *
 	 * @param array  $selement
-	 * @param string $selement['label']						label to expand
-	 * @param int    $selement['elementtype']				element type
-	 * @param array    $selement['elements']				elements
-	 * @param string $selement['elementExpressionTrigger']	if type is trigger, then trigger expression
+	 * @param string $selement['label']                     label to expand
+	 * @param int    $selement['elementtype']               element type
+	 * @param array  $selement['elements']                  elements
+	 * @param string $selement['elementExpressionTrigger']  if type is trigger, then trigger expression
 	 *
 	 * @return string
 	 */
 	public function resolveMapLabelMacrosAll(array $selement) {
 		$label = $selement['label'];
 
-		// For host and trigger items expand macros if they exists.
-		if (($selement['elementtype'] == SYSMAP_ELEMENT_TYPE_HOST || $selement['elementtype'] == SYSMAP_ELEMENT_TYPE_TRIGGER)
-				&& (strpos($label, 'HOST.NAME') !== false
-						|| strpos($label, 'HOSTNAME') !== false /* deprecated */
-						|| strpos($label, 'HOST.HOST') !== false
-						|| strpos($label, 'HOST.DESCRIPTION') !== false
-						|| strpos($label, 'HOST.DNS') !== false
-						|| strpos($label, 'HOST.IP') !== false
-						|| strpos($label, 'IPADDRESS') !== false /* deprecated */
-						|| strpos($label, 'HOST.CONN') !== false)) {
-			// Priorities of interface types doesn't match interface type ids in DB.
-			$priorities = [
-				INTERFACE_TYPE_AGENT => 4,
-				INTERFACE_TYPE_SNMP => 3,
-				INTERFACE_TYPE_JMX => 2,
-				INTERFACE_TYPE_IPMI => 1
-			];
-
-			// Get host data if element is host.
-			if ($selement['elementtype'] == SYSMAP_ELEMENT_TYPE_HOST) {
-				$res = DBselect(
-					'SELECT hi.ip,hi.dns,hi.useip,h.host,h.name,h.description,hi.type AS interfacetype'.
-					' FROM interface hi,hosts h'.
-					' WHERE hi.hostid=h.hostid'.
-						' AND hi.main=1 AND hi.hostid='.zbx_dbstr($selement['elements'][0]['hostid'])
-				);
-
-				// Process interface priorities.
-				$tmpPriority = 0;
-
-				while ($dbHost = DBfetch($res)) {
-					if ($priorities[$dbHost['interfacetype']] > $tmpPriority) {
-						$resHost = $dbHost;
-						$tmpPriority = $priorities[$dbHost['interfacetype']];
-					}
-				}
-
-				$hostsByNr[''] = $resHost;
+		// Check if label contains {INVENTORY.*<1-9>} macros and create an array of database fields for found macros.
+		$supported_inventory_macros = $this->getSupportedHostInventoryMacrosMap();
+		$inventory_macros_pattern = $this->getSupportedHostInventoryMacrosPattern($selement['elementtype']);
+		preg_match_all($inventory_macros_pattern, $label, $inventory_macros_matched);
+		$inventory_macros = null;
+		if ($inventory_macros_matched['macros']) {
+			$inventory_macros = [];
+			foreach ($inventory_macros_matched['macros'] as $match) {
+				$inventory_macros[$match] = $supported_inventory_macros[$match];
 			}
-			// Get trigger host list if element is trigger.
-			else {
-				$res = DBselect(
-					'SELECT hi.ip,hi.dns,hi.useip,h.host,h.name,h.description,f.functionid,hi.type AS interfacetype'.
-					' FROM interface hi,items i,functions f,hosts h'.
-					' WHERE h.hostid=hi.hostid'.
-						' AND hi.hostid=i.hostid'.
-						' AND i.itemid=f.itemid'.
-						' AND hi.main=1 AND f.triggerid='.zbx_dbstr($selement['elements'][0]['triggerid']).
-					' ORDER BY f.functionid'
-				);
+		}
+		unset($inventory_macros_pattern, $inventory_macros_matched);
 
-				// Process interface priorities, build $hostsByFunctionId array.
-				$tmpFunctionId = -1;
+		// Check if label contains host macros.
+		$host_nr = $selement['elementtype'] == SYSMAP_ELEMENT_TYPE_TRIGGER ? '[1-9]?' : '';
+		$has_interface_macros = preg_match('/{(IPADDRESS|HOST\.(DNS|IP|CONN))'.$host_nr.'}/', $label);
+		$has_host_macros = preg_match('/{(HOSTNAME|HOST\.(ID|NAME|HOST|DESCRIPTION))'.$host_nr.'}/', $label);
 
-				while ($dbHost = DBfetch($res)) {
-					if ($dbHost['functionid'] != $tmpFunctionId) {
-						$tmpPriority = 0;
-						$tmpFunctionId = $dbHost['functionid'];
+		// Resolve host and host inventory macros if found.
+		if (($inventory_macros || $has_host_macros)
+				&& ($selement['elementtype'] == SYSMAP_ELEMENT_TYPE_HOST
+					|| $selement['elementtype'] == SYSMAP_ELEMENT_TYPE_TRIGGER)) {
+			$hostids_to_resolve = [];
+			$hosts_by_itemids = [];
+			$itemids_by_functionids = [];
+
+			// Find hosts if element is trigger.
+			if ($selement['elementtype'] == SYSMAP_ELEMENT_TYPE_TRIGGER) {
+				$triggers = API::Trigger()->get([
+					'output' => [],
+					'triggerids' => zbx_objectValues($selement['elements'], 'triggerid'),
+					'selectFunctions' => ['functionid', 'itemid'],
+					'selectItems' => ['itemid', 'hostid'],
+					'selectHosts' => ['hostid'],
+					'nopermissions' => true,
+					'preservekeys' => true
+				]);
+
+				foreach ($triggers as $trigger) {
+					foreach ($trigger['hosts'] as $host) {
+						$hostids_to_resolve[$host['hostid']] = $host['hostid'];
 					}
-
-					if ($priorities[$dbHost['interfacetype']] > $tmpPriority) {
-						$hostsByFunctionId[$dbHost['functionid']] = $dbHost;
-						$tmpPriority = $priorities[$dbHost['interfacetype']];
+					foreach ($trigger['items'] as $item) {
+						$hosts_by_itemids[$item['itemid']] = $item['hostid'];
+					}
+					foreach ($trigger['functions'] as $fn) {
+						$itemids_by_functionids[$fn['functionid']] = $fn['itemid'];
 					}
 				}
+			}
+			elseif ($selement['elementtype'] == SYSMAP_ELEMENT_TYPE_HOST) {
+				$hostids_to_resolve[$selement['elements'][0]['hostid']] = true;
+			}
+
+			// Select host details.
+			$hosts = API::Host()->get([
+				'output' => ['host', 'name', 'description'],
+				'selectInterfaces' => $has_interface_macros ? ['main', 'type', 'useip', 'ip', 'dns'] : null,
+				'selectInventory' => $inventory_macros,
+				'hostids' => array_keys($hostids_to_resolve),
+				'nopermissions' => true,
+				'preservekeys' => true
+			]);
+
+			// Find highest priority interface from available.
+			if ($has_interface_macros) {
+				foreach ($hosts as &$host) {
+					$top_priority_interface = null;
+					$tmp_priority = 0;
+
+					foreach ($host['interfaces'] as $interface) {
+						if ($interface['main'] == INTERFACE_PRIMARY
+								&& $this->interfacePriorities[$interface['type']] > $tmp_priority) {
+							$tmp_priority = $this->interfacePriorities[$interface['type']];
+							$top_priority_interface = [
+								'useip' => $interface['useip'],
+								'ip' => $interface['ip'],
+								'dns' => $interface['dns']
+							];
+						}
+					}
+
+					$host['interface'] = $top_priority_interface;
+					unset($host['interfaces']);
+				}
+				unset($host);
+			}
+
+			/**
+			 * Map numeric host references to real hosts.
+			 * Each host can appear multiple times.
+			 */
+			$hosts_by_nr = [];
+			if ($selement['elementtype'] == SYSMAP_ELEMENT_TYPE_HOST) {
+				$hosts_by_nr[''] = reset($hosts);
+			}
+			else {
+				// Must be here for correct counting.
+				$hosts_by_nr = ['' => null];
 
 				// Get all function ids from expression and link host data against position in expression.
-				preg_match_all('/\{([0-9]+)\}/', $selement['elements'][0]['elementExpressionTrigger'], $matches);
+				foreach ($selement['elements'] as $map_element) {
+					preg_match_all('/\{([0-9]+)\}/', $map_element['elementExpressionTrigger'], $matches);
+					foreach ($matches[1] as $i => $functionid) {
+						$itemid = $itemids_by_functionids[$functionid];
+						$hostid = $hosts_by_itemids[$itemid];
 
-				$hostsByNr = [];
-
-				foreach ($matches[1] as $i => $functionid) {
-					if (isset($hostsByFunctionId[$functionid])) {
-						$hostsByNr[$i + 1] = $hostsByFunctionId[$functionid];
+						if (array_key_exists($hostid, $hosts)) {
+							$hosts_by_nr[count($hosts_by_nr)] = $hosts[$hostid];
+						}
 					}
 				}
 
-				// For macro without numeric index.
-				if (isset($hostsByNr[1])) {
-					$hostsByNr[''] = $hostsByNr[1];
+				// Add host reference for macro without numeric index.
+				if (array_key_exists(1, $hosts_by_nr)) {
+					$hosts_by_nr[''] = $hosts_by_nr[1];
 				}
 			}
 
 			// Resolve functional macros like: {{HOST.HOST}:log[{HOST.HOST}.log].last(0)}.
-			$label = $this->resolveMapLabelMacros($label, $hostsByNr);
+			$label = $this->resolveMapLabelMacros($label, $hosts_by_nr);
 
 			// Resolves basic macros.
-			// $hostsByNr possible keys: '' and 1-9.
-			foreach ($hostsByNr as $i => $host) {
+			// $hosts_by_nr possible keys: '' and 1-9.
+			foreach ($hosts_by_nr as $i => $host) {
 				$replace = [
-					'{HOST.NAME'.$i.'}' => $host['name'],
-					'{HOSTNAME'.$i.'}' => $host['host'],
-					'{HOST.HOST'.$i.'}' => $host['host'],
-					'{HOST.DESCRIPTION'.$i.'}' => $host['description'],
-					'{HOST.DNS'.$i.'}' => $host['dns'],
-					'{HOST.IP'.$i.'}' => $host['ip'],
-					'{IPADDRESS'.$i.'}' => $host['ip'],
-					'{HOST.CONN'.$i.'}' => $host['useip'] ? $host['ip'] : $host['dns']
+					'{HOST.ID'.$i.'}' => $host ? $host['hostid'] : '',
+					'{HOST.NAME'.$i.'}' => $host ? $host['name'] : '',
+					'{HOSTNAME'.$i.'}' => $host ? $host['host'] : '',
+					'{HOST.HOST'.$i.'}' => $host ? $host['host'] : '',
+					'{HOST.DESCRIPTION'.$i.'}' => $host ? $host['description'] : ''
 				];
+
+				if ($inventory_macros) {
+					foreach ($inventory_macros as $macros => $inventory_field) {
+						$replace['{'.$macros.$i.'}'] = $host ? $host['inventory'][$inventory_field] : '';
+					}
+				}
+
+				if ($has_interface_macros) {
+					$replace += [
+						'{HOST.DNS'.$i.'}' => $host ? $host['interface']['dns'] : '',
+						'{HOST.IP'.$i.'}' => $host ? $host['interface']['ip'] : '',
+						'{IPADDRESS'.$i.'}' => $host ? $host['interface']['ip'] : '',
+						'{HOST.CONN'.$i.'}' => $host
+							? ($host['interface']['useip'] ? $host['interface']['ip'] : $host['interface']['dns'])
+							: ''
+					];
+				}
 
 				$label = str_replace(array_keys($replace), $replace, $label);
 			}
@@ -1912,5 +1962,332 @@ class CMacrosResolver extends CMacrosResolverGeneral {
 		}
 
 		return $label;
+	}
+
+	/**
+	 * Resolve all kinds of macros in map element URL name and value.
+	 *
+	 * @static
+	 *
+	 * @param array        $url
+	 * @param string       $url['url']
+	 * @param string       $url['name']
+	 * @param array        $selement
+	 * @param int          $selement['elementtype']        Map element type.
+	 * @param int | array  $selement['elementid']          ID of element or array of IDs for map trigger elements.
+	 *
+	 * @return array
+	 */
+	public function resolveMapElementUrl(array $url, array $selement) {
+		switch ($selement['elementtype']) {
+			case SYSMAP_ELEMENT_TYPE_HOST_GROUP:
+				$macros = [
+					'{HOSTGROUP.ID}' => $selement['elementid'],
+				];
+				break;
+
+			case SYSMAP_ELEMENT_TYPE_TRIGGER:
+				$macros = [
+					'{TRIGGER.ID}' => $selement['elementid'][0]
+				];
+				break;
+
+			case SYSMAP_ELEMENT_TYPE_MAP:
+				$macros = [
+					'{MAP.ID}' => $selement['elementid']
+				];
+				break;
+
+			case SYSMAP_ELEMENT_TYPE_HOST:
+				$macros = [
+					'{HOST.ID}' => $selement['elementid']
+				];
+				break;
+
+			default:
+				$macros = false;
+		}
+
+		if ($selement['elementtype'] == SYSMAP_ELEMENT_TYPE_HOST
+				|| $selement['elementtype'] == SYSMAP_ELEMENT_TYPE_TRIGGER) {
+			$hostids_to_resolve = [];
+
+			// Find host if element is trigger.
+			if ($selement['elementtype'] == SYSMAP_ELEMENT_TYPE_TRIGGER) {
+				$triggers = API::Trigger()->get([
+					'output' => ['expression'],
+					'triggerids' => $selement['elementid'],
+					'selectHosts' => ['hostid'],
+					'selectFunctions' => ['functionid', 'itemid'],
+					'selectItems' => ['itemid', 'hostid'],
+					'nopermissions' => true,
+					'preservekeys' => true
+				]);
+
+				foreach ($triggers as $trigger) {
+					foreach ($trigger['hosts'] as $host) {
+						$hostids_to_resolve[$host['hostid']] = $host['hostid'];
+					}
+					foreach ($trigger['items'] as $item) {
+						$hosts_by_itemids[$item['itemid']] = $item['hostid'];
+					}
+					foreach ($trigger['functions'] as $fn) {
+						$itemids_by_functionids[$fn['functionid']] = $fn['itemid'];
+					}
+				}
+			}
+			else {
+				$hostids_to_resolve[$selement['elementid']] = $selement['elementid'];
+			}
+
+			/**
+			 * Check if URL value or name contains {INVENTORY.*<1-9>} macros and create an array of database fields
+			 * for used macros.
+			 */
+			$inventary_pattern = $this->getSupportedHostInventoryMacrosPattern($selement['elementtype']);
+			$supported_inventory_macros = $this->getSupportedHostInventoryMacrosMap();
+			$inventory_macros = [];
+
+			// Check if string contains {INVENTORY.*<1-9>} macros.
+			if (preg_match_all($inventary_pattern, $url['url'], $inventory_macros_matched)) {
+				foreach ($inventory_macros_matched['macros'] as $match) {
+					$inventory_macros[$match] = $supported_inventory_macros[$match];
+				}
+			}
+
+			if (preg_match_all($inventary_pattern, $url['name'], $inventory_macros_matched)) {
+				foreach ($inventory_macros_matched['macros'] as $match) {
+					$inventory_macros[$match] = $supported_inventory_macros[$match];
+				}
+			}
+			unset($inventary_pattern, $inventory_macros_matched);
+
+			// Number used in macros that refers to one of presorted host.
+			$host_nr = $selement['elementtype'] == SYSMAP_ELEMENT_TYPE_TRIGGER ? '[1-9]?' : '';
+
+			// Check if interface macros are used.
+			$interface_macros_pattern = '/{(?<macros>(IPADDRESS|HOST\.(DNS|IP|CONN)))'.$host_nr.'}/';
+			preg_match_all($interface_macros_pattern, $url['url'], $url_interface_macros);
+			preg_match_all($interface_macros_pattern, $url['name'], $name_interface_macros);
+			$interface_macros = (boolean) ($url_interface_macros['macros'] + $name_interface_macros['macros']);
+			unset($url_interface_macros);
+
+			// Check if string contains {HOST.*<1-9>} macros.
+			$host_macros_pattern = '/{(?<macros>(HOSTNAME|HOST\.(ID|NAME|HOST|DESCRIPTION|NAME)))'.$host_nr.'}/';
+			preg_match_all($host_macros_pattern, $url['url'], $url_host_macros);
+			preg_match_all($host_macros_pattern, $url['name'], $name_host_macros);
+			$host_macros = (boolean) ($url_host_macros['macros'] + $name_host_macros['macros']);
+			unset($url_host_macros);
+
+			if ($inventory_macros || $interface_macros || $host_macros) {
+				$hosts = API::Host()->get([
+					'output' => ['host', 'name', 'description'],
+					'selectInterfaces' => $interface_macros ? ['main', 'type', 'useip', 'ip', 'dns'] : null,
+					'selectInventory' => $inventory_macros ? : null,
+					'hostids' => array_keys($hostids_to_resolve),
+					'nopermissions' => true,
+					'preservekeys' => true
+				]);
+
+				// Find highest priority interface from available.
+				if ($interface_macros) {
+					foreach ($hosts as &$host) {
+						$top_priority_interface = null;
+						$tmp_priority = 0;
+
+						foreach ($host['interfaces'] as $interface) {
+							if ($interface['main'] == INTERFACE_PRIMARY
+									&& $this->interfacePriorities[$interface['type']] > $tmp_priority) {
+								$tmp_priority = $this->interfacePriorities[$interface['type']];
+								$top_priority_interface = [
+									'useip' => $interface['useip'],
+									'ip' => $interface['ip'],
+									'dns' => $interface['dns']
+								];
+							}
+						}
+
+						$host['interface'] = $top_priority_interface;
+						unset($host['interfaces']);
+					}
+					unset($host);
+				}
+
+				/**
+				 * Map numeric host references to hosts.
+				 * Each host can appear multiple times.
+				 */
+				$hosts_by_nr = [];
+
+				// Choose hosts used for macros values.
+				if ($selement['elementtype'] == SYSMAP_ELEMENT_TYPE_HOST) {
+					$hosts_by_nr[''] = reset($hosts);
+				}
+				else {
+					// Must be here for correct counting.
+					$hosts_by_nr = ['' => null];
+
+					// Get all function ids from expression and link host data against position in expression.
+					foreach ($triggers as $trigger) {
+						preg_match_all('/\{([0-9]+)\}/', $trigger['expression'], $matches);
+						foreach ($matches[1] as $i => $functionid) {
+							$itemid = $itemids_by_functionids[$functionid];
+							$hostid = $hosts_by_itemids[$itemid];
+
+							if (array_key_exists($hostid, $hosts)) {
+								$hosts_by_nr[count($hosts_by_nr)] = $hosts[$hostid];
+							}
+						}
+					}
+
+					// Add host reference for macro without numeric index.
+					if (array_key_exists(1, $hosts_by_nr)) {
+						$hosts_by_nr[''] = $hosts_by_nr[1];
+					}
+				}
+
+				// Assign values to macros.
+				foreach ($hosts_by_nr as $i => $host) {
+					foreach ($inventory_macros as $m => $f) {
+						$macros['{'.$m.$i.'}'] = $host ? $host['inventory'][$f] : '';
+					}
+
+					if ($interface_macros) {
+						$macros += [
+							'{HOST.DNS'.$i.'}' => $host ? $host['interface']['dns'] : '',
+							'{HOST.IP'.$i.'}' => $host ? $host['interface']['ip'] : '',
+							'{IPADDRESS'.$i.'}' => $host ? $host['interface']['ip'] : '',
+							'{HOST.CONN'.$i.'}' => $host
+								? ($host['interface']['useip'] ? $host['interface']['ip'] : $host['interface']['dns'])
+								: ''
+						];
+					}
+
+					if ($host_macros) {
+						$macros += [
+							'{HOST.ID'.$i.'}' => $host ? $host['hostid'] : '',
+							'{HOST.NAME'.$i.'}' => $host ? $host['name'] : '',
+							'{HOSTNAME'.$i.'}' => $host ? $host['host'] : '',
+							'{HOST.HOST'.$i.'}' => $host ? $host['host'] : '',
+							'{HOST.DESCRIPTION'.$i.'}' => $host ? $host['description'] : ''
+						];
+					}
+				}
+			}
+		}
+
+		if ($macros) {
+			$url['url'] = str_replace(array_keys($macros), $macros, $url['url']);
+			$url['name'] = str_replace(array_keys($macros), $macros, $url['name']);
+		}
+
+		return $url;
+	}
+
+	/**
+	 * Function returns array holding of inventory macros as a keys and corresponding database fields as value.
+	 *
+	 * @return array
+	 */
+	private function getSupportedHostInventoryMacrosMap() {
+		return [
+			'INVENTORY.ALIAS' => 'alias',
+			'INVENTORY.ASSET.TAG' => 'asset_tag',
+			'INVENTORY.CHASSIS' => 'chassis',
+			'INVENTORY.CONTACT' => 'contact',
+			'INVENTORY.CONTRACT.NUMBER' => 'contract_number',
+			'INVENTORY.DEPLOYMENT.STATUS' => 'deployment_status',
+			'INVENTORY.HARDWARE' => 'hardware',
+			'INVENTORY.HARDWARE.FULL' => 'hardware_full',
+			'INVENTORY.HOST.NETMASK' => 'host_netmask',
+			'INVENTORY.HOST.NETWORKS' => 'host_networks',
+			'INVENTORY.HOST.ROUTER' => 'host_router',
+			'INVENTORY.HW.ARCH' => 'hw_arch',
+			'INVENTORY.HW.DATE.DECOMM' => 'date_hw_decomm',
+			'INVENTORY.HW.DATE.EXPIRY' => 'date_hw_expiry',
+			'INVENTORY.HW.DATE.INSTALL' => 'date_hw_install',
+			'INVENTORY.HW.DATE.PURCHASE' => 'date_hw_purchase',
+			'INVENTORY.INSTALLER.NAME' => 'installer_name',
+			'INVENTORY.LOCATION' => 'location',
+			'INVENTORY.LOCATION.LAT' => 'location_lat',
+			'INVENTORY.LOCATION.LON' => 'location_lon',
+			'INVENTORY.MACADDRESS.A' => 'macaddress_a',
+			'INVENTORY.MACADDRESS.B' => 'macaddress_b',
+			'INVENTORY.MODEL' => 'model',
+			'INVENTORY.NAME' => 'name',
+			'INVENTORY.NOTES' => 'notes',
+			'INVENTORY.OOB.IP' => 'oob_ip',
+			'INVENTORY.OOB.NETMASK' => 'oob_netmask',
+			'INVENTORY.OOB.ROUTER' => 'oob_router',
+			'INVENTORY.OS' => 'os',
+			'INVENTORY.OS.FULL' => 'os_full',
+			'INVENTORY.OS.SHORT' => 'os_short',
+			'INVENTORY.POC.PRIMARY.CELL' => 'poc_1_cell',
+			'INVENTORY.POC.PRIMARY.EMAIL' => 'poc_1_email',
+			'INVENTORY.POC.PRIMARY.NAME' => 'poc_1_name',
+			'INVENTORY.POC.PRIMARY.NOTES' => 'poc_1_notes',
+			'INVENTORY.POC.PRIMARY.PHONE.A' => 'poc_1_phone_a',
+			'INVENTORY.POC.PRIMARY.PHONE.B' => 'poc_1_phone_b',
+			'INVENTORY.POC.PRIMARY.SCREEN' => 'poc_1_screen',
+			'INVENTORY.POC.SECONDARY.CELL' => 'poc_2_cell',
+			'INVENTORY.POC.SECONDARY.EMAIL' => 'poc_2_email',
+			'INVENTORY.POC.SECONDARY.NAME' => 'poc_2_name',
+			'INVENTORY.POC.SECONDARY.NOTES' => 'poc_2_notes',
+			'INVENTORY.POC.SECONDARY.PHONE.A' => 'poc_2_phone_a',
+			'INVENTORY.POC.SECONDARY.PHONE.B' => 'poc_2_phone_b',
+			'INVENTORY.POC.SECONDARY.SCREEN' => 'poc_2_screen',
+			'INVENTORY.SERIALNO.A' => 'serialno_a',
+			'INVENTORY.SERIALNO.B' => 'serialno_b',
+			'INVENTORY.SITE.ADDRESS.A' => 'site_address_a',
+			'INVENTORY.SITE.ADDRESS.B' => 'site_address_b',
+			'INVENTORY.SITE.ADDRESS.C' => 'site_address_c',
+			'INVENTORY.SITE.CITY' => 'site_city',
+			'INVENTORY.SITE.COUNTRY' => 'site_country',
+			'INVENTORY.SITE.NOTES' => 'site_notes',
+			'INVENTORY.SITE.RACK' => 'site_rack',
+			'INVENTORY.SITE.STATE' => 'site_state',
+			'INVENTORY.SITE.ZIP' => 'site_zip',
+			'INVENTORY.SOFTWARE' => 'software',
+			'INVENTORY.SOFTWARE.APP.A' => 'software_app_a',
+			'INVENTORY.SOFTWARE.APP.B' => 'software_app_b',
+			'INVENTORY.SOFTWARE.APP.C' => 'software_app_c',
+			'INVENTORY.SOFTWARE.APP.D' => 'software_app_d',
+			'INVENTORY.SOFTWARE.APP.E' => 'software_app_e',
+			'INVENTORY.SOFTWARE.FULL' => 'software_full',
+			'INVENTORY.TAG' => 'tag',
+			'INVENTORY.TYPE' => 'type',
+			'INVENTORY.TYPE.FULL' => 'type_full',
+			'INVENTORY.URL.A' => 'url_a',
+			'INVENTORY.URL.B' => 'url_b',
+			'INVENTORY.URL.C' => 'url_c',
+			'INVENTORY.VENDOR' => 'vendor'
+		];
+	}
+
+	/**
+	 * Function returns regular expression to march inventory macros.
+	 *
+	 * @param int  $elementtype   Map element type in which macros are extracted.
+	 *
+	 * @return string
+	 */
+	private function getSupportedHostInventoryMacrosPattern($elementtype) {
+		return '/{(?<macros>INVENTORY\.('.
+			'ALIAS|ASSET\.TAG|CHASSIS|CONTACT|CONTRACT\.NUMBER|DEPLOYMENT\.STATUS|'.
+			'HARDWARE(\.FULL)?|'.
+			'HOST\.(NETMASK|NETWORKS|ROUTER)|'.
+			'HW\.(ARCH|DATE\.(DECOMM|EXPIRY|INSTALL|PURCHASE))|'.
+			'INSTALLER\.NAME|'.
+			'LOCATION(\.(LAT|LON|A|B))?|'.
+			'MACADDRESS\.(A|B)|'.
+			'MODEL|NAME|NOTES|'.
+			'OOB\.(IP|NETMASK|ROUTER)|'.
+			'OS(\.(FULL|SHORT))?|'.
+			'POC\.(PRIMARY|SECONDARY)\.(CELL|EMAIL|NAME|NOTES|PHONE\.(A|B)|SCREEN)|'.
+			'SERIALNO\.(A|B)|'.
+			'SITE\.(ADDRESS\.[A-C]|'.'CITY|COUNTRY|NOTES|RACK|STATE|ZIP)|'.
+			'SOFTWARE(\.(APP\.[A-E]|FULL))?|'.
+			'TAG|TYPE|TYPE\.FULL|URL\.[A-C]|VENDOR'.
+		'))' . ($elementtype == SYSMAP_ELEMENT_TYPE_TRIGGER ? '[1-9]?' : '') . '}/';
 	}
 }

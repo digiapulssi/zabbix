@@ -499,6 +499,26 @@ class CMacrosResolverHelper {
 	}
 
 	/**
+	 * Resolve all kinds of macros in map element URL name and value.
+	 *
+	 * @static
+	 *
+	 * @param array        $url
+	 * @param string       $url['url']
+	 * @param string       $url['name']
+	 * @param array        $selement
+	 * @param int          $selement['elementtype']						label to expand
+	 * @param int | array  $selement['elementid']				element type
+	 *
+	 * @return array
+	 */
+	public static function resolveMapElementUrl(array $url, array $selement) {
+		self::init();
+
+		return self::$macrosResolver->resolveMapElementUrl($url, $selement);
+	}
+
+	/**
 	 * Resolve macros in dashboard widget URL.
 	 *
 	 * @static
