@@ -275,7 +275,7 @@ foreach my $service (keys(%services))
 }
 db_disconnect();
 
-my ($from, $till) = get_real_services_period(\%services, $check_from, $check_till, 1);	# consider last cycle
+my ($from, $till) = get_real_services_period(\%services, $check_from, $check_till);
 
 if (opt('print-period'))
 {

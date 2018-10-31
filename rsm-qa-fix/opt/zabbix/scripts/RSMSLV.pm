@@ -2544,14 +2544,14 @@ sub uint_value_exists
 # will be set for services whose tests fall under given time between
 # $check_from and $check_till.
 #
-# Input:
+# Input $services:
 #
 # [
 #   {'dns' => {'delay' => 60}},
 #   {'rdds' => {'delay' => 300}}
 # ]
 #
-# Output:
+# Output $services:
 #
 # [
 #   {'dns' => {'delay' => 60, 'from' => 1234234200, 'till' => 1234234259}}	# <- test period found for 'dns' but not for 'rdds'
@@ -2564,7 +2564,6 @@ sub get_real_services_period
 	my $services = shift;
 	my $check_from = shift;
 	my $check_till = shift;
-	my $consider_last = shift;	# consider last cycle if there is none within given period
 
 	my ($from, $till);
 
@@ -2603,14 +2602,6 @@ sub get_real_services_period
 			{
 				$service->{'till'} = $loop_till;
 			}
-		}
-
-		if ($consider_last && !$service->{'from'})
-		{
-			my $last_cycle = $check_till - $delay + 1;
-
-			$service->{'till'} = truncate_till($last_cycle, $delay);
-			$service->{'from'} = truncate_from($last_cycle, $delay);
 		}
 	}
 
