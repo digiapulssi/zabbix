@@ -733,9 +733,14 @@ do				\
 }				\
 while (0)
 
-#define THIS_SHOULD_NEVER_HAPPEN	zbx_error("ERROR [file:%s,line:%d] "				\
-							"Something impossible has just happened.",	\
-							__FILE__, __LINE__)
+#define THIS_SHOULD_NEVER_HAPPEN										\
+														\
+do														\
+{														\
+	zbx_error("ERROR [file:%s,line:%d] Something impossible has just happened.", __FILE__, __LINE__);	\
+	zbx_backtrace();											\
+}														\
+while (0)
 
 #define MIN_ZABBIX_PORT 1024u
 #define MAX_ZABBIX_PORT 65535u
@@ -1002,6 +1007,7 @@ int	is_ip(const char *ip);
 int	zbx_validate_hostname(const char *hostname);
 
 void	zbx_on_exit(void); /* calls exit() at the end! */
+void	zbx_backtrace(void);
 
 int	int_in_list(char *list, int value);
 int	ip_in_list(const char *list, const char *ip);
@@ -1077,6 +1083,7 @@ void	zbx_strupper(char *str);
 #if defined(_WINDOWS) || defined(HAVE_ICONV)
 char	*convert_to_utf8(char *in, size_t in_size, const char *encoding);
 #endif	/* HAVE_ICONV */
+#define ZBX_MAX_BYTES_IN_UTF8_CHAR	4
 size_t	zbx_utf8_char_len(const char *text);
 size_t	zbx_strlen_utf8(const char *text);
 size_t	zbx_strlen_utf8_nchars(const char *text, size_t utf8_maxlen);
@@ -1086,7 +1093,6 @@ int	zbx_is_utf8(const char *text);
 #define ZBX_UTF8_REPLACE_CHAR	'?'
 char	*zbx_replace_utf8(const char *text);
 void	zbx_replace_invalid_utf8(char *text);
-int	zbx_is_utf8(const char *text);
 
 void	dos2unix(char *str);
 int	str2uint64(const char *str, const char *suffixes, zbx_uint64_t *value);

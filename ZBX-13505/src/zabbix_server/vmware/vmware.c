@@ -78,7 +78,7 @@ extern char		*CONFIG_SOURCE_IP;
 
 #define ZBX_VMWARE_CACHE_UPDATE_PERIOD	CONFIG_VMWARE_FREQUENCY
 #define ZBX_VMWARE_PERF_UPDATE_PERIOD	CONFIG_VMWARE_PERF_FREQUENCY
-#define ZBX_VMWARE_SERVICE_TTL		SEC_PER_DAY
+#define ZBX_VMWARE_SERVICE_TTL		SEC_PER_HOUR
 #define ZBX_XML_DATETIME		26
 
 static ZBX_MUTEX	vmware_lock = ZBX_MUTEX_NULL;
@@ -349,7 +349,6 @@ static size_t	curl_write_cb(void *ptr, size_t size, size_t nmemb, void *userdata
 {
 	size_t	r_size = size * nmemb;
 
-	ZBX_UNUSED(ptr);
 	ZBX_UNUSED(userdata);
 
 	zbx_strncpy_alloc(&page.data, &page.alloc, &page.offset, ptr, r_size);
@@ -1512,6 +1511,53 @@ out:
 	return ret;
 }
 
+/******************************************************************************
+ *                                                                            *
+ * Function: vmware_service_logout                                            *
+ *                                                                            *
+ * Purpose: Close unused connection with vCenter                              *
+ *                                                                            *
+ * Parameters: service    - [IN] the vmware service                           *
+ *             easyhandle - [IN] the CURL handle                              *
+ *             error      - [OUT] the error message in the case of failure    *
+ *                                                                            *
+ ******************************************************************************/
+static int	vmware_service_logout(zbx_vmware_service_t *service, CURL *easyhandle, char **error)
+{
+#	define ZBX_POST_VMWARE_LOGOUT						\
+		ZBX_POST_VSPHERE_HEADER						\
+		"<ns0:Logout>"							\
+			"<ns0:_this type=\"SessionManager\">%s</ns0:_this>"	\
+		"</ns0:Logout>"							\
+		ZBX_POST_VSPHERE_FOOTER
+
+	const char	*__function_name = "vmware_service_logout";
+	char		tmp[MAX_STRING_LEN];
+	int		opt, err;
+
+	zbx_snprintf(tmp, sizeof(tmp), ZBX_POST_VMWARE_LOGOUT, vmware_service_objects[service->type].session_manager);
+	if (CURLE_OK != (err = curl_easy_setopt(easyhandle, opt = CURLOPT_POSTFIELDS, tmp)))
+	{
+		*error = zbx_dsprintf(*error, "Cannot set cURL option %d: %s.", opt, curl_easy_strerror(err));
+		return FAIL;
+	}
+
+	page.offset = 0;
+
+	if (CURLE_OK != (err = curl_easy_perform(easyhandle)))
+	{
+		*error = zbx_strdup(*error, curl_easy_strerror(err));
+		return FAIL;
+	}
+
+	zabbix_log(LOG_LEVEL_TRACE, "%s() SOAP response: %s", __function_name, page.data);
+
+	if (NULL != (*error = zbx_xml_read_value(page.data, ZBX_XPATH_FAULTSTRING())))
+		return FAIL;
+
+	return SUCCEED;
+}
+
 typedef struct
 {
 	const char	*property_collector;
@@ -2298,7 +2344,8 @@ static zbx_vmware_vm_t	*vmware_service_create_vm(zbx_vmware_service_t *service, 
 	vm->uuid = value;
 	vm->id = zbx_strdup(NULL, id);
 
-	vm->props = xml_read_props(details, vm_propmap, ZBX_VMWARE_VMPROPS_NUM);
+	if (NULL == (vm->props = xml_read_props(details, vm_propmap, ZBX_VMWARE_VMPROPS_NUM)))
+		goto out;
 
 	vmware_vm_get_nic_devices(vm, details);
 	vmware_vm_get_disk_devices(vm, details);
@@ -2602,7 +2649,8 @@ static int	vmware_service_init_hv(zbx_vmware_service_t *service, CURL *easyhandl
 	if (SUCCEED != vmware_service_get_hv_data(service, easyhandle, id, &details, error))
 		goto out;
 
-	hv->props = xml_read_props(details, hv_propmap, ZBX_VMWARE_HVPROPS_NUM);
+	if (NULL == (hv->props = xml_read_props(details, hv_propmap, ZBX_VMWARE_HVPROPS_NUM)))
+		goto out;
 
 	if (NULL == hv->props[ZBX_VMWARE_HVPROP_HW_UUID])
 		goto out;
@@ -3926,6 +3974,12 @@ static void	vmware_service_update(zbx_vmware_service_t *service)
 	else if (SUCCEED != vmware_service_get_maxquerymetrics(easyhandle, &data->max_query_metrics, &data->error))
 		goto clean;
 
+	if (SUCCEED != vmware_service_logout(service, easyhandle, &data->error))
+	{
+		zabbix_log(LOG_LEVEL_DEBUG, "Cannot close vmware connection: %s.", data->error);
+		zbx_free(data->error);
+	}
+
 	ret = SUCCEED;
 clean:
 	curl_slist_free_all(headers);
@@ -4467,6 +4521,12 @@ static void	vmware_service_update_perf(zbx_vmware_service_t *service)
 	vmware_service_retrieve_perf_counters(service, easyhandle, &hist_entities, service->data->max_query_metrics,
 			&perfdata);
 
+	if (SUCCEED != vmware_service_logout(service, easyhandle, &error))
+	{
+		zabbix_log(LOG_LEVEL_DEBUG, "Cannot close vmware connection: %s.", error);
+		zbx_free(error);
+	}
+
 	ret = SUCCEED;
 clean:
 	curl_slist_free_all(headers);
@@ -4522,7 +4582,7 @@ static void	vmware_service_remove(zbx_vmware_service_t *service)
 
 	zbx_vmware_lock();
 
-	if (FAIL != (index = zbx_vector_ptr_search(&vmware->services, &service, ZBX_DEFAULT_PTR_COMPARE_FUNC)))
+	if (FAIL != (index = zbx_vector_ptr_search(&vmware->services, service, ZBX_DEFAULT_PTR_COMPARE_FUNC)))
 	{
 		zbx_vector_ptr_remove(&vmware->services, index);
 		vmware_service_shared_free(service);

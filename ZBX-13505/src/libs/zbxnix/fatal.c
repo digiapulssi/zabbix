@@ -207,6 +207,38 @@ static const char	*get_register_name(int reg)
 
 #endif	/* defined(HAVE_SYS_UCONTEXT_H) && (defined(REG_EIP) || defined(REG_RIP)) */
 
+void	zbx_backtrace(void)
+{
+#	define	ZBX_BACKTRACE_SIZE	60
+#ifdef	HAVE_EXECINFO_H
+	char	**bcktrc_syms;
+	void	*bcktrc[ZBX_BACKTRACE_SIZE];
+	int	bcktrc_sz, i;
+
+	zabbix_log(LOG_LEVEL_CRIT, "=== Backtrace: ===");
+
+	bcktrc_sz = backtrace(bcktrc, ZBX_BACKTRACE_SIZE);
+	bcktrc_syms = backtrace_symbols(bcktrc, bcktrc_sz);
+
+	if (NULL == bcktrc_syms)
+	{
+		zabbix_log(LOG_LEVEL_CRIT, "error in backtrace_symbols(): %s", zbx_strerror(errno));
+
+		for (i = 0; i < bcktrc_sz; i++)
+			zabbix_log(LOG_LEVEL_CRIT, "%d: %p", bcktrc_sz - i - 1, bcktrc[i]);
+	}
+	else
+	{
+		for (i = 0; i < bcktrc_sz; i++)
+			zabbix_log(LOG_LEVEL_CRIT, "%d: %s", bcktrc_sz - i - 1, bcktrc_syms[i]);
+
+		zbx_free(bcktrc_syms);
+	}
+#else
+	zabbix_log(LOG_LEVEL_CRIT, "backtrace is not available for this platform");
+#endif	/* HAVE_EXECINFO_H */
+}
+
 void	print_fatal_info(int sig, siginfo_t *siginfo, void *context)
 {
 #ifdef	HAVE_SYS_UCONTEXT_H
@@ -231,17 +263,6 @@ void	print_fatal_info(int sig, siginfo_t *siginfo, void *context)
 #	endif
 
 #endif	/* HAVE_SYS_UCONTEXT_H */
-
-#ifdef	HAVE_EXECINFO_H
-
-#	define	ZBX_BACKTRACE_SIZE	60
-
-	char	**bcktrc_syms;
-	void	*bcktrc[ZBX_BACKTRACE_SIZE];
-	int	bcktrc_sz;
-
-#endif	/* HAVE_EXECINFO_H */
-
 	int	i;
 	FILE	*fd;
 
@@ -287,31 +308,7 @@ void	print_fatal_info(int sig, siginfo_t *siginfo, void *context)
 
 #endif	/* HAVE_SYS_UCONTEXT_H */
 
-	zabbix_log(LOG_LEVEL_CRIT, "=== Backtrace: ===");
-
-#ifdef	HAVE_EXECINFO_H
-
-	bcktrc_sz = backtrace(bcktrc, ZBX_BACKTRACE_SIZE);
-	bcktrc_syms = backtrace_symbols(bcktrc, bcktrc_sz);
-
-	if (NULL == bcktrc_syms)
-	{
-		zabbix_log(LOG_LEVEL_CRIT, "error in backtrace_symbols(): %s", zbx_strerror(errno));
-
-		for (i = 0; i < bcktrc_sz; i++)
-			zabbix_log(LOG_LEVEL_CRIT, "%d: %p", bcktrc_sz - i - 1, bcktrc[i]);
-	}
-	else
-	{
-		for (i = 0; i < bcktrc_sz; i++)
-			zabbix_log(LOG_LEVEL_CRIT, "%d: %s", bcktrc_sz - i - 1, bcktrc_syms[i]);
-
-		zbx_free(bcktrc_syms);
-	}
-#else
-	zabbix_log(LOG_LEVEL_CRIT, "backtrace not available for this platform");
-
-#endif	/* HAVE_EXECINFO_H */
+	zbx_backtrace();
 
 	zabbix_log(LOG_LEVEL_CRIT, "=== Memory map: ===");
 
