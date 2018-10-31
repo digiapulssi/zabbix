@@ -101,25 +101,32 @@
 			 * @param function       options.onUpdate  Callback function to execute once color has changed.
 			 */
 			init: function(options) {
-				var close = $('<button type="button" class="overlay-close-btn" title="' + t('Close') + '"/>').click(methods.hide);
-				options = $.extend(defaults, options||{});
-				overlay = $('<div class="overlay-dialogue" id="color_picker"/>').append(close).append(
-					$.map(options.palette, function(colors) {
-						return $('<div class="color-picker"/>').append(
-							$.map(colors, function(color) {
-								return $('<div style="background: #%s" title="#%s"/>'.replace(/%s/g, color));
-							})
-						);
-					})
-				).on('click', '.color-picker div', setColorHandler);
+				var close = $('<button type="button" class="overlay-close-btn" title="' + t('Close') + '"/>')
+					.click(methods.hide);
+
+				options = $.extend(defaults, options || {});
+				overlay = $('<div class="overlay-dialogue" id="color_picker"/>')
+					.append(close)
+					.append(
+						$.map(options.palette, function(colors) {
+							return $('<div class="color-picker"/>').append(
+								$.map(colors, function(color) {
+									return $('<div style="background: #%s" title="#%s"/>'.replace(/%s/g, color));
+								})
+							);
+						})
+					)
+					.on('click', '.color-picker div', setColorHandler);
 
 				overlay.appendTo($(options.appendTo));
+
 				if ($(options.appendTo).prop('tagName') !== 'BODY') {
 					$(options.appendTo).on('remove', function() {
 						overlay.remove();
 						overlay = null;
 					});
 				}
+
 				methods.hide();
 			},
 			/**
