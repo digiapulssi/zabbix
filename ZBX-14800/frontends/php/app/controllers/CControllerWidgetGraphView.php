@@ -293,7 +293,13 @@ class CControllerWidgetGraphView extends CControllerWidget {
 			}
 			elseif ($fields['source_type'] == ZBX_WIDGET_FIELD_RESOURCE_GRAPH) {
 				$graph_src = '';
-				$header_label = $graph['hosts'][0]['name'].NAME_DELIMITER.$graph['name'];
+
+				if ($fields['dynamic'] == WIDGET_DYNAMIC_ITEM && $dynamic_hostid == 0 && count($graph['hosts']) >= 1) {
+					$header_label = $graph['name'];
+				}
+				else {
+					$header_label = $graph['hosts'][0]['name'].NAME_DELIMITER.$graph['name'];
+				}
 
 				if ($fields['dynamic'] == WIDGET_DYNAMIC_ITEM && $dynamic_hostid && $resourceid) {
 					$chart_file = ($graph['graphtype'] == GRAPH_TYPE_PIE || $graph['graphtype'] == GRAPH_TYPE_EXPLODED)
