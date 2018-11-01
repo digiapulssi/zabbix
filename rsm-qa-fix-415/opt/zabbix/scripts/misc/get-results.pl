@@ -184,7 +184,7 @@ sub __check_test
 {
 	my $value = shift;
 
-	return (is_service_error($value) == SUCCESS or $value > $rtt_low) ? E_FAIL : SUCCESS;
+	return (is_service_error($service, $value, $rtt_low) ? E_FAIL : SUCCESS;
 }
 
 sub __get_all_ns_items
@@ -224,7 +224,7 @@ sub __get_rtt_low
 	my $proto = shift;	# for DNS
 	my $command = shift;	# for EPP: 'login', 'info' or 'update'
 
-	if ($service eq 'dns' || $service eq 'dnssec')
+	if ($service eq 'dns')
 	{
 		if ($proto == PROTO_UDP)
 		{

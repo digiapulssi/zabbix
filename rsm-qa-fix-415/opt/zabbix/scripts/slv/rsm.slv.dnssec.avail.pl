@@ -141,7 +141,7 @@ sub check_probe_values
 
 		foreach my $rtt (@{$values_ref->{$key}})
 		{
-			$name_servers{$ns} = (is_dnssec_error($rtt) == SUCCESS ? DOWN : UP);
+			$name_servers{$ns} = (is_service_error('dnssec', $rtt) ? DOWN : UP);
 		}
 	}
 
