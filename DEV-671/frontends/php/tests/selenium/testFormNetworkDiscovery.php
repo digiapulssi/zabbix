@@ -30,14 +30,13 @@ class testFormNetworkDiscovery extends CWebTest {
 			[
 				[
 					'error' => 'Incorrect value for field "name": cannot be empty.',
-					'check_db' => false
 				]
 			],
 			[
 				[
 					'name' => ' ',
 					'proxy' => 'Active proxy 1',
-					'range' => '192.168.0.1-25',
+					'iprange' => '192.168.0.1-25',
 					'delay' => '1m',
 					'checks' => [
 						['check_action' => 'New', 'type' => 'HTTP', 'ports' => '7555']
@@ -52,13 +51,12 @@ class testFormNetworkDiscovery extends CWebTest {
 						['check_action' => 'New', 'type' => 'HTTPS', 'ports' => '447']
 					],
 					'error' => 'Discovery rule "Local network" already exists.',
-					'check_db' => false
 				]
 			],
 			[
 				[
 					'name' => 'Discovery rule with empty IP range',
-					'range' => ' ',
+					'iprange' => ' ',
 					'checks' => [
 						['check_action' => 'New', 'type' => 'FTP', 'ports' => '22']
 					],
@@ -69,7 +67,7 @@ class testFormNetworkDiscovery extends CWebTest {
 				[
 					'name' => 'Discovery rule with incorrect IP range',
 					'proxy' => 'Active proxy 1',
-					'range' => 'text',
+					'iprange' => 'text',
 					'delay' => '1m',
 					'checks' => [
 						['check_action' => 'New', 'type' => 'HTTP', 'ports' => '7555']
@@ -93,7 +91,7 @@ class testFormNetworkDiscovery extends CWebTest {
 				[
 					'name' => 'Discovery rule without checks',
 					'proxy' => 'Active proxy 3',
-					'range' => '192.168.0.1-25',
+					'iprange' => '192.168.0.1-25',
 					'delay' => '1m',
 					'error' => 'Cannot save discovery rule without checks.'
 				]
@@ -149,9 +147,16 @@ class testFormNetworkDiscovery extends CWebTest {
 	}
 
 	/**
+	 * Test form validations at creation.
+	 *
 	 * @dataProvider getCreateValidationData
 	 */
 	public function testFormNetworkDiscovery_CreateValidation($data) {
+		$sql_drules = 'SELECT * FROM drules ORDER BY druleid';
+		$old_drules = DBhash($sql_drules);
+		$sql_dchecks = 'SELECT * FROM dchecks ORDER BY druleid, dcheckid';
+		$old_dchecks = DBhash($sql_dchecks);
+
 		$this->zbxTestLogin('discoveryconf.php');
 		$this->zbxTestClickButtonText('Create discovery rule');
 		$this->FillInFields($data);
@@ -166,16 +171,11 @@ class testFormNetworkDiscovery extends CWebTest {
 		}
 
 		$this->zbxTestClick('add');
-		if (array_key_exists('name', $data)) {
-			$sql = 'SELECT NULL FROM drules WHERE name='.zbx_dbstr($data['name']);
-		}
+		$this->zbxTestWaitUntilMessageTextPresent('msg-bad', $data['error']);
+		$this->zbxTestCheckFatalErrors();
 
-		if (array_key_exists('error', $data)) {
-			$this->zbxTestWaitUntilMessageTextPresent('msg-bad', $data['error']);
-			if (!array_key_exists('check_db', $data) || $data['check_db'] === true) {
-				$this->assertEquals(0, DBcount($sql));
-			}
-		}
+		$this->assertEquals($old_drules, DBhash($sql_drules));
+		$this->assertEquals($old_dchecks, DBhash($sql_dchecks));
 	}
 
 	public static function getCreateData() {
@@ -201,7 +201,7 @@ class testFormNetworkDiscovery extends CWebTest {
 				[
 					'name' => 'Discovery rule with many checks',
 					'proxy' => 'Active proxy 1',
-					'range' => '192.168.0.1-25',
+					'iprange' => '192.168.0.1-25',
 					'delay' => '1m',
 					'checks' => [
 						[
@@ -313,13 +313,13 @@ class testFormNetworkDiscovery extends CWebTest {
 		$this->zbxTestClickButtonText('Create discovery rule');
 		$this->FillInFields($data);
 
-		$this->zbxTestClick('add');
-		if (array_key_exists('name', $data)) {
-			$sql = 'SELECT NULL FROM drules WHERE name='.zbx_dbstr($data['name']);
-		}
+		$this->zbxTestClickWait('add');
 
 		$this->zbxTestWaitUntilMessageTextPresent('msg-good', 'Discovery rule created');
-		$this->assertEquals(1, DBcount($sql));
+		$this->zbxTestTextPresent($data['name']);
+		$this->zbxTestCheckFatalErrors();
+
+		$this->assertEquals(1, DBcount('SELECT NULL FROM drules WHERE name='.zbx_dbstr($data['name'])));
 		$cheks = 'SELECT NULL FROM dchecks WHERE druleid IN ('.
 				'SELECT druleid FROM drules WHERE name='.zbx_dbstr($data['name']).
 				')';
@@ -338,7 +338,7 @@ class testFormNetworkDiscovery extends CWebTest {
 			[
 				[
 					'old_name' => 'Discovery rule for update',
-					'range' => 'text',
+					'iprange' => 'text',
 					'error' => 'Incorrect value for field "iprange": invalid address range "text".'
 				]
 			],
@@ -380,9 +380,16 @@ class testFormNetworkDiscovery extends CWebTest {
 	}
 
 	/**
+	 * Test form validations at update.
+	 *
 	 * @dataProvider getUpdateValidationData
 	 */
 	public function testFormNetworkDiscovery_UpdateValidation($data) {
+		$sql_drules = 'SELECT * FROM drules ORDER BY druleid';
+		$old_drules = DBhash($sql_drules);
+		$sql_dchecks = 'SELECT * FROM dchecks ORDER BY druleid, dcheckid';
+		$old_dchecks = DBhash($sql_dchecks);
+
 		$this->zbxTestLogin('discoveryconf.php');
 		$this->zbxTestClickLinkText($data['old_name']);
 		$this->FillInFields($data);
@@ -395,16 +402,12 @@ class testFormNetworkDiscovery extends CWebTest {
 			return;
 		}
 
-		// Get amount of check rows in discovery form.
-		$checks_on_page = count($this->webDriver->findElements(WebDriverBy::xpath('//div[@id="dcheckList"]'.
-								'//tr[not(@id="dcheckListFooter")]')));
-
 		$this->zbxTestClick('update');
+		$this->zbxTestWaitUntilMessageTextPresent('msg-bad', $data['error']);
+		$this->zbxTestCheckFatalErrors();
 
-		if (array_key_exists('error', $data)) {
-			$this->zbxTestWaitUntilMessageTextPresent('msg-bad', $data['error']);
-			$this->zbxTestCheckFatalErrors();
-		}
+		$this->assertEquals($old_drules, DBhash($sql_drules));
+		$this->assertEquals($old_dchecks, DBhash($sql_dchecks));
 	}
 
 	public static function getUpdateData() {
@@ -413,7 +416,7 @@ class testFormNetworkDiscovery extends CWebTest {
 			[
 				[
 					'old_name' => 'Discovery rule for update',
-					'status' => false
+					'enabled' => false
 				]
 			],
 			[
@@ -445,7 +448,7 @@ class testFormNetworkDiscovery extends CWebTest {
 					'old_name' => 'Discovery rule for update',
 					'name' => 'Update name',
 					'proxy' => 'Active proxy 3',
-					'range' => '1.1.0.1-25',
+					'iprange' => '1.1.0.1-25',
 					'delay' => '30s',
 					'checks' => [
 						['check_action' => 'Edit', 'type' => 'TCP', 'ports' => '9']
@@ -481,7 +484,7 @@ class testFormNetworkDiscovery extends CWebTest {
 		// Check the results in DB after update.
 		$proxy = DBfetch(DBselect('SELECT proxy_hostid FROM drules WHERE name='.zbx_dbstr($data['name'])));
 		if ($proxy['proxy_hostid']) {
-			$discovery_db_data = DBdata('SELECT hosts.host AS proxy, drules.name, iprange AS "range", delay'.
+			$discovery_db_data = DBdata('SELECT hosts.host AS proxy, drules.name, iprange, delay'.
 					' FROM drules'.
 					' JOIN hosts ON drules.proxy_hostid=hostid'.
 					' WHERE drules.name='.zbx_dbstr($data['name']), false);
@@ -491,7 +494,7 @@ class testFormNetworkDiscovery extends CWebTest {
 		}
 		$discovery_db_data = $discovery_db_data[0][0];
 
-		$fields = ['name', 'proxy', 'range', 'delay'];
+		$fields = ['name', 'proxy', 'iprange', 'delay'];
 		foreach ($fields as $field) {
 			if (array_key_exists($field, $data)) {
 				$this->assertEquals($data[$field], $discovery_db_data[$field]);
@@ -536,8 +539,8 @@ class testFormNetworkDiscovery extends CWebTest {
 			$this->zbxTestDropdownSelect('proxy_hostid', $data['proxy']);
 		}
 
-		if (array_key_exists('range', $data)) {
-			$this->zbxTestInputTypeOverwrite('iprange', $data['range']);
+		if (array_key_exists('iprange', $data)) {
+			$this->zbxTestInputTypeOverwrite('iprange', $data['iprange']);
 		}
 
 		if (array_key_exists('delay', $data)) {
