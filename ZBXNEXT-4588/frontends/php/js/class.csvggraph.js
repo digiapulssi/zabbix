@@ -398,7 +398,7 @@ jQuery(function ($) {
 
 				// Find values.
 				var points = findValues(graph[0], offsetX),
-					points_total = points.length,
+					points_total = 0,
 					show_hint = false,
 					xy_point = false,
 					tolerance;
@@ -430,6 +430,10 @@ jQuery(function ($) {
 				}
 				var rows_added = 0;
 				points.forEach(function(point) {
+					if (point.v !== null) {
+						points_total++;
+					}
+
 					var point_highlight = point.g.querySelectorAll('.svg-point-highlight')[0];
 					if (point.v !== null && (xy_point === false || xy_point === point)) {
 						point_highlight.setAttribute('cx', point.x);
