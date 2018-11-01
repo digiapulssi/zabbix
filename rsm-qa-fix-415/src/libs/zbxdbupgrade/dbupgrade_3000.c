@@ -2709,6 +2709,10 @@ static int	DBpatch_3000228(void)
 		return FAIL;
 	}
 
+	/* RDAP -201 */
+	if (ZBX_DB_OK > DBexecute("delete from mappings where mappingid=13504"))
+		return FAIL;
+
 	return SUCCEED;
 }
 

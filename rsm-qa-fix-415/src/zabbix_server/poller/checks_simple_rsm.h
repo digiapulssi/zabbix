@@ -96,11 +96,9 @@
 #define ZBX_EC_DNS_UDP_SIG_NOT_INCEPTED	-417	/* DNS UDP - DNSSEC signature not incepted yet */
 #define ZBX_EC_DNS_UDP_SIG_EX_BEFORE_IN	-418	/* DNS UDP - DNSSEC signature has expiration date earlier than inception date */
 #define ZBX_EC_DNS_UDP_NSEC3_ERROR	-419	/* DNS UDP - Error in NSEC3 denial of existence proof */
-/* obsoleted #define ZBX_EC_DNS_UDP_NSEC3_ITERATIONS	-421	/\* DNS UDP - Iterations count for NSEC3 record higher than maximum *\/ */
 #define ZBX_EC_DNS_UDP_RR_NOTCOVERED	-422	/* DNS UDP - RR not covered by the given NSEC RRs */
 #define ZBX_EC_DNS_UDP_WILD_NOTCOVERED	-423	/* DNS UDP - Wildcard not covered by the given NSEC RRs */
 #define ZBX_EC_DNS_UDP_RRSIG_MISS_RDATA	-425	/* DNS UDP - The RRSIG has too few RDATA fields */
-/* obsoleted #define ZBX_EC_DNS_UDP_KEY_MISS_RDATA	-426	/\* DNS UDP - The DNSKEY has too few RDATA fields *\/ */
 #define ZBX_EC_DNS_UDP_DNSSEC_CATCHALL	-427	/* DNS UDP - Malformed DNSSEC response */
 /* DNS TCP error codes */
 #define ZBX_EC_DNS_TCP_NS_TO		-600	/* DNS TCP - DNS TCP - Timeout reply from name server */
@@ -153,11 +151,9 @@
 #define ZBX_EC_DNS_TCP_SIG_NOT_INCEPTED	-817	/* DNS TCP - DNSSEC signature not incepted yet */
 #define ZBX_EC_DNS_TCP_SIG_EX_BEFORE_IN	-818	/* DNS TCP - DNSSEC signature has expiration date earlier than inception date */
 #define ZBX_EC_DNS_TCP_NSEC3_ERROR	-819	/* DNS TCP - Error in NSEC3 denial of existence proof */
-/* obsoleted #define ZBX_EC_DNS_TCP_NSEC3_ITERATIONS	-821	/\* DNS TCP - Iterations count for NSEC3 record higher than maximum *\/ */
 #define ZBX_EC_DNS_TCP_RR_NOTCOVERED	-822	/* DNS TCP - RR not covered by the given NSEC RRs */
 #define ZBX_EC_DNS_TCP_WILD_NOTCOVERED	-823	/* DNS TCP - Wildcard not covered by the given NSEC RRs */
 #define ZBX_EC_DNS_TCP_RRSIG_MISS_RDATA	-825	/* DNS TCP - The RRSIG has too few RDATA fields */
-/* obsoleted #define ZBX_EC_DNS_TCP_KEY_MISS_RDATA	-826	/\* DNS TCP - The DNSKEY has too few RDATA fields *\/ */
 #define ZBX_EC_DNS_TCP_DNSSEC_CATCHALL	-827	/* DNS TCP - Malformed DNSSEC response */
 /* RDDS error codes */
 #define ZBX_EC_RDDS43_NONS		-201	/* Whois server returned no NS */
@@ -181,7 +177,6 @@
 #define ZBX_EC_RDAP_NOTLISTED		-100	/* The TLD is not listed in the Bootstrap Service Registry for Domain Name Space */
 #define ZBX_EC_RDAP_NOHTTPS		-101	/* The RDAP base URL obtained from Bootstrap Service Registry for Domain Name Space does not use HTTPS */
 #define ZBX_EC_RDAP_RES_NOREPLY		-200	/* RDAP - No server could be reached by local resolver */
-#define ZBX_EC_RDAP_RES_NOADBIT		-201	/* RDAP - No AD bit from local resolver */
 #define ZBX_EC_RDAP_RES_SERVFAIL	-202	/* RDAP - Expecting NOERROR RCODE but got SERVFAIL when resolving hostname */
 #define ZBX_EC_RDAP_RES_NXDOMAIN	-203	/* RDAP - Expecting NOERROR RCODE but got NXDOMAIN when resolving hostname */
 #define ZBX_EC_RDAP_TO			-205	/* RDAP - Timeout */

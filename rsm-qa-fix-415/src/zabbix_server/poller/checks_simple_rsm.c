@@ -107,7 +107,6 @@ typedef enum
 {
 	ZBX_RESOLVER_INTERNAL,
 	ZBX_RESOLVER_NOREPLY,
-	ZBX_RESOLVER_NOADBIT,
 	ZBX_RESOLVER_NXDOMAIN,
 	ZBX_RESOLVER_CATCHALL
 }
@@ -779,10 +778,6 @@ ZBX_DEFINE_ZBX_RR_CLASS_ERROR_TO(DNS_TCP)
 
 #undef ZBX_DEFINE_ZBX_RR_CLASS_ERROR_TO
 
-/* AD bit must be set for RDAP, but not required for RDDS43 and RDDS80 */
-#define ZBX_EC_RDDS43_RES_NOADBIT	ZBX_EC_RDDS43_INTERNAL_GENERAL
-#define ZBX_EC_RDDS80_RES_NOADBIT	ZBX_EC_RDDS80_INTERNAL_GENERAL
-
 /* map generic local resolver errors to interface specific ones */
 
 #define ZBX_DEFINE_RESOLVER_ERROR_TO(__interface)					\
@@ -794,8 +789,6 @@ static int	zbx_resolver_error_to_ ## __interface (zbx_resolver_error_t err)	\
 			return ZBX_EC_ ## __interface ## _INTERNAL_GENERAL;		\
 		case ZBX_RESOLVER_NOREPLY:						\
 			return ZBX_EC_ ## __interface ## _RES_NOREPLY;			\
-		case ZBX_RESOLVER_NOADBIT:						\
-			return ZBX_EC_ ## __interface ## _RES_NOADBIT;			\
 		case ZBX_RESOLVER_NXDOMAIN:						\
 			return ZBX_EC_ ## __interface ## _RES_NXDOMAIN;			\
 		case ZBX_RESOLVER_CATCHALL:						\
@@ -809,9 +802,6 @@ static int	zbx_resolver_error_to_ ## __interface (zbx_resolver_error_t err)	\
 ZBX_DEFINE_RESOLVER_ERROR_TO(RDDS43)
 ZBX_DEFINE_RESOLVER_ERROR_TO(RDDS80)
 ZBX_DEFINE_RESOLVER_ERROR_TO(RDAP)
-
-#undef ZBX_EC_RDDS43_RES_NOADBIT
-#undef ZBX_EC_RDDS80_RES_NOADBIT
 
 #undef ZBX_DEFINE_RESOLVER_ERROR_TO
 
@@ -2894,9 +2884,8 @@ out:
  *               FAIL - otherwise                                             *
  *                                                                            *
  ******************************************************************************/
-static int	zbx_resolver_resolve_host(ldns_resolver *res, unsigned int extras, const char *host,
-		zbx_vector_str_t *ips, int ipv_flags, FILE *log_fd, zbx_resolver_error_t *ec_res, char *err,
-		size_t err_size)
+static int	zbx_resolver_resolve_host(ldns_resolver *res, const char *host, zbx_vector_str_t *ips, int ipv_flags,
+		FILE *log_fd, zbx_resolver_error_t *ec_res, char *err, size_t err_size)
 {
 	const zbx_ipv_t	*ipv;
 	ldns_rdf	*rdf;
@@ -2927,14 +2916,6 @@ static int	zbx_resolver_resolve_host(ldns_resolver *res, unsigned int extras, co
 		}
 
 		ldns_pkt_print(log_fd, pkt);
-
-		if (0 != (ZBX_RESOLVER_CHECK_ADBIT & extras) && 0 == ldns_pkt_ad(pkt))
-		{
-			zbx_snprintf(err, err_size, "AD bit is not set in the answer for host \"%s\"", host);
-			*ec_res = ZBX_RESOLVER_NOADBIT;
-			ldns_pkt_free(pkt);
-			goto out;
-		}
 
 		if (LDNS_RCODE_NOERROR != (rcode = ldns_pkt_get_rcode(pkt)))
 		{
@@ -3747,8 +3728,7 @@ int	check_rsm_rdds(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 	random_host = hosts43.values[i];
 
 	/* start RDDS43 test, resolve host to ips */
-	if (SUCCEED != zbx_resolver_resolve_host(res, extras, random_host, &ips43, ipv_flags, log_fd, &ec_res,
-			err, sizeof(err)))
+	if (SUCCEED != zbx_resolver_resolve_host(res, random_host, &ips43, ipv_flags, log_fd, &ec_res, err, sizeof(err)))
 	{
 		rtt43 = zbx_resolver_error_to_RDDS43(ec_res);
 		zbx_rsm_errf(log_fd, "RDDS43 \"%s\": %s", random_host, err);
@@ -3854,8 +3834,7 @@ int	check_rsm_rdds(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 	zbx_rsm_infof(log_fd, "start RDDS80 test (host %s)", random_host);
 
 	/* start RDDS80 test, resolve host to ips */
-	if (SUCCEED != zbx_resolver_resolve_host(res, extras, random_host, &ips80, ipv_flags, log_fd, &ec_res,
-			err, sizeof(err)))
+	if (SUCCEED != zbx_resolver_resolve_host(res, random_host, &ips80, ipv_flags, log_fd, &ec_res, err, sizeof(err)))
 	{
 		rtt80 = zbx_resolver_error_to_RDDS80(ec_res);
 		zbx_rsm_errf(log_fd, "RDDS80 \"%s\": %s", random_host, err);
@@ -4178,8 +4157,7 @@ int	check_rsm_rdap(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 	}
 
 	/* resolve host to IPs */
-	if (SUCCEED != zbx_resolver_resolve_host(res, extras, domain_part, &ips, ipv_flags, log_fd, &ec_res,
-			err, sizeof(err)))
+	if (SUCCEED != zbx_resolver_resolve_host(res, domain_part, &ips, ipv_flags, log_fd, &ec_res, err, sizeof(err)))
 	{
 		rtt = zbx_resolver_error_to_RDAP(ec_res);
 		zbx_rsm_errf(log_fd, "RDAP \"%s\": %s", base_url, err);
@@ -5480,7 +5458,7 @@ int	check_rsm_epp(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 	random_host = epp_hosts.values[i];
 
 	/* resolve host to ips: TODO! error handler functions not implemented (see NULLs below) */
-	if (SUCCEED != zbx_resolver_resolve_host(res, extras, random_host, &epp_ips,
+	if (SUCCEED != zbx_resolver_resolve_host(res, random_host, &epp_ips,
 			(0 != ipv4_enabled ? ZBX_FLAG_IPV4_ENABLED : 0) | (0 != ipv6_enabled ? ZBX_FLAG_IPV6_ENABLED : 0),
 			log_fd, &ec_res, err, sizeof(err)))
 	{
