@@ -1,5 +1,8 @@
 Changes for rsm1.1.0rc33
 
+New features:
+....I..PS. [415] organized service, internal error codes according to new specification (dimir)
+
 Bug fixes:
 ....I..... [sub-392] fixed the range to select for handling the data in SLA API script, regression after merge from rsm1.0.7 (dimir)
 

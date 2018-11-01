@@ -1246,6 +1246,8 @@ ROW   |11001    |110       |1    |Up                                            
 ROW   |11002    |110       |2    |Up-inconclusive-no-data                                                                                         |
 ROW   |11003    |110       |3    |Up-inconclusive-no-probes                                                                                       |
 ROW   |12000    |120       |-1   |Internal error                                                                                                  |
+ROW   |12042    |120       |-2   |DNS UDP - Expecting NOERROR RCODE but got unexpected from local resolver                                        |
+ROW   |12096    |120       |-3   |DNS TCP - Expecting NOERROR RCODE but got unexpected from local resolver                                        |
 ROW   |12001    |120       |-200 |DNS UDP - No reply from name server                                                                             |
 ROW   |12002    |120       |-201 |Invalid reply from Name Server (obsolete)                                                                       |
 ROW   |12003    |120       |-202 |No UNIX timestamp (obsolete)                                                                                    |
@@ -1285,11 +1287,10 @@ ROW   |12034    |120       |-267 |DNS UDP - Querying for a non existent domain -
 ROW   |12035    |120       |-268 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADTRUNC                        |
 ROW   |12036    |120       |-269 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADCOOKIE                       |
 ROW   |12037    |120       |-270 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got unexpected                      |
-ROW   |12038    |120       |-400 |DNS UDP - No reply from local resolver                                                                          |
-ROW   |12039    |120       |-401 |DNS UDP - No AD bit from local resolver                                                                         |
-ROW   |12040    |120       |-402 |DNS UDP - Expecting NOERROR RCODE but got SERVFAIL from local resolver                                          |
+ROW   |12038    |120       |-400 |DNS UDP - No server could be reached by local resolver                                                          |
+ROW   |12039    |120       |-401 |DNS UDP - The TLD is configured as DNSSEC-enabled, but no DNSKEY was found in the apex                          |
+ROW   |12040    |120       |-402 |DNS UDP - No AD bit from local resolver                                                                         |
 ROW   |12041    |120       |-403 |DNS UDP - Expecting NOERROR RCODE but got NXDOMAIN from local resolver                                          |
-ROW   |12042    |120       |-404 |DNS UDP - Expecting NOERROR RCODE but got unexpected from local resolver                                        |
 ROW   |12043    |120       |-405 |DNS UDP - Unknown cryptographic algorithm                                                                       |
 ROW   |12044    |120       |-406 |DNS UDP - Cryptographic algorithm not implemented                                                               |
 ROW   |12045    |120       |-407 |DNS UDP - No RRSIGs where found in any section, and the TLD has the DNSSEC flag enabled                         |
@@ -1305,7 +1306,6 @@ ROW   |12054    |120       |-422 |DNS UDP - RR not covered by the given NSEC RRs
 ROW   |12055    |120       |-423 |DNS UDP - Wildcard not covered by the given NSEC RRs                                                            |
 ROW   |12056    |120       |-425 |DNS UDP - The RRSIG has too few RDATA fields                                                                    |
 ROW   |12058    |120       |-427 |DNS UDP - Malformed DNSSEC response                                                                             |
-ROW   |12059    |120       |-428 |DNS UDP - The TLD is configured as DNSSEC-enabled, but no DNSKEY was found in the apex                          |
 ROW   |12060    |120       |-600 |DNS TCP - Timeout reply from name server                                                                        |
 ROW   |12061    |120       |-601 |DNS TCP - Error opening connection to name server                                                               |
 ROW   |12062    |120       |-607 |DNS TCP - Expecting DNS CLASS IN but got CHAOS                                                                  |
@@ -1340,11 +1340,10 @@ ROW   |12088    |120       |-667 |DNS TCP - Querying for a non existent domain -
 ROW   |12089    |120       |-668 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADTRUNC                        |
 ROW   |12090    |120       |-669 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADCOOKIE                       |
 ROW   |12091    |120       |-670 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got unexpected                      |
-ROW   |12092    |120       |-800 |DNS TCP - No reply from local resolver                                                                          |
-ROW   |12093    |120       |-801 |DNS TCP - No AD bit from local resolver                                                                         |
-ROW   |12094    |120       |-802 |DNS TCP - Expecting NOERROR RCODE but got SERVFAIL from local resolver                                          |
+ROW   |12092    |120       |-800 |DNS TCP - No server could be reached by local resolver                                                          |
+ROW   |12093    |120       |-801 |DNS TCP - The TLD is configured as DNSSEC-enabled, but no DNSKEY was found in the apex                          |
+ROW   |12094    |120       |-802 |DNS TCP - No AD bit from local resolver                                                                         |
 ROW   |12095    |120       |-803 |DNS TCP - Expecting NOERROR RCODE but got NXDOMAIN from local resolver                                          |
-ROW   |12096    |120       |-804 |DNS TCP - Expecting NOERROR RCODE but got unexpected from local resolver                                        |
 ROW   |12097    |120       |-805 |DNS TCP - Unknown cryptographic algorithm                                                                       |
 ROW   |12098    |120       |-806 |DNS TCP - Cryptographic algorithm not implemented                                                               |
 ROW   |12099    |120       |-807 |DNS TCP - No RRSIGs where found in any section, and the TLD has the DNSSEC flag enabled                         |
@@ -1360,8 +1359,11 @@ ROW   |12108    |120       |-822 |DNS TCP - RR not covered by the given NSEC RRs
 ROW   |12109    |120       |-823 |DNS TCP - Wildcard not covered by the given NSEC RRs                                                            |
 ROW   |12110    |120       |-825 |DNS TCP - The RRSIG has too few RDATA fields                                                                    |
 ROW   |12112    |120       |-827 |DNS TCP - Malformed DNSSEC response                                                                             |
-ROW   |12113    |120       |-828 |DNS TCP - The TLD is configured as DNSSEC-enabled, but no DNSKEY was found in the apex                          |
 ROW   |13000    |130       |-1   |Internal error                                                                                                  |
+ROW   |13018    |130       |-2   |RDDS - IP addresses for the hostname are not supported by the IP versions supported by the probe node           |
+ROW   |13013    |130       |-3   |RDDS43 - Expecting NOERROR RCODE but got unexpected error when resolving hostname                               |
+ROW   |13021    |130       |-4   |RDDS80 - Expecting NOERROR RCODE but got unexpected error when resolving hostname                               |
+ROW   |13507    |135       |-5   |RDAP - Expecting NOERROR RCODE but got unexpected error when resolving hostname                                 |
 ROW   |13001    |130       |-200 |No reply from RDDS43 server (obsolete)                                                                          |
 ROW   |13002    |130       |-201 |Whois server returned no NS                                                                                     |
 ROW   |13003    |130       |-202 |No Unix timestamp (obsolete)                                                                                    |
@@ -1370,17 +1372,15 @@ ROW   |13005    |130       |-204 |No reply from RDDS80 server (obsolete)        
 ROW   |13006    |130       |-205 |Cannot resolve a Whois host name (obsolete)                                                                     |
 ROW   |13007    |130       |-206 |no HTTP status code                                                                                             |
 ROW   |13008    |130       |-207 |invalid HTTP status code (obsolete)                                                                             |
-ROW   |13009    |130       |-222 |RDDS43 - No reply from local resolver                                                                           |
+ROW   |13009    |130       |-222 |RDDS43 - No server could be reached by local resolver                                                           |
 ROW   |13011    |130       |-224 |RDDS43 - Expecting NOERROR RCODE but got SERVFAIL when resolving hostname                                       |
 ROW   |13012    |130       |-225 |RDDS43 - Expecting NOERROR RCODE but got NXDOMAIN when resolving hostname                                       |
-ROW   |13013    |130       |-226 |RDDS43 - Expecting NOERROR RCODE but got unexpected error when resolving hostname                               |
 ROW   |13014    |130       |-227 |RDDS43 - Timeout                                                                                                |
 ROW   |13015    |130       |-228 |RDDS43 - Error opening connection to server                                                                     |
 ROW   |13016    |130       |-229 |RDDS43 - Empty response                                                                                         |
-ROW   |13017    |130       |-250 |RDDS80 - No reply from local resolver                                                                           |
+ROW   |13017    |130       |-250 |RDDS80 - No server could be reached by local resolver                                                           |
 ROW   |13019    |130       |-252 |RDDS80 - Expecting NOERROR RCODE but got SERVFAIL when resolving hostname                                       |
 ROW   |13020    |130       |-253 |RDDS80 - Expecting NOERROR RCODE but got NXDOMAIN when resolving hostname                                       |
-ROW   |13021    |130       |-254 |RDDS80 - Expecting NOERROR RCODE but got unexpected error when resolving hostname                               |
 ROW   |13022    |130       |-255 |RDDS80 - Timeout                                                                                                |
 ROW   |13023    |130       |-256 |RDDS80 - Error opening connection to server                                                                     |
 ROW   |13024    |130       |-257 |RDDS80 - Error in HTTP protocol                                                                                 |
@@ -1451,13 +1451,12 @@ ROW   |13084    |130       |-358 |RDDS80 - Expecting HTTP status code 200 but go
 ROW   |13085    |130       |-359 |RDDS80 - Expecting HTTP status code 200 but got 511                                                             |
 ROW   |13086    |130       |-360 |RDDS80 - Expecting HTTP status code 200 but got unexpected status code                                          |
 ROW   |13500    |135       |-1   |Internal error                                                                                                  |
+ROW   |13578    |135       |-2   |RDAP - IP addresses for the hostname are not supported by the IP versions supported by the probe node           |
 ROW   |13501    |135       |-100 |The TLD is not listed in the Bootstrap Service Registry for Domain Name Space                                   |
 ROW   |13502    |135       |-101 |The RDAP base URL obtained from Bootstrap Service Registry for Domain Name Space does not use HTTPS             |
-ROW   |13503    |135       |-200 |RDAP - No reply from local resolver                                                                             |
-ROW   |13504    |135       |-201 |RDAP - No AD bit from local resolver                                                                            |
+ROW   |13503    |135       |-200 |RDAP - No server could be reached by local resolver                                                             |
 ROW   |13505    |135       |-202 |RDAP - Expecting NOERROR RCODE but got SERVFAIL when resolving hostname                                         |
 ROW   |13506    |135       |-203 |RDAP - Expecting NOERROR RCODE but got NXDOMAIN when resolving hostname                                         |
-ROW   |13507    |135       |-204 |RDAP - Expecting NOERROR RCODE but got unexpected error when resolving hostname                                 |
 ROW   |13508    |135       |-205 |RDAP - Timeout                                                                                                  |
 ROW   |13509    |135       |-206 |RDAP - Error opening connection to server                                                                       |
 ROW   |13510    |135       |-207 |RDAP - Invalid JSON format in response                                                                          |
@@ -1546,6 +1545,7 @@ ROW   |15008    |150       |-208 |Invalid reply to UPDATE command               
 ROW   |15009    |150       |-209 |INFO command timeout                                                                                            |
 ROW   |15010    |150       |-210 |Invalid reply to INFO command                                                                                   |
 ROW   |15011    |150       |-1   |Internal error                                                                                                  |
+ROW   |15013    |150       |-2   |EPP - IP addresses for the hostname are not supported by the IP versions supported by the probe node            |
 ROW   |15012    |150       |-211 |Server certificate validation failed                                                                            |
 ROW   |16000    |160       |0    |Down                                                                                                            |
 ROW   |16001    |160       |1    |Up                                                                                                              |
