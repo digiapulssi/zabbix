@@ -36,7 +36,6 @@ use constant ONLINE => 1;	# todo phase 1: check where these are used
 use constant OFFLINE => 0;	# todo phase 1: check where these are used
 use constant SLV_UNAVAILABILITY_LIMIT => 49; # NB! must be in sync with frontend
 
-use constant MAX_SERVICE_ERROR => -200; # -200, -201 ...
 use constant MIN_LOGIN_ERROR => -205;
 use constant MAX_LOGIN_ERROR => -203;
 use constant MIN_INFO_ERROR => -211;
@@ -70,6 +69,8 @@ use constant PROBE_ONLINE_STR => 'Online';
 use constant PROBE_OFFLINE_STR => 'Offline';
 use constant PROBE_NORESULT_STR => 'No result';
 
+use constant DETAILED_RESULT_DELIM => ', ';
+
 our ($result, $dbh, $tld, $server_key);
 
 our %OPTS; # specified command-line options
@@ -93,7 +94,10 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		max_avail_time get_probe_times probe_offline_at probes2tldhostids
 		get_probe_online_key_itemid
 		init_values push_value send_values get_nsip_from_key is_service_error get_templated_items_like
-		process_slv_avail avail_value_exists is_dnssec_error is_dnssec_error_desc
+		is_service_error_desc
+		is_internal_error
+		is_internal_error_desc
+		process_slv_avail avail_value_exists
 		rollweek_value_exists
 		sql_time_condition get_incidents get_downtime get_downtime_prepare get_downtime_execute
 		get_current_value get_itemids_by_hostids get_nsip_values get_valuemaps get_statusmaps get_detailed_result
@@ -1532,38 +1536,82 @@ sub get_nsip_from_key
 	return substr($key, $offset, $endpos - $offset);
 }
 
-sub is_service_error
+sub is_internal_error
 {
-	my $ec = shift;
+	my $rtt = shift;
 
-	return SUCCESS if ($ec <= MAX_SERVICE_ERROR);
+	return 0 unless (defined($rtt));
 
-	return E_FAIL;
+	return 1 if (ZBX_EC_INTERNAL_FIRST >= $rtt && $rtt >= ZBX_EC_INTERNAL_LAST);	# internal error
+
+	return 0;
 }
 
-sub is_dnssec_error
-{
-	my $ec = shift;
-
-	return SUCCESS if (ZBX_EC_DNS_UDP_DNSKEY_NONE <= $ec && $ec <= ZBX_EC_DNS_UDP_RES_NOADBIT);
-	return SUCCESS if (ZBX_EC_DNS_TCP_DNSKEY_NONE <= $ec && $ec <= ZBX_EC_DNS_TCP_RES_NOADBIT);
-
-	return E_FAIL;
-}
-
-# DNSSEC error with description, e. g. "-401, DNS UDP - No AD bit from local resolver"
-sub is_dnssec_error_desc
+sub get_value_from_desc
 {
 	my $desc = shift;
 
-	my $ec = $desc;
+	my $index = index($desc, DETAILED_RESULT_DELIM);
 
-	if ($ec =~ m/^(-[0-9]+).*/)
+	return ($index == -1 ? $desc : substr($desc, 0, $index));
+}
+
+sub is_internal_error_desc
+{
+	my $desc = shift;
+
+	return 0 unless (defined($desc));
+	return 0 unless (substr($desc, 0, 1) eq "-");
+
+	return is_internal_error(get_value_from_desc($desc));
+}
+
+sub is_service_error
+{
+	my $service = shift;
+	my $rtt = shift;
+	my $rtt_low = shift;	# optional
+
+	return 0 unless (defined($rtt));
+
+	# not an error
+	if ($rtt >= 0)
 	{
-		return is_dnssec_error($1);
+		return 1 if ($rtt_low && $rtt > $rtt_low);
+
+		# rtt within limit
+		return 0;
 	}
 
-	return E_FAIL;
+	# internal error
+	return 0 if (is_internal_error($rtt));
+
+	# dnssec error
+	if (lc($service) eq 'dnssec')
+	{
+		return 1 if (ZBX_EC_DNS_UDP_DNSSEC_FIRST >= $rtt && $rtt >= ZBX_EC_DNS_UDP_DNSSEC_LAST);
+		return 1 if (ZBX_EC_DNS_TCP_DNSSEC_FIRST >= $rtt && $rtt >= ZBX_EC_DNS_TCP_DNSSEC_LAST);
+
+		return 0;
+	}
+
+	# other service error
+	return 1;
+}
+
+# Check full error description and tell if it's a service error.
+# E. g. if desc is "-401, DNS UDP - The TLD is configured as DNSSEC-enabled, but no DNSKEY was found in the apex"
+# this function will return 1 for dnssec service.
+sub is_service_error_desc
+{
+	my $service = shift;
+	my $desc = shift;
+	my $rtt_low = shift;	# optional
+
+	return 0 unless (defined($desc));
+	return 0 if ($desc eq "");
+
+	return is_service_error($service, get_value_from_desc($desc), $rtt_low);
 }
 
 sub get_templated_items_like
@@ -2433,7 +2481,7 @@ sub get_detailed_result
 
 	return $value_int unless (exists($maps->{$value_int}));
 
-	return "$value_int, " . $maps->{$value_int};
+	return $value_int . DETAILED_RESULT_DELIM . $maps->{$value_int};
 }
 
 sub get_result_string
@@ -2544,14 +2592,14 @@ sub uint_value_exists
 # will be set for services whose tests fall under given time between
 # $check_from and $check_till.
 #
-# Input:
+# Input $services:
 #
 # [
 #   {'dns' => {'delay' => 60}},
 #   {'rdds' => {'delay' => 300}}
 # ]
 #
-# Output:
+# Output $services:
 #
 # [
 #   {'dns' => {'delay' => 60, 'from' => 1234234200, 'till' => 1234234259}}	# <- test period found for 'dns' but not for 'rdds'
@@ -2564,7 +2612,6 @@ sub get_real_services_period
 	my $services = shift;
 	my $check_from = shift;
 	my $check_till = shift;
-	my $consider_last = shift;	# consider last cycle if there is none within given period
 
 	my ($from, $till);
 
@@ -2603,14 +2650,6 @@ sub get_real_services_period
 			{
 				$service->{'till'} = $loop_till;
 			}
-		}
-
-		if ($consider_last && !$service->{'from'})
-		{
-			my $last_cycle = $check_till - $delay + 1;
-
-			$service->{'till'} = truncate_till($last_cycle, $delay);
-			$service->{'from'} = truncate_from($last_cycle, $delay);
 		}
 	}
 

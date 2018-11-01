@@ -1343,7 +1343,7 @@ sub __check_dns_udp_rtt
 	my $value = shift;
 	my $max_rtt = shift;
 
-	return (is_service_error($value) == SUCCESS or $value > $max_rtt) ? E_FAIL : SUCCESS;
+	return (is_service_error('dns', $value, $max_rtt)) ? E_FAIL : SUCCESS;
 }
 
 sub __get_false_positives
@@ -1448,48 +1448,12 @@ sub __check_test
 	my $description = shift;
 	my $max_value = shift;
 
-	if ($interface eq JSON_INTERFACE_DNS)
+	if (defined($description))
 	{
-		if (defined($description) &&
-				(substr($description, 0, length(ZBX_EC_INTERNAL)) eq ZBX_EC_INTERNAL ||
-				substr($description, 0, length(ZBX_EC_DNS_UDP_RES_NOREPLY)) eq ZBX_EC_DNS_UDP_RES_NOREPLY ||
-				substr($description, 0, length(ZBX_EC_DNS_TCP_RES_NOREPLY)) eq ZBX_EC_DNS_TCP_RES_NOREPLY))
-		{
-			return SUCCESS;
-		}
-	}
-	elsif ($interface eq JSON_INTERFACE_DNSSEC)
-	{
-		if (defined($description))
-		{
-			return E_FAIL if (is_dnssec_error_desc($description) == SUCCESS);
-		}
-
-		return SUCCESS;
-	}
-	elsif ($interface eq JSON_INTERFACE_RDDS43 || $interface eq JSON_INTERFACE_RDDS80)
-	{
-		if (defined($description) &&
-				(substr($description, 0, length(ZBX_EC_INTERNAL)) eq ZBX_EC_INTERNAL ||
-				substr($description, 0, length(ZBX_EC_RDDS43_RES_NOREPLY)) eq ZBX_EC_RDDS43_RES_NOREPLY ||
-				substr($description, 0, length(ZBX_EC_RDDS80_RES_NOREPLY)) eq ZBX_EC_RDDS80_RES_NOREPLY))
-		{
-			return SUCCESS;
-		}
-	}
-	elsif ($interface eq JSON_INTERFACE_RDAP)
-	{
-		if (defined($description) &&
-				(substr($description, 0, length(ZBX_EC_INTERNAL)) eq ZBX_EC_INTERNAL ||
-				substr($description, 0, length(ZBX_EC_RDAP_RES_NOREPLY)) eq ZBX_EC_RDAP_RES_NOREPLY))
-		{
-			return SUCCESS;
-		}
+		return SUCCESS if (is_internal_error_desc($interface, $description));
 	}
 
-	return E_FAIL unless ($value);
-
-	return (is_service_error($value) == SUCCESS or $value > $max_value) ? E_FAIL : SUCCESS;
+	return (is_service_error($interface, $value, $max_value) ? E_FAIL : SUCCESS);
 }
 
 # todo phase 1: taken from RSMSLV.pm phase 2
@@ -1547,7 +1511,7 @@ sub __print_undef
 # todo phase 1: taken from RSMSLV.pm phase 2
 # NB! THIS IS FIXED VERSION WHICH MUST REPLACE EXISTING ONE
 # (supports identifying service error)
-sub __best_rtt
+sub __best_dns_rtt
 {
 	my $cur_rtt = shift;
 	my $cur_description = shift;
@@ -1566,14 +1530,14 @@ sub __best_rtt
 			return ($new_rtt, $new_description);
 		}
 
-		if (is_service_error($cur_rtt) == SUCCESS)
+		if (is_service_error('dns', $cur_rtt))
 		{
-			if (is_service_error($new_rtt) != SUCCESS)
+			if (!is_service_error('dns', $new_rtt))
 			{
 				return ($new_rtt, $new_description);
 			}
 		}
-		elsif (is_service_error($new_rtt) != SUCCESS && $cur_rtt > $new_rtt)
+		elsif (!is_service_error('dns', $new_rtt) && $cur_rtt > $new_rtt)
 		{
 			return ($new_rtt, $new_description);
 		}
@@ -1681,7 +1645,7 @@ sub __get_dns_test_values
 			{
 				my $test_ref = $tests_ref->[$set_idx];
 
-				($new_value, $new_description) = __best_rtt($test_ref->{$value_tag}, $test_ref->{JSON_TAG_DESCRIPTION()}, $new_value, $new_description);
+				($new_value, $new_description) = __best_dns_rtt($test_ref->{$value_tag}, $test_ref->{JSON_TAG_DESCRIPTION()}, $new_value, $new_description);
 
 				if (!defined($new_value) || (defined($test_ref->{$value_tag}) && $new_value == $test_ref->{$value_tag}))
 				{

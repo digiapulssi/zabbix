@@ -22,10 +22,31 @@
 
 #include "dbcache.h"
 
-/* internal */
-#define ZBX_EC_INTERNAL			-1	/* general internal error */
-#define ZBX_EC_INTERNAL_IP_UNSUP	-2	/* IP version not supported by Probe */
-/* DNS UDP */
+#define ZBX_EC_LAST_INTERNAL		-200	/* -1 :: -200 */
+
+/* internal error codes (do not reflect as service error) */
+#define ZBX_EC_DNS_UDP_INTERNAL_GENERAL		-1	/* Internal error */
+#define ZBX_EC_DNS_UDP_INTERNAL_RES_CATCHALL	-2	/* DNS UDP - Expecting NOERROR RCODE but got unexpected from local resolver */
+
+#define ZBX_EC_DNS_TCP_INTERNAL_GENERAL		ZBX_EC_DNS_UDP_INTERNAL_GENERAL
+#define ZBX_EC_DNS_TCP_INTERNAL_RES_CATCHALL	-3	/* DNS TCP - Expecting NOERROR RCODE but got unexpected from local resolver */
+
+#define ZBX_EC_RDDS43_INTERNAL_GENERAL		-1	/* Internal error */
+#define ZBX_EC_RDDS43_INTERNAL_IP_UNSUP		-2	/* RDDS - IP addresses for the hostname are not supported by the IP versions supported by the probe node */
+#define ZBX_EC_RDDS43_INTERNAL_RES_CATCHALL	-3	/* RDDS43 - Expecting NOERROR RCODE but got unexpected error when resolving hostname */
+
+#define ZBX_EC_RDDS80_INTERNAL_GENERAL		ZBX_EC_RDDS43_INTERNAL_GENERAL
+#define ZBX_EC_RDDS80_INTERNAL_IP_UNSUP		ZBX_EC_RDDS43_INTERNAL_IP_UNSUP
+#define ZBX_EC_RDDS80_INTERNAL_RES_CATCHALL	-4	/* RDDS80 - Expecting NOERROR RCODE but got unexpected error when resolving hostname */
+
+#define ZBX_EC_RDAP_INTERNAL_GENERAL		-1	/* Internal error */
+#define ZBX_EC_RDAP_INTERNAL_IP_UNSUP		-2	/* RDAP - IP addresses for the hostname are not supported by the IP versions supported by the probe node */
+#define ZBX_EC_RDAP_INTERNAL_RES_CATCHALL	-5	/* RDAP - Expecting NOERROR RCODE but got unexpected error when resolving hostname */
+
+#define ZBX_EC_EPP_INTERNAL_GENERAL		-1	/* Internal error */
+#define ZBX_EC_EPP_INTERNAL_IP_UNSUP		-2	/* EPP - IP addresses for the hostname are not supported by the IP versions supported by the probe node */
+
+/* DNS UDP error codes */
 #define ZBX_EC_DNS_UDP_NS_NOREPLY	-200	/* DNS UDP - No reply from name server */
 #define ZBX_EC_DNS_UDP_CLASS_CHAOS	-207	/* DNS UDP - Expecting DNS CLASS IN but got CHAOS */
 #define ZBX_EC_DNS_UDP_CLASS_HESIOD	-208	/* DNS UDP - Expecting DNS CLASS IN but got HESIOD */
@@ -59,12 +80,11 @@
 #define ZBX_EC_DNS_UDP_RCODE_BADTRUNC	-268	/* DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADTRUNC */
 #define ZBX_EC_DNS_UDP_RCODE_BADCOOKIE	-269	/* DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADCOOKIE */
 #define ZBX_EC_DNS_UDP_RCODE_CATCHALL	-270	/* DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got unexpected */
-#define ZBX_EC_DNS_UDP_RES_NOREPLY	-400	/* DNS UDP - No reply from local resolver */
-/* -401 to -428: DNSSEC errors */
-#define ZBX_EC_DNS_UDP_RES_NOADBIT	-401	/* DNS UDP - No AD bit from local resolver */
-#define ZBX_EC_DNS_UDP_RES_SERVFAIL	-402	/* DNS UDP - Expecting NOERROR RCODE but got SERVFAIL from local resolver */
+#define ZBX_EC_DNS_UDP_RES_NOREPLY	-400	/* DNS UDP - No server could be reached by local resolver */
+/* DNS UDP DNSSEC error codes */
+#define ZBX_EC_DNS_UDP_DNSKEY_NONE	-401	/* DNS UDP - The TLD is configured as DNSSEC-enabled, but no DNSKEY was found in the apex */
+#define ZBX_EC_DNS_UDP_DNSKEY_NOADBIT	-402	/* DNS UDP - No AD bit from local resolver */
 #define ZBX_EC_DNS_UDP_RES_NXDOMAIN	-403	/* DNS UDP - Expecting NOERROR RCODE but got NXDOMAIN from local resolver */
-#define ZBX_EC_DNS_UDP_RES_CATCHALL	-404	/* DNS UDP - Expecting NOERROR RCODE but got unexpected from local resolver */
 #define ZBX_EC_DNS_UDP_ALGO_UNKNOWN	-405	/* DNS UDP - Unknown cryptographic algorithm */
 #define ZBX_EC_DNS_UDP_ALGO_NOT_IMPL	-406	/* DNS UDP - Cryptographic algorithm not implemented */
 #define ZBX_EC_DNS_UDP_RRSIG_NONE	-407	/* DNS UDP - No RRSIGs where found in any section, and the TLD has the DNSSEC flag enabled */
@@ -76,14 +96,11 @@
 #define ZBX_EC_DNS_UDP_SIG_NOT_INCEPTED	-417	/* DNS UDP - DNSSEC signature not incepted yet */
 #define ZBX_EC_DNS_UDP_SIG_EX_BEFORE_IN	-418	/* DNS UDP - DNSSEC signature has expiration date earlier than inception date */
 #define ZBX_EC_DNS_UDP_NSEC3_ERROR	-419	/* DNS UDP - Error in NSEC3 denial of existence proof */
-/* obsoleted #define ZBX_EC_DNS_UDP_NSEC3_ITERATIONS	-421	/\* DNS UDP - Iterations count for NSEC3 record higher than maximum *\/ */
 #define ZBX_EC_DNS_UDP_RR_NOTCOVERED	-422	/* DNS UDP - RR not covered by the given NSEC RRs */
 #define ZBX_EC_DNS_UDP_WILD_NOTCOVERED	-423	/* DNS UDP - Wildcard not covered by the given NSEC RRs */
 #define ZBX_EC_DNS_UDP_RRSIG_MISS_RDATA	-425	/* DNS UDP - The RRSIG has too few RDATA fields */
-/* obsoleted #define ZBX_EC_DNS_UDP_KEY_MISS_RDATA	-426	/\* DNS UDP - The DNSKEY has too few RDATA fields *\/ */
 #define ZBX_EC_DNS_UDP_DNSSEC_CATCHALL	-427	/* DNS UDP - Malformed DNSSEC response */
-#define ZBX_EC_DNS_UDP_DNSKEY_NONE	-428	/* DNS UDP - The TLD is configured as DNSSEC-enabled, but no DNSKEY was found in the apex */
-/* DNS TCP */
+/* DNS TCP error codes */
 #define ZBX_EC_DNS_TCP_NS_TO		-600	/* DNS TCP - DNS TCP - Timeout reply from name server */
 #define ZBX_EC_DNS_TCP_NS_ECON		-601	/* DNS TCP - Error opening connection to name server */
 #define ZBX_EC_DNS_TCP_CLASS_CHAOS	-607	/* DNS TCP - Expecting DNS CLASS IN but got CHAOS */
@@ -118,12 +135,11 @@
 #define ZBX_EC_DNS_TCP_RCODE_BADTRUNC	-668	/* DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADTRUNC */
 #define ZBX_EC_DNS_TCP_RCODE_BADCOOKIE	-669	/* DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADCOOKIE */
 #define ZBX_EC_DNS_TCP_RCODE_CATCHALL	-670	/* DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got unexpected */
-#define ZBX_EC_DNS_TCP_RES_NOREPLY	-800	/* DNS TCP - No reply from local resolver */
-/* -801 to -828: DNSSEC errors */
-#define ZBX_EC_DNS_TCP_RES_NOADBIT	-801	/* DNS TCP - No AD bit from local resolver */
-#define ZBX_EC_DNS_TCP_RES_SERVFAIL	-802	/* DNS TCP - Expecting NOERROR RCODE but got SERVFAIL from local resolver */
+#define ZBX_EC_DNS_TCP_RES_NOREPLY	-800	/* DNS TCP - No server could be reached by local resolver */
+/* DNS TCP DNSSEC error codes */
+#define ZBX_EC_DNS_TCP_DNSKEY_NONE	-801	/* DNS TCP - The TLD is configured as DNSSEC-enabled, but no DNSKEY was found in the apex */
+#define ZBX_EC_DNS_TCP_DNSKEY_NOADBIT	-802	/* DNS TCP - No AD bit from local resolver */
 #define ZBX_EC_DNS_TCP_RES_NXDOMAIN	-803	/* DNS TCP - Expecting NOERROR RCODE but got NXDOMAIN from local resolver */
-#define ZBX_EC_DNS_TCP_RES_CATCHALL	-804	/* DNS TCP - Expecting NOERROR RCODE but got unexpected from local resolver */
 #define ZBX_EC_DNS_TCP_ALGO_UNKNOWN	-805	/* DNS TCP - Unknown cryptographic algorithm */
 #define ZBX_EC_DNS_TCP_ALGO_NOT_IMPL	-806	/* DNS TCP - Cryptographic algorithm not implemented */
 #define ZBX_EC_DNS_TCP_RRSIG_NONE	-807	/* DNS TCP - No RRSIGs where found in any section, and the TLD has the DNSSEC flag enabled */
@@ -135,41 +151,34 @@
 #define ZBX_EC_DNS_TCP_SIG_NOT_INCEPTED	-817	/* DNS TCP - DNSSEC signature not incepted yet */
 #define ZBX_EC_DNS_TCP_SIG_EX_BEFORE_IN	-818	/* DNS TCP - DNSSEC signature has expiration date earlier than inception date */
 #define ZBX_EC_DNS_TCP_NSEC3_ERROR	-819	/* DNS TCP - Error in NSEC3 denial of existence proof */
-/* obsoleted #define ZBX_EC_DNS_TCP_NSEC3_ITERATIONS	-821	/\* DNS TCP - Iterations count for NSEC3 record higher than maximum *\/ */
 #define ZBX_EC_DNS_TCP_RR_NOTCOVERED	-822	/* DNS TCP - RR not covered by the given NSEC RRs */
 #define ZBX_EC_DNS_TCP_WILD_NOTCOVERED	-823	/* DNS TCP - Wildcard not covered by the given NSEC RRs */
 #define ZBX_EC_DNS_TCP_RRSIG_MISS_RDATA	-825	/* DNS TCP - The RRSIG has too few RDATA fields */
-/* obsoleted #define ZBX_EC_DNS_TCP_KEY_MISS_RDATA	-826	/\* DNS TCP - The DNSKEY has too few RDATA fields *\/ */
 #define ZBX_EC_DNS_TCP_DNSSEC_CATCHALL	-827	/* DNS TCP - Malformed DNSSEC response */
-#define ZBX_EC_DNS_TCP_DNSKEY_NONE	-828	/* DNS TCP - The TLD is configured as DNSSEC-enabled, but no DNSKEY was found in the apex */
-/* RDDS */
+/* RDDS error codes */
 #define ZBX_EC_RDDS43_NONS		-201	/* Whois server returned no NS */
 #define ZBX_EC_RDDS80_NOCODE		-206	/* no HTTP status code */
-#define ZBX_EC_RDDS43_RES_NOREPLY	-222	/* RDDS43 - No reply from local resolver */
+#define ZBX_EC_RDDS43_RES_NOREPLY	-222	/* RDDS43 - No server could be reached by local resolver */
 #define ZBX_EC_RDDS43_RES_SERVFAIL	-224	/* RDDS43 - Expecting NOERROR RCODE but got SERVFAIL when resolving hostname */
 #define ZBX_EC_RDDS43_RES_NXDOMAIN	-225	/* RDDS43 - Expecting NOERROR RCODE but got NXDOMAIN when resolving hostname */
-#define ZBX_EC_RDDS43_RES_CATCHALL	-226	/* RDDS43 - Expecting NOERROR RCODE but got unexpected when resolving hostname */
 #define ZBX_EC_RDDS43_TO		-227	/* RDDS43 - Timeout */
 #define ZBX_EC_RDDS43_ECON		-228	/* RDDS43 - Error opening connection to server */
 #define ZBX_EC_RDDS43_EMPTY		-229	/* RDDS43 - Empty response */
-#define ZBX_EC_RDDS80_RES_NOREPLY	-250	/* RDDS80 - No reply from local resolver */
+#define ZBX_EC_RDDS80_RES_NOREPLY	-250	/* RDDS80 - No server could be reached by local resolver */
 #define ZBX_EC_RDDS80_RES_SERVFAIL	-252	/* RDDS80 - Expecting NOERROR RCODE but got SERVFAIL when resolving hostname */
 #define ZBX_EC_RDDS80_RES_NXDOMAIN	-253	/* RDDS80 - Expecting NOERROR RCODE but got NXDOMAIN when resolving hostname */
-#define ZBX_EC_RDDS80_RES_CATCHALL	-254	/* RDDS80 - Expecting NOERROR RCODE but got unexpected when resolving hostname */
 #define ZBX_EC_RDDS80_TO		-255	/* RDDS80 - Timeout */
 #define ZBX_EC_RDDS80_ECON		-256	/* RDDS80 - Error opening connection to server */
 #define ZBX_EC_RDDS80_EHTTP		-257	/* RDDS80 - Error in HTTP protocol */
 #define ZBX_EC_RDDS80_EHTTPS		-258	/* RDDS80 - Error in HTTPS protocol */
 #define ZBX_EC_RDDS80_EMAXREDIRECTS	-259	/* RDDS80 - Maximum HTTP redirects were hit while trying to connect to RDDS server */
 #define ZBX_EC_RDDS80_HTTP_BASE		-300	/* RDDS80 - Expecting HTTP status code 200 but got xxx */
-/* RDAP */
+/* RDAP error codes */
 #define ZBX_EC_RDAP_NOTLISTED		-100	/* The TLD is not listed in the Bootstrap Service Registry for Domain Name Space */
 #define ZBX_EC_RDAP_NOHTTPS		-101	/* The RDAP base URL obtained from Bootstrap Service Registry for Domain Name Space does not use HTTPS */
-#define ZBX_EC_RDAP_RES_NOREPLY		-200	/* RDAP - No reply from local resolver */
-#define ZBX_EC_RDAP_RES_NOADBIT		-201	/* RDAP - No AD bit from local resolver */
+#define ZBX_EC_RDAP_RES_NOREPLY		-200	/* RDAP - No server could be reached by local resolver */
 #define ZBX_EC_RDAP_RES_SERVFAIL	-202	/* RDAP - Expecting NOERROR RCODE but got SERVFAIL when resolving hostname */
 #define ZBX_EC_RDAP_RES_NXDOMAIN	-203	/* RDAP - Expecting NOERROR RCODE but got NXDOMAIN when resolving hostname */
-#define ZBX_EC_RDAP_RES_CATCHALL	-204	/* RDAP - Expecting NOERROR RCODE but got unexpected error when resolving hostname */
 #define ZBX_EC_RDAP_TO			-205	/* RDAP - Timeout */
 #define ZBX_EC_RDAP_ECON		-206	/* RDAP - Error opening connection to server */
 #define ZBX_EC_RDAP_EJSON		-207	/* RDAP - Invalid JSON format in response */
@@ -179,7 +188,7 @@
 #define ZBX_EC_RDAP_EHTTPS		-214	/* RDAP - Error in HTTPS protocol */
 #define ZBX_EC_RDAP_EMAXREDIRECTS	-215	/* RDAP - Maximum HTTP redirects were hit while trying to connect to RDAP server */
 #define ZBX_EC_RDAP_HTTP_BASE		-250	/* RDAP - Expecting HTTP status code 200 bug got xxx */
-/* EPP */
+/* EPP error codes */
 #define ZBX_EC_EPP_NO_IP		-200	/* IP is missing for EPP server */
 #define ZBX_EC_EPP_CONNECT		-201	/* cannot connect to EPP server */
 #define ZBX_EC_EPP_CRYPT		-202	/* invalid certificate or private key */
@@ -197,7 +206,7 @@
 #define ZBX_EC_PROBE_ONLINE		1	/* probe in automatic online mode */
 #define ZBX_EC_PROBE_UNSUPPORTED	2	/* internal use only */
 
-#define ZBX_NO_VALUE			-1000	/* no item value should be set */
+#define ZBX_NO_VALUE			-1000	/* no value was obtained during the check, used in the code only */
 
 /* NB! Do not change, these are used as DNS array indexes. */
 #define ZBX_RSM_UDP	0

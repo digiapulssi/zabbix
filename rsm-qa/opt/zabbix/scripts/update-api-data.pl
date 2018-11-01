@@ -29,7 +29,7 @@ use constant JSON_VALUE_ALARMED_NO => 'No';
 use constant JSON_VALUE_ALARMED_DISABLED => 'Disabled';
 
 use constant JSON_OBJECT_NORESULT_PROBE => {
-	'status'	=> 'No result'
+	'status' => 'No result'
 };
 
 use constant CONFIGVALUE_DNS_UDP_RTT_HIGH_ITEMID	=> 100011;	# itemid of rsm.configvalue[RSM.DNS.UDP.RTT.HIGH] item
@@ -74,7 +74,6 @@ my $config = get_rsm_config();
 set_slv_config($config);
 
 my @server_keys = (opt('server-key') ? getopt('server-key') : get_rsm_server_keys($config));
-
 
 my $opt_from = getopt('from');
 
@@ -275,7 +274,7 @@ foreach my $service (keys(%services))
 }
 db_disconnect();
 
-my ($from, $till) = get_real_services_period(\%services, $check_from, $check_till, 1);	# consider last cycle
+my ($from, $till) = get_real_services_period(\%services, $check_from, $check_till);
 
 if (opt('print-period'))
 {
@@ -1408,13 +1407,13 @@ sub fill_test_data_dns($$$)
 				'targetIP'	=> $test->{'ip'}
 			};
 
+
 			if (!defined($test->{'rtt'}))
 			{
 				$metric->{'rtt'} = undef;
 				$metric->{'result'} = 'no data';
 			}
-			elsif (substr($test->{'rtt'}, 0, length(ZBX_EC_INTERNAL)) eq ZBX_EC_INTERNAL ||
-					substr($test->{'rtt'}, 0, length(ZBX_EC_DNS_UDP_RES_NOREPLY)) eq ZBX_EC_DNS_UDP_RES_NOREPLY)
+			elsif (is_internal_error_desc($test->{'rtt'}))
 			{
 				$metric->{'rtt'} = undef;
 				$metric->{'result'} = $test->{'rtt'};
@@ -1425,7 +1424,7 @@ sub fill_test_data_dns($$$)
 					$test_data_ref->{'status'} = "Up";
 				}
 			}
-			elsif (substr($test->{'rtt'}, 0, 1) eq "-")
+			elsif (is_service_error_desc('dns', $test->{'rtt'}))
 			{
 				$metric->{'rtt'} = undef;
 				$metric->{'result'} = $test->{'rtt'};
@@ -1497,9 +1496,7 @@ sub fill_test_data_dnssec($$)
 				# skip check for errors if NS is already known to be down
 				unless (defined($test_data_ref->{'status'}) && $test_data_ref->{'status'} eq "Down")
 				{
-					my $value = substr($test->{'rtt'}, 0, index($test->{'rtt'}, ","));
-
-					if (is_dnssec_error($value) == SUCCESS)
+					if (is_service_error_desc('dnssec', $test->{'rtt'}))
 					{
 						$test_data_ref->{'status'} = "Down";
 					}
@@ -1573,26 +1570,14 @@ sub fill_test_data_rdds($$$)
 			$metric->{'rtt'} = undef;
 			$metric->{'result'} = 'no data';
 		}
-		elsif (($subservice eq JSON_INTERFACE_RDDS80 || $subservice eq JSON_INTERFACE_RDDS43) &&
-				(substr($test->{'rtt'}, 0, length(ZBX_EC_INTERNAL)) eq ZBX_EC_INTERNAL ||
-				substr($test->{'rtt'}, 0, length(ZBX_EC_RDDS43_RES_NOREPLY)) eq ZBX_EC_RDDS43_RES_NOREPLY ||
-				substr($test->{'rtt'}, 0, length(ZBX_EC_RDDS80_RES_NOREPLY)) eq ZBX_EC_RDDS80_RES_NOREPLY))
+		elsif (is_internal_error_desc($test->{'rtt'}))
 		{
 			$test_data_ref->{'status'} = "Up";
 
 			$metric->{'rtt'} = undef;
 			$metric->{'result'} = $test->{'rtt'};
 		}
-		elsif ($subservice eq JSON_INTERFACE_RDAP &&
-				(substr($test->{'rtt'}, 0, length(ZBX_EC_INTERNAL)) eq ZBX_EC_INTERNAL ||
-				substr($test->{'rtt'}, 0, length(ZBX_EC_RDAP_RES_NOREPLY)) eq ZBX_EC_RDAP_RES_NOREPLY))
-		{
-			$test_data_ref->{'status'} = "Up";
-
-			$metric->{'rtt'} = undef;
-			$metric->{'result'} = $test->{'rtt'};
-		}
-		elsif (substr($test->{'rtt'}, 0, 1) eq "-")
+		elsif (is_service_error_desc('rdds', $test->{'rtt'}))
 		{
 			$test_data_ref->{'status'} = "Down";
 

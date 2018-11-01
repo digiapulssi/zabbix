@@ -56,47 +56,30 @@ use constant ITEM_VALUE_TYPE_LOG =>   2;
 use constant ITEM_VALUE_TYPE_UINT64=> 3;
 use constant ITEM_VALUE_TYPE_TEXT =>  4;
 
-use constant ITEM_TYPE_ZABBIX =>                     0;
-use constant ITEM_TYPE_TRAPPER =>                    2;
-use constant ITEM_TYPE_SIMPLE =>                     3;
+use constant ITEM_TYPE_ZABBIX =>             0;
+use constant ITEM_TYPE_TRAPPER =>            2;
+use constant ITEM_TYPE_SIMPLE =>             3;
 use constant ITEM_TYPE_INTERNAL =>           5;
 use constant ITEM_TYPE_ZABBIX_ACTIVE =>      7;
 use constant ITEM_TYPE_AGGREGATE =>          8;
 use constant ITEM_TYPE_EXTERNAL =>           10;
 use constant ITEM_TYPE_CALCULATED =>         15;
 
-use constant ZBX_EC_INTERNAL		=> -1;		# internal error (general)
-use constant ZBX_EC_DNS_UDP_RES_NOREPLY	=> -400;	# DNS UDP - No reply from local resolver
+use constant ZBX_EC_INTERNAL_FIRST	=> -1;
+use constant ZBX_EC_INTERNAL_LAST	=> -199;
 
-use constant ZBX_EC_DNS_UDP_RES_NOADBIT	=> -401;	# -401 to
-use constant ZBX_EC_DNS_UDP_DNSKEY_NONE	=> -428;	# -428: DNSSEC errors
-
-use constant ZBX_EC_DNS_TCP_RES_NOREPLY	=> -800;	# DNS TCP - No reply from local resolver
-use constant ZBX_EC_DNS_TCP_RES_NOADBIT	=> -801;	# DNS TCP - No AD bit from local resolver
-use constant ZBX_EC_DNS_TCP_DNSKEY_NONE	=> -828;	# DNS TCP - The TLD is configured as DNSSEC-enabled, but no DNSKEY was found in the apex
-use constant ZBX_EC_RDDS43_RES_NOREPLY	=> -222;	# RDDS43 - No reply from local resolver
-use constant ZBX_EC_RDDS80_RES_NOREPLY	=> -250;	# RDDS80 - No reply from local resolver
-use constant ZBX_EC_RDAP_RES_NOREPLY	=> -200;	# RDAP   - No reply from local resolver
-
-use constant ZBX_EC_EPP_NO_IP         => -200; # IP is missing for EPP server
-use constant ZBX_EC_EPP_CONNECT       => -201; # cannot connect to EPP server
-use constant ZBX_EC_EPP_CRYPT         => -202; # invalid certificate or private key
-use constant ZBX_EC_EPP_FIRSTTO       => -203; # first message timeout
-use constant ZBX_EC_EPP_FIRSTINVAL    => -204; # first message is invalid
-use constant ZBX_EC_EPP_LOGINTO       => -205; # LOGIN command timeout
-use constant ZBX_EC_EPP_LOGININVAL    => -206; # invalid reply to LOGIN command
-use constant ZBX_EC_EPP_UPDATETO      => -207; # UPDATE command timeout
-use constant ZBX_EC_EPP_UPDATEINVAL   => -208; # invalid reply to UPDATE command
-use constant ZBX_EC_EPP_INFOTO        => -209; # INFO command timeout
-use constant ZBX_EC_EPP_INFOINVAL     => -210; # invalid reply to INFO command
+# define ranges of DNSSEC error codes of DNS UDP/TCP
+use constant ZBX_EC_DNS_UDP_DNSSEC_FIRST	=> -401;	# DNS UDP - The TLD is configured as DNSSEC-enabled, but no DNSKEY was found in the apex
+use constant ZBX_EC_DNS_UDP_DNSSEC_LAST		=> -427;	# DNS UDP - Malformed DNSSEC response
+use constant ZBX_EC_DNS_TCP_DNSSEC_FIRST	=> -801;	# DNS TCP - The TLD is configured as DNSSEC-enabled, but no DNSKEY was found in the apex
+use constant ZBX_EC_DNS_TCP_DNSSEC_LAST		=> -827;	# DNS TCP - Malformed DNSSEC response
 
 use constant cfg_default_rdds_ns_string => 'Name Server:';
 
 use constant PROBE_KEY_ONLINE	=> 'rsm.probe.online';
 
 # todo phase 1: changed ids
-use constant rsm_value_mappings =>
-{
+use constant rsm_value_mappings => {
 	'rsm_dns_rtt' => 120,
 	'rsm_rdds_rtt' => 130,
 	'rsm_rdds_result' => 140,
@@ -106,12 +89,13 @@ use constant rsm_value_mappings =>
 	'rsm_probe' => 100
 };
 
-use constant rsm_trigger_rollweek_thresholds => { '1' => {'threshold' => '10', 'priority' => 2},
-                                    '2' => {'threshold' => '25', 'priority' => 3},
-                                    '3' => {'threshold' => '50', 'priority' => 3},
-                                    '4' => {'threshold' => '75', 'priority' => 4},
-                                    '5' => {'threshold' => '100', 'priority' => 5}
-                                  };
+use constant rsm_trigger_rollweek_thresholds => {
+	'1' => {'threshold' => '10', 'priority' => 2},
+	'2' => {'threshold' => '25', 'priority' => 3},
+	'3' => {'threshold' => '50', 'priority' => 3},
+	'4' => {'threshold' => '75', 'priority' => 4},
+	'5' => {'threshold' => '100', 'priority' => 5}
+};
 
 use constant cfg_global_macros => {'{$RSM.DNS.UDP.DELAY}' => '', '{$RSM.DNS.TCP.DELAY}' => '', '{$RSM.RDDS.DELAY}' => '', '{$RSM.EPP.DELAY}' => ''};
 
@@ -142,83 +126,72 @@ use constant TLD_TYPE_PROBE_RESULTS_GROUPIDS	=> {
 };
 
 our @EXPORT_OK = qw(
-			true
-			false
+	true
+	false
+	LINUX_TEMPLATEID
+	APP_ZABBIX_PROXY_TEMPLATEID
+	PROBE_ERRORS_TEMPLATEID
+	RDAP_TEMPLATEID
+	TEMPLATES_TLD_GROUPID
+	PROBES_GROUPID
+	PROBES_MON_GROUPID
+	TLDS_GROUPID
+	TLD_PROBE_RESULTS_GROUPID
+	TLD_TYPE_GROUPIDS
+	TLD_TYPE_PROBE_RESULTS_GROUPIDS
+	VALUE_TYPE_AVAIL
+	VALUE_TYPE_PERC
+	VALUE_TYPE_NUM
+	ZBX_EC_INTERNAL_FIRST
+	ZBX_EC_INTERNAL_LAST
+	ZBX_EC_DNS_UDP_DNSSEC_FIRST
+	ZBX_EC_DNS_UDP_DNSSEC_LAST
+	ZBX_EC_DNS_TCP_DNSSEC_FIRST
+	ZBX_EC_DNS_TCP_DNSSEC_LAST
+	rsm_value_mappings cfg_probe_status_delay
+	PROBE_KEY_ONLINE
+	cfg_default_rdds_ns_string rsm_trigger_rollweek_thresholds cfg_global_macros
+	HOST_STATUS_MONITORED HOST_STATUS_NOT_MONITORED HOST_STATUS_PROXY_ACTIVE HOST_STATUS_PROXY_PASSIVE HOST_ENCRYPTION_PSK ITEM_STATUS_ACTIVE
+	ITEM_STATUS_DISABLED INTERFACE_TYPE_AGENT DEFAULT_MAIN_INTERFACE TRIGGER_STATUS_DISABLED TRIGGER_STATUS_ENABLED
+	ITEM_VALUE_TYPE_FLOAT ITEM_VALUE_TYPE_STR ITEM_VALUE_TYPE_LOG ITEM_VALUE_TYPE_UINT64 ITEM_VALUE_TYPE_TEXT
+	ITEM_TYPE_ZABBIX ITEM_TYPE_TRAPPER ITEM_TYPE_SIMPLE ITEM_TYPE_INTERNAL ITEM_TYPE_ZABBIX_ACTIVE ITEM_TYPE_AGGREGATE ITEM_TYPE_EXTERNAL ITEM_TYPE_CALCULATED
+	APP_SLV_MONTHLY APP_SLV_ROLLWEEK APP_SLV_PARTTEST APP_SLV_CURMON TLD_TYPE_G TLD_TYPE_CC TLD_TYPE_OTHER TLD_TYPE_TEST
+);
+
+our %EXPORT_TAGS = (
+	general => [ qw(true false) ],
+	templates => [ qw(
 			LINUX_TEMPLATEID
 			APP_ZABBIX_PROXY_TEMPLATEID
 			PROBE_ERRORS_TEMPLATEID
-			RDAP_TEMPLATEID
+			RDAP_TEMPLATEID) ],
+	groups => [ qw(
 			TEMPLATES_TLD_GROUPID
 			PROBES_GROUPID
 			PROBES_MON_GROUPID
 			TLDS_GROUPID
 			TLD_PROBE_RESULTS_GROUPID
 			TLD_TYPE_GROUPIDS
-			TLD_TYPE_PROBE_RESULTS_GROUPIDS
-			VALUE_TYPE_AVAIL
-			VALUE_TYPE_PERC
-			VALUE_TYPE_NUM
-			ZBX_EC_INTERNAL
-			ZBX_EC_DNS_UDP_RES_NOREPLY
-			ZBX_EC_DNS_UDP_RES_NOADBIT
-			ZBX_EC_DNS_UDP_DNSKEY_NONE
-			ZBX_EC_DNS_TCP_RES_NOREPLY
-			ZBX_EC_DNS_TCP_RES_NOADBIT
-			ZBX_EC_DNS_TCP_DNSKEY_NONE
-			ZBX_EC_RDDS43_RES_NOREPLY
-			ZBX_EC_RDDS80_RES_NOREPLY
-			ZBX_EC_RDAP_RES_NOREPLY
-                    ZBX_EC_EPP_NO_IP
-                    ZBX_EC_EPP_CONNECT ZBX_EC_EPP_CRYPT ZBX_EC_EPP_FIRSTTO ZBX_EC_EPP_FIRSTINVAL ZBX_EC_EPP_LOGINTO ZBX_EC_EPP_LOGININVAL
-                    ZBX_EC_EPP_UPDATETO ZBX_EC_EPP_UPDATETO ZBX_EC_EPP_UPDATEINVAL ZBX_EC_EPP_INFOTO ZBX_EC_EPP_INFOINVAL
-		    rsm_value_mappings cfg_probe_status_delay
-		    PROBE_KEY_ONLINE
-		    cfg_default_rdds_ns_string rsm_trigger_rollweek_thresholds cfg_global_macros
-		    HOST_STATUS_MONITORED HOST_STATUS_NOT_MONITORED HOST_STATUS_PROXY_ACTIVE HOST_STATUS_PROXY_PASSIVE HOST_ENCRYPTION_PSK ITEM_STATUS_ACTIVE
-		    ITEM_STATUS_DISABLED INTERFACE_TYPE_AGENT DEFAULT_MAIN_INTERFACE TRIGGER_STATUS_DISABLED TRIGGER_STATUS_ENABLED
-		    ITEM_VALUE_TYPE_FLOAT ITEM_VALUE_TYPE_STR ITEM_VALUE_TYPE_LOG ITEM_VALUE_TYPE_UINT64 ITEM_VALUE_TYPE_TEXT
-		    ITEM_TYPE_ZABBIX ITEM_TYPE_TRAPPER ITEM_TYPE_SIMPLE ITEM_TYPE_INTERNAL ITEM_TYPE_ZABBIX_ACTIVE ITEM_TYPE_AGGREGATE ITEM_TYPE_EXTERNAL ITEM_TYPE_CALCULATED
-		    APP_SLV_MONTHLY APP_SLV_ROLLWEEK APP_SLV_PARTTEST APP_SLV_CURMON TLD_TYPE_G TLD_TYPE_CC TLD_TYPE_OTHER TLD_TYPE_TEST);
-
-our %EXPORT_TAGS = ( general => [ qw(true false) ],
-		     templates => [ qw(
-				LINUX_TEMPLATEID
-				APP_ZABBIX_PROXY_TEMPLATEID
-				PROBE_ERRORS_TEMPLATEID
-				RDAP_TEMPLATEID) ],
-		     groups => [ qw(
-				TEMPLATES_TLD_GROUPID
-				PROBES_GROUPID
-				PROBES_MON_GROUPID
-				TLDS_GROUPID
-				TLD_PROBE_RESULTS_GROUPID
-				TLD_TYPE_GROUPIDS
-				TLD_TYPE_PROBE_RESULTS_GROUPIDS) ],
-		     items => [ qw(PROBE_KEY_ONLINE) ],
-		     value_types => [ qw(VALUE_TYPE_AVAIL VALUE_TYPE_PERC VALUE_TYPE_NUM) ],
-		     ec => [ qw(
-				ZBX_EC_INTERNAL
-				ZBX_EC_DNS_UDP_RES_NOREPLY
-				ZBX_EC_DNS_UDP_RES_NOADBIT
-				ZBX_EC_DNS_UDP_DNSKEY_NONE
-				ZBX_EC_DNS_TCP_RES_NOREPLY
-				ZBX_EC_DNS_TCP_RES_NOADBIT
-				ZBX_EC_DNS_TCP_DNSKEY_NONE
-				ZBX_EC_RDDS43_RES_NOREPLY
-				ZBX_EC_RDDS80_RES_NOREPLY
-				ZBX_EC_RDAP_RES_NOREPLY
-				ZBX_EC_EPP_NO_IP
-				ZBX_EC_EPP_CONNECT ZBX_EC_EPP_CRYPT ZBX_EC_EPP_FIRSTTO ZBX_EC_EPP_FIRSTINVAL ZBX_EC_EPP_LOGINTO ZBX_EC_EPP_LOGININVAL
-				ZBX_EC_EPP_UPDATETO ZBX_EC_EPP_UPDATETO ZBX_EC_EPP_UPDATEINVAL ZBX_EC_EPP_INFOTO ZBX_EC_EPP_INFOINVAL) ],
-		    api => [ qw(HOST_STATUS_MONITORED HOST_STATUS_NOT_MONITORED HOST_STATUS_PROXY_ACTIVE HOST_STATUS_PROXY_PASSIVE ITEM_STATUS_ACTIVE
-				ITEM_STATUS_DISABLED INTERFACE_TYPE_AGENT DEFAULT_MAIN_INTERFACE
-				ITEM_VALUE_TYPE_FLOAT ITEM_VALUE_TYPE_STR ITEM_VALUE_TYPE_LOG ITEM_VALUE_TYPE_UINT64 ITEM_VALUE_TYPE_TEXT
-				ITEM_TYPE_ZABBIX ITEM_TYPE_TRAPPER ITEM_TYPE_SIMPLE ITEM_TYPE_INTERNAL ITEM_TYPE_ZABBIX_ACTIVE
-				ITEM_TYPE_AGGREGATE ITEM_TYPE_EXTERNAL ITEM_TYPE_CALCULATED
-				TRIGGER_STATUS_DISABLED TRIGGER_STATUS_ENABLED)],
-		    config => [ qw(cfg_probe_status_delay cfg_default_rdds_ns_string rsm_value_mappings rsm_trigger_rollweek_thresholds
-				    cfg_global_macros TLD_TYPE_G TLD_TYPE_CC TLD_TYPE_OTHER TLD_TYPE_TEST) ],
-		    slv => [ qw(APP_SLV_MONTHLY APP_SLV_ROLLWEEK APP_SLV_PARTTEST APP_SLV_CURMON) ],
-		    tls => [ qw(HOST_ENCRYPTION_PSK)] );
+			TLD_TYPE_PROBE_RESULTS_GROUPIDS) ],
+	items => [ qw(PROBE_KEY_ONLINE) ],
+	value_types => [ qw(VALUE_TYPE_AVAIL VALUE_TYPE_PERC VALUE_TYPE_NUM) ],
+	ec => [ qw(
+			ZBX_EC_INTERNAL_FIRST
+			ZBX_EC_INTERNAL_LAST
+			ZBX_EC_DNS_UDP_DNSSEC_FIRST
+			ZBX_EC_DNS_UDP_DNSSEC_LAST
+			ZBX_EC_DNS_TCP_DNSSEC_FIRST
+			ZBX_EC_DNS_TCP_DNSSEC_LAST) ],
+	api => [ qw(HOST_STATUS_MONITORED HOST_STATUS_NOT_MONITORED HOST_STATUS_PROXY_ACTIVE HOST_STATUS_PROXY_PASSIVE ITEM_STATUS_ACTIVE
+			ITEM_STATUS_DISABLED INTERFACE_TYPE_AGENT DEFAULT_MAIN_INTERFACE
+			ITEM_VALUE_TYPE_FLOAT ITEM_VALUE_TYPE_STR ITEM_VALUE_TYPE_LOG ITEM_VALUE_TYPE_UINT64 ITEM_VALUE_TYPE_TEXT
+			ITEM_TYPE_ZABBIX ITEM_TYPE_TRAPPER ITEM_TYPE_SIMPLE ITEM_TYPE_INTERNAL ITEM_TYPE_ZABBIX_ACTIVE
+			ITEM_TYPE_AGGREGATE ITEM_TYPE_EXTERNAL ITEM_TYPE_CALCULATED
+			TRIGGER_STATUS_DISABLED TRIGGER_STATUS_ENABLED)],
+	config => [ qw(cfg_probe_status_delay cfg_default_rdds_ns_string rsm_value_mappings rsm_trigger_rollweek_thresholds
+			cfg_global_macros TLD_TYPE_G TLD_TYPE_CC TLD_TYPE_OTHER TLD_TYPE_TEST) ],
+	slv => [ qw(APP_SLV_MONTHLY APP_SLV_ROLLWEEK APP_SLV_PARTTEST APP_SLV_CURMON) ],
+	tls => [ qw(HOST_ENCRYPTION_PSK)]
+);
 
 1;
