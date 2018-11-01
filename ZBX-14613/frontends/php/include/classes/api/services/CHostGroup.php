@@ -674,7 +674,7 @@ class CHostGroup extends CApiService {
 	 *
 	 * @throws APIException if the input is invalid.
 	 */
-	private function validateDelete(array $groupids, array &$db_groups = null, bool $nopermissions) {
+	private function validateDelete(array $groupids, array &$db_groups = null, $nopermissions) {
 		$api_input_rules = ['type' => API_IDS, 'flags' => API_NOT_EMPTY, 'uniq' => true];
 		if (!CApiInputValidator::validate($api_input_rules, $groupids, '/', $error)) {
 			self::exception(ZBX_API_ERROR_PARAMETERS, $error);
@@ -1482,16 +1482,22 @@ class CHostGroup extends CApiService {
 	 * @param array $groupids
 	 */
 	protected function validateDeleteCheckMaintenances(array $groupids) {
-		$sql = 'SELECT m.maintenanceid id, m.name FROM maintenances m'.
+		$res = DBselect(
+			'SELECT m.maintenanceid id, m.name'.
+			' FROM maintenances m'.
 			' WHERE NOT EXISTS ('.
-				'SELECT NULL FROM maintenances_groups mg'.
+				'SELECT NULL'.
+				' FROM maintenances_groups mg'.
 				' WHERE m.maintenanceid=mg.maintenanceid'.
 					' AND mg.groupid NOT IN ('.implode(',', $groupids).')'.
-			') AND NOT EXISTS ('.
-				'SELECT NULL FROM maintenances_hosts mh'.
-				' WHERE m.maintenanceid=mh.maintenanceid);';
+			')'.
+				' AND NOT EXISTS ('.
+					'SELECT NULL'.
+					' FROM maintenances_hosts mh'.
+					' WHERE m.maintenanceid=mh.maintenanceid'.
+				')'
+		);
 
-		$res = DBselect($sql);
 		if ($res->num_rows) {
 			$maintenance = DBfetch($res);
 

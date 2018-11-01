@@ -1159,16 +1159,22 @@ class CHost extends CHostGeneral {
 	 * @param array $hostids
 	 */
 	protected function validateDeleteCheckMaintenances(array $hostids) {
-		$sql = 'SELECT m.maintenanceid id, m.name FROM maintenances m'.
+		$res = DBselect(
+			'SELECT m.maintenanceid id, m.name'.
+			' FROM maintenances m'.
 			' WHERE NOT EXISTS ('.
-				'SELECT NULL FROM maintenances_hosts mh'.
+				'SELECT NULL'.
+				' FROM maintenances_hosts mh'.
 				' WHERE m.maintenanceid=mh.maintenanceid'.
 					' AND mh.hostid NOT IN ('.implode(',', $hostids).')'.
-			') AND NOT EXISTS ('.
-				'SELECT NULL FROM maintenances_groups mg'.
-				' WHERE m.maintenanceid=mg.maintenanceid);';
+			')'.
+				' AND NOT EXISTS ('.
+					'SELECT NULL'.
+					' FROM maintenances_groups mg'.
+					' WHERE m.maintenanceid=mg.maintenanceid'.
+				')'
+		);
 
-		$res = DBselect($sql);
 		if ($res->num_rows) {
 			$maintenance = DBfetch($res);
 
