@@ -165,6 +165,7 @@ class CHostPrototype extends CHostBase {
 	 * @return array
 	 */
 	protected function getHostPrototypeSchema() {
+		$valid_inventory_modes = [HOST_INVENTORY_DISABLED, HOST_INVENTORY_MANUAL, HOST_INVENTORY_AUTOMATIC];
 		return [
 			'validators' => [
 				'host' => new CLldMacroStringValidator([
@@ -197,8 +198,9 @@ class CHostPrototype extends CHostBase {
 				'inventory' => new CSchemaValidator([
 					'validators' => [
 						'inventory_mode' => new CLimitedSetValidator([
-							'values' => [HOST_INVENTORY_DISABLED, HOST_INVENTORY_MANUAL, HOST_INVENTORY_AUTOMATIC],
-							'messageInvalid' => _('Unsupported inventory mode "%2$s" for host prototype "%1$s".')
+							'values' => $valid_inventory_modes,
+							'messageInvalid' => _s('Incorrect value for field "%1$s": %2$s.', 'inventory_mode',
+								_s('value must be one of %1$s', implode(', ', $valid_inventory_modes)))
 						])
 					],
 					'messageUnsupported' => _('Unsupported parameter "%2$s" for host prototype %1$s host inventory.'),

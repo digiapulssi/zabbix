@@ -1678,9 +1678,11 @@ class CHost extends CHostGeneral {
 
 		$inventory_fields = zbx_objectValues(getHostInventories(), 'db_field');
 
+		$valid_inventory_modes = [HOST_INVENTORY_DISABLED, HOST_INVENTORY_MANUAL, HOST_INVENTORY_AUTOMATIC];
 		$inventory_mode = new CLimitedSetValidator([
-			'values' => [HOST_INVENTORY_DISABLED, HOST_INVENTORY_MANUAL, HOST_INVENTORY_AUTOMATIC],
-			'messageInvalid' => _('Unsupported inventory mode "%2$s" for host "%1$s".')
+			'values' => $valid_inventory_modes,
+			'messageInvalid' => _s('Incorrect value for field "%1$s": %2$s.', 'inventory_mode',
+				_s('value must be one of %1$s', implode(', ', $valid_inventory_modes)))
 		]);
 
 		$status_validator = new CLimitedSetValidator([
@@ -1811,9 +1813,11 @@ class CHost extends CHostGeneral {
 
 		$inventory_fields = zbx_objectValues(getHostInventories(), 'db_field');
 
+		$valid_inventory_modes = [HOST_INVENTORY_DISABLED, HOST_INVENTORY_MANUAL, HOST_INVENTORY_AUTOMATIC];
 		$inventory_mode = new CLimitedSetValidator([
-			'values' => [HOST_INVENTORY_DISABLED, HOST_INVENTORY_MANUAL, HOST_INVENTORY_AUTOMATIC],
-			'messageInvalid' => _('Unsupported inventory mode "%2$s" for host "%1$s".')
+			'values' => $valid_inventory_modes,
+			'messageInvalid' => _s('Incorrect value for field "%1$s": %2$s.', 'inventory_mode',
+				_s('value must be one of %1$s', implode(', ', $valid_inventory_modes)))
 		]);
 
 		$status_validator = new CLimitedSetValidator([
