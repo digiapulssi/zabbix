@@ -1787,7 +1787,7 @@ class CMacrosResolver extends CMacrosResolverGeneral {
 			if ($selement['elementtype'] == SYSMAP_ELEMENT_TYPE_TRIGGER) {
 				$triggers = API::Trigger()->get([
 					'output' => [],
-					'triggerids' => zbx_objectValues($selement['elements'], 'triggerid'),
+					'triggerids' => $selement['elements'][0]['triggerid'],
 					'selectFunctions' => ['functionid', 'itemid'],
 					'selectItems' => ['itemid', 'hostid'],
 					'selectHosts' => ['hostid'],
@@ -1795,7 +1795,9 @@ class CMacrosResolver extends CMacrosResolverGeneral {
 					'preservekeys' => true
 				]);
 
-				foreach ($triggers as $trigger) {
+				$triggers;
+				$trigger = reset($triggers);
+				if ($trigger) {
 					foreach ($trigger['hosts'] as $host) {
 						$hostids_to_resolve[$host['hostid']] = $host['hostid'];
 					}
@@ -1858,15 +1860,13 @@ class CMacrosResolver extends CMacrosResolverGeneral {
 				$hosts_by_nr = ['' => null];
 
 				// Get all function ids from expression and link host data against position in expression.
-				foreach ($selement['elements'] as $map_element) {
-					preg_match_all('/\{([0-9]+)\}/', $map_element['elementExpressionTrigger'], $matches);
-					foreach ($matches[1] as $i => $functionid) {
-						$itemid = $itemids_by_functionids[$functionid];
-						$hostid = $hosts_by_itemids[$itemid];
+				preg_match_all('/\{([0-9]+)\}/', $selement['elements'][0]['elementExpressionTrigger'], $matches);
+				foreach ($matches[1] as $i => $functionid) {
+					$itemid = $itemids_by_functionids[$functionid];
+					$hostid = $hosts_by_itemids[$itemid];
 
-						if (array_key_exists($hostid, $hosts)) {
-							$hosts_by_nr[count($hosts_by_nr)] = $hosts[$hostid];
-						}
+					if (array_key_exists($hostid, $hosts)) {
+						$hosts_by_nr[count($hosts_by_nr)] = $hosts[$hostid];
 					}
 				}
 
@@ -1988,7 +1988,7 @@ class CMacrosResolver extends CMacrosResolverGeneral {
 
 			case SYSMAP_ELEMENT_TYPE_TRIGGER:
 				$macros = [
-					'{TRIGGER.ID}' => $selement['elementid'][0]
+					'{TRIGGER.ID}' => $selement['elementid']
 				];
 				break;
 
@@ -2024,7 +2024,8 @@ class CMacrosResolver extends CMacrosResolverGeneral {
 					'preservekeys' => true
 				]);
 
-				foreach ($triggers as $trigger) {
+				$trigger = reset($triggers);
+				if ($trigger) {
 					foreach ($trigger['hosts'] as $host) {
 						$hostids_to_resolve[$host['hostid']] = $host['hostid'];
 					}
@@ -2128,7 +2129,7 @@ class CMacrosResolver extends CMacrosResolverGeneral {
 					$hosts_by_nr = ['' => null];
 
 					// Get all function ids from expression and link host data against position in expression.
-					foreach ($triggers as $trigger) {
+					if ($trigger) {
 						preg_match_all('/\{([0-9]+)\}/', $trigger['expression'], $matches);
 						foreach ($matches[1] as $i => $functionid) {
 							$itemid = $itemids_by_functionids[$functionid];

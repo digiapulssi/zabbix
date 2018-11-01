@@ -2290,9 +2290,8 @@ class CMap extends CMapElement {
 			// Are multiple rows supported?
 			foreach ($trigger_selements as $tr_sel) {
 				if ($selements[$tr_sel['selementid']]['elementid'] == 0) {
-					$selements[$tr_sel['selementid']]['elementid'] = [];
+					$selements[$tr_sel['selementid']]['elementid'] = $tr_sel['triggerid'];
 				}
-				$selements[$tr_sel['selementid']]['elementid'][] = $tr_sel['triggerid'];
 			}
 
 			$relation_map = $this->createRelationMap($selements, 'sysmapid', 'selementid');
