@@ -368,16 +368,14 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 						$history_value[0]['value'] = (array_sum(zbx_objectValues($history_value, 'value')) > 0) ? 1 : 0;
 						$history_value = $history_value[0];
 
-						if ($history_value) {
-							switch ($history_value['itemid']) {
-								case $_enabled_item_map[RDDS_ENABLED]:
-									$data['tld']['macros'][RSM_TLD_RDDS_ENABLED] = $history_value['value'];
-									break;
+						switch ($history_value['itemid']) {
+							case $_enabled_item_map[RDDS_ENABLED]:
+								$data['tld']['macros'][RSM_TLD_RDDS_ENABLED] = $history_value['value'];
+								break;
 
-								case $_enabled_item_map[RDAP_ENABLED]:
-									$data['tld']['macros'][RSM_RDAP_TLD_ENABLED] = $history_value['value'];
-									break;
-							}
+							case $_enabled_item_map[RDAP_ENABLED]:
+								$data['tld']['macros'][RSM_RDAP_TLD_ENABLED] = $history_value['value'];
+								break;
 						}
 					}
 				}
