@@ -46,6 +46,10 @@
 #define ZBX_EC_EPP_INTERNAL_GENERAL		-1	/* Internal error */
 #define ZBX_EC_EPP_INTERNAL_IP_UNSUP		-2	/* EPP - IP addresses for the hostname are not supported by the IP versions supported by the probe node */
 
+/* specific RDAP internal errors */
+#define ZBX_EC_RDAP_INTERNAL_NOTLISTED		-100	/* The TLD is not listed in the Bootstrap Service Registry for Domain Name Space */
+#define ZBX_EC_RDAP_INTERNAL_NOHTTPS		-101	/* The RDAP base URL obtained from Bootstrap Service Registry for Domain Name Space does not use HTTPS */
+
 /* DNS UDP error codes */
 #define ZBX_EC_DNS_UDP_NS_NOREPLY	-200	/* DNS UDP - No reply from name server */
 #define ZBX_EC_DNS_UDP_CLASS_CHAOS	-207	/* DNS UDP - Expecting DNS CLASS IN but got CHAOS */
@@ -174,20 +178,18 @@
 #define ZBX_EC_RDDS80_EMAXREDIRECTS	-259	/* RDDS80 - Maximum HTTP redirects were hit while trying to connect to RDDS server */
 #define ZBX_EC_RDDS80_HTTP_BASE		-300	/* RDDS80 - Expecting HTTP status code 200 but got xxx */
 /* RDAP error codes */
-#define ZBX_EC_RDAP_NOTLISTED		-100	/* The TLD is not listed in the Bootstrap Service Registry for Domain Name Space */
-#define ZBX_EC_RDAP_NOHTTPS		-101	/* The RDAP base URL obtained from Bootstrap Service Registry for Domain Name Space does not use HTTPS */
-#define ZBX_EC_RDAP_RES_NOREPLY		-200	/* RDAP - No server could be reached by local resolver */
-#define ZBX_EC_RDAP_RES_SERVFAIL	-202	/* RDAP - Expecting NOERROR RCODE but got SERVFAIL when resolving hostname */
-#define ZBX_EC_RDAP_RES_NXDOMAIN	-203	/* RDAP - Expecting NOERROR RCODE but got NXDOMAIN when resolving hostname */
-#define ZBX_EC_RDAP_TO			-205	/* RDAP - Timeout */
-#define ZBX_EC_RDAP_ECON		-206	/* RDAP - Error opening connection to server */
-#define ZBX_EC_RDAP_EJSON		-207	/* RDAP - Invalid JSON format in response */
-#define ZBX_EC_RDAP_NONAME		-208	/* RDAP - ldhName member not found in response */
-#define ZBX_EC_RDAP_ENAME		-209	/* RDAP - ldhName member doesn't match query in response */
-#define ZBX_EC_RDAP_EHTTP		-213	/* RDAP - Error in HTTP protocol */
-#define ZBX_EC_RDAP_EHTTPS		-214	/* RDAP - Error in HTTPS protocol */
-#define ZBX_EC_RDAP_EMAXREDIRECTS	-215	/* RDAP - Maximum HTTP redirects were hit while trying to connect to RDAP server */
-#define ZBX_EC_RDAP_HTTP_BASE		-250	/* RDAP - Expecting HTTP status code 200 bug got xxx */
+#define ZBX_EC_RDAP_RES_NOREPLY		-400	/* RDAP - No server could be reached by local resolver */
+#define ZBX_EC_RDAP_RES_SERVFAIL	-402	/* RDAP - Expecting NOERROR RCODE but got SERVFAIL when resolving hostname */
+#define ZBX_EC_RDAP_RES_NXDOMAIN	-403	/* RDAP - Expecting NOERROR RCODE but got NXDOMAIN when resolving hostname */
+#define ZBX_EC_RDAP_TO			-405	/* RDAP - Timeout */
+#define ZBX_EC_RDAP_ECON		-406	/* RDAP - Error opening connection to server */
+#define ZBX_EC_RDAP_EJSON		-407	/* RDAP - Invalid JSON format in response */
+#define ZBX_EC_RDAP_NONAME		-408	/* RDAP - ldhName member not found in response */
+#define ZBX_EC_RDAP_ENAME		-409	/* RDAP - ldhName member doesn't match query in response */
+#define ZBX_EC_RDAP_EHTTP		-413	/* RDAP - Error in HTTP protocol */
+#define ZBX_EC_RDAP_EHTTPS		-414	/* RDAP - Error in HTTPS protocol */
+#define ZBX_EC_RDAP_EMAXREDIRECTS	-415	/* RDAP - Maximum HTTP redirects were hit while trying to connect to RDAP server */
+#define ZBX_EC_RDAP_HTTP_BASE		-500	/* RDAP - Expecting HTTP status code 200 bug got xxx */
 /* EPP error codes */
 #define ZBX_EC_EPP_NO_IP		-200	/* IP is missing for EPP server */
 #define ZBX_EC_EPP_CONNECT		-201	/* cannot connect to EPP server */
