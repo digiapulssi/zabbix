@@ -216,7 +216,8 @@ jQuery(function ($) {
 			nodes = graph.querySelectorAll('[data-set]');
 
 		for (var i = 0, l = nodes.length; l > i; i++) {
-			var px = -10,
+			var tolerance = getDataPointTolerance(nodes[i]),
+				px = -10,
 				py = -10,
 				pv = null;
 
@@ -228,7 +229,8 @@ jQuery(function ($) {
 						points = [];
 
 					for (var c = 0, cl = circle_nodes.length; cl > c; c++) {
-						if (test_x >= parseInt(circle_nodes[c].getAttribute('cx'))) {
+						let cx = parseInt(circle_nodes[c].getAttribute('cx'));
+						if (test_x >= cx - tolerance) {
 							points.push(circle_nodes[c]);
 						}
 					}
@@ -274,7 +276,7 @@ jQuery(function ($) {
 					break;
 			}
 
-			data_sets.push({g: nodes[i], x: px, y: py, v: pv});
+			data_sets.push({g: nodes[i], x: +px, y: +py, v: pv, t: tolerance});
 		}
 
 		return data_sets;
@@ -400,29 +402,29 @@ jQuery(function ($) {
 				var points = findValues(graph[0], offsetX),
 					points_total = 0,
 					show_hint = false,
-					xy_point = false,
-					tolerance;
+					xy_point = false;
 
 				/**
 				 * Decide if one specific value or list of all matching Xs should be highlighted and either to show or
 				 * hide hintbox.
 				 */
-				if (data.isHintBoxFrozen === false) {
-					points.forEach(function(point) {
-						if (!show_hint && point.v !== null) {
-							show_hint = true;
-						}
+				points.forEach(function(p) {
+					if (p.v === null) {
+						return;
+					}
 
-						tolerance = getDataPointTolerance(point.g);
-						if (!xy_point && point.v !== null
-								&& (+point.x + tolerance) > e.offsetX && e.offsetX > (+point.x - tolerance)
-								&& (+point.y + tolerance) > e.offsetY && e.offsetY > (+point.y - tolerance)) {
-							xy_point = point;
-							points_total = 1;
-							return;
-						}
-					});
-				}
+					if (data.isHintBoxFrozen === false && !show_hint) {
+						show_hint = true;
+					}
+
+					let x = e.offsetX, y = e.offsetY;
+					if ((p.x + p.t) >= x && x >= (p.x - p.t) && (p.y + p.t) >= y && y >= (p.y - p.t)
+							&& (xy_point === false || (Math.abs(xy_point.x - x) > Math.abs(p.x - x)
+								&& Math.abs(xy_point.y - y) > Math.abs(p.y - y)))) {
+						xy_point = p;
+						points_total = 1;
+					}
+				});
 
 				// Make html for hintbox.
 				if (show_hint) {
