@@ -936,7 +936,9 @@ class CSvgGraph extends CSvg {
 
 		foreach ($this->problems as $problem) {
 			// If problem is never recovered, it will be drown till the end of graph or till current time.
-			$time_to =  ($problem['r_clock'] == 0) ? min($this->time_till, time()) : $problem['r_clock'];
+			$time_to =  ($problem['r_clock'] == 0)
+				? min($this->time_till, time())
+				: min($this->time_till, $problem['r_clock']);
 			$time_range = $this->time_till - $this->time_from;
 			$x1 = $this->canvas_x + $this->canvas_width
 				- $this->canvas_width * ($this->time_till - $problem['clock']) / $time_range;
@@ -989,11 +991,11 @@ class CSvgGraph extends CSvg {
 			$draw_type = ($x2 - $x1) > 2 ? CSvgGraphAnnotation::TYPE_RANGE : CSvgGraphAnnotation::TYPE_SIMPLE;
 
 			// Draw border lines. Make them dashed if beginning or ending of highligted zone is visible in graph.
-			if ($problem['clock'] >= $this->time_from) {
+			if ($problem['clock'] > $this->time_from) {
 				$draw_type |= CSvgGraphAnnotation::DASH_LINE_START;
 			}
 
-			if ($this->time_till >= $time_to) {
+			if ($this->time_till > $time_to) {
 				$draw_type |= CSvgGraphAnnotation::DASH_LINE_END;
 			}
 
