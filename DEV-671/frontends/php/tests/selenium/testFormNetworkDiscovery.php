@@ -159,7 +159,7 @@ class testFormNetworkDiscovery extends CWebTest {
 
 		$this->zbxTestLogin('discoveryconf.php');
 		$this->zbxTestClickButtonText('Create discovery rule');
-		$this->FillInFields($data);
+		$this->fillInFields($data);
 
 		if (array_key_exists('error_in_checks', $data)) {
 			$this->zbxTestLaunchOverlayDialog('Discovery check error');
@@ -311,7 +311,7 @@ class testFormNetworkDiscovery extends CWebTest {
 	public function testFormNetworkDiscovery_Create($data) {
 		$this->zbxTestLogin('discoveryconf.php');
 		$this->zbxTestClickButtonText('Create discovery rule');
-		$this->FillInFields($data);
+		$this->fillInFields($data);
 
 		$this->zbxTestClickWait('add');
 
@@ -392,7 +392,7 @@ class testFormNetworkDiscovery extends CWebTest {
 
 		$this->zbxTestLogin('discoveryconf.php');
 		$this->zbxTestClickLinkText($data['old_name']);
-		$this->FillInFields($data);
+		$this->fillInFields($data);
 
 		if (array_key_exists('error_in_checks', $data)) {
 			$this->zbxTestLaunchOverlayDialog('Discovery check error');
@@ -464,7 +464,7 @@ class testFormNetworkDiscovery extends CWebTest {
 	public function testFormNetworkDiscovery_Update($data) {
 		$this->zbxTestLogin('discoveryconf.php');
 		$this->zbxTestClickLinkText($data['old_name']);
-		$this->FillInFields($data);
+		$this->fillInFields($data);
 
 		// Get amount of check rows in discovery form.
 		$checks_on_page = count($this->webDriver->findElements(WebDriverBy::xpath('//div[@id="dcheckList"]'.
@@ -530,7 +530,7 @@ class testFormNetworkDiscovery extends CWebTest {
 		$this->assertEquals($old_dchecks, DBhash($sql_dchecks));
 	}
 
-	private function FillInFields($data) {
+	private function fillInFields($data) {
 		if (array_key_exists('name', $data)) {
 			$this->zbxTestInputTypeOverwrite('name', $data['name']);
 		}
@@ -554,6 +554,9 @@ class testFormNetworkDiscovery extends CWebTest {
 						case 'check_action':
 							$action = $value;
 							$this->zbxTestClickButtonText($action);
+							if ($action !== 'Remove') {
+								$this->zbxTestWaitUntilElementPresent(WebDriverBy::id('new_check_form'));
+							}
 							break;
 						case 'type':
 							$this->zbxTestDropdownSelectWait('type', $value);
@@ -595,6 +598,9 @@ class testFormNetworkDiscovery extends CWebTest {
 				}
 				if ($action === 'New' || $action === 'Edit') {
 					$this->zbxTestClick('add_new_dcheck');
+					if (!array_key_exists('error_in_checks', $data)) {
+						$this->zbxTestWaitUntilElementNotVisible(WebDriverBy::id('new_check_form'));
+					}
 				}
 			}
 		}
@@ -696,31 +702,30 @@ class testFormNetworkDiscovery extends CWebTest {
 				]
 			];
 			$this->zbxTestClickButtonText('Create discovery rule');
-			$this->FillInFields($discovery);
+			$this->fillInFields($discovery);
 		}
 		else {
-			foreach (DBdata("SELECT name FROM drules LIMIT 1", false) as $discovery) {
-				$discovery = $discovery[0];
-				$name = $discovery['name'];
-				$this->zbxTestClickLinkTextWait($name);
+			$discovery = DBdata("SELECT name FROM drules LIMIT 1", false);
+			$discovery = $discovery[0][0];
+			$name = $discovery['name'];
+			$this->zbxTestClickLinkTextWait($name);
 
-				switch ($action) {
-					case 'update':
-						$name .= ' (updated)';
-						$this->zbxTestInputTypeOverwrite('name', $name);
-						break;
+			switch ($action) {
+				case 'update':
+					$name .= ' (updated)';
+					$this->zbxTestInputTypeOverwrite('name', $name);
+					break;
 
-					case 'clone':
-						$name .= ' (cloned)';
-						$this->zbxTestClickWait('clone');
-						$this->zbxTestInputTypeOverwrite('name', $name);
-						break;
+				case 'clone':
+					$name .= ' (cloned)';
+					$this->zbxTestClickWait('clone');
+					$this->zbxTestInputTypeOverwrite('name', $name);
+					break;
 
-					case 'delete':
-						$this->zbxTestClickWait('delete');
-						$this->webDriver->switchTo()->alert()->dismiss();
-						break;
-				}
+				case 'delete':
+					$this->zbxTestClickWait('delete');
+					$this->webDriver->switchTo()->alert()->dismiss();
+					break;
 			}
 		}
 		$this->zbxTestClickWait('cancel');
@@ -733,5 +738,4 @@ class testFormNetworkDiscovery extends CWebTest {
 		$this->assertEquals($old_drules, DBhash($sql_drules));
 		$this->assertEquals($old_dchecks, DBhash($sql_dchecks));
 	}
-
 }
