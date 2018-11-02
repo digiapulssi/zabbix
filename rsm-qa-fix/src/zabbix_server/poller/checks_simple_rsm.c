@@ -4132,7 +4132,7 @@ int	check_rsm_rdap(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 	if (0 == strcmp(base_url, "not listed"))
 	{
 		zbx_rsm_err(log_fd, "The TLD is not listed in the Bootstrap Service Registry for Domain Name Space");
-		rtt = ZBX_EC_RDAP_NOTLISTED;
+		rtt = ZBX_EC_RDAP_INTERNAL_NOTLISTED;
 		goto out;
 	}
 
@@ -4140,7 +4140,7 @@ int	check_rsm_rdap(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 	{
 		zbx_rsm_err(log_fd, "The RDAP base URL obtained from Bootstrap Service Registry for Domain Name Space"
 				" does not use HTTPS");
-		rtt = ZBX_EC_RDAP_NOHTTPS;
+		rtt = ZBX_EC_RDAP_INTERNAL_NOHTTPS;
 		goto out;
 	}
 

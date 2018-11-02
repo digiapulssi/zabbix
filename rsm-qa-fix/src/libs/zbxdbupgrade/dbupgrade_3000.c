@@ -2716,6 +2716,32 @@ static int	DBpatch_3000228(void)
 	return SUCCEED;
 }
 
+static int	DBpatch_3000229(void)
+{
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	if (ZBX_DB_OK > DBexecute(
+			"update mappings"
+			" set value=value-200"
+			" where valuemapid=135"
+				" and convert(value,integer) between -215 and -200"))
+	{
+		return FAIL;
+	}
+
+	if (ZBX_DB_OK > DBexecute(
+			"update mappings"
+			" set value=value-250"
+			" where valuemapid=135"
+				" and convert(value,integer)<-249"))
+	{
+		return FAIL;
+	}
+
+	return SUCCEED;
+}
+
 #endif
 
 DBPATCH_START(3000)
@@ -2791,5 +2817,6 @@ DBPATCH_ADD(3000225, 0, 0)	/* change "Zabbix server" macro value {$MAX_PROCESSES
 DBPATCH_ADD(3000226, 0, 0)	/* disable "RDAP availability" items on hosts where RDAP is disabled */
 DBPATCH_ADD(3000227, 0, 0)	/* reorganize error codes: part 1 */
 DBPATCH_ADD(3000228, 0, 0)	/* reorganize error codes: part 2 */
+DBPATCH_ADD(3000229, 0, 0)	/* reorganize error codes: part 3 (add -200 and -250 to RDAP service error codes) */
 
 DBPATCH_END()
