@@ -27,6 +27,11 @@ else {
 	$this->addJsFile('gtlc.js');
 	$this->addJsFile('dashboard.grid.js');
 	$this->addJsFile('class.calendar.js');
+	$this->addJsFile('class.cclock.js');
+	$this->addJsFile('class.cnavtree.js');
+	$this->addJsFile('class.mapWidget.js');
+	$this->addJsFile('class.svg.canvas.js');
+	$this->addJsFile('class.svg.map.js');
 
 	$this->includeJSfile('app/views/monitoring.dashboard.view.js.php');
 
