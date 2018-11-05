@@ -28,7 +28,7 @@ $widget = (new CWidget())
 		)
 	)
 	->addItem(
-		(new CFilter('web.sysmapconf.filter.state'))
+		(new CFilter('web.sysmapconf.filter.state', new CUrl('sysmaps.php')))
 			->addColumn((new CFormList())->addRow(_('Name'),
 				(new CTextBox('filter_name', $data['filter']['name']))
 					->setWidth(ZBX_TEXTAREA_FILTER_STANDARD_WIDTH)

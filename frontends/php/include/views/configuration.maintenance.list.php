@@ -30,7 +30,7 @@ $widget = (new CWidget())
 			])
 			->addItem(new CSubmit('form', _('Create maintenance period')))
 		))
-	->addItem((new CFilter('web.maintenance.filter.state'))
+	->addItem((new CFilter('web.maintenance.filter.state', new CUrl('maintenance.php')))
 		->addColumn((new CFormList())->addRow(_('Name'),
 			(new CTextBox('filter_name', $data['filter']['name']))
 				->setWidth(ZBX_TEXTAREA_FILTER_SMALL_WIDTH)

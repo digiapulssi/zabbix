@@ -129,7 +129,10 @@ else {
 			->addItem($breadcrumbs)
 			->addClass(ZBX_STYLE_OBJECT_GROUP)
 		)
-		->addItem(($data['show_timeline']) ? (new CFilter('web.dashbrd.filter.state'))->addNavigator() : null)
+		->addItem(($data['show_timeline'])
+			? (new CFilter('web.dashbrd.filter.state', new CUrl()))->addNavigator()
+			: null
+		)
 		->addItem((new CDiv())->addClass(ZBX_STYLE_DASHBRD_GRID_WIDGET_CONTAINER))
 		->addItem($edit_form)
 		->addItem($sharing_form)

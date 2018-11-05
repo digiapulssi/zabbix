@@ -28,7 +28,7 @@ else {
 	$create_button = new CSubmit('form', _('Create trigger'));
 }
 
-$filter = (new CFilter('web.triggers.filter.state'))
+$filter = (new CFilter('web.triggers.filter.state', new CUrl('triggers.php')))
 	->addColumn(
 		(new CFormList())
 			->addRow(_('Severity'),

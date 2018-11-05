@@ -210,7 +210,7 @@ CScreenBuilder::insertScreenStandardJs([
 
 // Create graphs widget.
 (new CWidget())
-	->addItem((new CFilter('web.httpdetails.filter.state'))->addNavigator())
+	->addItem((new CFilter('web.httpdetails.filter.state', new CUrl()))->addNavigator())
 	->addItem((new CDiv($graphs))->addClass(ZBX_STYLE_TABLE_FORMS_CONTAINER))
 	->show();
 

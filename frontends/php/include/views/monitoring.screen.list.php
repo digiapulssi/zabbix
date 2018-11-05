@@ -49,7 +49,7 @@ $widget->setControls($createForm);
 // filter
 if (!$data['templateid']) {
 	$widget->addItem(
-		(new CFilter('web.screenconf.filter.state'))
+		(new CFilter('web.screenconf.filter.state', new CUrl('screenconf.php')))
 			->addColumn((new CFormList())->addRow(_('Name'),
 				(new CTextBox('filter_name', $data['filter']['name']))
 					->setWidth(ZBX_TEXTAREA_FILTER_STANDARD_WIDTH)
