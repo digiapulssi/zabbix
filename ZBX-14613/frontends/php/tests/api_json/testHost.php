@@ -30,27 +30,37 @@ class testHost extends CZabbixTest {
 		return [
 			[
 				'params' => [
-					'60001',
+					'61001',
 				],
 				'expected_error' => 'Cannot delete host'.
-					' because maintenance "test_maintenance_has_only_host"'.
+					' because maintenance "maintenance_has_only_host"'.
 					' must contain at least one host or host group.'
 			],
 			[
 				'params' => [
-					'60001',
-					'60003'
+					'61001',
+					'61003'
 				],
 				'expected_error' => 'Cannot delete selected hosts'.
-					' because maintenance "test_maintenance_has_only_host"'.
+					' because maintenance "maintenance_has_only_host"'.
 					' must contain at least one host or host group.'
 			],
 			[
 				'params' => [
-					'60003'
+					'61003'
 				],
 				'expected_error' => null,
+			],
+			[
+				'params' => [
+					'61004',
+					'61005'
+				],
+				'expected_error' => 'Cannot delete selected hosts'.
+					' because maintenance "maintenance_two_hosts"'.
+					' must contain at least one host or host group.'
 			]
+
 		];
 	}
 

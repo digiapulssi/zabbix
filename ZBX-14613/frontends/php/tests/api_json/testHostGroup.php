@@ -400,26 +400,41 @@ class testHostGroup extends CZabbixTest {
 			// maintenance related
 			[
 				'hostgroup' => [
-					'60002'
+					'62001'
+				],
+				'expected_error' => null
+			],
+			[
+				'hostgroup' => [
+					'62002'
 				],
 				'expected_error' => 'Cannot delete host group'.
-					' because maintenance "test_maintenance_has_only_group"'.
+					' because maintenance "maintenance_has_only_group"'.
 					' must contain at least one host or host group.'
 			],
 			[
 				'hostgroup' => [
-					'60002',
-					'60003'
+					'62002',
+					'62003'
 				],
 				'expected_error' => 'Cannot delete selected host groups'.
-					' because maintenance "test_maintenance_has_only_group"'.
+					' because maintenance "maintenance_has_only_group"'.
 					' must contain at least one host or host group.'
 			],
 			[
 				'hostgroup' => [
-					'60003'
+					'62003'
 				],
 				'expected_error' => null,
+			],
+			[
+				'hostgroup' => [
+					'62004',
+					'62005'
+				],
+				'expected_error' => 'Cannot delete selected host groups'.
+					' because maintenance "maintenance_two_groups"'.
+					' must contain at least one host or host group.'
 			],
 		];
 	}
