@@ -42,7 +42,8 @@ jQuery(function ($) {
 	// Cancel SBox and unset its variables.
 	function destroySBox(e, graph) {
 		var graph = graph || e.data.graph,
-			data = graph.data('options');
+			data = graph.data('options'),
+			widget = graph.data('widget');
 
 		$(document)
 			.off('selectstart', disableSelect)
@@ -54,6 +55,7 @@ jQuery(function ($) {
 			$('.svg-graph-selection', graph).attr({'width': 0, 'height': 0});
 			$('.svg-graph-selection-text', graph).text('');
 			graph.data('options').boxing = false;
+			$('.dashbrd-grid-widget-container').dashboardGrid('unpauseWidgetRefresh', widget['uniqueid']);
 		}
 	}
 
@@ -125,7 +127,8 @@ jQuery(function ($) {
 
 		var graph = e.data.graph,
 			offsetX = e.clientX - graph.offset().left,
-			data = graph.data('options');
+			data = graph.data('options'),
+			widget = graph.data('widget');
 
 		if (data.dimX <= offsetX && offsetX <= data.dimX + data.dimW && data.dimY <= e.offsetY
 				&& e.offsetY <= data.dimY + data.dimH) {
@@ -136,6 +139,7 @@ jQuery(function ($) {
 				.on('mouseup', {graph: graph}, endSBoxDrag);
 
 			data.start = offsetX - data.dimX;
+			$('.dashbrd-grid-widget-container').dashboardGrid('pauseWidgetRefresh', widget['uniqueid']);
 		}
 	}
 
@@ -514,7 +518,7 @@ jQuery(function ($) {
 	}
 
 	var methods = {
-		init: function(options) {
+		init: function(options, widget) {
 			options = $.extend({}, {
 				sbox: false,
 				show_problems: true,
@@ -538,15 +542,16 @@ jQuery(function ($) {
 					};
 
 				graph
+					.data('options', data)
+					.data('widget', widget)
+					.attr('unselectable', 'on')
+					.css('user-select', 'none')
+					.on('mousemove', {graph: graph}, showHintbox)
 					.on('mouseleave', function(e) {
 						var graph = $(this);
 						destroyHintbox(graph);
 						hideHelper(graph);
 					})
-					.data('options', data)
-					.on('mousemove', {graph: graph}, showHintbox)
-					.attr('unselectable', 'on')
-					.css('user-select', 'none')
 					.on('selectstart', false);
 
 				if (options.sbox) {
