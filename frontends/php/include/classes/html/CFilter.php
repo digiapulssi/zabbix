@@ -138,6 +138,7 @@ class CFilter extends CTag {
 		$url = (new CUrl())
 			->removeArgument('filter_set')
 			->removeArgument('ddreset')
+			->removeArgument('action')
 			->setArgument('filter_rst', 1);
 
 		return (new CDiv())
@@ -151,8 +152,6 @@ class CFilter extends CTag {
 					->addClass(ZBX_STYLE_BTN_ALT)
 					->onClick('javascript: chkbxRange.clearSelectedOnFilterChange();')
 			);
-
-		return $buttons;
 	}
 
 	public function startToString() {
