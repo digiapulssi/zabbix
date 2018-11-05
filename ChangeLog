@@ -6,6 +6,7 @@ New features:
 .......PS. [ZBXNEXT-4782] improve out of memory error message by adding statistics and backtrace; improve something impossible has just happened error message by adding backtrace (vso)
 
 Bug fixes:
+........S. [ZBX-15022] fixed shared memory leak during configuration cache synchronization (wiper)
 ..F....... [ZBX-13505] fixed link coloring in map when related trigger is not monitored (miks)
 ..F....... [ZBX-14934] made widget specific javascript files to be loaded with jsLoader (miks)
 ....I..... [ZBX-14966] removed the notes about sqlite from zabbix_server.conf (MVekslers)
