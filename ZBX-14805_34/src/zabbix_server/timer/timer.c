@@ -717,7 +717,8 @@ ZBX_THREAD_ENTRY(timer_thread, args)
 
 		zbx_sleep_loop(sleeptime);
 
-		zbx_handle_log();
+		sec = zbx_time();
+		zbx_update_env(sec);
 
 		if (0 != sleeptime)
 		{
@@ -739,7 +740,6 @@ ZBX_THREAD_ENTRY(timer_thread, args)
 			}
 		}
 
-		sec = zbx_time();
 		tr_count = 0;
 		ev_count = 0;
 		process_time_functions(&tr_count, &ev_count);
@@ -749,7 +749,7 @@ ZBX_THREAD_ENTRY(timer_thread, args)
 
 		/* only the "timer #1" process evaluates the maintenance periods */
 		if (1 != process_num)
-			goto next;
+			continue;
 
 		/* we process maintenance at every 00 sec */
 		/* process time functions can take long time */
@@ -765,12 +765,6 @@ ZBX_THREAD_ENTRY(timer_thread, args)
 			hm_count += process_maintenance();
 			total_sec_maint += zbx_time() - sec_maint;
 		}
-next:
-#if !defined(_WINDOWS) && defined(HAVE_RESOLV_H)
-		zbx_update_resolver_conf();	/* handle /etc/resolv.conf update */
-#else
-		;
-#endif
 	}
 
 #undef STAT_INTERVAL

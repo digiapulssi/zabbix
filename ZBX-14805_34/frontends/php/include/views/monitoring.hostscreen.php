@@ -41,7 +41,7 @@ else {
 		SPACE,
 		_('on'),
 		SPACE,
-		(new CSpan($this->data['host']['name']))->addClass(ZBX_STYLE_ORANGE)
+		new CSpan($this->data['host']['name'])
 	]);
 
 	// host screen list
