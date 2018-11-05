@@ -43,13 +43,25 @@ jQuery(function ($) {
 	function destroySBox(e, graph) {
 		var graph = graph || e.data.graph,
 			data = graph.data('options'),
-			widget = graph.data('widget');
+			widget = graph.data('widget'),
+			widgets_boxing = 0; // Number of widgets with active SBox.
 
-		$(document)
-			.off('selectstart', disableSelect)
-			.off('keydown', sBoxKeyboardInteraction)
-			.off('mousemove', moveSBoxMouse)
-			.off('mouseup', destroySBox);
+		$('.dashbrd-grid-widget-container').data('dashboardGrid')['widgets'].forEach(function(w) {
+			if (w !== widget && w['type'] === 'svggraph') {
+				let svg_graph = $('svg', w['content_body']);
+				if (svg_graph.length && svg_graph.data('options')['boxing']) {
+					widgets_boxing++;
+				}
+			}
+		});
+
+		if (widgets_boxing == 0) {
+			$(document)
+				.off('selectstart', disableSelect)
+				.off('keydown', sBoxKeyboardInteraction)
+				.off('mousemove', moveSBoxMouse)
+				.off('mouseup', destroySBox);
+		}
 
 		if (data) {
 			$('.svg-graph-selection', graph).attr({'width': 0, 'height': 0});
