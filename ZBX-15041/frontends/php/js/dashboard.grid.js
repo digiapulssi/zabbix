@@ -585,6 +585,7 @@
 
 	function updateWidgetConfig($obj, data, widget) {
 		var	url = new Curl('zabbix.php'),
+			footer = $('.overlay-dialogue-footer', data.dialogue['div']),
 			fields = $('form', data.dialogue['body']).serializeJSON(),
 			type = fields['type'],
 			name = fields['name'],
@@ -602,11 +603,15 @@
 			ajax_data['fields'] = JSON.stringify(fields);
 		}
 
+		$('.dialogue-widget-save', footer).prop('disabled', true);
 		$.ajax({
 			url: url.getUrl(),
 			method: 'POST',
 			dataType: 'json',
 			data: ajax_data,
+			complete: function() {
+				$('.dialogue-widget-save', footer).prop('disabled', false);
+			},
 			success: function(resp) {
 				if (typeof(resp.errors) !== 'undefined') {
 					// Error returned. Remove previous errors.
