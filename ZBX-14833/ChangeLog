@@ -1,3 +1,57 @@
+Changes for 3.0.24rc1
+
+New features:
+...G...... [ZBXNEXT-3047] fixed compilation errors on Windows platform with static OpenSSL libraries (Andris, viktors)
+...G...PS. [ZBXNEXT-4836] added license information and OpenSSL linking exception to README file, show crypto library version when started with '-V' (Andris)
+
+Bug fixes:
+.......PS. [ZBX-15062] fixed binary heap trying to reallocate slots on every insert (wiper)
+..F....... [ZBX-14805] fixed unauthorized request error when resetting filter after enabling/disabling elements (agriscenko)
+..F....... [ZBX-14758] fixed encoding for cookie names and values (Ivo, vmurzins)
+..F....... [ZBX-14691] fixed faulty behaviour of mandatory fields in Trigger expression form (vasilijs)
+..F....... [ZBX-13505] fixed link coloring in map when related trigger is not monitored (miks)
+.......PS. [ZBX-14953] fixed not closed connection with vmware at the end of update session via a call to Logout() (MVekslers)
+....I..... [ZBX-14966] removed the notes about sqlite from zabbix_server.conf (MVekslers)
+A.F....... [ZBX-14422] fixed SQL queries being logged when accessing API, even if debug mode is disabled (agriscenko)
+...G...PS. [ZBX-15027] fixed startup failures due to orphaned or zombie processes remaining when zabbix daemon is terminated during startup (vso)
+
+--------------------------------------------------------------------------------
+Changes for 3.0.23
+
+3.0.23rc1 was released as 3.0.23 without any changes
+
+--------------------------------------------------------------------------------
+Changes for 3.0.23rc1
+
+New features:
+.......PS. [ZBXNEXT-4782] improve out of memory error message by adding statistics and backtrace; improve something impossible has just happened error message by adding backtrace (vso)
+
+Bug fixes:
+...G...... [ZBX-14779] extended support of system.stat[ent], system.stat[cpu,pc], system.stat[cpu,ec] on IBM AIX to LPAR type 'dedicated' (Andris)
+........S. [ZBX-14851] fixed the host visible name in the event details/messages from server when using long utf8 text (MVekslers)
+.......PS. [ZBX-14972] fixed the case where data from non-monitored VMware services are not removed from vmware cache (MVekslers)
+...G...PS. [ZBX-14856] added support for OpenSSL 1.1.1 (Andris)
+.D.G...PS. [ZBX-14971] added note on runtime control with PID numbers larger than 65535 to server, proxy and agentd help messages and man pages (Andris)
+A......... [ZBX-14734] fixed the verification of the assignment of two web checks with the same name from different templates to one host (vasilijs)
+..F....... [ZBX-14749] fixed cloning inherited host prototype on host (vasilijs)
+..F....... [ZBX-14663] fixed calculation of Y zero position in graph (miks)
+..F....... [ZBX-14811] fixed color of the host name in the title of the Screens (vasilijs)
+..F....... [ZBX-14776] fixed sorting when changing status of media type (vasilijs)
+..F....... [ZBX-14757] fixed fields becoming writable upon form refresh in host prototype form (vmurzins)
+..F....... [ZBX-14689] fixed updating of the Graph list of host when selecting a group of hosts (vasilijs)
+..F....... [ZBX-14803] fixed incorrect profile update causing page filter to sometimes show duplicate values (Ivo)
+..F....... [ZBX-14727] fixed selection of data for trigger overview, data overview and graphs if first drop down entry is "none" (Ivo)
+..F....... [ZBX-14650] fixed web.page.regexp item parameters description (gcalenko)
+.......PS. [ZBX-14882] fixed crash in vmware collector when receiving invalid xml (vso)
+.......PS. [ZBX-14853] fixed error of vmware items caused by misconfigured vmware maxQueryMetrics parameter (MVekslers)
+..F....... [ZBX-14845] fixed filter in triggers status page not being reset when navigating from dashboard and host inventory (agriscenko)
+
+--------------------------------------------------------------------------------
+Changes for 3.0.22
+
+3.0.22rc1 was released as 3.0.22 without any changes
+
+--------------------------------------------------------------------------------
 Changes for 3.0.22rc1
 
 Bug fixes:
