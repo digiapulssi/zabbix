@@ -19,12 +19,12 @@
 **/
 
 
-require_once dirname(__FILE__).'/../include/class.czabbixtest.php';
+require_once dirname(__FILE__).'/../include/CAPITest.php';
 
 /**
  * @backup hosts
  */
-class testHost extends CZabbixTest {
+class testHost extends CAPITest {
 
 	public static function host_delete() {
 		return [
@@ -72,7 +72,8 @@ class testHost extends CZabbixTest {
 
 		if ($expected_error === null) {
 			foreach ($result['result']['hostids'] as $id) {
-				$this->assertEquals(0, DBcount('select * from hosts where hostid='.zbx_dbstr($id)));
+				$dbResult = 'select * from hosts where hostid='.zbx_dbstr($id);
+				$this->assertEquals(0, CDBHelper::getCount($dbResult));
 			}
 		}
 	}
