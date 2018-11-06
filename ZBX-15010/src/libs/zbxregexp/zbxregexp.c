@@ -67,7 +67,7 @@ static int	regexp_compile(const char *pattern, int flags, zbx_regexp_t **regexp,
 		{
 			offset++;
 
-			if ('0' <= *offset && *offset <= '9')
+			if (('0' <= *offset && *offset <= '9') || 'g' == *offset)
 			{
 				flags ^= PCRE_NO_AUTO_CAPTURE;
 				break;
