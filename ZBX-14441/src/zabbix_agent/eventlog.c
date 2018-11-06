@@ -841,9 +841,9 @@ int	process_eventslog6(const char *server, unsigned short port, const char *fl_s
 					SUCCEED == regexp_match_ex(regexps, str_logeventid, key_logeventid,
 							ZBX_CASE_SENSITIVE))
 			{
-				send_err = process_value_cb(server, port, CONFIG_HOSTNAME, metric->key_orig, evt_message,
-						ITEM_STATE_NORMAL, &lastlogsize, NULL, &evt_timestamp, evt_provider,
-						&evt_severity, &evt_eventid,
+				send_err = process_value_cb(server, port, CONFIG_HOSTNAME, metric->key_orig,
+						evt_message, ITEM_STATE_NORMAL, &lastlogsize, NULL, &evt_timestamp,
+						evt_provider, &evt_severity, &evt_eventid,
 						metric->flags | ZBX_METRIC_FLAG_PERSISTENT);
 
 				if (SUCCEED == send_err)
@@ -877,7 +877,6 @@ int	process_eventslog6(const char *server, unsigned short port, const char *fl_s
 			/* do not flood local system if file grows too fast */
 			if (p_count >= (4 * rate * metric->refresh))
 				break;
-
 		}
 
 		if (i < require)
@@ -1317,7 +1316,8 @@ int	process_eventslog(const char *server, unsigned short port, const char *fl_so
 
 		while (pELR < pEndOfRecords)
 		{
-			/* for prevent mismatch compare of RecordNumber due to wraparound, we are looking for using '=' */
+			/* to prevent mismatch in comparing with RecordNumber in case of wrap-around, */
+			/* we look for using '=' */
 			if (0 != timestamp || (DWORD)FirstID == ((PEVENTLOGRECORD)pELR)->RecordNumber)
 			{
 				/* increase counter only for records >= FirstID (start point for the search) */
@@ -1359,13 +1359,15 @@ int	process_eventslog(const char *server, unsigned short port, const char *fl_so
 				if (SUCCEED == regexp_match_ex(regexps, value, pattern, ZBX_CASE_SENSITIVE) &&
 						SUCCEED == regexp_match_ex(regexps, str_severity, key_severity,
 								ZBX_IGNORE_CASE) &&
-						SUCCEED == regexp_match_ex(regexps, source, key_source, ZBX_IGNORE_CASE) &&
+						SUCCEED == regexp_match_ex(regexps, source, key_source,
+								ZBX_IGNORE_CASE) &&
 						SUCCEED == regexp_match_ex(regexps, str_logeventid, key_logeventid,
 								ZBX_CASE_SENSITIVE))
 				{
-					send_err = process_value_cb(server, port, CONFIG_HOSTNAME, metric->key_orig, value,
-							ITEM_STATE_NORMAL, &lastlogsize, NULL, &timestamp, source, &severity,
-							&logeventid, metric->flags | ZBX_METRIC_FLAG_PERSISTENT);
+					send_err = process_value_cb(server, port, CONFIG_HOSTNAME, metric->key_orig,
+							value, ITEM_STATE_NORMAL, &lastlogsize, NULL, &timestamp,
+							source, &severity, &logeventid,
+							metric->flags | ZBX_METRIC_FLAG_PERSISTENT);
 
 					if (SUCCEED == send_err)
 					{
@@ -1397,7 +1399,6 @@ int	process_eventslog(const char *server, unsigned short port, const char *fl_so
 				/* do not flood local system if file grows too fast */
 				if (p_count >= (4 * rate * metric->refresh))
 					break;
-
 			}
 
 			pELR += ((PEVENTLOGRECORD)pELR)->Length;
