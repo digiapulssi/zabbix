@@ -1,6 +1,7 @@
 Changes for rsm1.1.0rc36
 
 Bug fixes:
+..F....... [436] fixed undefined index error in Details of particular test page (miks)
 
 --------------------------------------------------------------------------------
 Changes for rsm1.1.0rc35
