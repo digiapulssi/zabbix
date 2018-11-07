@@ -27,6 +27,11 @@ else {
 	$this->addJsFile('gtlc.js');
 	$this->addJsFile('dashboard.grid.js');
 	$this->addJsFile('class.calendar.js');
+	$this->addJsFile('class.cclock.js');
+	$this->addJsFile('class.cnavtree.js');
+	$this->addJsFile('class.mapWidget.js');
+	$this->addJsFile('class.svg.canvas.js');
+	$this->addJsFile('class.svg.map.js');
 
 	$this->includeJSfile('app/views/monitoring.dashboard.view.js.php');
 
@@ -124,7 +129,10 @@ else {
 			->addItem($breadcrumbs)
 			->addClass(ZBX_STYLE_OBJECT_GROUP)
 		)
-		->addItem(($data['show_timeline']) ? (new CFilter('web.dashbrd.filter.state'))->addNavigator() : null)
+		->addItem(($data['show_timeline'])
+			? (new CFilter('web.dashbrd.filter.state', new CUrl()))->addNavigator()
+			: null
+		)
 		->addItem((new CDiv())->addClass(ZBX_STYLE_DASHBRD_GRID_WIDGET_CONTAINER))
 		->addItem($edit_form)
 		->addItem($sharing_form)

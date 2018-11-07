@@ -24,7 +24,9 @@ $overview = $this->data['overview'];
 $filter = $this->data['filter'];
 $config = $this->data['config'];
 
-$filterForm = (new CFilter($filter['filterid']))
+$filterForm = (new CFilter($filter['filterid'],
+	(new CUrl($overview ? 'overview.php' : 'tr_status.php'))->setArgument('fullscreen', $filter['fullScreen'])
+))
 	->addVar('fullscreen', $filter['fullScreen'])
 	->addVar('groupid', $filter['groupId'])
 	->addVar('hostid', $filter['hostId']);

@@ -25,7 +25,7 @@ else {
 	$create_button = new CSubmit('form', _('Create web scenario'));
 }
 
-$filter = (new CFilter('web.httpconf.filter.state'))
+$filter = (new CFilter('web.httpconf.filter.state', new CUrl('httpconf.php')))
 	->addColumn(
 		(new CFormList())
 			->addRow(_('Status'),

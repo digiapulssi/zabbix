@@ -21,7 +21,7 @@
 $auditWidget = (new CWidget())->setTitle(_('Action log'));
 
 // create filter
-$filterForm = new CFilter('web.auditacts.filter.state');
+$filterForm = new CFilter('web.auditacts.filter.state', new CUrl('auditacts.php'));
 
 $filterColumn = new CFormList();
 $filterColumn->addRow(_('Recipient'), [
