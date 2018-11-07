@@ -479,6 +479,10 @@ function stripslashes(str) {
  */
 function overlayDialogueDestroy(dialogueid, xhr) {
 	if (typeof dialogueid !== 'undefined') {
+		if (typeof overlayDialogueDestroy.xhr !== 'undefined') {
+			overlayDialogueDestroy.xhr.abort();
+			delete overlayDialogueDestroy.xhr
+		}
 		if (typeof xhr !== 'undefined') {
 			xhr.abort();
 		}

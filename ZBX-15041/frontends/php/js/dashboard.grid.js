@@ -604,7 +604,7 @@
 		}
 
 		$('.dialogue-widget-save', footer).prop('disabled', true);
-		$.ajax({
+		overlayDialogueDestroy.xhr = $.ajax({
 			url: url.getUrl(),
 			method: 'POST',
 			dataType: 'json',
