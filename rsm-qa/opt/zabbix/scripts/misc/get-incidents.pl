@@ -32,7 +32,7 @@ db_connect();
 my $from = getopt('from');
 my $till = getopt('till');
 
-my $tlds_ref = opt('tld') ? [ getopt('tld') ] : get_tlds($from, $till);
+my $tlds_ref = opt('tld') ? [ getopt('tld') ] : get_tlds(undef, $till);
 
 my $delays = {
 	'dns'	=> get_dns_udp_delay(),
@@ -46,7 +46,7 @@ foreach (@$tlds_ref)
 
 	foreach my $service ('dns', 'rdds', 'epp')
 	{
-		next unless (tld_service_enabled($tld, $service, $from, $till));
+		next unless (tld_service_enabled($tld, $service, $till));
 
 		my $key = "rsm.slv.$service.avail";
 

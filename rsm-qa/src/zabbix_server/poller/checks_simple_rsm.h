@@ -22,8 +22,6 @@
 
 #include "dbcache.h"
 
-#define ZBX_EC_LAST_INTERNAL		-200	/* -1 :: -200 */
-
 /* internal error codes (do not reflect as service error) */
 #define ZBX_EC_DNS_UDP_INTERNAL_GENERAL		-1	/* Internal error */
 #define ZBX_EC_DNS_UDP_INTERNAL_RES_CATCHALL	-2	/* DNS UDP - Expecting NOERROR RCODE but got unexpected from local resolver */
@@ -47,8 +45,10 @@
 #define ZBX_EC_EPP_INTERNAL_IP_UNSUP		-2	/* EPP - IP addresses for the hostname are not supported by the IP versions supported by the probe node */
 
 /* specific RDAP internal errors */
-#define ZBX_EC_RDAP_INTERNAL_NOTLISTED		-100	/* The TLD is not listed in the Bootstrap Service Registry for Domain Name Space */
-#define ZBX_EC_RDAP_INTERNAL_NOHTTPS		-101	/* The RDAP base URL obtained from Bootstrap Service Registry for Domain Name Space does not use HTTPS */
+#define ZBX_EC_RDAP_INTERNAL_NOTLISTED	-100	/* The TLD is not listed in the Bootstrap Service Registry for Domain Name Space */
+#define ZBX_EC_RDAP_INTERNAL_NOHTTPS	-101	/* The RDAP base URL obtained from Bootstrap Service Registry for Domain Name Space does not use HTTPS */
+
+#define ZBX_EC_LAST_INTERNAL		-199	/* -1 :: -199 */
 
 /* DNS UDP error codes */
 #define ZBX_EC_DNS_UDP_NS_NOREPLY	-200	/* DNS UDP - No reply from name server */

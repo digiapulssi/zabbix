@@ -387,8 +387,9 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 	 * Since here we have obtained a final (historical) macros values, we can also check if there should be
 	 * RDAP base url be displayed.
 	 */
-	if (!array_key_exists(RSM_RDAP_TLD_ENABLED, $data['tld']['macros'])
-			|| $data['tld']['macros'][RSM_RDAP_TLD_ENABLED] != 0) {
+	if (array_key_exists(RDAP_BASE_URL, $data['tld']['macros'])
+			&& (!array_key_exists(RSM_RDAP_TLD_ENABLED, $data['tld']['macros'])
+				|| $data['tld']['macros'][RSM_RDAP_TLD_ENABLED] != 0)) {
 		$data['rdap_base_url'] = $data['tld']['macros'][RDAP_BASE_URL];
 	}
 

@@ -27,7 +27,7 @@ my ($from, $till, $value_ts) = get_downtime_bounds();
 
 my %tld_items;
 
-my $tlds_ref = get_tlds('RDDS', $from, $till);
+my $tlds_ref = get_tlds('RDDS', $till);
 
 # just collect itemids
 foreach (@$tlds_ref)

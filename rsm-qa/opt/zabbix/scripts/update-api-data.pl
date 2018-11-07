@@ -96,6 +96,19 @@ else
 	}
 }
 
+my @interfaces;
+foreach my $service (keys(%services))
+{
+	if ($service eq 'rdds')
+	{
+		push(@interfaces, 'rdds43', 'rdds80', 'rdap');
+	}
+	else
+	{
+		push(@interfaces, $service);
+	}
+}
+
 my %ignore_hash;
 
 if (opt('ignore-file'))
@@ -356,8 +369,11 @@ foreach (@server_keys)
 	}
 	else
 	{
-		$tlds_ref = get_tlds('DNS', $from, $till);
+		$tlds_ref = get_tlds(undef, $till);
 	}
+
+	# Prepare the cache for function tld_service_enabled(). Make sure this is called before creating child processes!
+	tld_interface_enabled_prepare($till, @interfaces);
 
 	db_disconnect();
 
@@ -432,7 +448,7 @@ foreach (@server_keys)
 					$service_till = cycle_end($till - $delay, $delay);
 				}
 
-				if (!tld_service_enabled($tld, $service, $service_from, $service_till))
+				if (!tld_service_enabled($tld, $service, $service_till))
 				{
 					if (opt('dry-run'))
 					{
@@ -1068,8 +1084,8 @@ foreach (@server_keys)
 
 							$tr_ref->{'service'} = uc($service);
 
-							my $rdds_enabled = tld_interface_enabled($tld, 'rdds43', $tr_start, $tr_end);
-							my $rdap_enabled = tld_interface_enabled($tld, 'rdap', $tr_start, $tr_end);
+							my $rdds_enabled = tld_interface_enabled($tld, 'rdds43', $tr_end);
+							my $rdap_enabled = tld_interface_enabled($tld, 'rdap', $tr_end);
 
 							dbg("enabled at ", ts_str($tr_start), " RDDS:$rdds_enabled RDAP:$rdap_enabled");
 

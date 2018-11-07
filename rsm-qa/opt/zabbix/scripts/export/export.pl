@@ -96,6 +96,19 @@ else
 	}
 }
 
+my @interfaces;
+foreach my $service (keys(%{$services}))
+{
+	if ($service eq 'rdds')
+	{
+		push(@interfaces, 'rdds43', 'rdds80', 'rdap');
+	}
+	else
+	{
+		push(@interfaces, $service);
+	}
+}
+
 # todo phase 1: changed from get_statusmaps('dns')
 my $cfg_avail_valuemaps = get_avail_valuemaps();
 
@@ -266,8 +279,11 @@ if (opt('tld'))
 }
 else
 {
-	$tlds_ref = get_tlds('DNS', $from, $till);
+	$tlds_ref = get_tlds(undef, $from, $till);
 }
+
+# Prepare the cache for function tld_service_enabled(). Make sure this is called before creating child processes!
+tld_interface_enabled_prepare($till, @interfaces);
 
 db_disconnect();
 
@@ -278,7 +294,6 @@ foreach my $tld_for_a_child_to_process (@{$tlds_ref})
 {
 		goto WAIT_CHILDREN if ($child_failed);	# break from both server and TLD loops
 
-		
 		my $pid;
 
 		# start a new child and send parent to the next iteration
@@ -580,7 +595,7 @@ sub __get_test_data
 	{
 		if ($service ne SERVICE_DNS_TCP)	# todo phase 1: Export DNS-TCP tests
 		{
-			next if (!tld_service_enabled($tld, $service, $from, $till));
+			next if (!tld_service_enabled($tld, $service, $till));
 		}
 
 		my $delay = $services->{$service}->{'delay'};
