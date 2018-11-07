@@ -205,6 +205,7 @@ class CSvgGraphAxis extends CSvgTag {
 		foreach ($this->labels as $pos => $label) {
 			$$axis = $pos;
 
+			// Skip label at the place of arrow of X axis.
 			if ($this->type == GRAPH_YAXIS_SIDE_RIGHT && $y == 0) {
 				continue;
 			}
