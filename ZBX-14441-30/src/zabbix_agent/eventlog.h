@@ -176,17 +176,17 @@ typedef enum	_EVT_VARIANT_TYPE
 }
 EVT_VARIANT_TYPE;
 
-int			process_eventlog(const char *source, zbx_uint64_t *lastlogsize, unsigned long *out_timestamp,
+int			process_eventlog_5(const char *source, zbx_uint64_t *lastlogsize, unsigned long *out_timestamp,
 			char **out_source, unsigned short *out_severity, char **out_message, unsigned long *out_eventid,
 			unsigned char skip_old_data);
-int			process_eventlog6(const char *source, zbx_uint64_t *lastlogsize, unsigned long *out_timestamp,
+int			process_eventlog_6(const char *source, zbx_uint64_t *lastlogsize, unsigned long *out_timestamp,
 			char **out_provider, char **out_source, unsigned short *out_severity, char **out_message,
 			unsigned long *out_eventid, zbx_uint64_t *FirstID, zbx_uint64_t *LastID,
 			EVT_HANDLE *render_context, EVT_HANDLE *query, zbx_uint64_t *keywords,
 			unsigned char skip_old_data);
-int			initialize_eventlog6(const char *source, zbx_uint64_t *lastlogsize, zbx_uint64_t *FirstID,
+int			initialize_eventlog_6(const char *source, zbx_uint64_t *lastlogsize, zbx_uint64_t *FirstID,
 			zbx_uint64_t *LastID, EVT_HANDLE *render_context, EVT_HANDLE *query);
-int			finalize_eventlog6(EVT_HANDLE *render_context, EVT_HANDLE *query);
+int			finalize_eventlog_6(EVT_HANDLE *render_context, EVT_HANDLE *query);
 
 EVT_HANDLE WINAPI	EvtOpenLog(EVT_HANDLE Session, const wchar_t *Path, DWORD Flags);
 EVT_HANDLE WINAPI	EvtCreateRenderContext(DWORD ValuePathsCount, const wchar_t **ValuePaths, DWORD Flags);
