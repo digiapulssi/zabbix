@@ -516,6 +516,10 @@ class CSvgGraph extends CSvg {
 		if ($this->left_y_max === null) {
 			$this->left_y_max = $this->max_value_left ? : 1;
 		}
+		$grid = $this->getValueGrid($this->left_y_min, $this->left_y_max);
+		$this->left_y_min = $grid[0];
+		$this->left_y_max = end($grid);
+
 		if ($this->left_y_units === null) {
 			$this->left_y_units = '';
 			foreach ($this->metrics as $metric) {
@@ -533,6 +537,9 @@ class CSvgGraph extends CSvg {
 		if ($this->right_y_max === null) {
 			$this->right_y_max = $this->max_value_right ? : 1;
 		}
+		$grid = $this->getValueGrid($this->right_y_min, $this->right_y_max);
+		$this->right_y_min = $grid[0];
+		$this->right_y_max = end($grid);
 
 		if ($this->right_y_units === null) {
 			$this->right_y_units = '';
@@ -607,9 +614,9 @@ class CSvgGraph extends CSvg {
 			$units = $this->right_y_units;
 		}
 
-		$min_value = (float) $min_value;
-		$max_value = (float) $max_value;
 		$grid = $this->getValueGrid($min_value, $max_value);
+		$min_value = $grid[0];
+		$max_value = end($grid);
 		$delta = ($max_value != $min_value)
 			? $max_value - $min_value
 			: (count($grid) > 1 ? end($grid) - $grid[0] : 1);
@@ -681,6 +688,7 @@ class CSvgGraph extends CSvg {
 	protected function getValueGrid($min, $max) {
 		$res = [];
 
+		// If absolute min/max is equal, calculate grid with 4 rows to make 0 centered. 5 rows otherwise.
 		$grid_rows = (abs($min) == abs($max)) ? 4 : 5;
 		$decimals = strlen(substr(strrchr($max, '.'), 1));
 		$decimals = $decimals > 4 ? 4 : $decimals;
