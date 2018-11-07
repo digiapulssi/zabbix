@@ -208,4 +208,15 @@ class CWebTest extends CTest {
 	public function query($type, $locator = null) {
 		return $this->page->query($type, $locator);
 	}
+
+	public function zbxTestIsAlertPresent() {
+		try {
+			$alert = $this->webDriver->switchTo()->alert();
+			$alert->getText();
+			return true;
+		}
+		catch (NoAlertOpenException $e) {
+			return false;
+		}
+	}
 }
