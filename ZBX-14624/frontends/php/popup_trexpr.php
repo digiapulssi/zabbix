@@ -33,127 +33,132 @@ $metrics = [
 	PARAM_TYPE_TIME => _('Time'),
 	PARAM_TYPE_COUNTS => _('Count')
 ];
+/*
+ * C - caption
+ * T - type
+ * M - metrics
+ */
 $param1SecCount = [
-	[
-		'C' => _('Last of').' (T)',	// caption
-		'T' => T_ZBX_INT,			// type
-		'M' => $metrics				// metrics
+	'last' => [
+		'C' => _('Last of').' (T)',
+		'T' => T_ZBX_INT,
+		'M' => $metrics
 	],
-	[
+	'shift' => [
 		'C' => _('Time shift'),
 		'T' => T_ZBX_INT
 	]
 ];
 $param1Sec = [
-	[
+	'last' => [
 		'C' => _('Last of').' (T)',
 		'T' => T_ZBX_INT
 	]
 ];
 $param1Str = [
-	[
+	'pattern' => [
 		'C' => 'T',
 		'T' => T_ZBX_STR
 	]
 ];
 $param2SecCount = [
-	[
+	'pattern' => [
 		'C' => 'V',
 		'T' => T_ZBX_STR
 	],
-	[
+	'last' => [
 		'C' => _('Last of').' (T)',
 		'T' => T_ZBX_INT,
 		'M' => $metrics
 	]
 ];
 $param3SecVal = [
-	[
+	'last' => [
 		'C' => _('Last of').' (T)',
 		'T' => T_ZBX_INT,
 		'M' => $metrics
 	],
-	[
+	'v' => [
 		'C' => 'V',
 		'T' => T_ZBX_STR
 	],
-	[
+	'o' => [
 		'C' => 'O',
 		'T' => T_ZBX_STR
 	],
-	[
+	'shift' => [
 		'C' => _('Time shift'),
 		'T' => T_ZBX_INT
 	]
 ];
 $param3SecPercent = [
-	[
+	'last' => [
 		'C' => _('Last of').' (T)',
 		'T' => T_ZBX_INT,
 		'M' => $metrics
 	],
-	[
+	'shift' => [
 		'C' => _('Time shift'),
 		'T' => T_ZBX_INT
 	],
-	[
+	'p' => [
 		'C' => _('Percentage').' (P)',
 		'T' => T_ZBX_DBL
 	]
 ];
 $paramSecIntCount = [
-	[
+	'last' => [
 		'C' => _('Last of').' (T)',
 		'T' => T_ZBX_INT,
 		'M' => $metrics
 	],
-	[
+	'mask' => [
 		'C' => _('Mask'),
 		'T' => T_ZBX_STR
 	],
-	[
+	'shift' => [
 		'C' => _('Time shift'),
 		'T' => T_ZBX_INT
 	]
 ];
 $paramForecast = [
-	[
+	'last' => [
 		'C' => _('Last of').' (T)',
 		'T' => T_ZBX_INT,
 		'M' => $metrics
 	],
-	[
+	'shift' => [
 		'C' => _('Time shift'),
 		'T' => T_ZBX_INT
 	],
-	[
+	'time' => [
 		'C' => _('Time').' (t)',
 		'T' => T_ZBX_INT
 	],
-	[
+	'fit' => [
 		'C' => _('Fit'),
 		'T' => T_ZBX_STR
 	],
-	[
+	'mode' => [
 		'C' => _('Mode'),
 		'T' => T_ZBX_STR
 	]
 ];
 $paramTimeleft = [
-	[
+	'last' => [
 		'C' => _('Last of').' (T)',
 		'T' => T_ZBX_INT,
 		'M' => $metrics
 	],
-	[
+	'shift' => [
 		'C' => _('Time shift'),
 		'T' => T_ZBX_INT
 	],
-	[
+	't' => [
 		'C' => _('Threshold'),
 		'T' => T_ZBX_DBL
 	],
-	[
+	'fit' => [
 		'C' => _('Fit'),
 		'T' => T_ZBX_STR
 	]
@@ -378,7 +383,8 @@ $fields = [
 	'hostid' =>				[T_ZBX_INT, O_OPT, null,	null,		null],
 	'groupid' =>			[T_ZBX_INT, O_OPT, null,	null,		null]
 ];
-check_fields($fields);
+
+$is_valid = check_fields($fields);
 
 $dstfrm = getRequest('dstfrm', 0);
 $dstfld1 = getRequest('dstfld1', '');
@@ -408,7 +414,8 @@ if (isset($_REQUEST['expression']) && $_REQUEST['dstfld1'] == 'expr_temp') {
 			// determine param type
 			$params = $functionMacroToken['data']['functionParams'];
 			$paramNumber = in_array($function, ['regexp', 'iregexp', 'str']) ? 1 : 0;
-			if (isset($params[$paramNumber][0]) && $params[$paramNumber][0] == '#') {
+			if (isset($params[$paramNumber][0]) && $params[$paramNumber][0] == '#'
+					&& !in_array($function, ['fuzzytime', 'nodata'])) {
 				$paramType = PARAM_TYPE_COUNTS;
 				$params[$paramNumber] = substr($params[$paramNumber], 1);
 			}
@@ -515,7 +522,8 @@ $data = [
 	'insert' => getRequest('insert'),
 	'cancel' => getRequest('cancel'),
 	'groupid' => getRequest('groupid'),
-	'hostid' => getRequest('hostid')
+	'hostid' => getRequest('hostid'),
+	'is_valid' => $is_valid
 ];
 
 // check if submitted function is usable with selected item
@@ -526,11 +534,9 @@ foreach ($data['functions'] as $id => $f) {
 	}
 }
 
-if ($data['insert'] === null && $data['selectedFunction'] === null) {
-	error(_s('Function "%1$s" cannot be used with selected item "%2$s"',
-		$data['functions'][$function]['description'],
-		$data['description']
-	));
+if ($data['selectedFunction'] === null) {
+	$data['selectedFunction'] = 'last';
+	$data['function'] = 'last';
 }
 
 // remove functions that not correspond to chosen item
@@ -550,13 +556,13 @@ foreach ($data['functions'] as $id => $f) {
 if (isset($data['insert'])) {
 	try {
 		if ($data['description']) {
-			if ($data['paramtype'] == PARAM_TYPE_COUNTS) {
-				$paramNumber = in_array($function, ['regexp', 'iregexp', 'str']) ? 1 : 0;
-				$data['params'][$paramNumber] = '#'.$data['params'][$paramNumber];
+			if ($data['paramtype'] == PARAM_TYPE_COUNTS
+					&& array_key_exists('last', $data['params'])
+					&& $data['params']['last'] !== '') {
+				$data['params']['last'] = '#'.$data['params']['last'];
 			}
-
-			if ($data['paramtype'] == PARAM_TYPE_TIME && in_array($function, ['last', 'band', 'strlen'])) {
-				$data['params'][0] = '';
+			elseif ($data['paramtype'] == PARAM_TYPE_TIME && in_array($function, ['last', 'band', 'strlen'])) {
+				$data['params']['last'] = '';
 			}
 
 			// quote function param
