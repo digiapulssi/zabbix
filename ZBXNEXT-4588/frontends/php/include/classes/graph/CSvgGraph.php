@@ -348,51 +348,27 @@ class CSvgGraph extends CSvg {
 	 * @return array
 	 */
 	public function getTimeGridWithPosition() {
-		$intervals = [
-			1 => ['H:i:s', 'H:i:s'],					// 1 second
-			5 => ['H:i:s', 'H:i:s'],					// 5 seconds
-			10 => ['H:i:s', 'H:i:s'],					// 10 seconds
-			30 => ['H:i:s', 'H:i:s'],					// 30 seconds
-			SEC_PER_MIN => ['H:i:s', 'H:i:s'],			// 1 minute
-			SEC_PER_MIN * 2 => ['H:i','H:i'],			// 2 minutes
-			SEC_PER_MIN * 5 => ['H:i', 'H:i'],			// 5 minutes
-			SEC_PER_MIN * 15 => ['H:i', 'H:i'],			// 15 minutes
-			SEC_PER_MIN * 30 => ['H:i', 'H:i'],			// 30 minutes
-			SEC_PER_HOUR => ['H:i', 'H:i'],				// 1 hours
-			SEC_PER_HOUR * 3 => ['H:i', 'n-d H:i'],		// 3 hours
-			SEC_PER_HOUR * 6 => ['H:i', 'n-d H:i'],		// 6 hours
-			SEC_PER_HOUR * 12 => ['H:i', 'n-d H:i'],	// 12 hours
-			SEC_PER_DAY => ['H:i', 'n-d H:i'],			// 1 day
-			SEC_PER_WEEK => ['n-d', 'n-d'],				// 1 week
-			SEC_PER_WEEK * 2 => ['n-d', 'n-d'],			// 2 weeks
-			SEC_PER_MONTH => ['n-d', 'Y-n-d'],			// 30 days
-			SEC_PER_MONTH * 3 => ['Y-n-d', 'Y-n-d'],	// 90 days
-			SEC_PER_MONTH * 4 => ['Y-n-d', 'Y-n-d'],	// 120 days
-			SEC_PER_MONTH * 6 => ['Y-n-d', 'Y-n-d'],	// 180 days
-			SEC_PER_YEAR => ['Y-n-d', 'Y-n-d'],			// 1 year
-			SEC_PER_YEAR * 2 => ['Y-n-d', 'Y-n-d']		// 2 years
-		];
-
 		$period = $this->time_till - $this->time_from;
-		$step = $period / $this->canvas_width * 100; // Grid cell (100px) in seconds.
-		$same_day = (date('d', $this->time_till) === date('d', $this->time_from));
-		$same_year = (date('y', $this->time_till) === date('y', $this->time_from));
-		$time_fmt = 'Y-n-d';
+		$step = round(bcmul(bcdiv($period, $this->canvas_width), 100)); // Grid cell (100px) in seconds.
+		$start = $this->time_from + $step - $this->time_from % $step;
+		$time_formats = ['Y-n-d', 'n-d', 'n-d H:i','H:i', 'H:i:s'];
 
-		foreach ($intervals as $interval => $format) {
-			if ($interval > $step) {
-				$fmt = $same_day && $same_year ? 0 : 1;
-				$time_fmt = $format[$fmt];
+		// Search for most appropriate time format.
+		foreach ($time_formats as $fmt) {
+			$grid_values = [];
+
+			for ($clock = $start; $this->time_till >= $clock; $clock += $step) {
+				$relative_pos = round($this->canvas_width - $this->canvas_width * ($this->time_till - $clock) / $period);
+				$grid_values[$relative_pos] = date($fmt, $clock);
+			}
+
+			/**
+			 * If at least two calculated time-strings are equal, proceed with next format. Do that as long as each date
+			 * is different or there is no more time formats to test.
+			 */
+			if (count(array_flip($grid_values)) == count($grid_values) || $fmt === end($time_formats)) {
 				break;
 			}
-		}
-
-		$grid_values = [];
-		$start = $this->time_from + $step - $this->time_from % $step;
-
-		for ($clock = $start; $this->time_till >= $clock; $clock += $step) {
-			$relative_pos = round($this->canvas_width - $this->canvas_width * ($this->time_till - $clock) / $period);
-			$grid_values[$relative_pos] = date($time_fmt, $clock);
 		}
 
 		return $grid_values;
