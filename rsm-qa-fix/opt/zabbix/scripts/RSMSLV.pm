@@ -90,6 +90,7 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		get_itemid_by_hostid get_itemid_like_by_hostid get_itemids_by_host_and_keypart get_lastclock get_tlds
 		get_probes get_nsips get_nsip_items tld_exists tld_service_enabled db_connect db_disconnect
 		get_templated_nsips db_exec tld_interface_enabled
+		tld_interface_enabled_prepare
 		db_select db_select_binds set_slv_config get_cycle_bounds get_rollweek_bounds get_downtime_bounds
 		max_avail_time get_probe_times probe_offline_at probes2tldhostids
 		get_probe_online_key_itemid
@@ -454,7 +455,6 @@ sub get_lastclock
 sub get_tlds
 {
 	my $service = shift;
-	my $from = shift;
 	my $till = shift;
 
 	my $rows_ref = db_select(
@@ -471,7 +471,10 @@ sub get_tlds
 	{
 		my $tld = $row_ref->[0];
 
-		next unless (tld_service_enabled($tld, $service, $from, $till));
+		if (defined($service))
+		{
+			next unless (tld_service_enabled($tld, $service, $till));
+		}
 
 		push(@tlds, $tld);
 	}
@@ -688,25 +691,37 @@ sub tld_service_enabled
 {
 	my $tld = shift;
 	my $service = shift;
-	my $from = shift;
 	my $till = shift;
 
 	$service = uc($service);
 
 	return 1 if ($service eq 'DNS');
 
-	$from = cycle_start(time(), 60) - 60 unless (defined($from));
-
 	if ($service eq 'RDDS')
 	{
-		return 1 if tld_interface_enabled($tld, 'rdds43', $from, $till);
+		return 1 if tld_interface_enabled($tld, 'rdds43', $till);
 
-		return tld_interface_enabled($tld, 'rdap', $from, $till);
+		return tld_interface_enabled($tld, 'rdap', $till);
 	}
 
-	return tld_interface_enabled($tld, $service, $from, $till);
+	return tld_interface_enabled($tld, $service, $till);
 }
 
+sub enabled_item_key_from_interface
+{
+	my $interface = shift;
+
+	if ($interface eq 'rdds43' || $interface eq 'rdds80')
+	{
+		return 'rdds.enabled';
+	}
+
+	return "$interface.enabled";
+}
+
+# NB! When parallelization is used use this function to generate item ids cache in parent
+# process and call tld_<service|interface>_enabled() in child processes after forking.
+#
 # Collect the itemids of 'enabled' items in one SQL to improve performance of the function
 #
 # {
@@ -733,75 +748,92 @@ sub tld_service_enabled
 #     },
 #     ...
 # }
+#
 
-my %service_itemids;
+my %enabled_items_cache;
+my %enabled_hostids_cache;	# hostid => 'tld'
+my $tlds_cache;
 
-sub tld_interface_enabled
+sub tld_interface_enabled_prepare
 {
-	my $tld = shift;
-	my $interface = shift;
-	my $from = shift;
 	my $till = shift;
+	my @interfaces = @_;
 
-	$interface = lc($interface);
+	return if (scalar(@interfaces) == 0);
 
-	return 1 if ($interface eq 'dns');
-
-	my $item_key;
-
-	if ($interface eq 'rdds43' || $interface eq 'rdds80')
+	if (keys(%enabled_hostids_cache) == 0)
 	{
-		$item_key = 'rdds.enabled';
+		$tlds_cache = get_tlds(undef, $till);  # get all
+
+		return if (scalar(@{$tlds_cache}) == 0);
+
+		my @host_patterns;
+
+		map {push(@host_patterns, "'$_ %'")} (@{$tlds_cache});
+
+		my $rows_ref = db_select(
+			"select hostid,substring_index(host, ' ', 1)".
+			" from hosts".
+			" where host like " . join(' or host like ', @host_patterns));
+
+		map {$enabled_hostids_cache{$_->[0]} = $_->[1]} (@{$rows_ref});
 	}
-	else
+
+	foreach my $interface (@interfaces)
 	{
-		$item_key = lc($interface) . ".enabled";
-	}
+		$interface = lc($interface);
 
-	if (!defined($service_itemids{$item_key}))
-	{
-		$service_itemids{$item_key} = {};
+		my $item_key = enabled_item_key_from_interface($interface);
 
-		my $tlds_ref = get_tlds('dns');	# filter from all
+		next if ($interface eq 'dns');
 
-		if (scalar(@{$tlds_ref}) != 0)
+		if (!defined($enabled_items_cache{$item_key}))
 		{
-			my @host_patterns;
-
-			map {push(@host_patterns, "'$_ %'")} (@{$tlds_ref});
+			$enabled_items_cache{$item_key} = {};
 
 			my $rows_ref = db_select(
-				"select hostid,substring_index(host, ' ', 1)".
-				" from hosts".
-				" where host like " . join(' or host like ', @host_patterns));
-
-			my %hostid_to_tld;	# hostid => 'tld'
-
-			map {$hostid_to_tld{$_->[0]} = $_->[1]} (@{$rows_ref});
-
-			$rows_ref = db_select(
 				"select itemid,hostid".
 				" from items".
 				" where key_='$item_key'".
-					" and hostid in (" . join(',', keys(%hostid_to_tld)) . ")");
+					" and hostid in (" . join(',', keys(%enabled_hostids_cache)) . ")");
 
-			map {$service_itemids{$item_key}{$_} = []} (@{$tlds_ref});
+			map {$enabled_items_cache{$item_key}{$_} = []} (@{$tlds_cache});
 
 			foreach my $row_ref (@{$rows_ref})
 			{
 				my $itemid = $row_ref->[0];
 				my $hostid = $row_ref->[1];
 
-				my $_tld = $hostid_to_tld{$hostid};
+				my $_tld = $enabled_hostids_cache{$hostid};
 
-				push(@{$service_itemids{$item_key}{$_tld}}, $itemid);
+				push(@{$enabled_items_cache{$item_key}{$_tld}}, $itemid);
 			}
 		}
 	}
+}
 
-	if (scalar(@{$service_itemids{$item_key}{$tld}}) != 0)
+sub tld_interface_enabled
+{
+	my $tld = shift;
+	my $interface = shift;
+	my $till = shift;
+
+	$interface = lc($interface);
+
+	return 1 if ($interface eq 'dns');
+
+	my $item_key = enabled_item_key_from_interface($interface);
+
+	if (!defined($enabled_items_cache{$item_key}))
+	{
+		tld_interface_enabled_prepare($till, $interface);
+	}
+
+	if (scalar(@{$enabled_items_cache{$item_key}{$tld}}) != 0)
 	{
 		# find the latest value but make sure to specify time bounds, relatively to $till
+
+		$till = cycle_end(time() - 120, 60);	# go back 2 minutes if time unspecified
 
 		my @conditions = (
 			[sql_time_condition($till - 0 * 3600 -  1 * 60 + 1, $till), "desc"],	# go back 1 minute
@@ -824,7 +856,7 @@ sub tld_interface_enabled
 					" and $condition".
 				" order by clock $order".
 				" limit 1",
-				$service_itemids{$item_key}{$tld});
+				$enabled_items_cache{$item_key}{$tld});
 
 			my $found = 0;
 

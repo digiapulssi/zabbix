@@ -132,7 +132,7 @@ info('selected period: ', selected_period($from, $till));
 my $probes_ref = get_probes($service);
 my $probe_times_ref = get_probe_times($from, $till, $probes_ref);
 
-my $tlds_ref = opt('tld') ? [ getopt('tld') ] : get_tlds($service, $from, $till);
+my $tlds_ref = opt('tld') ? [ getopt('tld') ] : get_tlds($service, $till);
 
 my $rtt_low;	# used in __check_test()
 

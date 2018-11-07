@@ -58,7 +58,7 @@ if (opt('tld'))
 }
 else
 {
-	$tlds_ref = get_tlds('RDDS', $from, $till);
+	$tlds_ref = get_tlds('RDDS', $till);
 }
 
 my $rdap_items = get_templated_items_like("RDAP", $cfg_rdap_key_in);;

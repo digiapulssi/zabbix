@@ -39,7 +39,7 @@ if (opt('tld'))
 }
 else
 {
-        $tlds_ref = get_tlds('DNSSEC', $from, $till);
+        $tlds_ref = get_tlds('DNSSEC', $till);
 }
 
 init_values();
