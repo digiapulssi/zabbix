@@ -1228,6 +1228,7 @@ class CWidgetHelper {
 	 * @return string
 	 */
 	public static function makeStringFromChunks(array $chunks) {
+		ksort($chunks);
 		return implode('', $chunks);
 	}
 
