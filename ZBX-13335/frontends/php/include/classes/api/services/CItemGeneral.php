@@ -1441,8 +1441,7 @@ abstract class CItemGeneral extends CApiService {
 	/**
 	 * Validate items with type ITEM_TYPE_DEPENDENT for create or update operation.
 	 *
-	 * @param array                $items          Array of items.
-	 * @param CItem|CItemPrototype $data_provider  Item data provider.
+	 * @param array $items
 	 *
 	 * @throws APIException for invalid data.
 	 */
