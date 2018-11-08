@@ -719,12 +719,13 @@ sub enabled_item_key_from_interface
 	return "$interface.enabled";
 }
 
-# NB! When parallelization is used use this function to generate item ids cache in parent
-# process and call tld_<service|interface>_enabled() in child processes after forking.
+# NB! When parallelization is used use this function to create cache in parent
+# process to use functions tld_<service|interface>_enabled() in child processes.
 #
 # Collect the itemids of 'enabled' items in one SQL to improve performance of the function
 #
-# {
+# %enabled_items_cache =
+# (
 #     'rdds.enabled' => {
 #         'tld1' => [
 #             itemid1,
@@ -747,11 +748,12 @@ sub enabled_item_key_from_interface
 #         ...
 #     },
 #     ...
-# }
+# )
 #
+# These variables are initialized at db_connect()
 
 my %enabled_items_cache;
-my %enabled_hostids_cache;	# hostid => 'tld'
+my %enabled_hosts_cache;	# hostid => 'tld'
 my $tlds_cache;
 
 sub tld_interface_enabled_prepare
@@ -761,7 +763,7 @@ sub tld_interface_enabled_prepare
 
 	return if (scalar(@interfaces) == 0);
 
-	if (keys(%enabled_hostids_cache) == 0)
+	if (keys(%enabled_hosts_cache) == 0)
 	{
 		$tlds_cache = get_tlds(undef, $till);  # get all
 
@@ -776,7 +778,7 @@ sub tld_interface_enabled_prepare
 			" from hosts".
 			" where host like " . join(' or host like ', @host_patterns));
 
-		map {$enabled_hostids_cache{$_->[0]} = $_->[1]} (@{$rows_ref});
+		map {$enabled_hosts_cache{$_->[0]} = $_->[1]} (@{$rows_ref});
 	}
 
 	foreach my $interface (@interfaces)
@@ -795,7 +797,7 @@ sub tld_interface_enabled_prepare
 				"select itemid,hostid".
 				" from items".
 				" where key_='$item_key'".
-					" and hostid in (" . join(',', keys(%enabled_hostids_cache)) . ")");
+					" and hostid in (" . join(',', keys(%enabled_hosts_cache)) . ")");
 
 			map {$enabled_items_cache{$item_key}{$_} = []} (@{$tlds_cache});
 
@@ -804,7 +806,7 @@ sub tld_interface_enabled_prepare
 				my $itemid = $row_ref->[0];
 				my $hostid = $row_ref->[1];
 
-				my $_tld = $enabled_hostids_cache{$hostid};
+				my $_tld = $enabled_hosts_cache{$hostid};
 
 				push(@{$enabled_items_cache{$item_key}{$_tld}}, $itemid);
 			}
@@ -980,6 +982,10 @@ sub db_connect
 	# http://search.cpan.org/~capttofu/DBD-mysql-4.028/lib/DBD/mysql.pm
 	# for details
 	$dbh->{'mysql_use_result'} = 1;
+
+	%enabled_items_cache = ();
+	%enabled_hosts_cache = ();
+	$tlds_cache = undef;
 }
 
 sub db_disconnect
