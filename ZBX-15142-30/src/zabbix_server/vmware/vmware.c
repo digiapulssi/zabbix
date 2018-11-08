@@ -4309,10 +4309,12 @@ static void	vmware_service_retrieve_perf_counters(zbx_vmware_service_t *service,
 
 				/* add startTime for entity performance counter request for decrease XML data load */
 				st_raw = zbx_time() - SEC_PER_HOUR;
-				st = *gmtime(&st_raw);
-				strftime(st_str, sizeof(st_str), "%Y-%m-%dT%XZ", &st);
-				zbx_snprintf_alloc(&tmp, &tmp_alloc, &tmp_offset, "<ns0:startTime>%s</ns0:startTime>",
-						st_str);
+				if (NULL != gmtime_r(&st_raw, &st))
+				{
+					strftime(st_str, sizeof(st_str), "%Y-%m-%dT%TZ", &st);
+					zbx_snprintf_alloc(&tmp, &tmp_alloc, &tmp_offset, "<ns0:startTime>%s</ns0:startTime>",
+							st_str);
+				}
 			}
 
 			zbx_snprintf_alloc(&tmp, &tmp_alloc, &tmp_offset, "<ns0:maxSample>1</ns0:maxSample>");
