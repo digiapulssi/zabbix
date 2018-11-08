@@ -4312,8 +4312,8 @@ static void	vmware_service_retrieve_perf_counters(zbx_vmware_service_t *service,
 				if (NULL != gmtime_r(&st_raw, &st))
 				{
 					strftime(st_str, sizeof(st_str), "%Y-%m-%dT%TZ", &st);
-					zbx_snprintf_alloc(&tmp, &tmp_alloc, &tmp_offset, "<ns0:startTime>%s</ns0:startTime>",
-							st_str);
+					zbx_snprintf_alloc(&tmp, &tmp_alloc, &tmp_offset,
+							"<ns0:startTime>%s</ns0:startTime>", st_str);
 				}
 			}
 
