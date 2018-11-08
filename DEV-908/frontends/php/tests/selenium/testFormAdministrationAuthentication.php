@@ -544,75 +544,7 @@ class testFormAdministrationAuthentication extends CLegacyWebTest {
 	 * Internal authentication with HTTP settings.
 	 */
 	public function testFormAdministrationAuthentication_HttpAuthentication($data) {
-		$this->zbxTestLogin('zabbix.php?action=authentication.edit&ddreset=1');
-		$this->zbxTestCheckHeader('Authentication');
-		$this->zbxTestCheckTitle('Configuration of authentication');
-
-		// Configuration at 'HTTP settings' tab.
-		if (array_key_exists('http_authentication', $data)) {
-			$http_auth = $data['http_authentication'];
-
-			$this->zbxTestTabSwitch('HTTP settings');
-
-			// Check disabled or enabled fields in form for HTTP auth.
-			$fields_xpath = ['//select[@id="http_login_form"]', '//input[@id="http_strip_domains"]', '//input[@id="http_case_sensitive"]'];
-			if (array_key_exists('http_enabled', $http_auth) && $http_auth['http_enabled'] === true) {
-				$this->zbxTestCheckboxSelect('http_auth_enabled');
-				foreach ($fields_xpath as $xpath) {
-					$this->zbxTestIsEnabled($xpath);
-				}
-			}
-			else {
-				foreach ($fields_xpath as $xpath) {
-					$this->assertFalse($this->query('xpath', $xpath)->one()->isEnabled());
-				}
-			}
-
-			if (array_key_exists('http_login_form', $http_auth)) {
-				$this->zbxTestDropdownSelect('http_login_form', $http_auth['http_login_form']);
-			}
-
-			if (array_key_exists('http_domain', $http_auth)) {
-				$this->zbxTestInputType('http_strip_domains', $http_auth['http_domain']);
-			}
-
-			if (array_key_exists('http_case_sensitive', $http_auth)) {
-				$this->zbxTestCheckboxSelect('http_case_sensitive', $http_auth['http_case_sensitive']);
-			}
-		}
-
-		// File .htaccess creation.
-		if (array_key_exists('file', $data)) {
-			if ($data['file'] === 'htaccess') {
-				$this->assertTrue(file_put_contents(PHPUNIT_BASEDIR.'/.htaccess', 'SetEnv REMOTE_USER "'.
-						$data['user'].'"') !== false);
-			}
-			elseif ($data['file'] === 'pwfile') {
-				$this->assertTrue(exec('htpasswd -c -b "'.PHPUNIT_BASEDIR.'/.pwd" "'.$data['user'].'" "'.
-						$data['password'].'" > /dev/null 2>&1') !== false);
-				$content = '<Files index_http.php>'."\n".
-						'	AuthType Basic'."\n".
-						'	AuthName "Password Required"'."\n".
-						'	AuthUserFile "'.PHPUNIT_BASEDIR.'/.pwd"'."\n".
-						'	Require valid-user'."\n".
-						'</Files>';
-				$this->assertTrue(file_put_contents(PHPUNIT_BASEDIR.'/.htaccess', $content) !== false);
-			}
-		}
-
-		$this->zbxTestClick('update');
-		$this->zbxTestCheckFatalErrors();
-		// Check DB configuration.
-		$sql = 'SELECT authentication_type, ldap_host, ldap_port, ldap_base_dn, ldap_bind_dn, ldap_bind_password, '.
-				'ldap_search_attribute, http_auth_enabled, http_login_form, http_strip_domains, '.
-				'http_case_sensitive, ldap_configured, ldap_case_sensitive'.
-				' FROM config';
-		$result = CDBHelper::getRow($sql);
-		$this->assertEquals($data['db_check'], $result);
-
-		$this->zbxTestLogout();
-		$this->zbxTestWaitForPageToLoad();
-		$this->webDriver->manage()->deleteAllCookies();
+		$this->httpConfiguration($data);
 
 		// Check authentication on pages.
 		if (array_key_exists('pages', $data)) {
@@ -684,6 +616,78 @@ class testFormAdministrationAuthentication extends CLegacyWebTest {
 				$this->webDriver->manage()->deleteAllCookies();
 			}
 		}
+	}
+
+	private function httpConfiguration($data) {
+		$this->zbxTestLogin('zabbix.php?action=authentication.edit&ddreset=1');
+		$this->zbxTestCheckHeader('Authentication');
+		$this->zbxTestCheckTitle('Configuration of authentication');
+
+		// Configuration at 'HTTP settings' tab.
+		if (array_key_exists('http_authentication', $data)) {
+			$http_auth = $data['http_authentication'];
+
+			$this->zbxTestTabSwitch('HTTP settings');
+
+			// Check disabled or enabled fields in form for HTTP auth.
+			$fields_xpath = ['//select[@id="http_login_form"]', '//input[@id="http_strip_domains"]', '//input[@id="http_case_sensitive"]'];
+			if (array_key_exists('http_enabled', $http_auth) && $http_auth['http_enabled'] === true) {
+				$this->zbxTestCheckboxSelect('http_auth_enabled');
+				foreach ($fields_xpath as $xpath) {
+					$this->zbxTestIsEnabled($xpath);
+				}
+			}
+			else {
+				foreach ($fields_xpath as $xpath) {
+					$this->assertFalse($this->query('xpath', $xpath)->one()->isEnabled());
+				}
+			}
+
+			if (array_key_exists('http_login_form', $http_auth)) {
+				$this->zbxTestDropdownSelect('http_login_form', $http_auth['http_login_form']);
+			}
+
+			if (array_key_exists('http_domain', $http_auth)) {
+				$this->zbxTestInputType('http_strip_domains', $http_auth['http_domain']);
+			}
+
+			if (array_key_exists('http_case_sensitive', $http_auth)) {
+				$this->zbxTestCheckboxSelect('http_case_sensitive', $http_auth['http_case_sensitive']);
+			}
+		}
+
+		// File .htaccess creation.
+		if (array_key_exists('file', $data)) {
+			if ($data['file'] === 'htaccess') {
+				$this->assertTrue(file_put_contents(PHPUNIT_BASEDIR.'/.htaccess', 'SetEnv REMOTE_USER "'.
+						$data['user'].'"') !== false);
+			}
+			elseif ($data['file'] === 'pwfile') {
+				$this->assertTrue(exec('htpasswd -c -b "'.PHPUNIT_BASEDIR.'/.pwd" "'.$data['user'].'" "'.
+						$data['password'].'" > /dev/null 2>&1') !== false);
+				$content = '<Files index_http.php>'."\n".
+						'	AuthType Basic'."\n".
+						'	AuthName "Password Required"'."\n".
+						'	AuthUserFile "'.PHPUNIT_BASEDIR.'/.pwd"'."\n".
+						'	Require valid-user'."\n".
+						'</Files>';
+				$this->assertTrue(file_put_contents(PHPUNIT_BASEDIR.'/.htaccess', $content) !== false);
+			}
+		}
+
+		$this->zbxTestClick('update');
+		$this->zbxTestCheckFatalErrors();
+		// Check DB configuration.
+		$sql = 'SELECT authentication_type, ldap_host, ldap_port, ldap_base_dn, ldap_bind_dn, ldap_bind_password, '.
+				'ldap_search_attribute, http_auth_enabled, http_login_form, http_strip_domains, '.
+				'http_case_sensitive, ldap_configured, ldap_case_sensitive'.
+				' FROM config';
+		$result = CDBHelper::getRow($sql);
+		$this->assertEquals($data['db_check'], $result);
+
+		$this->zbxTestLogout();
+		$this->zbxTestWaitForPageToLoad();
+		$this->webDriver->manage()->deleteAllCookies();
 	}
 
 	public function getLdapAuthenticationData() {
