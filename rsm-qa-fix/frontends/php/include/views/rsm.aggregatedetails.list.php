@@ -118,7 +118,7 @@ foreach ($data['probes'] as $probe) {
 						foreach (array_keys($ipvs[$ipv]) as $ip) {
 							if (array_key_exists($ip, $probe['results_udp'][$dns_udp_ns][$ipv])) {
 								$result = $probe['results_udp'][$dns_udp_ns][$ipv][$ip];
-								$is_dns_error = isDNSErrorCode($result, $data['type']);
+								$is_dns_error = isServiceErrorCode($result, $data['type']);
 
 								if ($result == 0) {
 									$row[] = '-';
