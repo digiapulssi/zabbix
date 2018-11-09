@@ -278,11 +278,11 @@ class CControllerWidgetGraphView extends CControllerWidget {
 
 					$new_graph_items = getSameGraphItemsForHost($graph['gitems'], $dynamic_hostid, false);
 
-					foreach ($new_graph_items as $new_graph_item) {
+					foreach ($new_graph_items as $i => $new_graph_item) {
 						unset($new_graph_item['gitemid'], $new_graph_item['graphid']);
 
 						foreach ($new_graph_item as $name => $value) {
-							$graph_src->setArgument('items['.$new_graph_item['itemid'].']['.$name.']', $value);
+							$graph_src->setArgument('items['.$i.']['.$name.']', $value);
 						}
 					}
 
