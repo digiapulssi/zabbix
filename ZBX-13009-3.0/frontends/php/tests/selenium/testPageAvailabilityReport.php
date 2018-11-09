@@ -86,8 +86,8 @@ class testPageAvailabilityReport extends CWebTest {
 
 		// Generate events data for 'SLA host' trigger items.
 		$eventid = get_dbid('events', 'eventid');
-		$start_time = 'INSERT INTO events SET eventid=%1$d, objectid=%2$d, clock=%3$d, value='.TRIGGER_VALUE_TRUE;
-		$end_time = 'INSERT INTO events SET eventid=%1$d, objectid=%2$d, clock=%3$d, value='.TRIGGER_VALUE_FALSE;
+		$start_time = 'INSERT INTO events (eventid, objectid, clock, value) VALUES (%1$d, %2$d, %3$d, '.TRIGGER_VALUE_TRUE.')';
+		$end_time = 'INSERT INTO events (eventid, objectid, clock, value) VALUES (%1$d, %2$d, %3$d, '.TRIGGER_VALUE_FALSE.')';
 
 		foreach (self::$SLA_events as $event) {
 			array_unshift($event, $eventid);
