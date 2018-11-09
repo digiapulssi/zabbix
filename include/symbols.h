@@ -22,8 +22,6 @@
 
 #if defined(_WINDOWS)
 
-#	define _WIN32_WINNT	0x0500	/* Target MS Windows 2000 and later. */
-
 /* some definitions which are not available on older MS Windows versions */
 typedef enum {
 	FileIdInfo	= 18	/* we need only one value, the rest of enumerated values are omitted here */
