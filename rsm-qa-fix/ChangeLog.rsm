@@ -1,6 +1,7 @@
 Changes for rsm1.1.0rc38
 
 Bug fixes:
+..F....... [437] updated interpretation of DNS error codes to be compatible with latest changes in backend (miks)
 
 --------------------------------------------------------------------------------
 Changes for rsm1.1.0rc37
