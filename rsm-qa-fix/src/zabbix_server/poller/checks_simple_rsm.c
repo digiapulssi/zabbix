@@ -107,6 +107,7 @@ typedef enum
 {
 	ZBX_RESOLVER_INTERNAL,
 	ZBX_RESOLVER_NOREPLY,
+	ZBX_RESOLVER_SERVFAIL,
 	ZBX_RESOLVER_NXDOMAIN,
 	ZBX_RESOLVER_CATCHALL
 }
@@ -789,6 +790,8 @@ static int	zbx_resolver_error_to_ ## __interface (zbx_resolver_error_t err)	\
 			return ZBX_EC_ ## __interface ## _INTERNAL_GENERAL;		\
 		case ZBX_RESOLVER_NOREPLY:						\
 			return ZBX_EC_ ## __interface ## _RES_NOREPLY;			\
+		case ZBX_RESOLVER_SERVFAIL:						\
+			return ZBX_EC_ ## __interface ## _RES_SERVFAIL;			\
 		case ZBX_RESOLVER_NXDOMAIN:						\
 			return ZBX_EC_ ## __interface ## _RES_NXDOMAIN;			\
 		case ZBX_RESOLVER_CATCHALL:						\
@@ -2927,6 +2930,9 @@ static int	zbx_resolver_resolve_host(ldns_resolver *res, const char *host, zbx_v
 
 			switch (rcode)
 			{
+				case LDNS_RCODE_SERVFAIL:
+					*ec_res = ZBX_RESOLVER_SERVFAIL;
+					break;
 				case LDNS_RCODE_NXDOMAIN:
 					*ec_res = ZBX_RESOLVER_NXDOMAIN;
 					break;
