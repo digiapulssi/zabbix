@@ -2759,6 +2759,251 @@ static int	DBpatch_3000230(void)
 	return SUCCEED;
 }
 
+static int	add_globalmacros(const char *const data[])
+{
+	int	i;
+
+	for (i = 0; NULL != data[i]; i++)
+	{
+		zbx_uint64_t	globalmacroid;
+		char		*macro = NULL, *value = NULL, *macro_esc, *value_esc;
+
+		if (0 == strncmp(data[i], "--", ZBX_CONST_STRLEN("--")))
+			continue;
+
+		if (3 != sscanf(data[i], "ROW |" ZBX_FS_UI64 " |%m[^|]|%m[^|]|",
+				&globalmacroid, &macro, &value))
+		{
+			zabbix_log(LOG_LEVEL_CRIT, "failed to parse the following line:\n%s", data[i]);
+			zbx_free(macro);
+			zbx_free(value);
+			return FAIL;
+		}
+
+		zbx_rtrim(macro, ZBX_WHITESPACE);
+		zbx_rtrim(value, ZBX_WHITESPACE);
+
+		/* NOTE: to keep it simple assume that data does not contain sequences "&pipe;", "&eol;" or "&bsn;" */
+
+		macro_esc = zbx_db_dyn_escape_string(macro);
+		value_esc = zbx_db_dyn_escape_string(value);
+		zbx_free(macro);
+		zbx_free(value);
+
+		if (ZBX_DB_OK > DBexecute("insert into globalmacro (globalmacroid,macro,value)"
+				" values (" ZBX_FS_UI64 ",'%s','%s')",
+				globalmacroid, macro_esc, value_esc))
+		{
+			zbx_free(macro_esc);
+			zbx_free(value_esc);
+			return FAIL;
+		}
+
+		zbx_free(macro_esc);
+		zbx_free(value_esc);
+	}
+
+	return SUCCEED;
+}
+
+static int	DBpatch_3000231(void)
+{
+	DB_RESULT		result;
+	DB_ROW			row;
+	zbx_vector_uint64_t	templateids;
+	zbx_uint64_t		next_itemid, next_itemappid;
+	size_t			i;
+
+	static const char	*const data[] = {
+		"ROW   |100          |{$RESOLVER.STATUS.TIMEOUT}    |5                  |",
+		"ROW   |101          |{$RESOLVER.STATUS.TRIES}      |3                  |",
+		NULL
+	};
+
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	zbx_vector_uint64_create(&templateids);
+	zbx_vector_uint64_reserve(&templateids, 1);
+
+	/* Select all "Template <Probe> Status" hosts */
+	result = DBselect("select h.hostid from hosts h,hosts_groups hg where h.hostid=hg.hostid and h.host like 'Template %% Status' and hg.groupid=240");
+
+	while (NULL != (row = DBfetch(result)))
+	{
+		zbx_uint64_t	templateid;
+
+		ZBX_STR2UINT64(templateid, row[0]);	/* hostid of "Template <Probe> Status" */
+
+		zbx_vector_uint64_append(&templateids, templateid);
+	}
+
+	DBfree_result(result);
+
+	next_itemid = DBget_maxid_num("items", templateids.values_num * 2);			/* for Template and host it is linked to */
+	next_itemappid = DBget_maxid_num("items_applications", templateids.values_num * 2);	/* for Template and host it is linked to */
+
+	for (i = 0; i < templateids.values_num; i++)
+	{
+		zbx_uint64_t	templateid, hostid, templated_itemid, applicationid;
+
+		templateid = templateids.values[i];
+		templated_itemid = next_itemid;
+
+		zabbix_log(LOG_LEVEL_CRIT, "DIMIR: " ZBX_FS_UI64, templateid);
+
+		if (ZBX_DB_OK > DBexecute(
+			"insert into items ("
+				"itemid,type,snmp_community,snmp_oid,hostid,name,"
+				"key_,"
+				"delay,history,trends,status,value_type,trapper_hosts,units,multiplier,delta,"
+				"snmpv3_securityname,snmpv3_securitylevel,snmpv3_authpassphrase,snmpv3_privpassphrase,"
+				"formula,logtimefmt,templateid,valuemapid,delay_flex,params,ipmi_sensor,data_type,"
+				"authtype,username,password,publickey,privatekey,flags,interfaceid,port,"
+				"description,"
+				"inventory_link,lifetime,snmpv3_authprotocol,snmpv3_privprotocol,snmpv3_contextname,evaltype"
+			")"
+			" values ("
+				ZBX_FS_UI64 ",'3','',''," ZBX_FS_UI64 ",'Local resolver status ($1)',"
+				"'resolver.status["
+					"{$RSM.RESOLVER},"
+					"{$RESOLVER.STATUS.TIMEOUT},"
+					"{$RESOLVER.STATUS.TRIES},"
+					"{$RSM.IP4.ENABLED},"
+					"{$RSM.IP6.ENABLED}"
+					"]',"
+				"'60','7','365','0','3','','','0','0',"
+				"'','0','','',"
+				"'1','',NULL,'1','','','','0',"
+				"'0','','','','','0',NULL,'',"
+				"'Status of Local resolver.',"
+				"'0','0','0','0','','0'"
+			")",
+			next_itemid++, templateids.values[i]))
+		{
+			return FAIL;
+		}
+
+		result = DBselect(
+				"select applicationid"
+				" from items_applications"
+				" where itemid in"
+					" (select itemid"
+					" from items"
+					" where key_='rsm.probe.status[manual]'"
+						" and hostid=" ZBX_FS_UI64
+					")",
+				templateids.values[i]);
+
+		if (NULL == (row = DBfetch(result)))
+		{
+			zabbix_log(LOG_LEVEL_CRIT, "Zabbix configuration in the database is corrupted");
+			return FAIL;
+		}
+
+		ZBX_STR2UINT64(applicationid, row[0]);	/* application of "Template <Probe> Status" */
+
+		if (ZBX_DB_OK > DBexecute(
+				"insert into items_applications (itemappid,applicationid,itemid)"
+				" values (" ZBX_FS_UI64 "," ZBX_FS_UI64 "," ZBX_FS_UI64 ")",
+				next_itemappid++, applicationid, templated_itemid))
+
+		{
+			return FAIL;
+		}
+
+		DBfree_result(result);
+
+		result = DBselect("select hostid from hosts_templates where templateid=" ZBX_FS_UI64, templateid);
+
+		if (NULL == (row = DBfetch(result)))
+		{
+			zabbix_log(LOG_LEVEL_CRIT, "Zabbix configuration in the database is corrupted");
+			return FAIL;
+		}
+
+		ZBX_STR2UINT64(hostid, row[0]);	/* hostid of "<Probe>" */
+
+		zabbix_log(LOG_LEVEL_CRIT, "DIMIR: " ZBX_FS_UI64, hostid);
+
+		DBfree_result(result);
+
+		if (ZBX_DB_OK > DBexecute(
+			"insert into items ("
+				"itemid,type,snmp_community,snmp_oid,hostid,name,"
+				"key_,"
+				"delay,history,trends,status,value_type,trapper_hosts,units,multiplier,delta,"
+				"snmpv3_securityname,snmpv3_securitylevel,snmpv3_authpassphrase,snmpv3_privpassphrase,"
+				"formula,logtimefmt,templateid,valuemapid,delay_flex,params,ipmi_sensor,data_type,"
+				"authtype,username,password,publickey,privatekey,flags,interfaceid,port,"
+				"description,"
+				"inventory_link,lifetime,snmpv3_authprotocol,snmpv3_privprotocol,snmpv3_contextname,evaltype"
+			")"
+			" values ("
+				ZBX_FS_UI64 ",'3','',''," ZBX_FS_UI64 ",'Local resolver status ($1)',"
+				"'resolver.status["
+					"{$RSM.RESOLVER},"
+					"{$RESOLVER.STATUS.TIMEOUT},"
+					"{$RESOLVER.STATUS.TRIES},"
+					"{$RSM.IP4.ENABLED},"
+					"{$RSM.IP6.ENABLED}"
+					"]',"
+				"'60','90','365','0','3','','','0','0',"
+				"'','0','','',"
+				"'1',''," ZBX_FS_UI64 ",'1','','','','0',"
+				"'0','','','','','0',NULL,'',"
+				"'Status of Local resolver.',"
+				"'0','0','0','0','','0'"
+			")",
+			next_itemid++, hostid, templated_itemid))
+		{
+			return FAIL;
+		}
+
+		result = DBselect(
+				"select applicationid"
+				" from items_applications"
+				" where itemid in"
+					" (select itemid"
+					" from items"
+					" where key_='rsm.probe.status[manual]'"
+						" and hostid=" ZBX_FS_UI64
+					")",
+				hostid);
+
+		if (NULL == (row = DBfetch(result)))
+		{
+			zabbix_log(LOG_LEVEL_CRIT, "Zabbix configuration in the database is corrupted");
+			return FAIL;
+		}
+
+		ZBX_STR2UINT64(applicationid, row[0]);	/* application of "Template <Probe> Status" */
+
+		if (ZBX_DB_OK > DBexecute(
+				"insert into items_applications (itemappid,applicationid,itemid)"
+				" values (" ZBX_FS_UI64 "," ZBX_FS_UI64 "," ZBX_FS_UI64 ")",
+				next_itemappid++, applicationid, next_itemid - 1))
+
+		{
+			return FAIL;
+		}
+
+		DBfree_result(result);
+	}
+
+	zbx_vector_uint64_destroy(&templateids);
+
+	add_globalmacros(data);
+
+	if (ZBX_DB_OK > DBexecute("delete from ids where table_name='items'"))
+		return FAIL;
+
+	if (ZBX_DB_OK > DBexecute("delete from ids where table_name='items_applications'"))
+		return FAIL;
+
+	return SUCCEED;
+}
+
 #endif
 
 DBPATCH_START(3000)
@@ -2836,5 +3081,6 @@ DBPATCH_ADD(3000227, 0, 0)	/* reorganize error codes: part 1 */
 DBPATCH_ADD(3000228, 0, 0)	/* reorganize error codes: part 2 */
 DBPATCH_ADD(3000229, 0, 0)	/* reorganize error codes: part 3 (add -200 and -250 to RDAP service error codes) */
 DBPATCH_ADD(3000230, 0, 0)	/* fix previous patch 3000229: RDAP error codes -400 :: -415 */
+DBPATCH_ADD(3000231, 0, 0)	/* add item resolver.status[...] to templates "Template <PROBE> status" */
 
 DBPATCH_END()

@@ -80,6 +80,7 @@ use constant PROBE_KEY_ONLINE	=> 'rsm.probe.online';
 
 # todo phase 1: changed ids
 use constant rsm_value_mappings => {
+	'service_state' => 1,
 	'rsm_dns_rtt' => 120,
 	'rsm_rdds_rtt' => 130,
 	'rsm_rdds_result' => 140,

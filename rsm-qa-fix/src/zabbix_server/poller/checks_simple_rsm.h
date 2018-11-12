@@ -48,7 +48,7 @@
 #define ZBX_EC_RDAP_INTERNAL_NOTLISTED	-100	/* The TLD is not listed in the Bootstrap Service Registry for Domain Name Space */
 #define ZBX_EC_RDAP_INTERNAL_NOHTTPS	-101	/* The RDAP base URL obtained from Bootstrap Service Registry for Domain Name Space does not use HTTPS */
 
-#define ZBX_EC_LAST_INTERNAL		-199	/* -1 :: -199 */
+#define ZBX_EC_INTERNAL_LAST		-199	/* -1 :: -199 */
 
 /* DNS UDP error codes */
 #define ZBX_EC_DNS_UDP_NS_NOREPLY	-200	/* DNS UDP - No reply from name server */
@@ -211,8 +211,8 @@
 #define ZBX_NO_VALUE			-1000	/* no value was obtained during the check, used in the code only */
 
 /* NB! Do not change, these are used as DNS array indexes. */
-#define ZBX_RSM_UDP	0
-#define ZBX_RSM_TCP	1
+#define RSM_UDP	0
+#define RSM_TCP	1
 
 #define ZBX_MACRO_DNS_RESOLVER		"{$RSM.RESOLVER}"
 #define ZBX_MACRO_DNS_TESTPREFIX	"{$RSM.DNS.TESTPREFIX}"
@@ -247,22 +247,24 @@
 #define ZBX_MACRO_TLD_RDDS_ENABLED	"{$RSM.TLD.RDDS.ENABLED}"
 #define ZBX_MACRO_TLD_EPP_ENABLED	"{$RSM.TLD.EPP.ENABLED}"
 
-#define ZBX_RSM_UDP_TIMEOUT	3	/* seconds */
-#define ZBX_RSM_UDP_RETRY	1
-#define ZBX_RSM_TCP_TIMEOUT	11	/* seconds (SLA: 5 times higher than max (2)) */
-#define ZBX_RSM_TCP_RETRY	1
+#define RSM_UDP_TIMEOUT	3	/* seconds */
+#define RSM_UDP_RETRY	1
+#define RSM_TCP_TIMEOUT	11	/* seconds (SLA: 5 times higher than max (2)) */
+#define RSM_TCP_RETRY	1
 
-#define ZBX_RSM_DEFAULT_LOGDIR		"/var/log"	/* if Zabbix log dir is undefined */
-#define ZBX_DNS_LOG_PREFIX		"dns"		/* file will be <LOGDIR>/<PROBE>-<TLD>-ZBX_DNS_LOG_PREFIX-<udp|tcp>.log */
-#define ZBX_RDDS_LOG_PREFIX		"rdds"		/* file will be <LOGDIR>/<PROBE>-<TLD>-ZBX_RDDS_LOG_PREFIX.log */
-#define ZBX_RDAP_LOG_PREFIX		"rdap"		/* file will be <LOGDIR>/<PROBE>-<TLD>-ZBX_RDAP_LOG_PREFIX.log */
-#define ZBX_EPP_LOG_PREFIX		"epp"		/* file will be <LOGDIR>/<PROBE>-<TLD>-ZBX_EPP_LOG_PREFIX.log */
-#define ZBX_PROBESTATUS_LOG_PREFIX	"probestatus"	/* file will be <LOGDIR>/<PROBE>-probestatus.log */
+#define RSM_DEFAULT_LOGDIR		"/var/log"		/* if Zabbix log dir is undefined */
+#define ZBX_DNS_LOG_PREFIX		"dns"			/* file will be <LOGDIR>/<PROBE>-<TLD>-ZBX_DNS_LOG_PREFIX-<udp|tcp>.log */
+#define ZBX_RDDS_LOG_PREFIX		"rdds"			/* file will be <LOGDIR>/<PROBE>-<TLD>-ZBX_RDDS_LOG_PREFIX.log */
+#define ZBX_RDAP_LOG_PREFIX		"rdap"			/* file will be <LOGDIR>/<PROBE>-<TLD>-ZBX_RDAP_LOG_PREFIX.log */
+#define ZBX_EPP_LOG_PREFIX		"epp"			/* file will be <LOGDIR>/<PROBE>-<TLD>-ZBX_EPP_LOG_PREFIX.log */
+#define ZBX_PROBESTATUS_LOG_PREFIX	"probestatus"		/* file will be <LOGDIR>/<PROBE>-probestatus.log */
+#define ZBX_RESOLVERSTATUS_LOG_PREFIX	"resolverstatus"	/* file will be <LOGDIR>/<PROBE>-ZBX_RESOLVERSTATUS_LOG_PREFIX.log */
 
 int	check_rsm_dns(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *result, char proto);
 int	check_rsm_rdds(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *result);
 int	check_rsm_rdap(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *result);
 int	check_rsm_epp(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *result);
 int	check_rsm_probe_status(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *result);
+int	check_rsm_resolver_status(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *result);
 
 #endif

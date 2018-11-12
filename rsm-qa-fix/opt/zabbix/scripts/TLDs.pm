@@ -622,40 +622,55 @@ sub create_probe_status_template {
 
     my $templateid = create_template($template_name, $child_templateid);
 
-    my $options = {'name' => 'Probe status ($1)',
-                                              'key_'=> 'rsm.probe.status[automatic,'.$root_servers_macros.']',
-                                              'hostid' => $templateid,
-                                              'applications' => [get_application_id('Probe status', $templateid)],
-                                              'type' => 3, 'value_type' => 3, 'delay' => cfg_probe_status_delay,
-                                              'valuemapid' => rsm_value_mappings->{'rsm_probe'}};
+    my $options = {
+	'name' => 'Probe status ($1)',
+	'key_'=> 'rsm.probe.status[automatic,'.$root_servers_macros.']',
+	'hostid' => $templateid,
+	'applications' => [get_application_id('Probe status', $templateid)],
+	'type' => 3, 'value_type' => 3, 'delay' => cfg_probe_status_delay,
+	'valuemapid' => rsm_value_mappings->{'rsm_probe'}
+    };
 
     create_item($options);
 
-    $options = {'name' => 'Probe status ($1)',
-                                              'key_'=> 'rsm.probe.status[manual]',
-                                              'hostid' => $templateid,
-                                              'applications' => [get_application_id('Probe status', $templateid)],
-                                              'type' => 2, 'value_type' => 3,
-                                              'valuemapid' => rsm_value_mappings->{'rsm_probe'}};
+    $options = {
+	'name' => 'Probe status ($1)',
+	'key_'=> 'rsm.probe.status[manual]',
+	'hostid' => $templateid,
+	'applications' => [get_application_id('Probe status', $templateid)],
+	'type' => 2, 'value_type' => 3,
+	'valuemapid' => rsm_value_mappings->{'rsm_probe'}
+    };
 
     create_item($options);
 
-    $options = { 'description' => 'Probe {HOST.NAME} has been disabled for more than {$RSM.PROBE.MAX.OFFLINE}',
-                         'expression' => '{'.$template_name.':rsm.probe.status[manual].max({$RSM.PROBE.MAX.OFFLINE})}=0',
-                        'priority' => '3',
-                };
+    my $options = {
+	'name' => 'Local resolver status ($1)',
+	'key_'=> 'resolver.status[{$RSM.RESOLVER},{$RESOLVER.STATUS.TIMEOUT},{$RESOLVER.STATUS.TRIES},{$RSM.IP4.ENABLED},{$RSM.IP6.ENABLED}]',
+	'hostid' => $templateid,
+	'applications' => [get_application_id('Probe status', $templateid)],
+	'type' => 3, 'value_type' => 3, 'delay' => cfg_probe_status_delay,
+	'valuemapid' => rsm_value_mappings->{'service_state'}
+    };
+
+    create_item($options);
+
+    $options = {
+	'description' => 'Probe {HOST.NAME} has been disabled for more than {$RSM.PROBE.MAX.OFFLINE}',
+	'expression' => '{'.$template_name.':rsm.probe.status[manual].max({$RSM.PROBE.MAX.OFFLINE})}=0',
+	'priority' => '3',
+    };
 
     create_trigger($options, $template_name);
 
 
-    $options = { 'description' => 'Probe {HOST.NAME} has been disabled by tests',
-                         'expression' => '{'.$template_name.':rsm.probe.status[automatic,"{$RSM.IP4.ROOTSERVERS1}","{$RSM.IP6.ROOTSERVERS1}"].last(0)}=0',
-                        'priority' => '4',
-                };
+    $options = {
+	'description' => 'Probe {HOST.NAME} has been disabled by tests',
+	'expression' => '{'.$template_name.':rsm.probe.status[automatic,"{$RSM.IP4.ROOTSERVERS1}","{$RSM.IP6.ROOTSERVERS1}"].last(0)}=0',
+	'priority' => '4',
+    };
 
     create_trigger($options, $template_name);
-
-
 
     return $templateid;
 }
