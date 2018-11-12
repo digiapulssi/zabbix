@@ -2183,6 +2183,7 @@ function getMapLinktriggerInfo($sysmap, $options) {
 	$trigger_options = [
 		'output' => ['status', 'value', 'priority'],
 		'triggerids' => $triggerids,
+		'monitored' => true,
 		'preservekeys' => true
 	];
 
