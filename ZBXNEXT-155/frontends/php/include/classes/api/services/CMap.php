@@ -2273,28 +2273,54 @@ class CMap extends CMapElement {
 				'preservekeys' => true
 			]);
 
-			// Temporary fix for problem reported in ZBX-15083.
-			$trigger_selements = [];
-			foreach ($selements as $selement) {
-				if ($selement['elementtype'] == SYSMAP_ELEMENT_TYPE_TRIGGER) {
-					$trigger_selements[$selement['selementid']] = true;
-				}
-			}
-			$trigger_selements = $trigger_selements
-				? API::getApiService()->select('sysmap_element_trigger', [
-					'output' => ['selementid', 'triggerid'],
-					'filter' => ['selementid' => array_keys($trigger_selements)]
-				])
-				: [];
-
-			// Are multiple rows supported?
-			foreach ($trigger_selements as $tr_sel) {
-				if ($selements[$tr_sel['selementid']]['elementid'] == 0) {
-					$selements[$tr_sel['selementid']]['elementid'] = $tr_sel['triggerid'];
-				}
-			}
-
 			$relation_map = $this->createRelationMap($selements, 'sysmapid', 'selementid');
+
+			if ($this->outputIsRequested('elements', $options['selectSelements']) && $selements) {
+				foreach ($selements as &$selement) {
+					$selement['elements'] = [];
+				}
+				unset($selement);
+
+				$selement_triggers = DBselect(
+					'SELECT st.selementid,st.triggerid,st.selement_triggerid'.
+					' FROM sysmap_element_trigger st,triggers tr'.
+					' WHERE '.dbConditionInt('st.selementid', array_keys($selements)).
+						' AND st.triggerid=tr.triggerid'.
+					' ORDER BY tr.priority DESC,st.selement_triggerid'
+				);
+				while ($selement_trigger = DBfetch($selement_triggers)) {
+					$selements[$selement_trigger['selementid']]['elements'][] = [
+						'triggerid' => $selement_trigger['triggerid']
+					];
+					if ($selements[$selement_trigger['selementid']]['elementid'] == 0) {
+						$selements[$selement_trigger['selementid']]['elementid'] = $selement_trigger['triggerid'];
+					}
+				}
+
+				$single_element_types = [SYSMAP_ELEMENT_TYPE_HOST, SYSMAP_ELEMENT_TYPE_MAP,
+					SYSMAP_ELEMENT_TYPE_HOST_GROUP
+				];
+
+				foreach ($selements as &$selement) {
+					if (in_array($selement['elementtype'], $single_element_types)) {
+						switch ($selement['elementtype']) {
+							case SYSMAP_ELEMENT_TYPE_HOST_GROUP:
+								$field = 'groupid';
+								break;
+
+							case SYSMAP_ELEMENT_TYPE_HOST:
+								$field = 'hostid';
+								break;
+
+							case SYSMAP_ELEMENT_TYPE_MAP:
+								$field = 'sysmapid';
+								break;
+						}
+						$selement['elements'][] = [$field => $selement['elementid']];
+					}
+				}
+				unset($selement);
+			}
 
 			// add selement URLs
 			if ($this->outputIsRequested('urls', $options['selectSelements'])) {
@@ -2335,49 +2361,6 @@ class CMap extends CMapElement {
 						? $selementUrl
 						: CMacrosResolverHelper::resolveMapElementUrl($selementUrl, $selements[$selementUrl['selementid']]);
 				}
-			}
-
-			if ($this->outputIsRequested('elements', $options['selectSelements']) && $selements) {
-				foreach ($selements as &$selement) {
-					$selement['elements'] = [];
-				}
-				unset($selement);
-
-				$selement_triggers = DBselect(
-					'SELECT st.selementid,st.triggerid'.
-					' FROM sysmap_element_trigger st'.
-					' WHERE '.dbConditionInt('st.selementid', array_keys($selements)).
-					' ORDER BY st.selement_triggerid'
-				);
-				while ($selement_trigger = DBfetch($selement_triggers)) {
-					$selements[$selement_trigger['selementid']]['elements'][] = [
-						'triggerid' => $selement_trigger['triggerid']
-					];
-				}
-
-				$single_element_types = [SYSMAP_ELEMENT_TYPE_HOST, SYSMAP_ELEMENT_TYPE_MAP,
-					SYSMAP_ELEMENT_TYPE_HOST_GROUP
-				];
-
-				foreach ($selements as &$selement) {
-					if (in_array($selement['elementtype'], $single_element_types)) {
-						switch ($selement['elementtype']) {
-							case SYSMAP_ELEMENT_TYPE_HOST_GROUP:
-								$field = 'groupid';
-								break;
-
-							case SYSMAP_ELEMENT_TYPE_HOST:
-								$field = 'hostid';
-								break;
-
-							case SYSMAP_ELEMENT_TYPE_MAP:
-								$field = 'sysmapid';
-								break;
-						}
-						$selement['elements'][] = [$field => $selement['elementid']];
-					}
-				}
-				unset($selement);
 			}
 
 			if ($this->outputIsRequested('permission', $options['selectSelements']) && $selements) {
