@@ -92,8 +92,8 @@ typedef struct
 }
 curl_data_t;
 
-#define ZBX_RESOLVER_CHECK_BASIC	0x0u
-#define ZBX_RESOLVER_CHECK_ADBIT	0x1u
+#define RESOLVER_EXTRAS_NONE	0x0u
+#define RESOLVER_EXTRAS_DNSSEC	0x1u
 
 typedef enum
 {
@@ -107,6 +107,7 @@ typedef enum
 {
 	ZBX_RESOLVER_INTERNAL,
 	ZBX_RESOLVER_NOREPLY,
+	ZBX_RESOLVER_SERVFAIL,
 	ZBX_RESOLVER_NXDOMAIN,
 	ZBX_RESOLVER_CATCHALL
 }
@@ -221,11 +222,11 @@ static int	unpack_values(size_t *v1, size_t *v2, int *v3, int *v4, char *buf)
 	return sscanf(buf, PACK_FORMAT, v1, v2, v3, v4);
 }
 
-#define zbx_rsm_dump(log_fd, fmt, ...)	fprintf(log_fd, ZBX_CONST_STRING(fmt), ##__VA_ARGS__)
-#define zbx_rsm_errf(log_fd, fmt, ...)	zbx_rsm_logf(log_fd, "Error", ZBX_CONST_STRING(fmt), ##__VA_ARGS__)
-#define zbx_rsm_warnf(log_fd, fmt, ...)	zbx_rsm_logf(log_fd, "Warning", ZBX_CONST_STRING(fmt), ##__VA_ARGS__)
-#define zbx_rsm_infof(log_fd, fmt, ...)	zbx_rsm_logf(log_fd, "Info", ZBX_CONST_STRING(fmt), ##__VA_ARGS__)
-static void	zbx_rsm_logf(FILE *log_fd, const char *prefix, const char *fmt, ...)
+#define rsm_dump(log_fd, fmt, ...)	fprintf(log_fd, ZBX_CONST_STRING(fmt), ##__VA_ARGS__)
+#define rsm_errf(log_fd, fmt, ...)	rsm_logf(log_fd, "Error", ZBX_CONST_STRING(fmt), ##__VA_ARGS__)
+#define rsm_warnf(log_fd, fmt, ...)	rsm_logf(log_fd, "Warning", ZBX_CONST_STRING(fmt), ##__VA_ARGS__)
+#define rsm_infof(log_fd, fmt, ...)	rsm_logf(log_fd, "Info", ZBX_CONST_STRING(fmt), ##__VA_ARGS__)
+static void	rsm_logf(FILE *log_fd, const char *prefix, const char *fmt, ...)
 {
 	va_list		args;
 	char		fmt_buf[ZBX_ERR_BUF_SIZE];
@@ -255,9 +256,9 @@ static void	zbx_rsm_logf(FILE *log_fd, const char *prefix, const char *fmt, ...)
 	va_end(args);
 }
 
-#define zbx_rsm_err(log_fd, text)	zbx_rsm_log(log_fd, "Error", text)
-#define zbx_rsm_info(log_fd, text)	zbx_rsm_log(log_fd, "Info", text)
-static void	zbx_rsm_log(FILE *log_fd, const char *prefix, const char *text)
+#define rsm_err(log_fd, text)	rsm_log(log_fd, "Error", text)
+#define rsm_info(log_fd, text)	rsm_log(log_fd, "Info", text)
+static void	rsm_log(FILE *log_fd, const char *prefix, const char *text)
 {
 	struct timeval	current_time;
 	struct tm	*tm;
@@ -328,7 +329,7 @@ static int	zbx_set_resolver_ns(ldns_resolver *res, const char *name, const char 
 		return FAIL;
 	}
 
-	zbx_rsm_infof(log_fd, "successfully using %s (%s)", name, ip);
+	rsm_infof(log_fd, "successfully using %s (%s)", name, ip);
 	return SUCCEED;
 }
 
@@ -343,16 +344,26 @@ static char	ip_support(char ipv4_enabled, char ipv6_enabled)
 	return 0;	/* no preference */
 }
 
-static int	zbx_create_resolver(ldns_resolver **res, const char *name, const char *ip, char proto,
-		char ipv4_enabled, char ipv6_enabled, unsigned int extras, FILE *log_fd, char *err, size_t err_size)
+static int	zbx_change_resolver(ldns_resolver *res, const char *name, const char *ip, char ipv4_enabled,
+		char ipv6_enabled, FILE *log_fd, char *err, size_t err_size)
 {
-	struct timeval	timeout = {.tv_usec = 0};
+	ldns_rdf	*pop;
+
+	/* remove current list of nameservers from resolver */
+	while (NULL != (pop = ldns_resolver_pop_nameserver(res)))
+		ldns_rdf_deep_free(pop);
+
+	return zbx_set_resolver_ns(res, name, ip, ipv4_enabled, ipv6_enabled, log_fd, err, err_size);
+}
+
+static int	zbx_create_resolver(ldns_resolver **res, const char *name, const char *ip, char proto,
+		char ipv4_enabled, char ipv6_enabled, unsigned int extras, int timeout, int tries, FILE *log_fd,
+		char *err, size_t err_size)
+{
+	struct timeval	tv = {.tv_usec = 0, .tv_sec = timeout};
 
 	if (NULL != *res)
-	{
-		zbx_strlcpy(err, "unfreed memory detected", err_size);
-		return FAIL;
-	}
+		return zbx_change_resolver(*res, name, ip, ipv4_enabled, ipv6_enabled, log_fd, err, err_size);
 
 	/* create a new resolver */
 	if (NULL == (*res = ldns_resolver_new()))
@@ -366,40 +377,27 @@ static int	zbx_create_resolver(ldns_resolver **res, const char *name, const char
 		return FAIL;
 
 	/* set timeout of one try */
-	timeout.tv_sec = (ZBX_RSM_UDP == proto ? ZBX_RSM_UDP_TIMEOUT : ZBX_RSM_TCP_TIMEOUT);
-	ldns_resolver_set_timeout(*res, timeout);
+	ldns_resolver_set_timeout(*res, tv);
 
 	/* set number of tries */
-	ldns_resolver_set_retry(*res, (ZBX_RSM_UDP == proto ? ZBX_RSM_UDP_RETRY : ZBX_RSM_TCP_RETRY));
+	ldns_resolver_set_retry(*res, tries);
 
 	/* set DNSSEC if needed */
-	if (0 != (extras & ZBX_RESOLVER_CHECK_BASIC))
+	if (0 != (extras & RESOLVER_EXTRAS_NONE))
 		ldns_resolver_set_dnssec(*res, 0);
-	else if (0 != (extras & ZBX_RESOLVER_CHECK_ADBIT))
+	else if (0 != (extras & RESOLVER_EXTRAS_DNSSEC))
 		ldns_resolver_set_dnssec(*res, 1);
 
 	/* unset the CD flag */
 	ldns_resolver_set_dnssec_cd(*res, false);
 
 	/* use TCP or UDP */
-	ldns_resolver_set_usevc(*res, (ZBX_RSM_UDP == proto ? false : true));
+	ldns_resolver_set_usevc(*res, (RSM_UDP == proto ? false : true));
 
 	/* set IP version support */
 	ldns_resolver_set_ip6(*res, ip_support(ipv4_enabled, ipv6_enabled));
 
 	return SUCCEED;
-}
-
-static int	zbx_change_resolver(ldns_resolver *res, const char *name, const char *ip, char ipv4_enabled,
-		char ipv6_enabled, FILE *log_fd, char *err, size_t err_size)
-{
-	ldns_rdf	*pop;
-
-	/* remove current list of nameservers from resolver */
-	while (NULL != (pop = ldns_resolver_pop_nameserver(res)))
-		ldns_rdf_deep_free(pop);
-
-	return zbx_set_resolver_ns(res, name, ip, ipv4_enabled, ipv6_enabled, log_fd, err, err_size);
 }
 
 /******************************************************************************
@@ -789,6 +787,8 @@ static int	zbx_resolver_error_to_ ## __interface (zbx_resolver_error_t err)	\
 			return ZBX_EC_ ## __interface ## _INTERNAL_GENERAL;		\
 		case ZBX_RESOLVER_NOREPLY:						\
 			return ZBX_EC_ ## __interface ## _RES_NOREPLY;			\
+		case ZBX_RESOLVER_SERVFAIL:						\
+			return ZBX_EC_ ## __interface ## _RES_SERVFAIL;			\
 		case ZBX_RESOLVER_NXDOMAIN:						\
 			return ZBX_EC_ ## __interface ## _RES_NXDOMAIN;			\
 		case ZBX_RESOLVER_CATCHALL:						\
@@ -928,7 +928,7 @@ const zbx_error_functions_t DNS[] = {
 	}
 };
 
-#define DNS_PROTO(RES)	ldns_resolver_usevc(RES) ? ZBX_RSM_TCP : ZBX_RSM_UDP
+#define DNS_PROTO(RES)	ldns_resolver_usevc(RES) ? RSM_TCP : RSM_UDP
 
 static int	zbx_verify_rrsigs(const ldns_pkt *pkt, ldns_rr_type covered_type, const ldns_rr_list *keys,
 		const char *ns, const char *ip, zbx_dnssec_error_t *dnssec_ec, char *err, size_t err_size)
@@ -1237,7 +1237,7 @@ static int	zbx_dns_in_a_query(ldns_pkt **pkt, ldns_resolver *res, const ldns_rdf
 			if (!is_tcp)
 				*ec = ZBX_NS_QUERY_NOREPLY;
 			/* TCP */
-			else if (sec >= ZBX_RSM_TCP_TIMEOUT * ZBX_RSM_TCP_RETRY)
+			else if (sec >= RSM_TCP_TIMEOUT * RSM_TCP_RETRY)
 				*ec = ZBX_NS_QUERY_TO;
 			else
 				*ec = ZBX_NS_QUERY_ECON;
@@ -1530,7 +1530,7 @@ static int	zbx_get_ns_ip_values(ldns_resolver *res, const char *ns, const char *
 			rr = ldns_rr_list_rr(nsset, zbx_random(ldns_rr_list_rr_count(nsset)));
 			host = ldns_rdf2str(ldns_rr_rdf(rr, 0));
 
-			zbx_rsm_infof(log_fd, "randomly chose ns %s", host);
+			rsm_infof(log_fd, "randomly chose ns %s", host);
 			if (SUCCEED != zbx_get_ts_from_host(host, &ts))
 			{
 				zbx_snprintf(err, err_size, "cannot extract Unix timestamp from %s", host);
@@ -1582,9 +1582,9 @@ static int	zbx_get_ns_ip_values(ldns_resolver *res, const char *ns, const char *
 	ret = SUCCEED;
 out:
 	if (NULL != upd)
-		zbx_rsm_infof(log_fd, "RSM DNS \"%s\" (%s) RTT:%d UPD:%d", ns, ip, *rtt, *upd);
+		rsm_infof(log_fd, "RSM DNS \"%s\" (%s) RTT:%d UPD:%d", ns, ip, *rtt, *upd);
 	else
-		zbx_rsm_infof(log_fd, "RSM DNS \"%s\" (%s) RTT:%d", ns, ip, *rtt);
+		rsm_infof(log_fd, "RSM DNS \"%s\" (%s) RTT:%d", ns, ip, *rtt);
 
 	if (NULL != nsset)
 		ldns_rr_list_deep_free(nsset);
@@ -1951,21 +1951,21 @@ static size_t	zbx_get_dns_items(const char *keyname, DC_ITEM *item, const char *
 		if (SUCCEED != substitute_key_macros(&in_item->key, NULL, item, NULL, MACRO_TYPE_ITEM_KEY, NULL, 0))
 		{
 			/* problem with key macros, skip it */
-			zbx_rsm_warnf(log_fd, "%s: cannot substitute key macros", in_item->key_orig);
+			rsm_warnf(log_fd, "%s: cannot substitute key macros", in_item->key_orig);
 			continue;
 		}
 
 		if (SUCCEED != zbx_parse_dns_item(in_item, host, sizeof(host)))
 		{
 			/* unexpected item key syntax, skip it */
-			zbx_rsm_warnf(log_fd, "%s: unexpected key syntax", in_item->key);
+			rsm_warnf(log_fd, "%s: unexpected key syntax", in_item->key);
 			continue;
 		}
 
 		if (0 != strcmp(host, domain))
 		{
 			/* first parameter does not match expected domain name, skip it */
-			zbx_rsm_warnf(log_fd, "%s: first parameter does not match host %s", in_item->key, domain);
+			rsm_warnf(log_fd, "%s: first parameter does not match host %s", in_item->key, domain);
 			continue;
 		}
 
@@ -2016,21 +2016,21 @@ static size_t	zbx_get_nameservers(const DC_ITEM *items, size_t items_num, zbx_ns
 
 		if (SUCCEED != parse_item_key(item->key, &request))
 		{
-			zbx_rsm_errf(log_fd, "%s: item key %s is incorrectly formatted", item->host.host,
+			rsm_errf(log_fd, "%s: item key %s is incorrectly formatted", item->host.host,
 					item->key_orig);
 			goto next;
 		}
 
 		if (NULL == (ns = get_rparam(&request, 1)) || '\0' == *ns)
 		{
-			zbx_rsm_errf(log_fd, "%s: cannot get Name Server from item %s (itemid:" ZBX_FS_UI64 ")",
+			rsm_errf(log_fd, "%s: cannot get Name Server from item %s (itemid:" ZBX_FS_UI64 ")",
 					item->host.host, item->key_orig, item->itemid);
 			goto next;
 		}
 
 		if (NULL == (ip = get_rparam(&request, 2)) || '\0' == *ip)
 		{
-			zbx_rsm_errf(log_fd, "%s: cannot get IP address from item %s (itemid:" ZBX_FS_UI64 ")",
+			rsm_errf(log_fd, "%s: cannot get IP address from item %s (itemid:" ZBX_FS_UI64 ")",
 					item->host.host, item->key_orig, item->itemid);
 			goto next;
 		}
@@ -2130,7 +2130,7 @@ static zbx_subtest_result_t	zbx_subtest_result(int rtt, int rtt_limit)
 	if (ZBX_NO_VALUE == rtt)
 			return ZBX_SUBTEST_SUCCESS;
 
-	if (rtt <= -1 && ZBX_EC_LAST_INTERNAL <= rtt)
+	if (rtt <= -1 && ZBX_EC_INTERNAL_LAST <= rtt)
 	{
 		zbx_dc_rsm_errors_inc();
 
@@ -2257,7 +2257,7 @@ static FILE	*open_item_log(const char *host, const char *tld, const char *name, 
 		p--;
 
 	if (CONFIG_LOG_FILE == p)
-		file_name = zbx_strdup(NULL, ZBX_RSM_DEFAULT_LOGDIR);
+		file_name = zbx_strdup(NULL, RSM_DEFAULT_LOGDIR);
 	else
 		file_name = zbx_dsprintf(NULL, "%.*s", p - CONFIG_LOG_FILE, CONFIG_LOG_FILE);
 
@@ -2366,14 +2366,14 @@ int	check_rsm_dns(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 	}
 
 	/* open log file */
-	if (NULL == (log_fd = open_item_log(item->host.host, domain, ZBX_DNS_LOG_PREFIX, (ZBX_RSM_UDP == proto ? "udp" : "tcp"),
+	if (NULL == (log_fd = open_item_log(item->host.host, domain, ZBX_DNS_LOG_PREFIX, (RSM_UDP == proto ? "udp" : "tcp"),
 			err, sizeof(err))))
 	{
 		SET_MSG_RESULT(result, zbx_strdup(NULL, err));
 		return SYSINFO_RET_FAIL;
 	}
 
-	zbx_rsm_info(log_fd, "START TEST");
+	rsm_info(log_fd, "START TEST");
 
 	if (SUCCEED != zbx_conf_int(&item->host.hostid, ZBX_MACRO_TLD_DNSSEC_ENABLED, &dnssec_enabled, 0,
 			err, sizeof(err)))
@@ -2419,7 +2419,7 @@ int	check_rsm_dns(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 		}
 	}
 
-	if (SUCCEED != zbx_conf_int(&item->host.hostid, ZBX_RSM_UDP == proto ? ZBX_MACRO_DNS_UDP_RTT :
+	if (SUCCEED != zbx_conf_int(&item->host.hostid, RSM_UDP == proto ? ZBX_MACRO_DNS_UDP_RTT :
 			ZBX_MACRO_DNS_TCP_RTT, &rtt_limit, 1, err, sizeof(err)))
 	{
 		SET_MSG_RESULT(result, zbx_strdup(NULL, err));
@@ -2432,10 +2432,12 @@ int	check_rsm_dns(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 		goto out;
 	}
 
-	extras = (dnssec_enabled ? ZBX_RESOLVER_CHECK_ADBIT : ZBX_RESOLVER_CHECK_BASIC);
+	extras = (dnssec_enabled ? RESOLVER_EXTRAS_DNSSEC : RESOLVER_EXTRAS_NONE);
 
 	/* create resolver */
 	if (SUCCEED != zbx_create_resolver(&res, "resolver", res_ip, proto, ipv4_enabled, ipv6_enabled, extras,
+			(RSM_UDP == proto ? RSM_UDP_TIMEOUT : RSM_TCP_TIMEOUT),
+			(RSM_UDP == proto ? RSM_UDP_RETRY : RSM_TCP_RETRY),
 			log_fd, err, sizeof(err)))
 	{
 		SET_MSG_RESULT(result, zbx_dsprintf(NULL, "cannot create resolver: %s", err));
@@ -2463,7 +2465,7 @@ int	check_rsm_dns(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 
 		int	res_ec;
 
-		zbx_rsm_err(log_fd, err);
+		rsm_err(log_fd, err);
 
 		res_ec = DNS[DNS_PROTO(res)].dnskeys_error(ec_dnskeys);
 
@@ -2508,7 +2510,7 @@ int	check_rsm_dns(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 
 				if (-1 == (rv_fd = pipe(fd)) || -1 == (rv_log_pipe = pipe(log_pipe)))
 				{
-					zbx_rsm_errf(log_fd, "cannot create pipe: %s", zbx_strerror(errno));
+					rsm_errf(log_fd, "cannot create pipe: %s", zbx_strerror(errno));
 
 					if (-1 == rv_log_pipe)
 					{
@@ -2524,7 +2526,7 @@ int	check_rsm_dns(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 
 				if (0 > (pid = zbx_child_fork()))
 				{
-					zbx_rsm_errf(log_fd, "cannot create process: %s", zbx_strerror(errno));
+					rsm_errf(log_fd, "cannot create process: %s", zbx_strerror(errno));
 
 					close(fd[0]);
 					close(fd[1]);
@@ -2548,24 +2550,24 @@ int	check_rsm_dns(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 
 					if (NULL == (th_log_fd = fdopen(log_pipe[1], "w")))
 					{
-						zbx_rsm_errf(log_fd, "cannot open log pipe: %s", zbx_strerror(errno));
+						rsm_errf(log_fd, "cannot open log pipe: %s", zbx_strerror(errno));
 
 						nss[i].ips[j].rtt = DNS[DNS_PROTO(res)].ns_query_error(ZBX_NS_QUERY_INTERNAL);
 					}
 
 					if (NULL != th_log_fd && SUCCEED != zbx_get_ns_ip_values(res, nss[i].name,
 							nss[i].ips[j].ip, keys, testprefix, domain, th_log_fd,
-							&nss[i].ips[j].rtt, (ZBX_RSM_UDP == proto && 0 != rdds_enabled ?
+							&nss[i].ips[j].rtt, (RSM_UDP == proto && 0 != rdds_enabled ?
 							&nss[i].ips[j].upd : NULL), ipv4_enabled, ipv6_enabled,
 							epp_enabled, err, sizeof(err)))
 					{
-						zbx_rsm_err(th_log_fd, err);
+						rsm_err(th_log_fd, err);
 					}
 
 					pack_values(i, j, nss[i].ips[j].rtt, nss[i].ips[j].upd, buf, sizeof(buf));
 
 					if (-1 == write(fd[1], buf, strlen(buf) + 1))
-						zbx_rsm_errf(th_log_fd, "cannot write to pipe: %s", zbx_strerror(errno));
+						rsm_errf(th_log_fd, "cannot write to pipe: %s", zbx_strerror(errno));
 
 					fclose(th_log_fd);
 					close(fd[1]);
@@ -2607,26 +2609,26 @@ int	check_rsm_dns(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 				}
 				else
 				{
-					zbx_rsm_errf(log_fd, "cannot unpack values (unpacked %d, need %d)", rv,
+					rsm_errf(log_fd, "cannot unpack values (unpacked %d, need %d)", rv,
 							PACK_NUM_VARS);
 				}
 			}
 			else
-				zbx_rsm_errf(log_fd, "cannot read from pipe: %s", zbx_strerror(errno));
+				rsm_errf(log_fd, "cannot read from pipe: %s", zbx_strerror(errno));
 
 			while (0 != (bytes = read(threads[th_num].log_fd, buf, sizeof(buf))))
 			{
 				if (-1 == bytes)
 				{
-					zbx_rsm_errf(log_fd, "cannot read logs from pipe: %s", zbx_strerror(errno));
+					rsm_errf(log_fd, "cannot read logs from pipe: %s", zbx_strerror(errno));
 					break;
 				}
 
-				zbx_rsm_dump(log_fd, "%.*s", bytes, buf);
+				rsm_dump(log_fd, "%.*s", bytes, buf);
 			}
 
 			if (0 >= waitpid(threads[th_num].pid, &status, 0))
-				zbx_rsm_err(log_fd, "error on thread waiting");
+				rsm_err(log_fd, "error on thread waiting");
 
 			close(threads[th_num].fd);
 			close(threads[th_num].log_fd);
@@ -2660,9 +2662,9 @@ int	check_rsm_dns(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 	zbx_add_value_uint(item, item->nextcheck, ok_nss_num);
 out:
 	if (0 != ISSET_MSG(result))
-		zbx_rsm_err(log_fd, result->msg);
+		rsm_err(log_fd, result->msg);
 
-	zbx_rsm_info(log_fd, "END TEST");
+	rsm_info(log_fd, "END TEST");
 
 	if (0 != nss_num)
 	{
@@ -2716,7 +2718,7 @@ static void	zbx_get_rdds43_nss(zbx_vector_str_t *nss, const char *recv_buf, cons
 		if (sizeof(ns_buf) == ns_buf_len)
 		{
 			/* internal error, ns buffer not enough */
-			zbx_rsm_errf(log_fd, "RSM RDDS internal error, NS buffer too small (%u bytes)"
+			rsm_errf(log_fd, "RSM RDDS internal error, NS buffer too small (%u bytes)"
 					" for host in \"%.*s...\"", sizeof(ns_buf), sizeof(ns_buf), p);
 			continue;
 		}
@@ -2758,21 +2760,21 @@ static size_t	zbx_get_rdds_items(const char *keyname, DC_ITEM *item, const char 
 		if (SUCCEED != substitute_key_macros(&in_item->key, NULL, item, NULL, MACRO_TYPE_ITEM_KEY, NULL, 0))
 		{
 			/* problem with key macros, skip it */
-			zbx_rsm_warnf(log_fd, "%s: cannot substitute key macros", in_item->key_orig);
+			rsm_warnf(log_fd, "%s: cannot substitute key macros", in_item->key_orig);
 			continue;
 		}
 
 		if (SUCCEED != zbx_parse_rdds_item(in_item, host, sizeof(host)))
 		{
 			/* unexpected item key syntax, skip it */
-			zbx_rsm_warnf(log_fd, "%s: unexpected key syntax", in_item->key);
+			rsm_warnf(log_fd, "%s: unexpected key syntax", in_item->key);
 			continue;
 		}
 
 		if (0 != strcmp(host, domain))
 		{
 			/* first parameter does not match expected domain name, skip it */
-			zbx_rsm_warnf(log_fd, "%s: first parameter does not match host %s", in_item->key, domain);
+			rsm_warnf(log_fd, "%s: first parameter does not match host %s", in_item->key, domain);
 			continue;
 		}
 
@@ -2927,6 +2929,9 @@ static int	zbx_resolver_resolve_host(ldns_resolver *res, const char *host, zbx_v
 
 			switch (rcode)
 			{
+				case LDNS_RCODE_SERVFAIL:
+					*ec_res = ZBX_RESOLVER_SERVFAIL;
+					break;
 				case LDNS_RCODE_NXDOMAIN:
 					*ec_res = ZBX_RESOLVER_NXDOMAIN;
 					break;
@@ -3574,12 +3579,12 @@ int	check_rsm_rdds(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 	zbx_vector_str_create(&ips80);
 	zbx_vector_str_create(&nss);
 
-	zbx_rsm_info(log_fd, "START TEST");
+	rsm_info(log_fd, "START TEST");
 
 	if (SUCCEED != zbx_conf_int(&item->host.hostid, ZBX_MACRO_RDDS_ENABLED, &rdds_enabled, 0, err, sizeof(err)) ||
 			0 == rdds_enabled)
 	{
-		zbx_rsm_info(log_fd, "RDDS disabled on this probe");
+		rsm_info(log_fd, "RDDS disabled on this probe");
 		ret = SYSINFO_RET_OK;
 		goto out;
 	}
@@ -3587,7 +3592,7 @@ int	check_rsm_rdds(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 	if (SUCCEED != zbx_conf_int(&item->host.hostid, ZBX_MACRO_TLD_RDDS_ENABLED, &rdds_enabled, 0,
 			err, sizeof(err)) || 0 == rdds_enabled)
 	{
-		zbx_rsm_info(log_fd, "RDDS disabled on this TLD");
+		rsm_info(log_fd, "RDDS disabled on this TLD");
 		ret = SYSINFO_RET_OK;
 		goto out;
 	}
@@ -3703,11 +3708,11 @@ int	check_rsm_rdds(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 		goto out;
 	}
 
-	extras = ZBX_RESOLVER_CHECK_BASIC;
+	extras = RESOLVER_EXTRAS_NONE;
 
 	/* create resolver */
-	if (SUCCEED != zbx_create_resolver(&res, "resolver", res_ip, ZBX_RSM_TCP, ipv4_enabled, ipv6_enabled, extras,
-			log_fd, err, sizeof(err)))
+	if (SUCCEED != zbx_create_resolver(&res, "resolver", res_ip, RSM_TCP, ipv4_enabled, ipv6_enabled, extras,
+			RSM_TCP_TIMEOUT, RSM_TCP_RETRY, log_fd, err, sizeof(err)))
 	{
 		SET_MSG_RESULT(result, zbx_dsprintf(NULL, "cannot create resolver: %s", err));
 		goto out;
@@ -3731,7 +3736,7 @@ int	check_rsm_rdds(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 	if (SUCCEED != zbx_resolver_resolve_host(res, random_host, &ips43, ipv_flags, log_fd, &ec_res, err, sizeof(err)))
 	{
 		rtt43 = zbx_resolver_error_to_RDDS43(ec_res);
-		zbx_rsm_errf(log_fd, "RDDS43 \"%s\": %s", random_host, err);
+		rsm_errf(log_fd, "RDDS43 \"%s\": %s", random_host, err);
 	}
 
 	/* if RDDS43 fails we should still process RDDS80 */
@@ -3741,7 +3746,7 @@ int	check_rsm_rdds(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 		if (0 == ips43.values_num)
 		{
 			rtt43 = ZBX_EC_RDDS43_INTERNAL_IP_UNSUP;
-			zbx_rsm_errf(log_fd, "RDDS43 \"%s\": IP address(es) of host not supported by the Probe",
+			rsm_errf(log_fd, "RDDS43 \"%s\": IP address(es) of host not supported by the Probe",
 					random_host);
 		}
 	}
@@ -3757,13 +3762,13 @@ int	check_rsm_rdds(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 		else
 			zbx_strlcpy(testname, testprefix, sizeof(testname));
 
-		zbx_rsm_infof(log_fd, "start RDDS43 test (ip %s, request \"%s\", expected prefix \"%s\")",
+		rsm_infof(log_fd, "start RDDS43 test (ip %s, request \"%s\", expected prefix \"%s\")",
 				ip43, testname, rdds_ns_string);
 
-		if (SUCCEED != zbx_rdds43_test(testname, ip43, 43, ZBX_RSM_TCP_TIMEOUT, &answer, &rtt43,
+		if (SUCCEED != zbx_rdds43_test(testname, ip43, 43, RSM_TCP_TIMEOUT, &answer, &rtt43,
 				err, sizeof(err)))
 		{
-			zbx_rsm_errf(log_fd, "RDDS43 of \"%s\" (%s) failed: %s", random_host, ip43, err);
+			rsm_errf(log_fd, "RDDS43 of \"%s\" (%s) failed: %s", random_host, ip43, err);
 		}
 	}
 
@@ -3774,7 +3779,7 @@ int	check_rsm_rdds(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 		if (0 == nss.values_num)
 		{
 			rtt43 = ZBX_EC_RDDS43_NONS;
-			zbx_rsm_errf(log_fd, "no Name Servers found in the output of RDDS43 server \"%s\""
+			rsm_errf(log_fd, "no Name Servers found in the output of RDDS43 server \"%s\""
 					" (%s) for query \"%s\" (expecting prefix \"%s\")",
 					random_host, ip43, testname, rdds_ns_string);
 		}
@@ -3791,12 +3796,12 @@ int	check_rsm_rdds(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 			i = zbx_random(nss.values_num);
 			random_ns = nss.values[i];
 
-			zbx_rsm_infof(log_fd, "randomly selected Name Server server \"%s\"", random_ns);
+			rsm_infof(log_fd, "randomly selected Name Server server \"%s\"", random_ns);
 
 			if (SUCCEED != zbx_get_ts_from_host(random_ns, &ts))
 			{
 				upd43 = ZBX_EC_RDDS43_INTERNAL_GENERAL;
-				zbx_rsm_errf(log_fd, "cannot extract Unix timestamp from Name Server \"%s\"", random_ns);
+				rsm_errf(log_fd, "cannot extract Unix timestamp from Name Server \"%s\"", random_ns);
 			}
 
 			if (upd43 == ZBX_NO_VALUE)
@@ -3805,7 +3810,7 @@ int	check_rsm_rdds(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 
 				if (0 > now - ts)
 				{
-					zbx_rsm_errf(log_fd, "Unix timestamp of Name Server \"%s\" is in the future"
+					rsm_errf(log_fd, "Unix timestamp of Name Server \"%s\" is in the future"
 							" (current: %lu)", random_ns, now);
 					upd43 = ZBX_EC_RDDS43_INTERNAL_GENERAL;
 				}
@@ -3817,12 +3822,12 @@ int	check_rsm_rdds(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 				upd43 = now - ts;
 			}
 
-			zbx_rsm_infof(log_fd, "===>\n%.*s\n<=== end RDDS43 test (rtt:%d upd43:%d)",
+			rsm_infof(log_fd, "===>\n%.*s\n<=== end RDDS43 test (rtt:%d upd43:%d)",
 					ZBX_RDDS_PREVIEW_SIZE, answer, rtt43, upd43);
 		}
 		else
 		{
-			zbx_rsm_infof(log_fd, "===>\n%.*s\n<=== end RDDS43 test (rtt:%d)",
+			rsm_infof(log_fd, "===>\n%.*s\n<=== end RDDS43 test (rtt:%d)",
 					ZBX_RDDS_PREVIEW_SIZE, answer, rtt43);
 		}
 	}
@@ -3831,20 +3836,20 @@ int	check_rsm_rdds(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 	i = zbx_random(hosts80.values_num);
 	random_host = hosts80.values[i];
 
-	zbx_rsm_infof(log_fd, "start RDDS80 test (host %s)", random_host);
+	rsm_infof(log_fd, "start RDDS80 test (host %s)", random_host);
 
 	/* start RDDS80 test, resolve host to ips */
 	if (SUCCEED != zbx_resolver_resolve_host(res, random_host, &ips80, ipv_flags, log_fd, &ec_res, err, sizeof(err)))
 	{
 		rtt80 = zbx_resolver_error_to_RDDS80(ec_res);
-		zbx_rsm_errf(log_fd, "RDDS80 \"%s\": %s", random_host, err);
+		rsm_errf(log_fd, "RDDS80 \"%s\": %s", random_host, err);
 		goto out;
 	}
 
 	if (0 == ips80.values_num)
 	{
 		rtt80 = ZBX_EC_RDDS80_INTERNAL_IP_UNSUP;
-		zbx_rsm_errf(log_fd, "RDDS80 \"%s\": IP address(es) of host not supported by the Probe", random_host);
+		rsm_errf(log_fd, "RDDS80 \"%s\": IP address(es) of host not supported by the Probe", random_host);
 		goto out;
 	}
 
@@ -3855,7 +3860,7 @@ int	check_rsm_rdds(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 	if (SUCCEED != zbx_validate_ip(ip80, ipv4_enabled, ipv6_enabled, NULL, &is_ipv4))
 	{
 		rtt80 = ZBX_EC_RDDS80_INTERNAL_GENERAL;
-		zbx_rsm_errf(log_fd, "internal error, selected unsupported IP of \"%s\": \"%s\"", random_host, ip80);
+		rsm_errf(log_fd, "internal error, selected unsupported IP of \"%s\": \"%s\"", random_host, ip80);
 		goto out;
 	}
 
@@ -3864,19 +3869,19 @@ int	check_rsm_rdds(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 	else
 		zbx_snprintf(testname, sizeof(testname), "http://[%s]", ip80);
 
-	if (SUCCEED != zbx_http_test(random_host, testname, ZBX_RSM_TCP_TIMEOUT, maxredirs, &ec_http, &rtt80, NULL,
+	if (SUCCEED != zbx_http_test(random_host, testname, RSM_TCP_TIMEOUT, maxredirs, &ec_http, &rtt80, NULL,
 			curl_devnull, err, sizeof(err)))
 	{
 		rtt80 = zbx_http_error_to_RDDS80(ec_http);
-		zbx_rsm_errf(log_fd, "RDDS80 of \"%s\" (%s) failed: %s (%d)", random_host, ip80, err, rtt80);
+		rsm_errf(log_fd, "RDDS80 of \"%s\" (%s) failed: %s (%d)", random_host, ip80, err, rtt80);
 	}
 
-	zbx_rsm_infof(log_fd, "end RDDS80 test (rtt:%d)", rtt80);
+	rsm_infof(log_fd, "end RDDS80 test (rtt:%d)", rtt80);
 out:
 	if (0 != ISSET_MSG(result))
-		zbx_rsm_err(log_fd, result->msg);
+		rsm_err(log_fd, result->msg);
 
-	zbx_rsm_info(log_fd, "END TEST");
+	rsm_info(log_fd, "END TEST");
 
 	if (SYSINFO_RET_OK == ret)
 	{
@@ -4091,7 +4096,7 @@ int	check_rsm_rdap(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 
 	zbx_vector_str_create(&ips);
 
-	zbx_rsm_info(log_fd, "START TEST");
+	rsm_info(log_fd, "START TEST");
 
 	/* get items */
 	if (SUCCEED != zbx_get_rdap_items(item->host.host, &ip_item, &rtt_item))
@@ -4102,23 +4107,23 @@ int	check_rsm_rdap(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 
 	if (0 == probe_enabled)
 	{
-		zbx_rsm_info(log_fd, "RDAP disabled on this probe");
+		rsm_info(log_fd, "RDAP disabled on this probe");
 		ret = SYSINFO_RET_OK;
 		goto out;
 	}
 
 	if (0 == tld_enabled)
 	{
-		zbx_rsm_info(log_fd, "RDAP disabled on this TLD");
+		rsm_info(log_fd, "RDAP disabled on this TLD");
 		ret = SYSINFO_RET_OK;
 		goto out;
 	}
 
-	extras = ZBX_RESOLVER_CHECK_ADBIT;
+	extras = RESOLVER_EXTRAS_DNSSEC;
 
 	/* create resolver */
-	if (SUCCEED != zbx_create_resolver(&res, "resolver", res_ip, ZBX_RSM_TCP, ipv4_enabled, ipv6_enabled, extras,
-			log_fd, err, sizeof(err)))
+	if (SUCCEED != zbx_create_resolver(&res, "resolver", res_ip, RSM_TCP, ipv4_enabled, ipv6_enabled, extras,
+			RSM_TCP_TIMEOUT, RSM_TCP_RETRY, log_fd, err, sizeof(err)))
 	{
 		SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Cannot create resolver: %s.", err));
 		goto out;
@@ -4131,14 +4136,14 @@ int	check_rsm_rdap(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 
 	if (0 == strcmp(base_url, "not listed"))
 	{
-		zbx_rsm_err(log_fd, "The TLD is not listed in the Bootstrap Service Registry for Domain Name Space");
+		rsm_err(log_fd, "The TLD is not listed in the Bootstrap Service Registry for Domain Name Space");
 		rtt = ZBX_EC_RDAP_INTERNAL_NOTLISTED;
 		goto out;
 	}
 
 	if (0 == strcmp(base_url, "no https"))
 	{
-		zbx_rsm_err(log_fd, "The RDAP base URL obtained from Bootstrap Service Registry for Domain Name Space"
+		rsm_err(log_fd, "The RDAP base URL obtained from Bootstrap Service Registry for Domain Name Space"
 				" does not use HTTPS");
 		rtt = ZBX_EC_RDAP_INTERNAL_NOHTTPS;
 		goto out;
@@ -4152,7 +4157,7 @@ int	check_rsm_rdap(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 	if (SUCCEED != zbx_split_url(base_url, &proto, &domain_part, &port, &prefix, err, sizeof(err)))
 	{
 		rtt = ZBX_EC_RDAP_INTERNAL_GENERAL;
-		zbx_rsm_errf(log_fd, "RDAP \"%s\": %s", base_url, err);
+		rsm_errf(log_fd, "RDAP \"%s\": %s", base_url, err);
 		goto out;
 	}
 
@@ -4160,14 +4165,14 @@ int	check_rsm_rdap(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 	if (SUCCEED != zbx_resolver_resolve_host(res, domain_part, &ips, ipv_flags, log_fd, &ec_res, err, sizeof(err)))
 	{
 		rtt = zbx_resolver_error_to_RDAP(ec_res);
-		zbx_rsm_errf(log_fd, "RDAP \"%s\": %s", base_url, err);
+		rsm_errf(log_fd, "RDAP \"%s\": %s", base_url, err);
 		goto out;
 	}
 
 	if (0 == ips.values_num)
 	{
 		rtt = ZBX_EC_RDAP_INTERNAL_IP_UNSUP;
-		zbx_rsm_errf(log_fd, "RDAP \"%s\": IP address(es) of host \"%s\" are not supported by the Probe",
+		rsm_errf(log_fd, "RDAP \"%s\": IP address(es) of host \"%s\" are not supported by the Probe",
 				base_url, domain_part);
 		goto out;
 	}
@@ -4178,7 +4183,7 @@ int	check_rsm_rdap(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 	if (SUCCEED != zbx_validate_ip(ip, ipv4_enabled, ipv6_enabled, NULL, &is_ipv4))
 	{
 		rtt = ZBX_EC_RDAP_INTERNAL_GENERAL;
-		zbx_rsm_errf(log_fd, "internal error, selected unsupported IP of \"%s\": \"%s\"", domain_part, ip);
+		rsm_errf(log_fd, "internal error, selected unsupported IP of \"%s\": \"%s\"", domain_part, ip);
 		goto out;
 	}
 
@@ -4195,46 +4200,46 @@ int	check_rsm_rdap(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 	else
 		full_url = zbx_dsprintf(full_url, "%s%s:%d%s%s/%s", proto, ip, port, prefix, rdap_prefix, test_domain);
 
-	zbx_rsm_infof(log_fd, "the domain in base URL \"%s\" was resolved to %s, using full URL \"%s\".",
+	rsm_infof(log_fd, "the domain in base URL \"%s\" was resolved to %s, using full URL \"%s\".",
 			base_url, ip, full_url);
 
-	if (SUCCEED != zbx_http_test(domain_part, full_url, ZBX_RSM_TCP_TIMEOUT, maxredirs, &ec_http, &rtt, &data,
+	if (SUCCEED != zbx_http_test(domain_part, full_url, RSM_TCP_TIMEOUT, maxredirs, &ec_http, &rtt, &data,
 			curl_memory, err, sizeof(err)))
 	{
 		rtt = zbx_http_error_to_RDAP(ec_http);
-		zbx_rsm_errf(log_fd, "test of \"%s\" (%s) failed: %s (%d)", base_url, ip, err, rtt);
+		rsm_errf(log_fd, "test of \"%s\" (%s) failed: %s (%d)", base_url, ip, err, rtt);
 		goto out;
 	}
 
-	zbx_rsm_infof(log_fd, "got response ===>\n%.*s\n<===", ZBX_RDDS_PREVIEW_SIZE, ZBX_NULL2STR(data.buf));
+	rsm_infof(log_fd, "got response ===>\n%.*s\n<===", ZBX_RDDS_PREVIEW_SIZE, ZBX_NULL2STR(data.buf));
 
 	if (NULL == data.buf || '\0' == *data.buf || SUCCEED != zbx_json_open(data.buf, &jp))
 	{
 		rtt = ZBX_EC_RDAP_EJSON;
-		zbx_rsm_errf(log_fd, "Invalid JSON format in response of \"%s\" (%s)", base_url, ip);
+		rsm_errf(log_fd, "Invalid JSON format in response of \"%s\" (%s)", base_url, ip);
 		goto out;
 	}
 
 	if (SUCCEED != zbx_json_value_by_name_dyn(&jp, "ldhName", &value_str, &value_alloc))
 	{
 		rtt = ZBX_EC_RDAP_NONAME;
-		zbx_rsm_errf(log_fd, "ldhName member not found in response of \"%s\" (%s)", base_url, ip);
+		rsm_errf(log_fd, "ldhName member not found in response of \"%s\" (%s)", base_url, ip);
 		goto out;
 	}
 
 	if (NULL == value_str || 0 != strcmp(value_str, test_domain))
 	{
 		rtt = ZBX_EC_RDAP_ENAME;
-		zbx_rsm_errf(log_fd, "ldhName member doesn't match query in response of \"%s\" (%s)", base_url, ip);
+		rsm_errf(log_fd, "ldhName member doesn't match query in response of \"%s\" (%s)", base_url, ip);
 		goto out;
 	}
 
-	zbx_rsm_infof(log_fd, "end test of \"%s\" (%s) (rtt:%d)", base_url, ZBX_NULL2STR(ip), rtt);
+	rsm_infof(log_fd, "end test of \"%s\" (%s) (rtt:%d)", base_url, ZBX_NULL2STR(ip), rtt);
 out:
-	zbx_rsm_info(log_fd, "END TEST");
-
 	if (0 != ISSET_MSG(result))
-		zbx_rsm_err(log_fd, result->msg);
+		rsm_err(log_fd, result->msg);
+
+	rsm_info(log_fd, "END TEST");
 
 	if (SYSINFO_RET_OK == ret && ZBX_NO_VALUE != rtt)
 	{
@@ -4326,7 +4331,7 @@ static int	epp_recv_message(SSL *ssl, char **data, size_t *data_len, FILE *log_f
 
 	(*data)[*data_len - 1] = '\0';
 
-	zbx_rsm_infof(log_fd, "received message ===>\n%s\n<===", *data);
+	rsm_infof(log_fd, "received message ===>\n%s\n<===", *data);
 
 	ret = SUCCEED;
 out:
@@ -4377,7 +4382,7 @@ static int	epp_send_message(SSL *ssl, const char *data, int data_size, FILE *log
 	if (SUCCEED != epp_send_buf(ssl, data, data_size))
 		goto out;
 
-	zbx_rsm_infof(log_fd, "sent message ===>\n%s\n<===", data);
+	rsm_infof(log_fd, "sent message ===>\n%s\n<===", data);
 
 	ret = SUCCEED;
 out:
@@ -4795,21 +4800,21 @@ static size_t	zbx_get_epp_items(const char *keyname, DC_ITEM *item, const char *
 		if (SUCCEED != substitute_key_macros(&in_item->key, NULL, item, NULL, MACRO_TYPE_ITEM_KEY, NULL, 0))
 		{
 			/* problem with key macros, skip it */
-			zbx_rsm_warnf(log_fd, "%s: cannot substitute key macros", in_item->key_orig);
+			rsm_warnf(log_fd, "%s: cannot substitute key macros", in_item->key_orig);
 			continue;
 		}
 
 		if (SUCCEED != zbx_parse_epp_item(in_item, host, sizeof(host)))
 		{
 			/* unexpected item key syntax, skip it */
-			zbx_rsm_warnf(log_fd, "%s: unexpected key syntax", in_item->key);
+			rsm_warnf(log_fd, "%s: unexpected key syntax", in_item->key);
 			continue;
 		}
 
 		if (0 != strcmp(host, domain))
 		{
 			/* first parameter does not match expected domain name, skip it */
-			zbx_rsm_warnf(log_fd, "%s: first parameter does not match host %s", in_item->key, domain);
+			rsm_warnf(log_fd, "%s: first parameter does not match host %s", in_item->key, domain);
 			continue;
 		}
 
@@ -5220,7 +5225,7 @@ int	check_rsm_epp(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 		return SYSINFO_RET_FAIL;
 	}
 
-	zbx_rsm_info(log_fd, "START TEST");
+	rsm_info(log_fd, "START TEST");
 
 	if ('\0' == *epp_passphrase)
 	{
@@ -5255,7 +5260,7 @@ int	check_rsm_epp(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 
 	if (0 == epp_enabled)
 	{
-		zbx_rsm_info(log_fd, "EPP disabled on this probe");
+		rsm_info(log_fd, "EPP disabled on this probe");
 		ret = SYSINFO_RET_OK;
 		goto out;
 	}
@@ -5268,7 +5273,7 @@ int	check_rsm_epp(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 
 	if (0 == epp_enabled)
 	{
-		zbx_rsm_info(log_fd, "EPP disabled on this TLD");
+		rsm_info(log_fd, "EPP disabled on this TLD");
 		ret = SYSINFO_RET_OK;
 		goto out;
 	}
@@ -5410,12 +5415,12 @@ int	check_rsm_epp(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 		goto out;
 	}
 
-	/* TODO: find out if ZBX_RESOLVER_CHECK_ADBIT is correct choice */
-	extras = ZBX_RESOLVER_CHECK_ADBIT;
+	/* TODO: find out if RESOLVER_EXTRAS_DNSSEC is correct choice */
+	extras = RESOLVER_EXTRAS_DNSSEC;
 
 	/* create resolver */
-	if (SUCCEED != zbx_create_resolver(&res, "resolver", res_ip, ZBX_RSM_TCP, ipv4_enabled, ipv6_enabled, extras,
-			log_fd, err, sizeof(err)))
+	if (SUCCEED != zbx_create_resolver(&res, "resolver", res_ip, RSM_TCP, ipv4_enabled, ipv6_enabled, extras,
+			RSM_TCP_TIMEOUT, RSM_TCP_RETRY, log_fd, err, sizeof(err)))
 	{
 		SET_MSG_RESULT(result, zbx_dsprintf(NULL, "cannot create resolver: %s", err));
 		goto out;
@@ -5427,7 +5432,7 @@ int	check_rsm_epp(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 	if (SUCCEED != rsm_ssl_init())
 	{
 		rtt1 = rtt2 = rtt3 = ZBX_EC_EPP_INTERNAL_GENERAL;
-		zbx_rsm_err(log_fd, "cannot initialize SSL library");
+		rsm_err(log_fd, "cannot initialize SSL library");
 		goto out;
 	}
 
@@ -5438,7 +5443,7 @@ int	check_rsm_epp(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 	if (NULL == (ctx = SSL_CTX_new(method)))
 	{
 		rtt1 = rtt2 = rtt3 = ZBX_EC_EPP_INTERNAL_GENERAL;
-		zbx_rsm_err(log_fd, "cannot create a new SSL context structure");
+		rsm_err(log_fd, "cannot create a new SSL context structure");
 		goto out;
 	}
 
@@ -5449,7 +5454,7 @@ int	check_rsm_epp(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 	if (NULL == (ssl = SSL_new(ctx)))
 	{
 		rtt1 = rtt2 = rtt3 = ZBX_EC_EPP_INTERNAL_GENERAL;
-		zbx_rsm_err(log_fd, "cannot create a new SSL context structure");
+		rsm_err(log_fd, "cannot create a new SSL context structure");
 		goto out;
 	}
 
@@ -5463,7 +5468,7 @@ int	check_rsm_epp(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 			log_fd, &ec_res, err, sizeof(err)))
 	{
 		rtt1 = rtt2 = rtt3 = (ZBX_RESOLVER_NOREPLY != ec_res ? ZBX_EC_EPP_NO_IP : ZBX_EC_EPP_INTERNAL_GENERAL);
-		zbx_rsm_errf(log_fd, "\"%s\": %s", random_host, err);
+		rsm_errf(log_fd, "\"%s\": %s", random_host, err);
 		goto out;
 	}
 
@@ -5472,7 +5477,7 @@ int	check_rsm_epp(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 	if (0 == epp_ips.values_num)
 	{
 		rtt1 = rtt2 = rtt3 = ZBX_EC_RDAP_INTERNAL_IP_UNSUP;
-		zbx_rsm_errf(log_fd, "EPP \"%s\": IP address(es) of host not supported by this probe", random_host);
+		rsm_errf(log_fd, "EPP \"%s\": IP address(es) of host not supported by this probe", random_host);
 		goto out;
 	}
 
@@ -5481,11 +5486,11 @@ int	check_rsm_epp(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 	ip = epp_ips.values[i];
 
 	/* make the underlying TCP socket connection */
-	if (SUCCEED != zbx_tcp_connect(&sock, NULL, ip, epp_port, ZBX_RSM_TCP_TIMEOUT,
+	if (SUCCEED != zbx_tcp_connect(&sock, NULL, ip, epp_port, RSM_TCP_TIMEOUT,
 			ZBX_TCP_SEC_UNENCRYPTED, NULL, NULL))
 	{
 		rtt1 = rtt2 = rtt3 = ZBX_EC_EPP_CONNECT;
-		zbx_rsm_errf(log_fd, "cannot connect to EPP server %s:%d", ip, epp_port);
+		rsm_errf(log_fd, "cannot connect to EPP server %s:%d", ip, epp_port);
 		goto out;
 	}
 
@@ -5493,7 +5498,7 @@ int	check_rsm_epp(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 	if (1 != SSL_set_fd(ssl, sock.socket))
 	{
 		rtt1 = rtt2 = rtt3 = ZBX_EC_EPP_INTERNAL_GENERAL;
-		zbx_rsm_err(log_fd, "cannot attach TCP socket to SSL session");
+		rsm_err(log_fd, "cannot attach TCP socket to SSL session");
 		goto out;
 	}
 
@@ -5502,7 +5507,7 @@ int	check_rsm_epp(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 	if (SUCCEED != zbx_ssl_attach_cert(ssl, epp_cert, epp_cert_size, &rtt, err, sizeof(err)))
 	{
 		rtt1 = rtt2 = rtt3 = rtt;
-		zbx_rsm_errf(log_fd, "cannot attach client certificate to SSL session: %s", err);
+		rsm_errf(log_fd, "cannot attach client certificate to SSL session: %s", err);
 		goto out;
 	}
 
@@ -5512,7 +5517,7 @@ int	check_rsm_epp(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 			err, sizeof(err)))
 	{
 		rtt1 = rtt2 = rtt3 = ZBX_EC_EPP_INTERNAL_GENERAL;
-		zbx_rsm_errf(log_fd, "cannot decrypt client private key: %s", err);
+		rsm_errf(log_fd, "cannot decrypt client private key: %s", err);
 		goto out;
 	}
 
@@ -5524,7 +5529,7 @@ int	check_rsm_epp(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 	if (SUCCEED != rv)
 	{
 		rtt1 = rtt2 = rtt3 = rtt;
-		zbx_rsm_errf(log_fd, "cannot attach client private key to SSL session: %s", err);
+		rsm_errf(log_fd, "cannot attach client private key to SSL session: %s", err);
 		goto out;
 	}
 
@@ -5533,7 +5538,7 @@ int	check_rsm_epp(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 	{
 		rtt1 = rtt2 = rtt3 = ZBX_EC_EPP_INTERNAL_GENERAL;
 		zbx_ssl_get_error(err, sizeof(err));
-		zbx_rsm_errf(log_fd, "cannot build an SSL connection to %s:%d: %s", ip, epp_port, err);
+		rsm_errf(log_fd, "cannot build an SSL connection to %s:%d: %s", ip, epp_port, err);
 		goto out;
 	}
 
@@ -5541,25 +5546,25 @@ int	check_rsm_epp(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 	if (NULL == (epp_server_x509 = SSL_get_peer_certificate(ssl)))
 	{
 		rtt1 = rtt2 = rtt3 = ZBX_EC_EPP_SERVERCERT;
-		zbx_rsm_errf(log_fd, "cannot get Server certificate from %s:%d", ip, epp_port);
+		rsm_errf(log_fd, "cannot get Server certificate from %s:%d", ip, epp_port);
 		goto out;
 	}
 
 	if (SUCCEED != zbx_validate_cert(epp_server_x509, epp_servercertmd5, &rtt, err, sizeof(err)))
 	{
 		rtt1 = rtt2 = rtt3 = rtt;
-		zbx_rsm_errf(log_fd, "Server certificate validation failed: %s", err);
+		rsm_errf(log_fd, "Server certificate validation failed: %s", err);
 		goto out;
 	}
 
-	zbx_rsm_info(log_fd, "Server certificate validation successful");
+	rsm_info(log_fd, "Server certificate validation successful");
 
-	zbx_rsm_infof(log_fd, "start EPP test (ip %s)", ip);
+	rsm_infof(log_fd, "start EPP test (ip %s)", ip);
 
 	if (SUCCEED != get_first_message(ssl, &rv, log_fd, epp_serverid, err, sizeof(err)))
 	{
 		rtt1 = rtt2 = rtt3 = rv;
-		zbx_rsm_err(log_fd, err);
+		rsm_err(log_fd, err);
 		goto out;
 	}
 
@@ -5569,7 +5574,7 @@ int	check_rsm_epp(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 			err, sizeof(err)))
 	{
 		rtt1 = rtt2 = rtt3 = ZBX_EC_EPP_INTERNAL_GENERAL;
-		zbx_rsm_errf(log_fd, "cannot decrypt EPP password: %s", err);
+		rsm_errf(log_fd, "cannot decrypt EPP password: %s", err);
 		goto out;
 	}
 
@@ -5581,7 +5586,7 @@ int	check_rsm_epp(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 	if (SUCCEED != rv)
 	{
 		rtt2 = rtt3 = rtt1;
-		zbx_rsm_err(log_fd, err);
+		rsm_err(log_fd, err);
 		goto out;
 	}
 
@@ -5589,26 +5594,26 @@ int	check_rsm_epp(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *res
 			err, sizeof(err)))
 	{
 		rtt3 = rtt2;
-		zbx_rsm_err(log_fd, err);
+		rsm_err(log_fd, err);
 		goto out;
 	}
 
 	if (SUCCEED != command_info(epp_commands, COMMAND_INFO, ssl, &rtt3, log_fd, epp_testprefix, domain, err,
 			sizeof(err)))
 	{
-		zbx_rsm_err(log_fd, err);
+		rsm_err(log_fd, err);
 		goto out;
 	}
 
 	/* logout command errors should not affect the test results */
 	if (SUCCEED != command_logout(epp_commands, COMMAND_LOGOUT, ssl, log_fd, err, sizeof(err)))
-		zbx_rsm_err(log_fd, err);
+		rsm_err(log_fd, err);
 
-	zbx_rsm_infof(log_fd, "end EPP test (ip %s):SUCCESS", ip);
+	rsm_infof(log_fd, "end EPP test (ip %s):SUCCESS", ip);
 out:
 	if (0 != ISSET_MSG(result))
 	{
-		zbx_rsm_err(log_fd, result->msg);
+		rsm_err(log_fd, result->msg);
 	}
 	else
 	{
@@ -5634,7 +5639,7 @@ out:
 		}
 	}
 
-	zbx_rsm_info(log_fd, "END TEST");
+	rsm_info(log_fd, "END TEST");
 
 	free_items(items, items_num);
 
@@ -5678,37 +5683,20 @@ out:
 	return ret;
 }
 
-static int	zbx_check_dns_connection(ldns_resolver **res, const char *ip, ldns_rdf *query_rdf, int reply_ms,
-		int *dns_res, FILE *log_fd, int ipv4_enabled, int ipv6_enabled, char *err, size_t err_size)
+#define	CHECK_DNS_CONN_BASIC	0x0u
+#define	CHECK_DNS_CONN_RRSIGS	0x1u
+#define	CHECK_DNS_CONN_RTT	0x2u
+
+static int	zbx_check_dns_connection(const ldns_resolver *res, ldns_rdf *query_rdf, int flags, int reply_ms,
+		FILE *log_fd, char *err, size_t err_size)
 {
 	ldns_pkt	*pkt = NULL;
 	ldns_rr_list	*rrset = NULL;
 	int		ret = FAIL;
 
-	if (NULL == *res)
+	if (NULL == (pkt = ldns_resolver_query(res, query_rdf, LDNS_RR_TYPE_SOA, LDNS_RR_CLASS_IN, 0)))
 	{
-		if (SUCCEED != zbx_create_resolver(res, "root server", ip, ZBX_RSM_UDP, ipv4_enabled, ipv6_enabled,
-				ZBX_RESOLVER_CHECK_BASIC, log_fd, err, err_size))
-		{
-			goto out;
-		}
-	}
-	else if (SUCCEED != zbx_change_resolver(*res, "root server", ip, ipv4_enabled, ipv6_enabled, log_fd,
-			err, sizeof(err)))
-	{
-		goto out;
-	}
-
-	/* not internal error */
-	ret = SUCCEED;
-	*dns_res = FAIL;
-
-	/* set edns DO flag */
-	ldns_resolver_set_dnssec(*res, true);
-
-	if (NULL == (pkt = ldns_resolver_query(*res, query_rdf, LDNS_RR_TYPE_SOA, LDNS_RR_CLASS_IN, 0)))
-	{
-		zbx_rsm_errf(log_fd, "cannot connect to root server %s", ip);
+		zbx_strlcpy(err, "cannot connect to host", err_size);
 		goto out;
 	}
 
@@ -5716,26 +5704,28 @@ static int	zbx_check_dns_connection(ldns_resolver **res, const char *ip, ldns_rd
 
 	if (NULL == (rrset = ldns_pkt_rr_list_by_type(pkt, LDNS_RR_TYPE_SOA, LDNS_SECTION_ANSWER)))
 	{
-		zbx_rsm_warnf(log_fd, "no SOA records from %s", ip);
+		zbx_strlcpy(err, "no SOA records found", err_size);
 		goto out;
 	}
 
 	ldns_rr_list_deep_free(rrset);
+	rrset = NULL;
 
-	if (NULL == (rrset = ldns_pkt_rr_list_by_type(pkt, LDNS_RR_TYPE_RRSIG, LDNS_SECTION_ANSWER)))
+	if (0 != (flags & CHECK_DNS_CONN_RRSIGS) &&
+			NULL == (rrset = ldns_pkt_rr_list_by_type(pkt, LDNS_RR_TYPE_RRSIG, LDNS_SECTION_ANSWER)))
 	{
-		zbx_rsm_warnf(log_fd, "no RRSIG records from %s", ip);
+		zbx_strlcpy(err, "no RRSIG records found", err_size);
 		goto out;
 	}
 
-	if (ldns_pkt_querytime(pkt) > reply_ms)
+	if (0 != (flags & CHECK_DNS_CONN_RTT) && ldns_pkt_querytime(pkt) > reply_ms)
 	{
-		zbx_rsm_warnf(log_fd, "%s query RTT %d over limit (%d)", ip, ldns_pkt_querytime(pkt), reply_ms);
+		zbx_snprintf(err, err_size, "query RTT %d over limit (%d)", ldns_pkt_querytime(pkt), reply_ms);
 		goto out;
 	}
 
 	/* target succeeded */
-	*dns_res = SUCCEED;
+	ret = SUCCEED;
 out:
 	if (NULL != rrset)
 		ldns_rr_list_deep_free(rrset);
@@ -5754,6 +5744,7 @@ int	check_rsm_probe_status(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RE
 	ldns_resolver		*res = NULL;
 	ldns_rdf		*query_rdf = NULL;
 	FILE			*log_fd = NULL;
+	unsigned int		extras = RESOLVER_EXTRAS_DNSSEC;
 	int			i, ipv4_enabled = 0, ipv6_enabled = 0, min_servers, reply_ms, online_delay, dns_res,
 				ok_servers, ret, status = ZBX_EC_PROBE_UNSUPPORTED;
 
@@ -5776,7 +5767,7 @@ int	check_rsm_probe_status(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RE
 		return SYSINFO_RET_FAIL;
 	}
 
-	zbx_rsm_info(log_fd, "START TEST");
+	rsm_info(log_fd, "START TEST");
 
 	if (SUCCEED != zbx_conf_ip_support(&item->host.hostid, &ipv4_enabled, &ipv6_enabled, err, sizeof(err)))
 	{
@@ -5784,10 +5775,10 @@ int	check_rsm_probe_status(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RE
 		goto out;
 	}
 
-	/* request to root servers to check the connection */
+	/* create query to check the connection */
 	if (NULL == (query_rdf = ldns_rdf_new_frm_str(LDNS_RDF_TYPE_DNAME, ".")))
 	{
-		SET_MSG_RESULT(result, zbx_strdup(NULL, "cannot create request to root servers"));
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "cannot create DNS request"));
 		goto out;
 	}
 
@@ -5798,7 +5789,7 @@ int	check_rsm_probe_status(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RE
 		goto out;
 	}
 
-	zbx_rsm_infof(log_fd, "IPv4:%s IPv6:%s", 0 == ipv4_enabled ? "DISABLED" : "ENABLED",
+	rsm_infof(log_fd, "IPv4:%s IPv6:%s", 0 == ipv4_enabled ? "DISABLED" : "ENABLED",
 			0 == ipv6_enabled ? "DISABLED" : "ENABLED");
 
 	if (0 != ipv4_enabled)
@@ -5841,19 +5832,25 @@ int	check_rsm_probe_status(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RE
 		{
 			ip = ips4.values[i];
 
-			if (SUCCEED != zbx_check_dns_connection(&res, ip, query_rdf, reply_ms, &dns_res, log_fd,
-					ipv4_enabled, ipv6_enabled, err, sizeof(err)))
+			if (SUCCEED != zbx_create_resolver(&res, "root server", ip, RSM_UDP, ipv4_enabled, ipv6_enabled,
+					extras, RSM_UDP_TIMEOUT, RSM_UDP_RETRY, log_fd, err, sizeof(err)))
 			{
-				SET_MSG_RESULT(result, zbx_strdup(NULL, err));
+				SET_MSG_RESULT(result, zbx_dsprintf(NULL, "cannot instantiate LDNS resolver: %s", err));
 				goto out;
 			}
 
-			if (SUCCEED == dns_res)
+			if (SUCCEED == zbx_check_dns_connection(res, query_rdf,
+					(CHECK_DNS_CONN_BASIC | CHECK_DNS_CONN_RRSIGS | CHECK_DNS_CONN_RTT),
+					reply_ms, log_fd, err, sizeof(err)))
+			{
 				ok_servers++;
+			}
+			else
+				rsm_errf(log_fd, "dns check of root server %s failed: %s", ip, err);
 
 			if (ok_servers == min_servers)
 			{
-				zbx_rsm_infof(log_fd, "%d successful results, IPv4 considered working", ok_servers);
+				rsm_infof(log_fd, "%d successful results, IPv4 considered working", ok_servers);
 				break;
 			}
 		}
@@ -5861,7 +5858,7 @@ int	check_rsm_probe_status(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RE
 		if (ok_servers != min_servers)
 		{
 			/* IP protocol check failed */
-			zbx_rsm_warnf(log_fd, "status OFFLINE. IPv4 protocol check failed, %d out of %d root servers"
+			rsm_warnf(log_fd, "status OFFLINE. IPv4 protocol check failed, %d out of %d root servers"
 					" replied successfully, minimum required %d",
 					ok_servers, ips4.values_num, min_servers);
 			status = ZBX_EC_PROBE_OFFLINE;
@@ -5909,19 +5906,25 @@ int	check_rsm_probe_status(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RE
 		{
 			ip = ips6.values[i];
 
-			if (SUCCEED != zbx_check_dns_connection(&res, ip, query_rdf, reply_ms, &dns_res, log_fd,
-					ipv4_enabled, ipv6_enabled, err, sizeof(err)))
+			if (SUCCEED != zbx_create_resolver(&res, "root server", ip, RSM_UDP, ipv4_enabled, ipv6_enabled,
+					extras, RSM_UDP_TIMEOUT, RSM_UDP_RETRY, log_fd, err, sizeof(err)))
 			{
-				SET_MSG_RESULT(result, zbx_strdup(NULL, err));
+				SET_MSG_RESULT(result, zbx_dsprintf(NULL, "cannot instantiate LDNS resolver: %s", err));
 				goto out;
 			}
 
-			if (SUCCEED == dns_res)
+			if (SUCCEED == zbx_check_dns_connection(res, query_rdf,
+					(CHECK_DNS_CONN_BASIC | CHECK_DNS_CONN_RRSIGS | CHECK_DNS_CONN_RTT),
+					reply_ms, log_fd, err, sizeof(err)))
+			{
 				ok_servers++;
+			}
+			else
+				rsm_errf(log_fd, "dns check of root server %s failed: %s", ip, err);
 
 			if (ok_servers == min_servers)
 			{
-				zbx_rsm_infof(log_fd, "%d successful results, IPv6 considered working", ok_servers);
+				rsm_infof(log_fd, "%d successful results, IPv6 considered working", ok_servers);
 				break;
 			}
 		}
@@ -5929,7 +5932,7 @@ int	check_rsm_probe_status(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RE
 		if (ok_servers != min_servers)
 		{
 			/* IP protocol check failed */
-			zbx_rsm_warnf(log_fd, "status OFFLINE. IPv6 protocol check failed, %d out of %d root servers"
+			rsm_warnf(log_fd, "status OFFLINE. IPv6 protocol check failed, %d out of %d root servers"
 					" replied successfully, minimum required %d",
 					ok_servers, ips6.values_num, min_servers);
 			status = ZBX_EC_PROBE_OFFLINE;
@@ -5940,7 +5943,7 @@ int	check_rsm_probe_status(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RE
 	status = ZBX_EC_PROBE_ONLINE;
 out:
 	if (0 != ISSET_MSG(result))
-		zbx_rsm_err(log_fd, result->msg);
+		rsm_err(log_fd, result->msg);
 
 	/* The value @online_delay controlls how many seconds must the check be successful in order */
 	/* to switch from OFFLINE to ONLINE. This is why we keep last online time in the cache.     */
@@ -5967,13 +5970,13 @@ out:
 			{
 				if (now - probe_online_since < online_delay)
 				{
-					zbx_rsm_warnf(log_fd, "probe status successful for % seconds, still OFFLINE",
+					rsm_warnf(log_fd, "probe status successful for % seconds, still OFFLINE",
 							now - probe_online_since);
 					status = ZBX_EC_PROBE_OFFLINE;
 				}
 				else
 				{
-					zbx_rsm_warnf(log_fd, "probe status successful for % seconds, changing to ONLINE",
+					rsm_warnf(log_fd, "probe status successful for % seconds, changing to ONLINE",
 							now - probe_online_since);
 				}
 			}
@@ -5989,7 +5992,7 @@ out:
 
 	DCset_probe_last_status(status);
 
-	zbx_rsm_info(log_fd, "END TEST");
+	rsm_info(log_fd, "END TEST");
 
 	if (NULL != res)
 	{
@@ -6009,6 +6012,130 @@ out:
 
 	if (NULL != query_rdf)
 		ldns_rdf_deep_free(query_rdf);
+
+	if (NULL != log_fd)
+		fclose(log_fd);
+
+	return ret;
+}
+
+int	check_rsm_resolver_status(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *result)
+{
+	char		*res_ip, *timeout_str, *tries_str, *ipv4_enabled_str, *ipv6_enabled_str, err[ZBX_ERR_BUF_SIZE];
+	ldns_resolver	*res = NULL;
+	ldns_rdf	*query_rdf = NULL;
+	FILE		*log_fd = NULL;
+	unsigned int	extras;
+	int		timeout, tries, ipv4_enabled, ipv6_enabled, status = 0, ret = SYSINFO_RET_FAIL;
+
+	if (5 != request->nparam)
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid number of parameters."));
+		goto out;;
+	}
+
+	/* TLD goes first, then RDAP specific parameters, then TLD options, probe options and global settings */
+	res_ip = get_rparam(request, 0);		/* local resolver IP, e.g. "127.0.0.1" */
+	timeout_str = get_rparam(request, 1);		/* timeout in seconds */
+	tries_str = get_rparam(request, 2);		/* maximum number of tries */
+	ipv4_enabled_str = get_rparam(request, 3);	/* IPv4 enabled */
+	ipv6_enabled_str = get_rparam(request, 4);	/* IPv6 enabled */
+
+	if ('\0' == *res_ip)
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "IP address of local resolver cannot be empty."));
+		goto out;;
+	}
+
+	if (SUCCEED != is_uint31(timeout_str, &timeout))
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid second parameter."));
+		goto out;;
+	}
+
+	if (SUCCEED != is_uint31(tries_str, &tries))
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid third parameter."));
+		goto out;;
+	}
+
+	if (SUCCEED != is_uint31(ipv4_enabled_str, &ipv4_enabled))
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid fourth parameter."));
+		goto out;;
+	}
+
+	if (SUCCEED != is_uint31(ipv6_enabled_str, &ipv6_enabled))
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid fifth parameter."));
+		goto out;;
+	}
+
+	/* open log file */
+	if (NULL == (log_fd = open_item_log(item->host.host, NULL, ZBX_RESOLVERSTATUS_LOG_PREFIX, NULL,
+			err, sizeof(err))))
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, err));
+		goto out;;
+	}
+
+	extras = RESOLVER_EXTRAS_DNSSEC;
+
+	/* create resolver */
+	if (SUCCEED != zbx_create_resolver(&res, "resolver", res_ip, RSM_UDP, ipv4_enabled, ipv6_enabled, extras,
+			RSM_UDP_TIMEOUT, RSM_UDP_RETRY, log_fd, err, sizeof(err)))
+	{
+		SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Cannot create resolver: %s.", err));
+		goto out;
+	}
+
+	/* create query to check the connection */
+	if (NULL == (query_rdf = ldns_rdf_new_frm_str(LDNS_RDF_TYPE_DNAME, ".")))
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "cannot create DNS request"));
+		goto out;
+	}
+
+	/* from this point item will not become NOTSUPPORTED */
+	ret = SYSINFO_RET_OK;
+	rsm_info(log_fd, "START TEST");
+
+	rsm_infof(log_fd, "IPv4:%s IPv6:%s", 0 == ipv4_enabled ? "DISABLED" : "ENABLED",
+			0 == ipv6_enabled ? "DISABLED" : "ENABLED");
+
+	if (SUCCEED != zbx_check_dns_connection(res, query_rdf, CHECK_DNS_CONN_BASIC, 0, log_fd, err, sizeof(err)))
+	{
+		rsm_errf(log_fd, "dns check of local resolver %s failed: %s", res_ip, err);
+		goto out;
+	}
+
+	status = 1;
+out:
+	if (0 != ISSET_MSG(result))
+		rsm_err(log_fd, result->msg);
+
+	if (SYSINFO_RET_OK == ret)
+	{
+		rsm_infof(log_fd, "status of \"%s\": %d", res_ip, status);
+
+		rsm_info(log_fd, "END TEST");
+
+		zbx_add_value_uint(item, item->nextcheck, status);
+
+		if (0 == status)
+			zbx_dc_rsm_errors_inc();
+	}
+
+	if (NULL != query_rdf)
+		ldns_rdf_deep_free(query_rdf);
+
+	if (NULL != res)
+	{
+		if (0 != ldns_resolver_nameserver_count(res))
+			ldns_resolver_deep_free(res);
+		else
+			ldns_resolver_free(res);
+	}
 
 	if (NULL != log_fd)
 		fclose(log_fd);

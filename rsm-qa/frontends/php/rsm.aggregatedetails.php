@@ -383,7 +383,7 @@ if ($data['tld_host'] && $data['time'] && $data['slvItemId'] && $data['type'] !=
 					if (array_key_exists($ipv, $ipvs)) {
 						foreach ($ipvs[$ipv] as $item_value) {
 							if ($item_value !== null
-									&& ($item_value > $data['udp_rtt'] || isDNSErrorCode($item_value, $data['type']))) {
+									&& ($item_value > $data['udp_rtt'] || isServiceErrorCode($item_value, $data['type']))) {
 								$ipvs['status'] = NAMESERVER_DOWN;
 								$probe['udp_ns_down']++;
 								unset($nameservers_up[$ns]);

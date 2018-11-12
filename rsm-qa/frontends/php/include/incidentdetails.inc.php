@@ -42,20 +42,16 @@ function getFirstUintValue($itemId, $startTime) {
 /**
  * Returned boolean indicates either passed value is valid DNS error code.
  *
- * @param int $item_value		Error code.
- * @param int $type				Type of DNS service. Allowed values are RSM_DNSSEC and RSM_DNS.
+ * @param int $item_value	Error code.
+ * @param int $type		Type of service, e. g. RSM_DNS, RSM_DNSSEC etc.
  *
  * @return bool
  */
-function isDNSErrorCode($item_value, $type) {
+function isServiceErrorCode($item_value, $type) {
 	if ($type == RSM_DNSSEC) {
 		return (ZBX_EC_DNS_UDP_DNSKEY_NONE <= $item_value && $item_value <= ZBX_EC_DNS_UDP_RES_NOADBIT);
 	}
-	elseif ($type == RSM_DNS) {
-		return (ZBX_EC_DNS_UDP_DNSKEY_NONE <= $item_value && $item_value <= ZBX_EC_DNS_UDP_NS_NOREPLY
-			&& $item_value != ZBX_EC_DNS_UDP_RES_NOREPLY);
-	}
 	else {
-		throw new Exception(_s('Unsupported DNS service.'));
+		return ($item_value < ZBX_EC_INTERNAL_LAST);
 	}
 }

@@ -1,3 +1,11 @@
+Changes for rsm1.1.0rc38
+
+Bug fixes:
+....I..PS. [433] added simple check item "resolver.status" to monitor local resolver on each probe node (dimir)
+.......PS. [439] fixed reporting of SERVFAIL error for RDDS43/80/RDAP (yurii)
+..F....... [437] updated interpretation of DNS error codes to be compatible with latest changes in backend (miks)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.1.0rc37
 
 Bug fixes:

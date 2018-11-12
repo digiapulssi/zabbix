@@ -548,9 +548,7 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 				if (!$itemValue) {
 					$nsArray[$item['hostid']][$nsValues[1]]['value'][] = NS_NO_RESULT;
 				}
-				elseif ($itemValue['value'] < $udpRtt
-						&& ($itemValue['value'] > ZBX_EC_DNS_UDP_NS_NOREPLY
-						|| $itemValue['value'] == ZBX_EC_DNS_UDP_RES_NOREPLY)) {
+				elseif ($itemValue['value'] < $udpRtt && !isServiceErrorCode($itemValue['value'], $data['type'])) {
 					$nsArray[$item['hostid']][$nsValues[1]]['value'][] = NS_UP;
 				}
 				else {
@@ -566,7 +564,7 @@ if ($data['host'] && $data['time'] && $data['slvItemId'] && $data['type'] !== nu
 				}
 
 				if ($itemValue) {
-					if (ZBX_EC_DNS_UDP_DNSKEY_NONE <= $itemValue['value'] && $itemValue['value'] <= ZBX_EC_DNS_UDP_RES_NOADBIT) {
+					if (isServiceErrorCode($itemValue['value'], $data['type'])) {
 						$hosts[$item['hostid']]['value']['fail']++;
 					}
 					else {
