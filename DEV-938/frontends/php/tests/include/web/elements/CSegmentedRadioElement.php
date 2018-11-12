@@ -42,7 +42,7 @@ class CSegmentedRadioElement extends CElement {
 	 * @return string
 	 */
 	public function getText() {
-		return $this->query('xpath:.//input[@checked="checked"]/..//label')->one()->asText();
+		return $this->query('xpath:.//input[@checked="checked"]/../label')->one()->getText();
 	}
 
 	/**
@@ -53,8 +53,7 @@ class CSegmentedRadioElement extends CElement {
 	 * @return $this
 	 */
 	public function select($text) {
-		$label = $this->query('xpath:.//label[text()='.CXPathHelper::escapeQuotes($text).']')->waitUntilVisible()->one();
-		$label->click();
+		$this->query('xpath:.//label[text()='.CXPathHelper::escapeQuotes($text).']')->waitUntilVisible()->one()->click();
 
 		return $this;
 	}
