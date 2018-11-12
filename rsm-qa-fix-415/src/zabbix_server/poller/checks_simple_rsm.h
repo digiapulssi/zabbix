@@ -45,8 +45,8 @@
 #define ZBX_EC_EPP_INTERNAL_IP_UNSUP		-2	/* EPP - IP addresses for the hostname are not supported by the IP versions supported by the probe node */
 
 /* specific RDAP internal errors */
-#define ZBX_EC_RDAP_INTERNAL_NOTLISTED	-100	/* The TLD is not listed in the Bootstrap Service Registry for Domain Name Space */
-#define ZBX_EC_RDAP_INTERNAL_NOHTTPS	-101	/* The RDAP base URL obtained from Bootstrap Service Registry for Domain Name Space does not use HTTPS */
+#define ZBX_EC_RDAP_INTERNAL_NOTLISTED	-398	/* The TLD is not listed in the Bootstrap Service Registry for Domain Name Space */
+#define ZBX_EC_RDAP_INTERNAL_NOHTTPS	-399	/* The RDAP base URL obtained from Bootstrap Service Registry for Domain Name Space does not use HTTPS */
 
 #define ZBX_EC_LAST_INTERNAL		-199	/* -1 :: -199 */
 
