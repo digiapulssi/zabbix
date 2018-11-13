@@ -2130,12 +2130,12 @@ static zbx_subtest_result_t	zbx_subtest_result(int rtt, int rtt_limit)
 	if (ZBX_NO_VALUE == rtt)
 			return ZBX_SUBTEST_SUCCESS;
 
-	if (rtt <= -1 && ZBX_EC_INTERNAL_LAST <= rtt)
-	{
+	/* probe knock-down on -1 */
+	if (rtt == -1)
 		zbx_dc_rsm_errors_inc();
 
+	if (rtt <= -1 && ZBX_EC_INTERNAL_LAST <= rtt)
 		return ZBX_SUBTEST_SUCCESS;
-	}
 
 	return (0 > rtt || rtt > rtt_limit ? ZBX_SUBTEST_FAIL : ZBX_SUBTEST_SUCCESS);
 }
@@ -6122,6 +6122,7 @@ out:
 
 		zbx_add_value_uint(item, item->nextcheck, status);
 
+		/* probe knock-down if local resolver non-functional */
 		if (0 == status)
 			zbx_dc_rsm_errors_inc();
 	}
