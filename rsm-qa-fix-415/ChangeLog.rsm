@@ -1,7 +1,7 @@
 Changes for rsm1.1.0rc38
 
 Bug fixes:
-.......PS. [415] replaced error codes -100 and -101 with -398 and -399 (yurii)
+.......PS. [415] replaced error codes -100 and -101 with -390 and -391 (yurii)
 .......PS. [439] fixed reporting of SERVFAIL error for RDDS43/80/RDAP (yurii)
 ..F....... [437] updated interpretation of DNS error codes to be compatible with latest changes in backend (miks)
 
