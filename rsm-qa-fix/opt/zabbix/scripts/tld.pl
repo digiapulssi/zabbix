@@ -1833,7 +1833,7 @@ sub get_services($) {
 	my $name = $group->{'name'};
 	foreach my $tld_type (@tld_types)
 	{
-		if($name eq $tld_type)
+		if ($name eq $tld_type)
 		{
 			$result->{'tld_type'} = $name;
 			last;

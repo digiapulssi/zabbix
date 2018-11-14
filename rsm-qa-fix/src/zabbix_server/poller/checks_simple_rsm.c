@@ -5683,18 +5683,22 @@ out:
 	return ret;
 }
 
-#define	CHECK_DNS_CONN_BASIC	0x0u
-#define	CHECK_DNS_CONN_RRSIGS	0x1u
-#define	CHECK_DNS_CONN_RTT	0x2u
+#define	CHECK_DNS_CONN_RRSIGS		0x1u
+#define	CHECK_DNS_CONN_RTT		0x2u
+#define	CHECK_DNS_CONN_RECURSIVE	0x4u
 
 static int	zbx_check_dns_connection(const ldns_resolver *res, ldns_rdf *query_rdf, int flags, int reply_ms,
 		FILE *log_fd, char *err, size_t err_size)
 {
 	ldns_pkt	*pkt = NULL;
 	ldns_rr_list	*rrset = NULL;
+	uint16_t	query_flags = 0;
 	int		ret = FAIL;
 
-	if (NULL == (pkt = ldns_resolver_query(res, query_rdf, LDNS_RR_TYPE_SOA, LDNS_RR_CLASS_IN, 0)))
+	if (0 != (flags & CHECK_DNS_CONN_RECURSIVE))
+		query_flags = LDNS_RD;
+
+	if (NULL == (pkt = ldns_resolver_query(res, query_rdf, LDNS_RR_TYPE_SOA, LDNS_RR_CLASS_IN, query_flags)))
 	{
 		zbx_strlcpy(err, "cannot connect to host", err_size);
 		goto out;
@@ -5840,7 +5844,7 @@ int	check_rsm_probe_status(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RE
 			}
 
 			if (SUCCEED == zbx_check_dns_connection(res, query_rdf,
-					(CHECK_DNS_CONN_BASIC | CHECK_DNS_CONN_RRSIGS | CHECK_DNS_CONN_RTT),
+					(CHECK_DNS_CONN_RRSIGS | CHECK_DNS_CONN_RTT),
 					reply_ms, log_fd, err, sizeof(err)))
 			{
 				ok_servers++;
@@ -5914,7 +5918,7 @@ int	check_rsm_probe_status(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RE
 			}
 
 			if (SUCCEED == zbx_check_dns_connection(res, query_rdf,
-					(CHECK_DNS_CONN_BASIC | CHECK_DNS_CONN_RRSIGS | CHECK_DNS_CONN_RTT),
+					(CHECK_DNS_CONN_RRSIGS | CHECK_DNS_CONN_RTT),
 					reply_ms, log_fd, err, sizeof(err)))
 			{
 				ok_servers++;
@@ -6103,7 +6107,7 @@ int	check_rsm_resolver_status(DC_ITEM *item, const AGENT_REQUEST *request, AGENT
 	rsm_infof(log_fd, "IPv4:%s IPv6:%s", 0 == ipv4_enabled ? "DISABLED" : "ENABLED",
 			0 == ipv6_enabled ? "DISABLED" : "ENABLED");
 
-	if (SUCCEED != zbx_check_dns_connection(res, query_rdf, CHECK_DNS_CONN_BASIC, 0, log_fd, err, sizeof(err)))
+	if (SUCCEED != zbx_check_dns_connection(res, query_rdf, CHECK_DNS_CONN_RECURSIVE, 0, log_fd, err, sizeof(err)))
 	{
 		rsm_errf(log_fd, "dns check of local resolver %s failed: %s", res_ip, err);
 		goto out;
