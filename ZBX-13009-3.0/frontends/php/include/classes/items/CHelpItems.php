@@ -325,7 +325,7 @@ class CHelpItems {
 					'description' => _('Loading time of full web page (in seconds). Returns float')
 				],
 				[
-					'key' => 'web.page.regexp[host,<path>,<port>,<regexp>,<length>,<output>]',
+					'key' => 'web.page.regexp[host,<path>,<port>,regexp,<length>,<output>]',
 					'description' => _('Find string on a web page. Returns the matched string, or as specified by the optional output parameter')
 				],
 				[
@@ -611,7 +611,7 @@ class CHelpItems {
 					'description' => _('Loading time of full web page (in seconds). Returns float')
 				],
 				[
-					'key' => 'web.page.regexp[host,<path>,<port>,<regexp>,<length>,<output>]',
+					'key' => 'web.page.regexp[host,<path>,<port>,regexp,<length>,<output>]',
 					'description' => _('Find string on a web page. Returns the matched string, or as specified by the optional output parameter')
 				],
 				[

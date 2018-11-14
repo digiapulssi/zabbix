@@ -27,7 +27,8 @@ $config = $this->data['config'];
 $filterForm = (new CFilter($filter['filterid']))
 	->addVar('fullscreen', $filter['fullScreen'])
 	->addVar('groupid', $filter['groupId'])
-	->addVar('hostid', $filter['hostId']);
+	->addVar('hostid', $filter['hostId'])
+	->addVar('show_maintenance', 0);
 
 $column1 = (new CFormList())
 	->addRow(_('Triggers status'),

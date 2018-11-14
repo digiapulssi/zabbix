@@ -2524,8 +2524,9 @@ void	process_dhis_data(struct zbx_json_parse *jp)
 	int			status, ret;
 	unsigned short		port;
 	const char		*p = NULL;
-	char			last_ip[INTERFACE_IP_LEN_MAX], ip[INTERFACE_IP_LEN_MAX], key_[ITEM_KEY_LEN * 4 + 1],
-				tmp[MAX_STRING_LEN], *value = NULL, dns[INTERFACE_DNS_LEN_MAX];
+	char			last_ip[INTERFACE_IP_LEN_MAX], ip[INTERFACE_IP_LEN_MAX],
+				key_[ITEM_KEY_LEN * ZBX_MAX_BYTES_IN_UTF8_CHAR + 1], tmp[MAX_STRING_LEN],
+				*value = NULL, dns[INTERFACE_DNS_LEN_MAX];
 	time_t			now, hosttime, itemtime;
 	size_t			value_alloc = 128;
 

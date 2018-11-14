@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Zabbix 3.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2018-06-22 20:29+0300\n"
-"PO-Revision-Date: 2018-05-05 18:21+0300\n"
+"PO-Revision-Date: 2018-09-04 14:50+0300\n"
 "Last-Translator: Kodai <kodai74@gmail.com>\n"
 "Language-Team: Zabbix\n"
 "Language: ja\n"
@@ -13,7 +13,7 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Generator: Pootle 2.5.1.3\n"
 "X-Poedit-Basepath: ../../\n"
-"X-POOTLE-MTIME: 1525537294.000000\n"
+"X-POOTLE-MTIME: 1536065411.000000\n"
 
 #: include/classes/import/validators/C10XmlValidator.php:358
 #: include/classes/import/validators/C10XmlValidator.php:375
@@ -9357,7 +9357,7 @@ msgstr "マップの要素"
 
 #: sysmap.php:83
 msgid "Map is updated! Return?"
-msgstr "マップが更新されています！ 戻りますか？"
+msgstr "マップを更新しました！一覧画面へ戻りますか？"
 
 #: include/views/monitoring.sysmap.edit.php:178
 msgid "Map label type"
@@ -13863,7 +13863,7 @@ msgstr "テストデータ"
 
 #: include/views/administration.general.regularexpressions.edit.php:111
 msgid "Test expressions"
-msgstr "テスト条件式"
+msgstr "条件式のテスト"
 
 #: adm.regexps.php:37
 #: include/views/administration.general.regularexpressions.edit.php:108
