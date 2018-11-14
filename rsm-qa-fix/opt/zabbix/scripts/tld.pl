@@ -126,7 +126,7 @@ my $rv = GetOptions(\%OPTS,
 		    "quiet!",
 		    "help|?");
 
-usage() if ($OPTS{'help'} or not $rv);
+print_usage() if ($OPTS{'help'} or not $rv);
 
 print("\nIgnoring unknown command-line options:\n  ", join("\n  ", @ARGV), "\n\n") if (scalar(@ARGV));
 
@@ -799,7 +799,7 @@ sub create_items_epp {
 }
 
 
-sub trim
+sub trim_keysalt
 {
     $_[0] =~ s/^\s*//g;
     $_[0] =~ s/\s*$//g;
@@ -1008,7 +1008,7 @@ sub create_main_template {
 	my $m = '{$RSM.EPP.KEYSALT}';
 	my $keysalt = get_global_macro_value($m);
 	pfail('cannot get macro ', $m) unless defined($keysalt);
-	trim($keysalt);
+	trim_keysalt($keysalt);
 	pfail("global macro $m must conatin |") unless ($keysalt =~ m/\|/);
 
 	if ($OPTS{'epp-commands'}) {
@@ -1218,7 +1218,7 @@ sub create_slv_items {
     }
 }
 
-sub usage {
+sub print_usage {
     my ($opt_name, $opt_value) = @_;
 
     my $cfg_default_rdds_ns_string = cfg_default_rdds_ns_string;
@@ -1351,7 +1351,7 @@ sub validate_input {
     {
 	    unless ($msg eq "") {
 		    print($msg);
-		    usage();
+		    print_usage();
 	    }
 	    return;
     }
@@ -1395,7 +1395,7 @@ sub validate_input {
 
     unless ($msg eq "") {
 	print($msg);
-	usage();
+	print_usage();
     }
 }
 
@@ -1823,7 +1823,7 @@ sub disable_old_ns($) {
 sub get_services($) {
     my $tld = shift;
 
-    my @tld_types = [TLD_TYPE_G, TLD_TYPE_CC, TLD_TYPE_OTHER, TLD_TYPE_TEST];
+    my @tld_types = (TLD_TYPE_G, TLD_TYPE_CC, TLD_TYPE_OTHER, TLD_TYPE_TEST);
 
     my $result;
 
@@ -1837,7 +1837,14 @@ sub get_services($) {
 
     foreach my $group (@{$tld_host->{'groups'}}) {
 	my $name = $group->{'name'};
-	$result->{'tld_type'} = $name if ( $name ~~ @tld_types );
+	foreach my $tld_type (@tld_types)
+	{
+		if($name eq $tld_type)
+		{
+			$result->{'tld_type'} = $name;
+			last;
+		}
+	}
     }
 
     foreach my $macro (@{$macros}) {
