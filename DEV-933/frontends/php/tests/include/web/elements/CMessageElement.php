@@ -54,6 +54,7 @@ class CMessageElement extends CElement {
 	 * @return string
 	 */
 	public function getTitle() {
+//		return $this->query('xpath:./span')->getText();
 		return $this->getText();
 	}
 
@@ -63,7 +64,7 @@ class CMessageElement extends CElement {
 	 * @return CElementCollection
 	 */
 	public function getLines() {
-		$this->query('xpath:./div[@class="msg-details"]/ul[@class="msg-details-border"]/li')->all();
+		return $this->query('xpath:./div[@class="msg-details"]/ul/li')->all();
 	}
 
 	/**

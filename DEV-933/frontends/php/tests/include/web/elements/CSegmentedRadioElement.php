@@ -18,20 +18,44 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
+require_once 'vendor/autoload.php';
 
-class CColorValidator extends CStringValidator {
+require_once dirname(__FILE__).'/../CElement.php';
+
+/**
+ * Segmented radio element.
+ */
+class CSegmentedRadioElement extends CElement {
 
 	/**
-	 * Hex color code regex.
+	 * Get collection of labels.
 	 *
-	 * @var string
+	 * @return CElementCollection
 	 */
-	public $regex = '/^[0-9a-f]{6}$/i';
+	public function getLabels() {
+		return $this->query('tag:label')->all();
+	}
 
-	public function __construct(array $options = []) {
-		$this->messageRegex = _('Colour "%1$s" is not correct: expecting hexadecimal colour code (6 symbols).');
-		$this->messageEmpty = _('Empty colour.');
+	/**
+	 * Get text of selected element.
+	 *
+	 * @return string
+	 */
+	public function getText() {
+		return $this->query('xpath:.//input[@checked="checked"]/..//label')->one()->asText();
+	}
 
-		parent::__construct($options);
+	/**
+	 * Select label by text.
+	 *
+	 * @param string $text    label text to be selected
+	 *
+	 * @return $this
+	 */
+	public function select($text) {
+		$label = $this->query('xpath:.//label[text()='.CXPathHelper::escapeQuotes($text).']')->waitUntilVisible()->one();
+		$label->click();
+
+		return $this;
 	}
 }

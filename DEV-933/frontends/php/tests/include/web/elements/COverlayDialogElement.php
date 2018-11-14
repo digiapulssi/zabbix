@@ -53,7 +53,7 @@ class COverlayDialogElement extends CElement {
 	 * @return CElement
 	 */
 	public function getContent() {
-		return $this->query('class:overlay-dialogue-body')->one();
+		return $this->query('class:overlay-dialogue-body')->waitUntilPresent()->one();
 	}
 
 	/**
@@ -73,5 +73,14 @@ class COverlayDialogElement extends CElement {
 	public function close() {
 		$this->query('class:overlay-close-btn')->one()->click();
 		return $this->waitUntilNotPresent();
+	}
+
+	/**
+	 * Get message element of content of overlay dialog.
+	 *
+	 * @return CMessageElement
+	 */
+	public function getMessage() {
+		return $this->getContent()->query('tag:output')->asMessage()->one();
 	}
 }
