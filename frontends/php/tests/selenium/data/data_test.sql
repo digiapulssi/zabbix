@@ -1344,3 +1344,17 @@ INSERT INTO users_groups (id, usrgrpid, userid) VALUES (7, 7, 5);
 
 -- Disable warning if Zabbix server is down
 UPDATE config SET server_check_interval = 0 WHERE configid = 1;
+
+
+-- testPageAvailabilityReport SLA reports
+INSERT INTO hosts (hostid, host, name, status, description) VALUES (50009, 'SLA reports host', 'SLA reports host', 0, '');
+INSERT INTO hosts_groups (hostgroupid, hostid, groupid) VALUES (50009, 50009, 4);
+INSERT INTO items (itemid, type, hostid, name, key_, params, description) VALUES (40066, 2, 50009, 'Item A', 'A', '', '');
+INSERT INTO items (itemid, type, hostid, name, key_, params, description) VALUES (40067, 2, 50009, 'Item B', 'B', '', '');
+INSERT INTO items (itemid, type, hostid, name, key_, params, description) VALUES (40068, 2, 50009, 'Item C', 'C', '', '');
+INSERT INTO triggers (triggerid, expression, description, comments) VALUES (16027, '{16027}=0', 'A trigger', '');
+INSERT INTO triggers (triggerid, expression, description, comments) VALUES (16028, '{16028}=0', 'B trigger', '');
+INSERT INTO triggers (triggerid, expression, description, comments) VALUES (16029, '{16029}=0', 'C trigger', '');
+INSERT INTO functions (functionid, itemid, triggerid, function, parameter) VALUES (16028, 40066, 16027,'last','0');
+INSERT INTO functions (functionid, itemid, triggerid, function, parameter) VALUES (16029, 40067, 16028,'last','0');
+INSERT INTO functions (functionid, itemid, triggerid, function, parameter) VALUES (16030, 40068, 16029,'last','0');
