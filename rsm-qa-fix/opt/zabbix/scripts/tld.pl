@@ -83,8 +83,6 @@ my ($ns_servers, $root_servers_macros);
 
 my ($main_templateid, $tld_groupid, $tld_probe_results_groupid);
 
-my $config = get_rsm_config();
-
 my %OPTS;
 my $rv = GetOptions(\%OPTS,
 		    "tld=s",
@@ -126,9 +124,11 @@ my $rv = GetOptions(\%OPTS,
 		    "quiet!",
 		    "help|?");
 
-print_usage() if ($OPTS{'help'} or not $rv);
+__usage() if ($OPTS{'help'} or not $rv);
 
 print("\nIgnoring unknown command-line options:\n  ", join("\n  ", @ARGV), "\n\n") if (scalar(@ARGV));
+
+my $config = get_rsm_config();
 
 validate_input();
 lc_options();
@@ -799,12 +799,6 @@ sub create_items_epp {
 }
 
 
-sub trim_keysalt
-{
-    $_[0] =~ s/^\s*//g;
-    $_[0] =~ s/\s*$//g;
-}
-
 sub get_sensdata
 {
     my $prompt = shift;
@@ -1008,7 +1002,7 @@ sub create_main_template {
 	my $m = '{$RSM.EPP.KEYSALT}';
 	my $keysalt = get_global_macro_value($m);
 	pfail('cannot get macro ', $m) unless defined($keysalt);
-	trim_keysalt($keysalt);
+	trim($keysalt);
 	pfail("global macro $m must conatin |") unless ($keysalt =~ m/\|/);
 
 	if ($OPTS{'epp-commands'}) {
@@ -1218,12 +1212,12 @@ sub create_slv_items {
     }
 }
 
-sub print_usage {
+sub __usage {
     my ($opt_name, $opt_value) = @_;
 
     my $cfg_default_rdds_ns_string = cfg_default_rdds_ns_string;
 
-    my $local_server_id = get_rsm_local_id($config);
+    my $default_server_id = ($config ? "(default: " . get_rsm_local_id($config) . ")" : "");
 
     # todo phase 1: updated --delete and --disable sections, explaining better how these options work
 
@@ -1308,7 +1302,7 @@ Other options
                 list of IPv4 and IPv6 root servers separated by comma and semicolon: "v4IP1[,v4IP2,...][;v6IP1[,v6IP2,...]]"
                 (default: taken from DNS)
         --server-id=STRING
-                ID of Zabbix server (default: $local_server_id)
+                ID of Zabbix server $default_server_id
         --rdds-test-prefix=STRING
 		domain test prefix for RDDS monitoring (needed only if rdds servers specified)
         --setup-cron
@@ -1351,7 +1345,7 @@ sub validate_input {
     {
 	    unless ($msg eq "") {
 		    print($msg);
-		    print_usage();
+		    __usage();
 	    }
 	    return;
     }
@@ -1395,7 +1389,7 @@ sub validate_input {
 
     unless ($msg eq "") {
 	print($msg);
-	print_usage();
+	__usage();
     }
 }
 
