@@ -2806,12 +2806,8 @@ sub fail
 
 sub trim
 {
-	my $out = shift;
-
-	$out =~ s/^\s+//;
-	$out =~ s/\s+$//;
-
-	return $out;
+	$_[0] =~ s/^\s+//g;
+	$_[0] =~ s/\s+$//g;
 }
 
 sub parse_opts

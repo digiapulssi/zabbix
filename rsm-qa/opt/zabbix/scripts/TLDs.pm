@@ -644,7 +644,7 @@ sub create_probe_status_template {
 
     create_item($options);
 
-    my $options = {
+    $options = {
 	'name' => 'Local resolver status ($1)',
 	'key_'=> 'resolver.status[{$RSM.RESOLVER},{$RESOLVER.STATUS.TIMEOUT},{$RESOLVER.STATUS.TRIES},{$RSM.IP4.ENABLED},{$RSM.IP6.ENABLED}]',
 	'hostid' => $templateid,

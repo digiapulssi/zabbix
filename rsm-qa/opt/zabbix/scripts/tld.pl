@@ -83,8 +83,6 @@ my ($ns_servers, $root_servers_macros);
 
 my ($main_templateid, $tld_groupid, $tld_probe_results_groupid);
 
-my $config = get_rsm_config();
-
 my %OPTS;
 my $rv = GetOptions(\%OPTS,
 		    "tld=s",
@@ -126,9 +124,11 @@ my $rv = GetOptions(\%OPTS,
 		    "quiet!",
 		    "help|?");
 
-usage() if ($OPTS{'help'} or not $rv);
+__usage() if ($OPTS{'help'} or not $rv);
 
 print("\nIgnoring unknown command-line options:\n  ", join("\n  ", @ARGV), "\n\n") if (scalar(@ARGV));
+
+my $config = get_rsm_config();
 
 validate_input();
 lc_options();
@@ -799,12 +799,6 @@ sub create_items_epp {
 }
 
 
-sub trim
-{
-    $_[0] =~ s/^\s*//g;
-    $_[0] =~ s/\s*$//g;
-}
-
 sub get_sensdata
 {
     my $prompt = shift;
@@ -1218,12 +1212,12 @@ sub create_slv_items {
     }
 }
 
-sub usage {
+sub __usage {
     my ($opt_name, $opt_value) = @_;
 
     my $cfg_default_rdds_ns_string = cfg_default_rdds_ns_string;
 
-    my $local_server_id = get_rsm_local_id($config);
+    my $default_server_id = ($config ? "(default: " . get_rsm_local_id($config) . ")" : "");
 
     # todo phase 1: updated --delete and --disable sections, explaining better how these options work
 
@@ -1280,8 +1274,8 @@ Other options
                 list of RDDS80 servers separated by comma: "NAME1,NAME2,..."
         --rdap-base-url=STRING
                 base URL for RDAP queries
-                Specify "not listed" to get error -100, e. g. --rdap-base-url="not listed"
-                Specify "no https" to get error -101, e. g. --rdap-base-url="no https"
+                Specify "not listed" to get error -390, e. g. --rdap-base-url="not listed"
+                Specify "no https" to get error -391, e. g. --rdap-base-url="no https"
         --rdap-test-domain=STRING
                 test domain for RDAP queries
         --epp-servers=STRING
@@ -1308,7 +1302,7 @@ Other options
                 list of IPv4 and IPv6 root servers separated by comma and semicolon: "v4IP1[,v4IP2,...][;v6IP1[,v6IP2,...]]"
                 (default: taken from DNS)
         --server-id=STRING
-                ID of Zabbix server (default: $local_server_id)
+                ID of Zabbix server $default_server_id
         --rdds-test-prefix=STRING
 		domain test prefix for RDDS monitoring (needed only if rdds servers specified)
         --setup-cron
@@ -1351,7 +1345,7 @@ sub validate_input {
     {
 	    unless ($msg eq "") {
 		    print($msg);
-		    usage();
+		    __usage();
 	    }
 	    return;
     }
@@ -1395,7 +1389,7 @@ sub validate_input {
 
     unless ($msg eq "") {
 	print($msg);
-	usage();
+	__usage();
     }
 }
 
@@ -1823,7 +1817,7 @@ sub disable_old_ns($) {
 sub get_services($) {
     my $tld = shift;
 
-    my @tld_types = [TLD_TYPE_G, TLD_TYPE_CC, TLD_TYPE_OTHER, TLD_TYPE_TEST];
+    my @tld_types = (TLD_TYPE_G, TLD_TYPE_CC, TLD_TYPE_OTHER, TLD_TYPE_TEST);
 
     my $result;
 
@@ -1837,7 +1831,14 @@ sub get_services($) {
 
     foreach my $group (@{$tld_host->{'groups'}}) {
 	my $name = $group->{'name'};
-	$result->{'tld_type'} = $name if ( $name ~~ @tld_types );
+	foreach my $tld_type (@tld_types)
+	{
+		if ($name eq $tld_type)
+		{
+			$result->{'tld_type'} = $name;
+			last;
+		}
+	}
     }
 
     foreach my $macro (@{$macros}) {

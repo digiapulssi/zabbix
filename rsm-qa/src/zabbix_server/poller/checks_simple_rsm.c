@@ -2130,12 +2130,12 @@ static zbx_subtest_result_t	zbx_subtest_result(int rtt, int rtt_limit)
 	if (ZBX_NO_VALUE == rtt)
 			return ZBX_SUBTEST_SUCCESS;
 
-	if (rtt <= -1 && ZBX_EC_INTERNAL_LAST <= rtt)
-	{
+	/* probe knock-down on -1 */
+	if (ZBX_EC_DNS_UDP_INTERNAL_GENERAL == rtt)
 		zbx_dc_rsm_errors_inc();
 
+	if (rtt <= ZBX_EC_DNS_UDP_INTERNAL_GENERAL && ZBX_EC_INTERNAL_LAST <= rtt)
 		return ZBX_SUBTEST_SUCCESS;
-	}
 
 	return (0 > rtt || rtt > rtt_limit ? ZBX_SUBTEST_FAIL : ZBX_SUBTEST_SUCCESS);
 }
@@ -4137,7 +4137,7 @@ int	check_rsm_rdap(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 	if (0 == strcmp(base_url, "not listed"))
 	{
 		rsm_err(log_fd, "The TLD is not listed in the Bootstrap Service Registry for Domain Name Space");
-		rtt = ZBX_EC_RDAP_INTERNAL_NOTLISTED;
+		rtt = ZBX_EC_RDAP_NOTLISTED;
 		goto out;
 	}
 
@@ -4145,7 +4145,7 @@ int	check_rsm_rdap(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 	{
 		rsm_err(log_fd, "The RDAP base URL obtained from Bootstrap Service Registry for Domain Name Space"
 				" does not use HTTPS");
-		rtt = ZBX_EC_RDAP_INTERNAL_NOHTTPS;
+		rtt = ZBX_EC_RDAP_NOHTTPS;
 		goto out;
 	}
 
@@ -5683,18 +5683,22 @@ out:
 	return ret;
 }
 
-#define	CHECK_DNS_CONN_BASIC	0x0u
-#define	CHECK_DNS_CONN_RRSIGS	0x1u
-#define	CHECK_DNS_CONN_RTT	0x2u
+#define	CHECK_DNS_CONN_RRSIGS		0x1u
+#define	CHECK_DNS_CONN_RTT		0x2u
+#define	CHECK_DNS_CONN_RECURSIVE	0x4u
 
 static int	zbx_check_dns_connection(const ldns_resolver *res, ldns_rdf *query_rdf, int flags, int reply_ms,
 		FILE *log_fd, char *err, size_t err_size)
 {
 	ldns_pkt	*pkt = NULL;
 	ldns_rr_list	*rrset = NULL;
+	uint16_t	query_flags = 0;
 	int		ret = FAIL;
 
-	if (NULL == (pkt = ldns_resolver_query(res, query_rdf, LDNS_RR_TYPE_SOA, LDNS_RR_CLASS_IN, 0)))
+	if (0 != (flags & CHECK_DNS_CONN_RECURSIVE))
+		query_flags = LDNS_RD;
+
+	if (NULL == (pkt = ldns_resolver_query(res, query_rdf, LDNS_RR_TYPE_SOA, LDNS_RR_CLASS_IN, query_flags)))
 	{
 		zbx_strlcpy(err, "cannot connect to host", err_size);
 		goto out;
@@ -5840,7 +5844,7 @@ int	check_rsm_probe_status(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RE
 			}
 
 			if (SUCCEED == zbx_check_dns_connection(res, query_rdf,
-					(CHECK_DNS_CONN_BASIC | CHECK_DNS_CONN_RRSIGS | CHECK_DNS_CONN_RTT),
+					(CHECK_DNS_CONN_RRSIGS | CHECK_DNS_CONN_RTT),
 					reply_ms, log_fd, err, sizeof(err)))
 			{
 				ok_servers++;
@@ -5914,7 +5918,7 @@ int	check_rsm_probe_status(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RE
 			}
 
 			if (SUCCEED == zbx_check_dns_connection(res, query_rdf,
-					(CHECK_DNS_CONN_BASIC | CHECK_DNS_CONN_RRSIGS | CHECK_DNS_CONN_RTT),
+					(CHECK_DNS_CONN_RRSIGS | CHECK_DNS_CONN_RTT),
 					reply_ms, log_fd, err, sizeof(err)))
 			{
 				ok_servers++;
@@ -6103,7 +6107,7 @@ int	check_rsm_resolver_status(DC_ITEM *item, const AGENT_REQUEST *request, AGENT
 	rsm_infof(log_fd, "IPv4:%s IPv6:%s", 0 == ipv4_enabled ? "DISABLED" : "ENABLED",
 			0 == ipv6_enabled ? "DISABLED" : "ENABLED");
 
-	if (SUCCEED != zbx_check_dns_connection(res, query_rdf, CHECK_DNS_CONN_BASIC, 0, log_fd, err, sizeof(err)))
+	if (SUCCEED != zbx_check_dns_connection(res, query_rdf, CHECK_DNS_CONN_RECURSIVE, 0, log_fd, err, sizeof(err)))
 	{
 		rsm_errf(log_fd, "dns check of local resolver %s failed: %s", res_ip, err);
 		goto out;
@@ -6122,6 +6126,7 @@ out:
 
 		zbx_add_value_uint(item, item->nextcheck, status);
 
+		/* probe knock-down if local resolver non-functional */
 		if (0 == status)
 			zbx_dc_rsm_errors_inc();
 	}

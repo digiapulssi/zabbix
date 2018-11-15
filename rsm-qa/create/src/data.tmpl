@@ -945,7 +945,7 @@ ROW   |62           |{$MIN_FREE_MEMORY}            |20                 |
 ROW   |63           |{$MAX_CPU_IOWAIT}             |20                 |
 ROW   |64           |{$FREE_DISK_SPACE}            |20                 |
 ROW   |65           |{$FREE_DISK_INODES}           |20                 |
-ROW   |66           |{$PROBE.INTERNAL.ERROR.INTERVAL}|5m               |
+ROW   |66           |{$PROBE.INTERNAL.ERROR.INTERVAL}|1m               |
 ROW   |100          |{$RESOLVER.STATUS.TIMEOUT}    |5                  |
 ROW   |101          |{$RESOLVER.STATUS.TRIES}      |3                  |
 
@@ -1454,8 +1454,8 @@ ROW   |13085    |130       |-359 |RDDS80 - Expecting HTTP status code 200 but go
 ROW   |13086    |130       |-360 |RDDS80 - Expecting HTTP status code 200 but got unexpected status code                                          |
 ROW   |13500    |135       |-1   |Internal error                                                                                                  |
 ROW   |13578    |135       |-2   |RDAP - IP addresses for the hostname are not supported by the IP versions supported by the probe node           |
-ROW   |13501    |135       |-100 |The TLD is not listed in the Bootstrap Service Registry for Domain Name Space                                   |
-ROW   |13502    |135       |-101 |The RDAP base URL obtained from Bootstrap Service Registry for Domain Name Space does not use HTTPS             |
+ROW   |13501    |135       |-390 |The TLD is not listed in the Bootstrap Service Registry for Domain Name Space                                   |
+ROW   |13502    |135       |-391 |The RDAP base URL obtained from Bootstrap Service Registry for Domain Name Space does not use HTTPS             |
 ROW   |13503    |135       |-400 |RDAP - No server could be reached by local resolver                                                             |
 ROW   |13505    |135       |-402 |RDAP - Expecting NOERROR RCODE but got SERVFAIL when resolving hostname                                         |
 ROW   |13506    |135       |-403 |RDAP - Expecting NOERROR RCODE but got NXDOMAIN when resolving hostname                                         |
