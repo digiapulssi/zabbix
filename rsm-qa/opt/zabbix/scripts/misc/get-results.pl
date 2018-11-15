@@ -184,7 +184,7 @@ sub __check_test
 {
 	my $value = shift;
 
-	return (is_service_error($service, $value, $rtt_low) ? E_FAIL : SUCCESS;
+	return (is_service_error($service, $value, $rtt_low) ? E_FAIL : SUCCESS);
 }
 
 sub __get_all_ns_items
