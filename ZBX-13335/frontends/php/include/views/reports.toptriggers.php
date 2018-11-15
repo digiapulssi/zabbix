@@ -21,7 +21,7 @@
 
 require_once dirname(__FILE__).'/js/reports.toptriggers.js.php';
 
-$filterForm = (new CFilter('web.toptriggers.filter.state'))
+$filterForm = (new CFilter('web.toptriggers.filter.state', new CUrl('toptriggers.php')))
 	->addVar('filter_from', date(TIMESTAMP_FORMAT, $this->data['filter']['filter_from']))
 	->addVar('filter_till', date(TIMESTAMP_FORMAT, $this->data['filter']['filter_till']));
 

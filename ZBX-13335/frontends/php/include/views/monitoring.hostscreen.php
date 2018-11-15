@@ -21,7 +21,7 @@
 
 $screenWidget = new CWidget();
 
-$form = (new CFilter('web.hostscreen.filter.state'))->addNavigator();
+$form = (new CFilter('web.hostscreen.filter.state', new CUrl()))->addNavigator();
 
 $screenWidget->addItem($form);
 
@@ -41,7 +41,7 @@ else {
 		SPACE,
 		_('on'),
 		SPACE,
-		(new CSpan($this->data['host']['name']))->addClass(ZBX_STYLE_ORANGE)
+		new CSpan($this->data['host']['name'])
 	]);
 
 	// host screen list

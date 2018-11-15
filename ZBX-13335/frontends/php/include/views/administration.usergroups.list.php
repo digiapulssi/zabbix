@@ -24,7 +24,7 @@ $widget = (new CWidget())
 		->cleanItems()
 		->addItem((new CList())->addItem(new CSubmit('form', _('Create user group'))))
 	)
-	->addItem((new CFilter('web.usergroup.filter.state'))
+	->addItem((new CFilter('web.usergroup.filter.state', new CUrl('usergrps.php')))
 		->addColumn((new CFormList())->addRow(_('Name'),
 			(new CTextBox('filter_name', $data['filter']['name']))
 				->setWidth(ZBX_TEXTAREA_FILTER_SMALL_WIDTH)

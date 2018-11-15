@@ -332,7 +332,9 @@ $widget = (new CWidget())
 	);
 
 // Filter
-$filterForm = (new CFilter('web.latest.filter.state'))
+$filterForm = (new CFilter('web.latest.filter.state',
+	(new CUrl('latest.php'))->setArgument('fullscreen', getRequest('fullscreen'))
+))
 	->addVar('fullscreen', getRequest('fullscreen'));
 
 $filterColumn1 = (new CFormList())

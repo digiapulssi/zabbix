@@ -37,7 +37,6 @@ $output = [
 	'header' => $data['name'],
 	'body' => $item->toString(),
 	'footer' => (new CList([_s('Updated: %s', zbx_date2str(TIME_FORMAT_SECONDS))]))->toString(),
-	'script_file' => $item->getScriptFile(),
 	'script_inline' => $item->getScriptRun()
 ];
 

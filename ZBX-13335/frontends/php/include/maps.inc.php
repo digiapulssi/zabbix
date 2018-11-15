@@ -2158,6 +2158,7 @@ function getMapLinktriggerInfo($sysmap, $options) {
 		'output' => ['status', 'value', 'priority'],
 		'min_severity' => $options['severity_min'],
 		'preservekeys' => true,
+		'monitored' => true,
 		'triggerids' => $triggerids
 	]);
 }

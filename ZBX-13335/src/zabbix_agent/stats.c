@@ -444,7 +444,7 @@ ZBX_THREAD_ENTRY(collector_thread, args)
 
 	while (ZBX_IS_RUNNING())
 	{
-		zbx_handle_log();
+		zbx_update_env(zbx_time());
 
 		zbx_setproctitle("collector [processing data]");
 #ifdef _WINDOWS
@@ -467,10 +467,6 @@ ZBX_THREAD_ENTRY(collector_thread, args)
 #endif
 		zbx_setproctitle("collector [idle 1 sec]");
 		zbx_sleep(1);
-
-#if !defined(_WINDOWS) && defined(HAVE_RESOLV_H)
-		zbx_update_resolver_conf();	/* handle /etc/resolv.conf update */
-#endif
 	}
 
 #ifdef _WINDOWS

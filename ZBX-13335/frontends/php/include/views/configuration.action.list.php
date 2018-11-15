@@ -37,7 +37,7 @@ $widget = (new CWidget())
 			->addItem(new CSubmit('form', _('Create action')))
 		)
 	)
-	->addItem((new CFilter('web.actionconf.filter.state'))
+	->addItem((new CFilter('web.actionconf.filter.state', new CUrl('actionconf.php')))
 		->addColumn((new CFormList())->addRow(_('Name'),
 			(new CTextBox('filter_name', $data['filter']['name']))
 				->setWidth(ZBX_TEXTAREA_FILTER_SMALL_WIDTH)

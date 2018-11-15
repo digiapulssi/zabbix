@@ -24,7 +24,7 @@ $widget = (new CWidget())
 		->cleanItems()
 		->addItem((new CList())->addItem(new CSubmit('form', _('Create discovery rule'))))
 	)
-	->addItem((new CFilter('web.discoveryconf.filter.state'))
+	->addItem((new CFilter('web.discoveryconf.filter.state', new CUrl('discoveryconf.php')))
 		->addColumn((new CFormList())->addRow(_('Name'),
 			(new CTextBox('filter_name', $data['filter']['name']))
 				->setWidth(ZBX_TEXTAREA_FILTER_SMALL_WIDTH)

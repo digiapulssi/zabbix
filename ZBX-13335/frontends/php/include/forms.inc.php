@@ -260,7 +260,7 @@ function getItemFilterForm(&$items) {
 	$subfilter_trends			= $_REQUEST['subfilter_trends'];
 	$subfilter_interval			= $_REQUEST['subfilter_interval'];
 
-	$form = (new CFilter('web.items.filter.state'))
+	$form = (new CFilter('web.items.filter.state', new CUrl('items.php')))
 		->addVar('subfilter_hosts', $subfilter_hosts)
 		->addVar('subfilter_apps', $subfilter_apps)
 		->addVar('subfilter_types', $subfilter_types)

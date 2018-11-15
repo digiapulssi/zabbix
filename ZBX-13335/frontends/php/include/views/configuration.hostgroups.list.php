@@ -33,7 +33,7 @@ $widget = (new CWidget())
 		->cleanItems()
 		->addItem((new CList())->addItem($create_button))
 	)
-	->addItem((new CFilter('web.groups.filter.state'))
+	->addItem((new CFilter('web.groups.filter.state', new CUrl('hostgroups.php')))
 		->addColumn((new CFormList())->addRow(_('Name'),
 			(new CTextBox('filter_name', $data['filter']['name']))
 				->setWidth(ZBX_TEXTAREA_FILTER_STANDARD_WIDTH)

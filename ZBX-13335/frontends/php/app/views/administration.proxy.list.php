@@ -29,7 +29,7 @@ $widget = (new CWidget())
 		->cleanItems()
 		->addItem((new CList())->addItem(new CRedirectButton(_('Create proxy'), 'zabbix.php?action=proxy.edit')))
 	)
-	->addItem((new CFilter('web.proxies.filter.state'))
+	->addItem((new CFilter('web.proxies.filter.state', (new CUrl('zabbix.php'))->setArgument('action', 'proxy.list')))
 		->addVar('action', 'proxy.list')
 		->addColumn((new CFormList())->addRow(_('Name'),
 			(new CTextBox('filter_name', $data['filter']['name']))

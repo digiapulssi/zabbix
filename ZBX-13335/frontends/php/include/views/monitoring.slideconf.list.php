@@ -35,7 +35,7 @@ $widget = (new CWidget())
 
 // filter
 $widget->addItem(
-	(new CFilter('web.slideconf.filter.state'))
+	(new CFilter('web.slideconf.filter.state', new CUrl('slideconf.php')))
 		->addColumn((new CFormList())->addRow(_('Name'),
 			(new CTextBox('filter_name', $data['filter']['name']))
 				->setWidth(ZBX_TEXTAREA_FILTER_STANDARD_WIDTH)

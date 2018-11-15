@@ -65,7 +65,8 @@ ZBX_THREAD_ENTRY(dbsyncer_thread, args)
 
 	for (;;)
 	{
-		zbx_handle_log();
+		sec = zbx_time();
+		zbx_update_env(sec);
 
 		if (0 != sleeptime)
 		{
@@ -73,7 +74,6 @@ ZBX_THREAD_ENTRY(dbsyncer_thread, args)
 					get_process_type_string(process_type), process_num, old_num, old_total_sec);
 		}
 
-		sec = zbx_time();
 		next_sync = DCsync_history(ZBX_SYNC_PARTIAL, &sync_num);
 		num += sync_num;
 		total_sec += zbx_time() - sec;
@@ -101,10 +101,6 @@ ZBX_THREAD_ENTRY(dbsyncer_thread, args)
 		}
 
 		zbx_sleep_loop(sleeptime);
-
-#if !defined(_WINDOWS) && defined(HAVE_RESOLV_H)
-		zbx_update_resolver_conf();	/* handle /etc/resolv.conf update */
-#endif
 	}
 
 #undef STAT_INTERVAL

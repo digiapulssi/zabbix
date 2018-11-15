@@ -35,7 +35,7 @@ $widget = (new CWidget())
 	);
 
 // filter
-$filter = (new CFilter('web.hosts.filter.state'))
+$filter = (new CFilter('web.hosts.filter.state', new CUrl('hosts.php')))
 	->addColumn((new CFormList())->addRow(_('Name'),
 		(new CTextBox('filter_host', $data['filter']['host']))
 			->setWidth(ZBX_TEXTAREA_FILTER_SMALL_WIDTH)

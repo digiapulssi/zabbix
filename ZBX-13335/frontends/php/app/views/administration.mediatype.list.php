@@ -29,7 +29,9 @@ $widget = (new CWidget())
 		->cleanItems()
 		->addItem((new CList())->addItem(new CRedirectButton(_('Create media type'), 'zabbix.php?action=mediatype.edit')))
 	)
-	->addItem((new CFilter('web.media_types.filter.state'))
+	->addItem((new CFilter('web.media_types.filter.state',
+		(new CUrl('zabbix.php'))->setArgument('action', 'mediatype.list')
+	))
 		->addVar('action', 'mediatype.list')
 		->addColumn((new CFormList())->addRow(_('Name'),
 			(new CTextBox('filter_name', $data['filter']['name']))

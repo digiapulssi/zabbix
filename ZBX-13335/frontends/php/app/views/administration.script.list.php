@@ -29,7 +29,7 @@ $widget = (new CWidget())
 		->cleanItems()
 		->addItem((new CList())->addItem(new CRedirectButton(_('Create script'), 'zabbix.php?action=script.edit')))
 	)
-	->addItem((new CFilter('web.scripts.filter.state'))
+	->addItem((new CFilter('web.scripts.filter.state', (new CUrl('zabbix.php'))->setArgument('action', 'script.list')))
 		->addVar('action', 'script.list')
 		->addColumn((new CFormList())->addRow(_('Name'),
 			(new CTextBox('filter_name', $data['filter']['name']))

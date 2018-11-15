@@ -38,7 +38,7 @@ $widget = (new CWidget())
 			->addItem(new CSubmit('form', _('Create user')))
 		)
 	)
-	->addItem((new CFilter('web.user.filter.state'))
+	->addItem((new CFilter('web.user.filter.state', new CUrl('users.php')))
 		->addColumn((new CFormList())->addRow(_('Alias'),
 			(new CTextBox('filter_alias', $data['filter']['alias']))
 				->setWidth(ZBX_TEXTAREA_FILTER_SMALL_WIDTH)

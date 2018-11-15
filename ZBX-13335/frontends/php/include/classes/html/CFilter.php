@@ -24,17 +24,25 @@ class CFilter extends CTag {
 	private $filterid;
 	private $columns = [];
 	private $form;
-	private $footer = null;
+	private $footer;
 	private $navigator = false;
 	private $name = 'zbx_filter';
 	private $opened = true;
 	private $show_buttons = true;
 
-	public function __construct($filterid) {
+	/**
+	 * Filter page URL.
+	 *
+	 * @var object
+	 */
+	private $url;
+
+	public function __construct($filterid, CUrl $url) {
 		parent::__construct('div', true);
 		$this->addClass(ZBX_STYLE_FILTER_CONTAINER);
 		$this->setId('filter-space');
 		$this->filterid = $filterid;
+		$this->url = $url;
 		$this->columns = [];
 
 		$this->form = (new CForm('get'))
@@ -138,11 +146,6 @@ class CFilter extends CTag {
 			return null;
 		}
 
-		$url = (new CUrl())
-			->removeArgument('filter_set')
-			->removeArgument('ddreset')
-			->setArgument('filter_rst', 1);
-
 		return (new CDiv())
 			->addClass(ZBX_STYLE_FILTER_FORMS)
 			->addItem(
@@ -150,12 +153,14 @@ class CFilter extends CTag {
 					->onClick('javascript: chkbxRange.clearSelectedOnFilterChange();')
 			)
 			->addItem(
-				(new CRedirectButton(_('Reset'), $url->getUrl()))
+				(new CRedirectButton(_('Reset'),
+					$this->url
+						->setArgument('filter_rst', 1)
+						->getUrl()
+				))
 					->addClass(ZBX_STYLE_BTN_ALT)
 					->onClick('javascript: chkbxRange.clearSelectedOnFilterChange();')
 			);
-
-		return $buttons;
 	}
 
 	protected function startToString() {
