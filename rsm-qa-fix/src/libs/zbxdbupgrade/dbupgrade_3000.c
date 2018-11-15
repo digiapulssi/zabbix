@@ -3004,6 +3004,37 @@ static int	DBpatch_3000231(void)
 	return SUCCEED;
 }
 
+static int	DBpatch_3000232(void)
+{
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	if (ZBX_DB_OK > DBexecute("update mappings set value='-390' where mappingid=13501"))
+		return FAIL;
+
+	if (ZBX_DB_OK > DBexecute("update mappings set value='-391' where mappingid=13502"))
+		return FAIL;
+
+	return SUCCEED;
+}
+
+static int	DBpatch_3000233(void)
+{
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	/* {$PROBE.INTERNAL.ERROR.INTERVAL}=1m */
+	if (ZBX_DB_OK > DBexecute(
+			"update globalmacro"
+			" set value='1m'"
+			" where globalmacroid=66"))
+	{
+		return FAIL;
+	}
+
+	return SUCCEED;
+}
+
 #endif
 
 DBPATCH_START(3000)
@@ -3082,5 +3113,7 @@ DBPATCH_ADD(3000228, 0, 0)	/* reorganize error codes: part 2 */
 DBPATCH_ADD(3000229, 0, 0)	/* reorganize error codes: part 3 (add -200 and -250 to RDAP service error codes) */
 DBPATCH_ADD(3000230, 0, 0)	/* fix previous patch 3000229: RDAP error codes -400 :: -415 */
 DBPATCH_ADD(3000231, 0, 0)	/* add item resolver.status[...] to templates "Template <PROBE> status" */
+DBPATCH_ADD(3000232, 0, 0)	/* replace error codes -100 and -101 with -390 and -391 */
+DBPATCH_ADD(3000233, 0, 0)	/* change global macro value {$PROBE.INTERNAL.ERROR.INTERVAL}=5m (was 1m) */
 
 DBPATCH_END()

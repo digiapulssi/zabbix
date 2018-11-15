@@ -1274,8 +1274,8 @@ Other options
                 list of RDDS80 servers separated by comma: "NAME1,NAME2,..."
         --rdap-base-url=STRING
                 base URL for RDAP queries
-                Specify "not listed" to get error -100, e. g. --rdap-base-url="not listed"
-                Specify "no https" to get error -101, e. g. --rdap-base-url="no https"
+                Specify "not listed" to get error -390, e. g. --rdap-base-url="not listed"
+                Specify "no https" to get error -391, e. g. --rdap-base-url="no https"
         --rdap-test-domain=STRING
                 test domain for RDAP queries
         --epp-servers=STRING
