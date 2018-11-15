@@ -1348,6 +1348,7 @@ UPDATE config SET server_check_interval = 0 WHERE configid = 1;
 
 -- testPageAvailabilityReport SLA reports
 INSERT INTO hosts (hostid, host, name, status, description) VALUES (50009, 'SLA reports host', 'SLA reports host', 0, '');
+INSERT INTO interface (interfaceid, hostid, main, type, useip, ip, port) VALUES (50022, 50009, 1, 1, 1, '127.0.0.1', '10051');
 INSERT INTO hosts_groups (hostgroupid, hostid, groupid) VALUES (50009, 50009, 4);
 INSERT INTO items (itemid, type, hostid, name, key_, params, description) VALUES (40066, 2, 50009, 'Item A', 'A', '', '');
 INSERT INTO items (itemid, type, hostid, name, key_, params, description) VALUES (40067, 2, 50009, 'Item B', 'B', '', '');
