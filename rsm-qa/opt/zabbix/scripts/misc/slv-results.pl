@@ -14,6 +14,10 @@ use TLD_constants qw(:api);
 use RSM;
 use RSMSLV;
 
+my @months = (
+	qw/Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec/
+);
+
 parse_opts('tld=s', 'from=n', 'till=n');
 
 setopt('nolog');
@@ -25,11 +29,20 @@ my $till = getopt('till');
 
 usage() unless ($tld);
 
-if (!$from)
+if (!$from || substr(getopt('from'), 0, length("-")) eq "-")
 {
 	my $t = time();
 
-	$from = $t - 300 - ($t % 300);
+	print("Current time: ", __ts_human($t), "\n");
+
+	$from = cycle_start($t - 180 - 300, 300);
+
+	if (substr(getopt('from'), 0, length("-")) eq "-")
+	{
+		my $mult = substr(getopt('from'), 1);
+
+		$from -= ($mult * 300);
+	}
 }
 
 if (!$till)
@@ -41,6 +54,8 @@ set_slv_config(get_rsm_config());
 
 db_connect();
 
+fail("TLD \"" . getopt('tld') . "\" not found") unless (tld_exists(getopt('tld')));
+
 my %uint_itemids;
 
 my $rows_ref = db_select(
@@ -49,6 +64,8 @@ my $rows_ref = db_select(
 	" where i.hostid=h.hostid".
 		" and h.host='$tld'".
 		" and i.value_type=" . ITEM_VALUE_TYPE_UINT64);
+
+fail("cannot find SLV items like Service availability") if (scalar(@{$rows_ref}) == 0);
 
 map {$uint_itemids{$_->[0]} = $_->[1]} (@{$rows_ref});
 
@@ -60,6 +77,8 @@ $rows_ref = db_select(
 	" where i.hostid=h.hostid".
 		" and h.host='$tld'".
 		" and i.value_type=" . ITEM_VALUE_TYPE_FLOAT);
+
+fail("cannot find SLV items like Service rolling week") if (scalar(@{$rows_ref}) == 0);
 
 map {$float_itemids{$_->[0]} = $_->[1]} (@{$rows_ref});
 
@@ -150,7 +169,7 @@ foreach my $row_ref (@$rows_ref)
 
 	if ($cycle_clock != $prev_cycle_clock)
 	{
-		print("calculated values: $cycle_values\n") if (defined($cycle_values));
+		printf("%30s\n", "calculated values: $cycle_values") if (defined($cycle_values));
 
 		$cycle_values = 0;
 		__print_header($cycle_clock) unless ($cycle_clock == $prev_cycle_clock);
@@ -158,12 +177,12 @@ foreach my $row_ref (@$rows_ref)
 
 	$cycle_values++;
 
-	printf("%-40s %s\n", "$service $type", "($clock) " . $value);
+	printf("%-40s %s\n", "$service $type", $value);
 
 	$prev_cycle_clock = $cycle_clock;
 }
 
-print("calculated values: $cycle_values\n") if (defined($cycle_values));
+printf("%30s\n", "calculated values: $cycle_values") if (defined($cycle_values));
 
 sub __ts_human
 {
@@ -174,7 +193,7 @@ sub __ts_human
 	# sec, min, hour, mday, mon, year, wday, yday, isdst
 	my ($sec, $min, $hour, $mday, $mon, $year) = localtime($ts);
 
-	return sprintf("%.2d-%.2d-%.4d %.2d:%.2d", $mday, $mon + 1, $year + 1900, $hour, $min);
+	return sprintf("%.2d %s %.4d %.2d:%.2d", $mday, $months[$mon], $year + 1900, $hour, $min);
 }
 
 sub __print_header
@@ -182,7 +201,7 @@ sub __print_header
 	my $clock = shift;
 
 	print("----------------------------------------------------------------------------------------------------\n");
-	print("                ", __ts_human($clock), "\n");
+	print("Cycle: ", __ts_human($clock), "\n");
 	print("----------------------------------------------------------------------------------------------------\n");
 }
 
@@ -194,7 +213,7 @@ slv-results.pl - show accumulated results stored by cron
 
 =head1 SYNOPSIS
 
-slv-results.pl --tld <tld> --from <unixtime> --till <unixtime> [options] [--debug] [--help]
+slv-results.pl --tld <tld> [--from <unixtime>] [--till <unixtime>] [--debug] [--help]
 
 =head1 OPTIONS
 
@@ -206,11 +225,18 @@ Show results of specified TLD.
 
 =item B<--from> timestamp
 
-Specify Unix timestamp within the cycle.
+There are 2 types of value you can specify with --from:
+- Unix timestamp within the cycle
+- negative number representing number of cycles to go back from @from
+By default @from is the last complete 5-minute cycle. E. g.
+
+--from -2
+
+tells the script to move 2 cycles back from the last complete 5-minute cycle.
 
 =item B<--till> timestamp
 
-Specify Unix timestamp within the cycle.
+Specify Unix timestamp within the cycl (default: end of 5-minute cycle since @from).
 
 =item B<--debug>
 
