@@ -237,7 +237,8 @@ if (defined($OPTS{'list-services'}))
 		'{$RSM.RDDS.TESTPREFIX}',
 		'{$RSM.TLD.DNSSEC.ENABLED}',
 		'{$RSM.TLD.EPP.ENABLED}',
-		'{$RSM.TLD.RDDS.ENABLED}'
+		'{$RSM.TLD.RDDS.ENABLED}',
+		'{$RDAP.TLD.ENABLED}'
 	);
 
 	foreach my $tld (sort(@tlds))
@@ -1241,7 +1242,7 @@ Other options
                 if none or all services specified - will disable the whole TLD
 	--list-services
 		list services of each TLD, the output is comma-separated list:
-                <TLD>,<TLD-TYPE>,<TLD-STATUS>,<RDDS.DNS.TESTPREFIX>,<RDDS.NS.STRING>,<RDDS.TESTPREFIX>,<TLD.DNSSEC.ENABLED>,<TLD.EPP.ENABLED>,<TLD.RDDS.ENABLED>
+                <TLD>,<TLD-TYPE>,<TLD-STATUS>,<RDDS.DNS.TESTPREFIX>,<RDDS.NS.STRING>,<RDDS.TESTPREFIX>,<TLD.DNSSEC.ENABLED>,<TLD.EPP.ENABLED>,<TLD.RDDS.ENABLED>,<TLD.RDAP.ENABLED>
 	--get-nsservers-list
 		CSV formatted list of NS + IP server pairs for specified TLD:
 		<TLD>,<IP-VERSION>,<NAME-SERVER>,<IP>

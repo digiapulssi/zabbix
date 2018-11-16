@@ -1,3 +1,10 @@
+Changes for rsm1.1.0rc40
+
+Bug fixes:
+....I..... [424] improved performance of SLA API, Data Export scripts by tuning SQL statements and removing excessive SQL calls (dimir)
+....I..... [441] added <TLD.RDAP.ENABLED> to output of tld.pl --list-services (yurii)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.1.0rc39
 
 Bug fixes:
