@@ -3035,6 +3035,35 @@ static int	DBpatch_3000233(void)
 	return SUCCEED;
 }
 
+static int	DBpatch_3000234(void)
+{
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	/* delete obsoleted records */
+	if (ZBX_DB_OK > DBexecute(
+			"delete l"
+			" from lastvalue as l"
+			" left join items i"
+				" on i.itemid = l.itemid"
+			" where i.itemid is null"))
+	{
+		return FAIL;
+	}
+
+	/* delete obsoleted records */
+	if (ZBX_DB_OK > DBexecute(
+			"alter table `lastvalue`"
+			" add constraint `c_lastvalue_1`"
+				" foreign key (`itemid`) references `items` (`itemid`)"
+			" on delete cascade"))
+	{
+		return FAIL;
+	}
+
+	return SUCCEED;
+}
+
 #endif
 
 DBPATCH_START(3000)
@@ -3115,5 +3144,6 @@ DBPATCH_ADD(3000230, 0, 0)	/* fix previous patch 3000229: RDAP error codes -400 
 DBPATCH_ADD(3000231, 0, 0)	/* add item resolver.status[...] to templates "Template <PROBE> status" */
 DBPATCH_ADD(3000232, 0, 0)	/* replace error codes -100 and -101 with -390 and -391 */
 DBPATCH_ADD(3000233, 0, 0)	/* change global macro value {$PROBE.INTERNAL.ERROR.INTERVAL}=5m (was 1m) */
+DBPATCH_ADD(3000234, 0, 0)	/* add constraint on lastvalue table to delete obsoleted itemids */
 
 DBPATCH_END()

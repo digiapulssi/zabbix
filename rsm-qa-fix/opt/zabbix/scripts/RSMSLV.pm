@@ -4,12 +4,13 @@ use strict;
 use warnings;
 
 use DBI;
+use DBI qw(:sql_types);
 use Getopt::Long;
 use Pod::Usage;
 use Exporter qw(import);
 use Zabbix;
 use Alerts;
-use TLD_constants qw(:api :items :ec);
+use TLD_constants qw(:api :items :ec :groups);
 use File::Pid;
 use POSIX qw(floor);
 use Sys::Syslog;
@@ -48,7 +49,6 @@ use constant TRIGGER_VALUE_FALSE => 0;
 use constant TRIGGER_VALUE_TRUE => 1;
 use constant INCIDENT_FALSE_POSITIVE => 1; # NB! must be in sync with frontend
 use constant PROBE_LASTACCESS_ITEM => 'zabbix[proxy,{$RSM.PROXY_NAME},lastaccess]';
-use constant PROBE_GROUP_NAME => 'Probes';
 use constant PROBE_KEY_MANUAL => 'rsm.probe.status[manual]';
 use constant PROBE_KEY_AUTOMATIC => 'rsm.probe.status[automatic,%]'; # match all in SQL
 
@@ -90,7 +90,7 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		get_itemid_by_hostid get_itemid_like_by_hostid get_itemids_by_host_and_keypart get_lastclock get_tlds
 		get_probes get_nsips get_nsip_items tld_exists tld_service_enabled db_connect db_disconnect
 		get_templated_nsips db_exec tld_interface_enabled
-		tld_interface_enabled_prepare
+		tld_interface_enabled_create_cache tld_interface_enabled_delete_cache
 		db_select db_select_binds set_slv_config get_cycle_bounds get_rollweek_bounds get_downtime_bounds
 		max_avail_time get_probe_times probe_offline_at probes2tldhostids
 		get_probe_online_key_itemid
@@ -421,9 +421,9 @@ sub get_lastclock
 			"select i.itemid".
 			" from items i,hosts h".
 			" where i.hostid=h.hostid".
-			" and i.status=0".
-			" and h.host='$host'".
-			" and i.key_ like '$key%'".
+				" and i.status=0".
+				" and h.host='$host'".
+				" and i.key_ like '$key%'".
 			" limit 1";
 	}
 	else
@@ -432,9 +432,9 @@ sub get_lastclock
 			"select i.itemid".
 			" from items i,hosts h".
 			" where i.hostid=h.hostid".
-			" and i.status=0".
-			" and h.host='$host'".
-			" and i.key_='$key'";
+				" and i.status=0".
+				" and h.host='$host'".
+				" and i.key_='$key'";
 	}
 
 	my $rows_ref = db_select($sql);
@@ -459,10 +459,9 @@ sub get_tlds
 
 	my $rows_ref = db_select(
 		"select distinct h.host".
-		" from hosts h,hosts_groups hg,groups g".
+		" from hosts h,hosts_groups hg".
 		" where h.hostid=hg.hostid".
-			" and hg.groupid=g.groupid".
-			" and g.name='TLDs'".
+			" and hg.groupid=".TLDS_GROUPID.
 			" and h.status=0".
 		" order by h.host");
 
@@ -497,12 +496,11 @@ sub get_probes
 
 	my $rows_ref = db_select(
 		"select h.host,h.hostid".
-		" from hosts h, hosts_groups hg, groups g".
+		" from hosts h, hosts_groups hg".
 		" where h.hostid=hg.hostid".
-			" and hg.groupid=g.groupid".
 			" and h.status=0".
 			$name_cond.
-			" and g.name='".PROBE_GROUP_NAME."'");
+			" and hg.groupid=".PROBES_GROUPID);
 
 	my $result = {};
 
@@ -693,11 +691,11 @@ sub tld_service_enabled
 	my $service = shift;
 	my $till = shift;
 
-	$service = uc($service);
+	$service = lc($service);
 
-	return 1 if ($service eq 'DNS');
+	return 1 if ($service eq 'dns');
 
-	if ($service eq 'RDDS')
+	if ($service eq 'rdds')
 	{
 		return 1 if tld_interface_enabled($tld, 'rdds43', $till);
 
@@ -736,7 +734,7 @@ sub enabled_item_key_from_interface
 #             ...
 #         ]
 #     },
-#     'dnssec.enabled' => [
+#     'dnssec.enabled' => {
 #         'tld1' => [
 #             itemid1,
 #             itemid2,
@@ -752,33 +750,38 @@ sub enabled_item_key_from_interface
 #
 # These variables are initialized at db_connect()
 
-my %enabled_items_cache;
-my %enabled_hosts_cache;	# hostid => 'tld'
-my $tlds_cache;
+my %enabled_hosts_cache;	# (hostid1 => tld1, ...)
+my %enabled_items_cache;	# (key1 => {tld1 => [itemid1, itemid2, ...], ...}, ...)
+my @tlds_cache;			# (tld1, tld2, ...)
 
-sub tld_interface_enabled_prepare
+sub uniq
+{
+	my %seen;
+
+	grep(!$seen{$_}++, @_);
+}
+
+sub tld_interface_enabled_create_cache
 {
 	my $till = shift;
 	my @interfaces = @_;
 
+	dbg("In tld_interface_enabled_create_cache() ", join(',', @interfaces));
+
 	return if (scalar(@interfaces) == 0);
 
-	if (keys(%enabled_hosts_cache) == 0)
+	if (scalar(keys(%enabled_hosts_cache)) == 0)
 	{
-		$tlds_cache = get_tlds(undef, $till);  # get all
-
-		return if (scalar(@{$tlds_cache}) == 0);
-
-		my @host_patterns;
-
-		map {push(@host_patterns, "'$_ %'")} (@{$tlds_cache});
-
 		my $rows_ref = db_select(
-			"select hostid,substring_index(host, ' ', 1)".
-			" from hosts".
-			" where host like " . join(' or host like ', @host_patterns));
+			"select h.hostid,h.host".
+			" from hosts h,hosts_groups hg".
+			" where h.hostid=hg.hostid".
+				" and h.status=0".
+				" and hg.groupid=".TLD_PROBE_RESULTS_GROUPID);
 
-		map {$enabled_hosts_cache{$_->[0]} = $_->[1]} (@{$rows_ref});
+		map {$enabled_hosts_cache{$_->[0]} = substr($_->[1], 0, index($_->[1], ' '))} (@{$rows_ref});
+
+		@tlds_cache = uniq(values(%enabled_hosts_cache)) if (scalar(@tlds_cache) == 0);
 	}
 
 	foreach my $interface (@interfaces)
@@ -791,7 +794,7 @@ sub tld_interface_enabled_prepare
 
 		if (!defined($enabled_items_cache{$item_key}))
 		{
-			$enabled_items_cache{$item_key} = {};
+			$enabled_items_cache{$item_key} = ();
 
 			my $rows_ref = db_select(
 				"select itemid,hostid".
@@ -799,7 +802,7 @@ sub tld_interface_enabled_prepare
 				" where key_='$item_key'".
 					" and hostid in (" . join(',', keys(%enabled_hosts_cache)) . ")");
 
-			map {$enabled_items_cache{$item_key}{$_} = []} (@{$tlds_cache});
+			map {$enabled_items_cache{$item_key}{$_} = []} (@tlds_cache);
 
 			foreach my $row_ref (@{$rows_ref})
 			{
@@ -812,6 +815,13 @@ sub tld_interface_enabled_prepare
 			}
 		}
 	}
+}
+
+sub tld_interface_enabled_delete_cache()
+{
+	%enabled_items_cache = ();
+	%enabled_hosts_cache = ();
+	@tlds_cache = ();
 }
 
 sub tld_interface_enabled
@@ -828,7 +838,7 @@ sub tld_interface_enabled
 
 	if (!defined($enabled_items_cache{$item_key}))
 	{
-		tld_interface_enabled_prepare($till, $interface);
+		tld_interface_enabled_create_cache($till, $interface);
 	}
 
 	if (scalar(@{$enabled_items_cache{$item_key}{$tld}}) != 0)
@@ -982,10 +992,6 @@ sub db_connect
 	# http://search.cpan.org/~capttofu/DBD-mysql-4.028/lib/DBD/mysql.pm
 	# for details
 	$dbh->{'mysql_use_result'} = 1;
-
-	%enabled_items_cache = ();
-	%enabled_hosts_cache = ();
-	$tlds_cache = undef;
 }
 
 sub db_disconnect
@@ -2231,9 +2237,9 @@ sub get_downtime_execute
 			$sql_start = Time::HiRes::time();
 		}
 
-		$sth->bind_param(1, $itemid);
-		$sth->bind_param(2, $period_from);
-		$sth->bind_param(3, $period_till);
+		$sth->bind_param(1, $itemid, SQL_INTEGER);
+		$sth->bind_param(2, $period_from, SQL_INTEGER);
+		$sth->bind_param(3, $period_till, SQL_INTEGER);
 
 		$sth->execute()
 			or fail("cannot execute query: ", $sth->errstr);

@@ -177,6 +177,9 @@ foreach my $row_ref (@$rows_ref)
 
 	$cycle_values++;
 
+	$value = "($clock) $value" if (opt('debug'));
+	$service = "($itemid) $service" if (opt('debug'));
+
 	printf("%-40s %s\n", "$service $type", $value);
 
 	$prev_cycle_clock = $cycle_clock;
