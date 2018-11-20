@@ -976,12 +976,12 @@ sub create_main_template {
     create_items_epp($templateid, $template_name) if (defined($OPTS{'epp-servers'}));
 
     really(create_macro('{$RSM.TLD}', $tld, $templateid));
-    really(create_macro('{$RSM.DNS.TESTPREFIX}', $OPTS{'dns-test-prefix'}, $templateid));
-    really(create_macro('{$RSM.RDDS.TESTPREFIX}', $OPTS{'rdds-test-prefix'}, $templateid)) if (defined($OPTS{'rdds-test-prefix'}));
-    really(create_macro('{$RSM.RDDS.NS.STRING}', defined($OPTS{'rdds-ns-string'}) ? $OPTS{'rdds-ns-string'} : cfg_default_rdds_ns_string, $templateid));
-    really(create_macro('{$RSM.TLD.DNSSEC.ENABLED}', $OPTS{'dnssec'}, $templateid, true));
-    really(create_macro('{$RSM.TLD.RDDS.ENABLED}', defined($OPTS{'rdds43-servers'}) ? 1 : 0, $templateid, true));
-    really(create_macro('{$RSM.TLD.EPP.ENABLED}', defined($OPTS{'epp-servers'}) ? 1 : 0, $templateid, true));
+    really(create_macro('{$RSM.DNS.TESTPREFIX}', $OPTS{'dns-test-prefix'}, $templateid, 1));
+    really(create_macro('{$RSM.RDDS.TESTPREFIX}', $OPTS{'rdds-test-prefix'}, $templateid, 1)) if (defined($OPTS{'rdds-test-prefix'}));
+    really(create_macro('{$RSM.RDDS.NS.STRING}', defined($OPTS{'rdds-ns-string'}) ? $OPTS{'rdds-ns-string'} : cfg_default_rdds_ns_string, $templateid, 1));
+    really(create_macro('{$RSM.TLD.DNSSEC.ENABLED}', $OPTS{'dnssec'}, $templateid, 1));
+    really(create_macro('{$RSM.TLD.RDDS.ENABLED}', defined($OPTS{'rdds43-servers'}) ? 1 : 0, $templateid, 1));
+    really(create_macro('{$RSM.TLD.EPP.ENABLED}', defined($OPTS{'epp-servers'}) ? 1 : 0, $templateid, 1));
 
 	if (defined($OPTS{'rdap-base-url'}) && defined($OPTS{'rdap-test-domain'}))
 	{
