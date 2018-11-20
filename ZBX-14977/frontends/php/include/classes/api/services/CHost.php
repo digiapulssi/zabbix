@@ -769,9 +769,14 @@ class CHost extends CHostGeneral {
 
 		// Check inventory mode value.
 		$valid_inventory_modes = [HOST_INVENTORY_DISABLED, HOST_INVENTORY_MANUAL, HOST_INVENTORY_AUTOMATIC];
-		if (isset($data['inventory_mode']) && !in_array($data['inventory_mode'], $valid_inventory_modes)) {
-			self::exception(ZBX_API_ERROR_PARAMETERS, _s('Incorrect value for field "%1$s": %2$s.', 'inventory_mode',
-				_s('value must be one of %1$s', implode(', ', $valid_inventory_modes))));
+		$inventory_mode = new CLimitedSetValidator([
+			'values' => $valid_inventory_modes,
+			'messageInvalid' => _s('Incorrect value for field "%1$s": %2$s.', 'inventory_mode',
+				_s('value must be one of %1$s', implode(', ', $valid_inventory_modes)))
+		]);
+
+		if (array_key_exists('inventory_mode', $data)) {
+			$this->checkValidator($data['inventory_mode'], $inventory_mode);
 		}
 
 		// Check connection fields only for massupdate action.
