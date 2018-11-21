@@ -1424,7 +1424,6 @@ sub fill_test_data_dns($$$)
 				'targetIP'	=> $test->{'ip'}
 			};
 
-
 			if (!defined($test->{'rtt'}))
 			{
 				$metric->{'rtt'} = undef;

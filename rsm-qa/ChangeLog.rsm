@@ -1,7 +1,18 @@
+Changes for rsm1.1.0rc41
+
+Bug fixes:
+....I..... [445] forced quoting of fields when using tld.pl to list name servers or services in CSV format (dimir)
+....I..... [443] added <RDAP.BASE.URL>,<RDAP.TEST.DOMAIN>,<RDDS43.SERVERS>,<RDDS80.SERVERS> to output of `tld.pl --list-services` (yurii)
+....I..... [444] fixed NS status in Data Export script (dimir)
+....I..... [sub-433] added trigger for item rsm.probe.status[manual] to alert on Probe knock out (dimir)
+....I..... [442] fixed rdds-test-prefix update by tld.pl (yurii)
+....I..... [sub-424] changed StartEscalators=5 in zabbix_server.conf (was 1) (dimir)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.1.0rc40
 
 Bug fixes:
-....I..... [424] improved performance of SLA API, Data Export scripts by tuning SQL statements and removing excessive SQL calls (dimir)
+....I..... [sub-424] improved performance of SLA API, Data Export scripts by tuning SQL statements and removing excessive SQL calls (dimir)
 ....I..... [441] added <TLD.RDAP.ENABLED> to output of tld.pl --list-services (yurii)
 
 --------------------------------------------------------------------------------

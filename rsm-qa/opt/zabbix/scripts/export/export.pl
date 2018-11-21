@@ -1466,7 +1466,7 @@ sub __check_test
 
 	if (defined($description))
 	{
-		return SUCCESS if (is_internal_error_desc($interface, $description));
+		return (is_service_error_desc($interface, $description, $max_value) ? E_FAIL : SUCCESS);
 	}
 
 	return (is_service_error($interface, $value, $max_value) ? E_FAIL : SUCCESS);

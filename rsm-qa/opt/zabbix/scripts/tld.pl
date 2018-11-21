@@ -61,6 +61,7 @@ use RSM;
 use RSMSLV;
 use TLD_constants qw(:general :templates :groups :value_types :ec :slv :config :api);
 use TLDs;
+use Text::CSV_XS;
 
 sub really($);
 
@@ -201,6 +202,9 @@ if (defined($OPTS{'set-type'})) {
 #### Manage NS + IP server pairs ####
 if (defined($OPTS{'get-nsservers-list'}))
 {
+	# all fiels in a CSV must be double-quoted, even if empty
+	my $csv = Text::CSV_XS->new({binary => 1, auto_diag => 1, always_quote => 1, eol => "\n"});
+
 	my @tlds = ($OPTS{'tld'} // get_tld_list());
 
 	foreach my $tld (sort(@tlds))
@@ -216,7 +220,7 @@ if (defined($OPTS{'get-nsservers-list'}))
 			{
 				foreach my $ip (@{$nsservers->{$type}->{$ns_name}})
 				{
-					print($tld.",".$type.",".$ns_name.",".$ip."\n");
+					$csv->print(*STDOUT, [$tld, $type, $ns_name // "", $ip // ""]);
 				}
 			}
 		}
@@ -238,27 +242,65 @@ if (defined($OPTS{'list-services'}))
 		'{$RSM.TLD.DNSSEC.ENABLED}',
 		'{$RSM.TLD.EPP.ENABLED}',
 		'{$RSM.TLD.RDDS.ENABLED}',
-		'{$RDAP.TLD.ENABLED}'
+		'{$RDAP.TLD.ENABLED}',
+		'{$RDAP.BASE.URL}',
+		'{$RDAP.TEST.DOMAIN}'
 	);
+
+	my @rows = ();
+
+	# all fiels in a CSV must be double-quoted, even if empty
+	my $csv = Text::CSV_XS->new({binary => 1, auto_diag => 1, always_quote => 1, eol => "\n"});
 
 	foreach my $tld (sort(@tlds))
 	{
+		my @row = ();
+
 		my $services = get_services($tld);
-		print($tld);
+
+		push(@row, $tld);
 
 		foreach my $column (@columns)
 		{
-			print(",", $services->{$column} // "");
+			push(@row, $services->{$column} // "");
 		}
 
-		print("\n");
+		# obtain rsm.rdds[] item key and extract RDDS(43|80).SERVERS strings
+		my $template = get_template("Template $tld", 0, 0);
+		my $items = get_items_like($template->{'templateid'}, 'rsm.rdds[', true);
+
+		my $key;
+		foreach my $k (keys(%{$items}))	# assuming that only one rsm.rdds[] item is enabled at a time
+		{
+			if ($items->{$k}->{'status'} == 0)
+			{
+				$key = $items->{$k}->{'key_'};
+				last;
+			}
+		}
+
+		if (!defined($key))
+		{
+			push(@row, ("", ""));
+		}
+		else
+		{
+			$key =~ /,"(\S+)","(\S+)"]/;
+
+			push(@row, "$1");
+			push(@row, "$2");
+		}
+
+		push(@rows, \@row);
 	}
+
+	$csv->print(*STDOUT, $_) foreach (@rows);
 
 	exit;
 }
 
 if (defined($OPTS{'update-nsservers'})) {
-    # Possible use dig instead of --ns-servers-v4 and ns-servers-v6
+    # possible use dig instead of --ns-servers-v4 and ns-servers-v6
     $ns_servers = get_ns_servers($OPTS{'tld'});
     update_nsservers($OPTS{'tld'}, $ns_servers);
     exit;
@@ -976,12 +1018,12 @@ sub create_main_template {
     create_items_epp($templateid, $template_name) if (defined($OPTS{'epp-servers'}));
 
     really(create_macro('{$RSM.TLD}', $tld, $templateid));
-    really(create_macro('{$RSM.DNS.TESTPREFIX}', $OPTS{'dns-test-prefix'}, $templateid));
-    really(create_macro('{$RSM.RDDS.TESTPREFIX}', $OPTS{'rdds-test-prefix'}, $templateid)) if (defined($OPTS{'rdds-test-prefix'}));
-    really(create_macro('{$RSM.RDDS.NS.STRING}', defined($OPTS{'rdds-ns-string'}) ? $OPTS{'rdds-ns-string'} : cfg_default_rdds_ns_string, $templateid));
-    really(create_macro('{$RSM.TLD.DNSSEC.ENABLED}', $OPTS{'dnssec'}, $templateid, true));
-    really(create_macro('{$RSM.TLD.RDDS.ENABLED}', defined($OPTS{'rdds43-servers'}) ? 1 : 0, $templateid, true));
-    really(create_macro('{$RSM.TLD.EPP.ENABLED}', defined($OPTS{'epp-servers'}) ? 1 : 0, $templateid, true));
+    really(create_macro('{$RSM.DNS.TESTPREFIX}', $OPTS{'dns-test-prefix'}, $templateid, 1));
+    really(create_macro('{$RSM.RDDS.TESTPREFIX}', $OPTS{'rdds-test-prefix'}, $templateid, 1)) if (defined($OPTS{'rdds-test-prefix'}));
+    really(create_macro('{$RSM.RDDS.NS.STRING}', defined($OPTS{'rdds-ns-string'}) ? $OPTS{'rdds-ns-string'} : cfg_default_rdds_ns_string, $templateid, 1));
+    really(create_macro('{$RSM.TLD.DNSSEC.ENABLED}', $OPTS{'dnssec'}, $templateid, 1));
+    really(create_macro('{$RSM.TLD.RDDS.ENABLED}', defined($OPTS{'rdds43-servers'}) ? 1 : 0, $templateid, 1));
+    really(create_macro('{$RSM.TLD.EPP.ENABLED}', defined($OPTS{'epp-servers'}) ? 1 : 0, $templateid, 1));
 
 	if (defined($OPTS{'rdap-base-url'}) && defined($OPTS{'rdap-test-domain'}))
 	{
@@ -1242,7 +1284,9 @@ Other options
                 if none or all services specified - will disable the whole TLD
 	--list-services
 		list services of each TLD, the output is comma-separated list:
-                <TLD>,<TLD-TYPE>,<TLD-STATUS>,<RDDS.DNS.TESTPREFIX>,<RDDS.NS.STRING>,<RDDS.TESTPREFIX>,<TLD.DNSSEC.ENABLED>,<TLD.EPP.ENABLED>,<TLD.RDDS.ENABLED>,<TLD.RDAP.ENABLED>
+                <TLD>,<TLD-TYPE>,<TLD-STATUS>,<RDDS.DNS.TESTPREFIX>,<RDDS.NS.STRING>,<RDDS.TESTPREFIX>,
+                <TLD.DNSSEC.ENABLED>,<TLD.EPP.ENABLED>,<TLD.RDDS.ENABLED>,<TLD.RDAP.ENABLED>,
+                <RDAP.BASE.URL>,<RDAP.TEST.DOMAIN>,<RDDS43.SERVERS>,<RDDS80.SERVERS>
 	--get-nsservers-list
 		CSV formatted list of NS + IP server pairs for specified TLD:
 		<TLD>,<IP-VERSION>,<NAME-SERVER>,<IP>

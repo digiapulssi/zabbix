@@ -656,13 +656,20 @@ sub create_probe_status_template {
     create_item($options);
 
     $options = {
+	'description' => 'Probe {HOST.NAME} has been knocked out',
+	'expression' => '{'.$template_name.':rsm.probe.status[manual].last(0)}=0',
+	'priority' => '4',
+    };
+
+    create_trigger($options, $template_name);
+
+    $options = {
 	'description' => 'Probe {HOST.NAME} has been disabled for more than {$RSM.PROBE.MAX.OFFLINE}',
 	'expression' => '{'.$template_name.':rsm.probe.status[manual].max({$RSM.PROBE.MAX.OFFLINE})}=0',
 	'priority' => '3',
     };
 
     create_trigger($options, $template_name);
-
 
     $options = {
 	'description' => 'Probe {HOST.NAME} has been disabled by tests',
