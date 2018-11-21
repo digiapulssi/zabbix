@@ -24,6 +24,8 @@
 #	error "This module is only available for Windows OS"
 #endif
 
+#include "zbxalgo.h"
+
 #define EVT_VARIANT_TYPE_ARRAY	128
 #define EVT_VARIANT_TYPE_MASK	0x7f
 
@@ -176,17 +178,12 @@ typedef enum	_EVT_VARIANT_TYPE
 }
 EVT_VARIANT_TYPE;
 
-int			process_eventlog_5(const char *source, zbx_uint64_t *lastlogsize, unsigned long *out_timestamp,
-			char **out_source, unsigned short *out_severity, char **out_message, unsigned long *out_eventid,
-			unsigned char skip_old_data);
-int			process_eventlog_6(const char *source, zbx_uint64_t *lastlogsize, unsigned long *out_timestamp,
-			char **out_provider, char **out_source, unsigned short *out_severity, char **out_message,
-			unsigned long *out_eventid, zbx_uint64_t *FirstID, zbx_uint64_t *LastID,
-			EVT_HANDLE *render_context, EVT_HANDLE *query, zbx_uint64_t *keywords,
-			unsigned char skip_old_data);
-int			initialize_eventlog_6(const char *source, zbx_uint64_t *lastlogsize, zbx_uint64_t *FirstID,
-			zbx_uint64_t *LastID, EVT_HANDLE *render_context, EVT_HANDLE *query);
-int			finalize_eventlog_6(EVT_HANDLE *render_context, EVT_HANDLE *query);
+int			process_eventlog(const char *eventlog_name, zbx_uint64_t *lastlogsize,
+			zbx_uint64_t *lastlogsize_sent, unsigned char *skip_old_data, char **error,
+			zbx_vector_ptr_t *regexps, const char *pattern, const char *key_severity,
+			const char *key_source, const char *key_logeventid, int p_count, int s_count,
+			zbx_process_value_func_t process_value, const char *server, unsigned short port,
+			const char *hostname, const char *key);
 
 EVT_HANDLE WINAPI	EvtOpenLog(EVT_HANDLE Session, const wchar_t *Path, DWORD Flags);
 EVT_HANDLE WINAPI	EvtCreateRenderContext(DWORD ValuePathsCount, const wchar_t **ValuePaths, DWORD Flags);

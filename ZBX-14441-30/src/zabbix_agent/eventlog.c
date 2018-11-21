@@ -20,6 +20,11 @@
 #include "common.h"
 #include "log.h"
 #include "eventlog.h"
+#include "zbxregexp.h"
+#include "active.h"
+#include "winmeta.h"
+#include <delayimp.h>
+
 
 #define	DEFAULT_EVENT_CONTENT_SIZE 256
 
@@ -393,7 +398,7 @@ out:
 	return ret;
 }
 
-int	process_eventlog_5(const char *source, zbx_uint64_t *lastlogsize, unsigned long *out_timestamp,
+static int	process_eventlog_5(const char *source, zbx_uint64_t *lastlogsize, unsigned long *out_timestamp,
 		char **out_source, unsigned short *out_severity, char **out_message,
 		unsigned long *out_eventid, unsigned char skip_old_data)
 {
@@ -642,7 +647,7 @@ out:
 }
 
 /* initialize event logs with Windows API version 6 */
-int	initialize_eventlog_6(const char *source, zbx_uint64_t *lastlogsize, zbx_uint64_t *FirstID,
+static int	initialize_eventlog_6(const char *source, zbx_uint64_t *lastlogsize, zbx_uint64_t *FirstID,
 		zbx_uint64_t *LastID, EVT_HANDLE *render_context, EVT_HANDLE *query)
 {
 	const char	*__function_name = "initialize_eventlog_6";
@@ -890,7 +895,7 @@ out:
 }
 
 /* process eventlog with Windows API version 6 */
-int	process_eventlog_6(const char *source, zbx_uint64_t *lastlogsize, unsigned long *out_timestamp,
+static int	process_eventlog_6(const char *source, zbx_uint64_t *lastlogsize, unsigned long *out_timestamp,
 		char **out_provider, char **out_source, unsigned short *out_severity, char **out_message,
 		unsigned long *out_eventid, zbx_uint64_t *FirstID, zbx_uint64_t *LastID, EVT_HANDLE *render_context,
 		EVT_HANDLE *query, zbx_uint64_t *keywords, unsigned char skip_old_data)
@@ -956,7 +961,7 @@ out:
 }
 
 /* finalize eventlog6 and free the handles */
-int	finalize_eventlog_6(EVT_HANDLE *render_context, EVT_HANDLE *query)
+static int	finalize_eventlog_6(EVT_HANDLE *render_context, EVT_HANDLE *query)
 {
 	const char	*__function_name = "finalize_eventlog_6";
 	int		ret = FAIL;
@@ -982,4 +987,278 @@ int	finalize_eventlog_6(EVT_HANDLE *render_context, EVT_HANDLE *query)
 	return ret;
 }
 
+LONG WINAPI	DelayLoadDllExceptionFilter(PEXCEPTION_POINTERS excpointers)
+{
+	LONG		disposition = EXCEPTION_EXECUTE_HANDLER;
+	PDelayLoadInfo	delayloadinfo = (PDelayLoadInfo)(excpointers->ExceptionRecord->ExceptionInformation[0]);
 
+	switch (excpointers->ExceptionRecord->ExceptionCode)
+	{
+		case VcppException(ERROR_SEVERITY_ERROR, ERROR_MOD_NOT_FOUND):
+			zabbix_log(LOG_LEVEL_DEBUG, "function %s was not found in %s",
+					delayloadinfo->dlp.szProcName, delayloadinfo->szDll);
+			break;
+		case VcppException(ERROR_SEVERITY_ERROR, ERROR_PROC_NOT_FOUND):
+			if (delayloadinfo->dlp.fImportByName)
+			{
+				zabbix_log(LOG_LEVEL_DEBUG, "function %s was not found in %s",
+						delayloadinfo->dlp.szProcName, delayloadinfo->szDll);
+			}
+			else
+			{
+				zabbix_log(LOG_LEVEL_DEBUG, "function ordinal %d was not found in %s",
+						delayloadinfo->dlp.dwOrdinal, delayloadinfo->szDll);
+			}
+			break;
+		default:
+			disposition = EXCEPTION_CONTINUE_SEARCH;
+			break;
+	}
+
+	return disposition;
+}
+
+int	process_eventlog(const char *eventlog_name, zbx_uint64_t *lastlogsize, zbx_uint64_t *lastlogsize_sent,
+		unsigned char *skip_old_data, char **error, zbx_vector_ptr_t *regexps, const char *pattern,
+		const char *key_severity, const char *key_source, const char *key_logeventid, int p_count, int s_count,
+		zbx_process_value_func_t process_value, const char *server, unsigned short port, const char *hostname,
+		const char *key)
+{
+/* Windows event types for `eventlog' check */
+#ifndef INFORMATION_TYPE
+#	define INFORMATION_TYPE	"Information"
+#endif
+#ifndef WARNING_TYPE
+#	define WARNING_TYPE	"Warning"
+#endif
+#ifndef ERROR_TYPE
+#	define ERROR_TYPE	"Error"
+#endif
+#ifndef AUDIT_FAILURE
+#	define AUDIT_FAILURE	"Failure Audit"
+#endif
+#ifndef AUDIT_SUCCESS
+#	define AUDIT_SUCCESS	"Success Audit"
+#endif
+#ifndef CRITICAL_TYPE
+#	define CRITICAL_TYPE	"Critical"
+#endif
+#ifndef VERBOSE_TYPE
+#	define VERBOSE_TYPE	"Verbose"
+#endif
+
+	int		ret = FAIL, send_err = SUCCEED;
+	zbx_uint64_t	lastlogsize_tmp = *lastlogsize;
+	unsigned long	timestamp, logeventid;
+	char		*value = NULL, *source = NULL, str_logeventid[8];
+	const char	*str_severity;
+	unsigned short	severity;
+	OSVERSIONINFO	versionInfo;
+
+	versionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+	GetVersionEx(&versionInfo);
+
+	if (versionInfo.dwMajorVersion >= 6)	/* Windows Vista, 7 or Server 2008 */
+	{
+		__try
+		{
+			zbx_uint64_t	eventlog6_firstid = 0, eventlog6_lastid = 0, keywords;
+			EVT_HANDLE	eventlog6_render_context = NULL;
+			EVT_HANDLE	eventlog6_query = NULL;
+			char		*provider = NULL;
+
+			if (SUCCEED != initialize_eventlog_6(eventlog_name, &lastlogsize_tmp, &eventlog6_firstid,
+					&eventlog6_lastid, &eventlog6_render_context, &eventlog6_query))
+			{
+				finalize_eventlog_6(&eventlog6_render_context, &eventlog6_query);
+				goto out;
+			}
+
+			while (SUCCEED == (ret = process_eventlog_6(eventlog_name, &lastlogsize_tmp, &timestamp,
+					&provider, &source, &severity, &value, &logeventid, &eventlog6_firstid,
+					&eventlog6_lastid, &eventlog6_render_context, &eventlog6_query, &keywords,
+					*skip_old_data)))
+			{
+				*skip_old_data = 0;
+
+				/* End of file. */
+				/* The eventlog could become empty, must save `lastlogsize'. */
+				if (NULL == value)
+				{
+					*lastlogsize = lastlogsize_tmp;
+					break;
+				}
+
+				switch (severity)
+				{
+					case WINEVENT_LEVEL_LOG_ALWAYS:
+					case WINEVENT_LEVEL_INFO:
+						if (0 != (keywords & WINEVENT_KEYWORD_AUDIT_FAILURE))
+						{
+							severity = ITEM_LOGTYPE_FAILURE_AUDIT;
+							str_severity = AUDIT_FAILURE;
+							break;
+						}
+						else if (0 != (keywords & WINEVENT_KEYWORD_AUDIT_SUCCESS))
+						{
+							severity = ITEM_LOGTYPE_SUCCESS_AUDIT;
+							str_severity = AUDIT_SUCCESS;
+							break;
+						}
+						else
+							severity = ITEM_LOGTYPE_INFORMATION;
+							str_severity = INFORMATION_TYPE;
+							break;
+					case WINEVENT_LEVEL_WARNING:
+						severity = ITEM_LOGTYPE_WARNING;
+						str_severity = WARNING_TYPE;
+						break;
+					case WINEVENT_LEVEL_ERROR:
+						severity = ITEM_LOGTYPE_ERROR;
+						str_severity = ERROR_TYPE;
+						break;
+					case WINEVENT_LEVEL_CRITICAL:
+						severity = ITEM_LOGTYPE_CRITICAL;
+						str_severity = CRITICAL_TYPE;
+						break;
+					case WINEVENT_LEVEL_VERBOSE:
+						severity = ITEM_LOGTYPE_VERBOSE;
+						str_severity = VERBOSE_TYPE;
+						break;
+				}
+
+				zbx_snprintf(str_logeventid, sizeof(str_logeventid), "%lu", logeventid);
+
+				if (SUCCEED == regexp_match_ex(regexps, value, pattern, ZBX_CASE_SENSITIVE) &&
+						SUCCEED == regexp_match_ex(regexps, str_severity, key_severity,
+								ZBX_IGNORE_CASE) &&
+						SUCCEED == regexp_match_ex(regexps, provider, key_source,
+								ZBX_IGNORE_CASE) &&
+						SUCCEED == regexp_match_ex(regexps, str_logeventid, key_logeventid,
+								ZBX_CASE_SENSITIVE))
+				{
+					send_err = process_value(server, port, hostname, key, value, ITEM_STATE_NORMAL,
+							&lastlogsize_tmp, NULL, &timestamp, provider, &severity,
+							&logeventid, (unsigned char)ZBX_METRIC_FLAG_PERSISTENT);
+
+					if (SUCCEED == send_err)
+					{
+						*lastlogsize_sent = lastlogsize_tmp;
+						s_count--;
+					}
+				}
+				p_count--;
+
+				zbx_free(source);
+				zbx_free(provider);
+				zbx_free(value);
+
+				if (SUCCEED == send_err)
+				{
+					*lastlogsize = lastlogsize_tmp;
+				}
+				else
+				{
+					/* buffer is full, stop processing active checks */
+					/* till the buffer is cleared */
+					lastlogsize_tmp = *lastlogsize;
+					break;
+				}
+
+				/* limit on number of processed or sent-to-server lines reached */
+				if (0 >= p_count || 0 >= s_count)
+					break;
+
+			}	/* while processing an eventlog */
+
+			finalize_eventlog_6(&eventlog6_render_context, &eventlog6_query);
+		}
+		__except (DelayLoadDllExceptionFilter(GetExceptionInformation()))
+		{
+			zabbix_log(LOG_LEVEL_WARNING, "failed to process eventlog");
+		}
+	}
+	else if (versionInfo.dwMajorVersion < 6)    /* Windows versions before Vista */
+	{
+		while (SUCCEED == (ret = process_eventlog_5(eventlog_name, &lastlogsize_tmp, &timestamp, &source,
+				&severity, &value, &logeventid, *skip_old_data)))
+		{
+			*skip_old_data = 0;
+
+			/* End of file. */
+			/* The eventlog could become empty, must save `lastlogsize'. */
+			if (NULL == value)
+			{
+				*lastlogsize = lastlogsize_tmp;
+				break;
+			}
+
+			switch (severity)
+			{
+				case EVENTLOG_SUCCESS:
+				case EVENTLOG_INFORMATION_TYPE:
+					severity = ITEM_LOGTYPE_INFORMATION;
+					str_severity = INFORMATION_TYPE;
+					break;
+				case EVENTLOG_WARNING_TYPE:
+					severity = ITEM_LOGTYPE_WARNING;
+					str_severity = WARNING_TYPE;
+					break;
+				case EVENTLOG_ERROR_TYPE:
+					severity = ITEM_LOGTYPE_ERROR;
+					str_severity = ERROR_TYPE;
+					break;
+				case EVENTLOG_AUDIT_FAILURE:
+					severity = ITEM_LOGTYPE_FAILURE_AUDIT;
+					str_severity = AUDIT_FAILURE;
+					break;
+				case EVENTLOG_AUDIT_SUCCESS:
+					severity = ITEM_LOGTYPE_SUCCESS_AUDIT;
+					str_severity = AUDIT_SUCCESS;
+					break;
+			}
+
+			zbx_snprintf(str_logeventid, sizeof(str_logeventid), "%lu", logeventid);
+
+			if (SUCCEED == regexp_match_ex(regexps, value, pattern, ZBX_CASE_SENSITIVE) &&
+					SUCCEED == regexp_match_ex(regexps, str_severity, key_severity,
+							ZBX_IGNORE_CASE) &&
+					SUCCEED == regexp_match_ex(regexps, source, key_source, ZBX_IGNORE_CASE) &&
+					SUCCEED == regexp_match_ex(regexps, str_logeventid, key_logeventid,
+							ZBX_CASE_SENSITIVE))
+			{
+				send_err = process_value(server, port, hostname, key, value, ITEM_STATE_NORMAL,
+						&lastlogsize_tmp, NULL, &timestamp, source, &severity, &logeventid,
+						(unsigned char)ZBX_METRIC_FLAG_PERSISTENT);
+
+				if (SUCCEED == send_err)
+				{
+					*lastlogsize_sent = lastlogsize_tmp;
+					s_count--;
+				}
+			}
+			p_count--;
+
+			zbx_free(source);
+			zbx_free(value);
+
+			if (SUCCEED == send_err)
+			{
+				*lastlogsize = lastlogsize_tmp;
+			}
+			else
+			{
+				/* buffer is full, stop processing active checks */
+				/* till the buffer is cleared */
+				lastlogsize_tmp = *lastlogsize;
+				break;
+			}
+
+			/* limit on number of processed or sent-to-server lines reached */
+			if (0 >= p_count || 0 >= s_count)
+				break;
+		} /* while processing an eventlog */
+	}
+out:
+	return ret;
+}
