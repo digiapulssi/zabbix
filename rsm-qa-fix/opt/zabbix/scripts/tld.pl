@@ -246,6 +246,7 @@ if (defined($OPTS{'list-services'}))
 
 	my @rows = ();
 
+	# all row columns must be double-quoted, even if empty
 	foreach my $tld (sort(@tlds))
 	{
 		my @row = ();
@@ -256,28 +257,34 @@ if (defined($OPTS{'list-services'}))
 
 		foreach my $column (@columns)
 		{
-			push(@row, $services->{$column});
+			push(@row, $services->{$column} // "");
 		}
 
-		# Obtain rsm.rdds[] item key and extract RDDS(43|80).SERVERS strings.
+		# obtain rsm.rdds[] item key and extract RDDS(43|80).SERVERS strings
 		my $template = get_template("Template $tld", 0, 0);
 		my $items = get_items_like($template->{'templateid'}, 'rsm.rdds[', true);
-		my $key = '';
-		foreach my $k (keys %{$items}) # Assuming that only one rsm.rdds[] item is enabled at a time.
+
+		my $key;
+		foreach my $k (keys(%{$items}))	# assuming that only one rsm.rdds[] item is enabled at a time
 		{
-			if($items->{$k}->{'status'} == 0)
+			if ($items->{$k}->{'status'} == 0)
 			{
 				$key = $items->{$k}->{'key_'};
 				last;
 			}
 		}
 
-		pfail("Cannot obtain rsm.rdds[] item key for tld $tld") if $key eq '';
+		if (!defined($key))
+		{
+			push(@row, ("", ""));
+		}
+		else
+		{
+			$key =~ /,"(\S+)","(\S+)"]/;
 
-		$key =~ /,"(\S+)","(\S+)"]/;
-
-		push(@row, "$1");
-		push(@row, "$2");
+			push(@row, "$1");
+			push(@row, "$2");
+		}
 
 		push(@rows, \@row);
 	}
@@ -290,7 +297,7 @@ if (defined($OPTS{'list-services'}))
 }
 
 if (defined($OPTS{'update-nsservers'})) {
-    # Possible use dig instead of --ns-servers-v4 and ns-servers-v6
+    # possible use dig instead of --ns-servers-v4 and ns-servers-v6
     $ns_servers = get_ns_servers($OPTS{'tld'});
     update_nsservers($OPTS{'tld'}, $ns_servers);
     exit;

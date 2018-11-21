@@ -40,7 +40,8 @@ our %CATALOGS = (
 	ID_SERVICE_CATEGORY() => 'serviceCategory.csv',
 	ID_TLD_TYPE() => 'tldTypes.csv',
 	ID_STATUS_MAP() => 'statusMaps.csv',
-	ID_IP_VERSION() => 'ipVersions.csv');
+	ID_IP_VERSION() => 'ipVersions.csv'
+);
 
 our %DATAFILES = (
 	DATA_TEST() => 'tests.csv',
@@ -49,16 +50,19 @@ our %DATAFILES = (
 	DATA_INCIDENT() => 'incidents.csv',
 	DATA_INCIDENT_END() => 'incidentsEndTime.csv',
 	DATA_FALSE_POSITIVE() => 'falsePositiveChanges.csv',
-	DATA_PROBE_CHANGES() => 'probeChanges.csv');
+	DATA_PROBE_CHANGES() => 'probeChanges.csv'
+);
 
 use base 'Exporter';
 
-our @EXPORT = qw(ID_PROBE ID_TLD ID_NS_NAME ID_NS_IP ID_TRANSPORT_PROTOCOL ID_TEST_TYPE ID_SERVICE_CATEGORY
+our @EXPORT = qw(
+		ID_PROBE ID_TLD ID_NS_NAME ID_NS_IP ID_TRANSPORT_PROTOCOL ID_TEST_TYPE ID_SERVICE_CATEGORY
 		ID_TLD_TYPE ID_STATUS_MAP ID_IP_VERSION DATA_TEST DATA_NSTEST DATA_CYCLE DATA_INCIDENT DATA_INCIDENT_END
 		DATA_FALSE_POSITIVE DATA_PROBE_CHANGES
 		%CATALOGS %DATAFILES
 		dw_csv_init dw_append_csv dw_load_ids_from_db dw_get_id dw_get_name dw_write_csv_files
-		dw_write_csv_catalogs dw_delete_csvs dw_get_cycle_id dw_translate_cycle_id dw_set_date);
+		dw_write_csv_catalogs dw_delete_csvs dw_get_cycle_id dw_translate_cycle_id dw_set_date
+);
 
 my %_MAX_IDS = (
 	ID_PROBE() => 32767,
@@ -70,8 +74,10 @@ my %_MAX_IDS = (
 	ID_SERVICE_CATEGORY() => 127,
 	ID_TLD_TYPE() => 127,
 	ID_STATUS_MAP() => 127,
-	ID_IP_VERSION() => 127);
+	ID_IP_VERSION() => 127
+);
 
+# this is needed to construct Cycle ID
 use constant _DIGITS_CLOCK			=> 10;
 use constant _DIGITS_SERVICE_CATEGORY_ID	=> 3;
 use constant _DIGITS_TLD_ID			=> 5;
