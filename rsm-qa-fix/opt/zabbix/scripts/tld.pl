@@ -202,6 +202,9 @@ if (defined($OPTS{'set-type'})) {
 #### Manage NS + IP server pairs ####
 if (defined($OPTS{'get-nsservers-list'}))
 {
+	# all fiels in a CSV must be double-quoted, even if empty
+	my $csv = Text::CSV_XS->new({binary => 1, auto_diag => 1, always_quote => 1, eol => "\n"});
+
 	my @tlds = ($OPTS{'tld'} // get_tld_list());
 
 	foreach my $tld (sort(@tlds))
@@ -217,7 +220,7 @@ if (defined($OPTS{'get-nsservers-list'}))
 			{
 				foreach my $ip (@{$nsservers->{$type}->{$ns_name}})
 				{
-					print($tld.",".$type.",".$ns_name.",".$ip."\n");
+					$csv->print(*STDOUT, [$tld, $type, $ns_name // "", $ip // ""]);
 				}
 			}
 		}
@@ -246,7 +249,9 @@ if (defined($OPTS{'list-services'}))
 
 	my @rows = ();
 
-	# all row columns must be double-quoted, even if empty
+	# all fiels in a CSV must be double-quoted, even if empty
+	my $csv = Text::CSV_XS->new({binary => 1, auto_diag => 1, always_quote => 1, eol => "\n"});
+
 	foreach my $tld (sort(@tlds))
 	{
 		my @row = ();
@@ -289,8 +294,6 @@ if (defined($OPTS{'list-services'}))
 		push(@rows, \@row);
 	}
 
-	my $csv = Text::CSV_XS->new({binary => 1, auto_diag => 1, always_quote => 1});
-	$csv->eol("\n");
 	$csv->print(*STDOUT, $_) foreach (@rows);
 
 	exit;
