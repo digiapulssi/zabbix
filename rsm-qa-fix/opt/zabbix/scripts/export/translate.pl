@@ -208,7 +208,7 @@ sub __translate_ns_tests_line
 	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'nsFQDN', $ns_fqdn);
 	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'nsTestTLD', $ns_test_tld);
 	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'cycleDateMinute', ts_full($cycle_date_minute));
-	printf("%-" . PRINT_RIGHT_SHIFT . "s%s (%s)\n", 'nsTestStatus', $ns_test_status, $columns[2]);
+	printf("%-" . PRINT_RIGHT_SHIFT . "s%s (%s)\n", 'nsTestStatus', $ns_test_status, $columns[4]);
 	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'tldType', $tld_type);
 	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'testProtocol', $ns_test_protocol);
 }
