@@ -294,11 +294,11 @@ class CControllerWidgetGraphView extends CControllerWidget {
 			elseif ($fields['source_type'] == ZBX_WIDGET_FIELD_RESOURCE_GRAPH) {
 				$graph_src = '';
 
-				if ($fields['dynamic'] == WIDGET_DYNAMIC_ITEM && $dynamic_hostid == 0 && count($graph['hosts']) >= 1) {
-					$header_label = $graph['name'];
+				if (count($graph['hosts']) == 1 || $fields['dynamic'] == WIDGET_DYNAMIC_ITEM && $dynamic_hostid != 0) {
+					$header_label = $graph['hosts'][0]['name'].NAME_DELIMITER.$graph['name'];
 				}
 				else {
-					$header_label = $graph['hosts'][0]['name'].NAME_DELIMITER.$graph['name'];
+					$header_label = $graph['name'];
 				}
 
 				if ($fields['dynamic'] == WIDGET_DYNAMIC_ITEM && $dynamic_hostid && $resourceid) {
@@ -324,8 +324,6 @@ class CControllerWidgetGraphView extends CControllerWidget {
 							$graph_src->setArgument('items['.$new_graph_item['itemid'].']['.$name.']', $value);
 						}
 					}
-
-					$graph_src->setArgument('name', $host['name'].NAME_DELIMITER.$graph['name']);
 				}
 
 				if ($graph_dims['graphtype'] == GRAPH_TYPE_PIE || $graph_dims['graphtype'] == GRAPH_TYPE_EXPLODED) {
