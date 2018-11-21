@@ -61,6 +61,7 @@ use RSM;
 use RSMSLV;
 use TLD_constants qw(:general :templates :groups :value_types :ec :slv :config :api);
 use TLDs;
+use Text::CSV_XS;
 
 sub really($);
 
@@ -238,21 +239,52 @@ if (defined($OPTS{'list-services'}))
 		'{$RSM.TLD.DNSSEC.ENABLED}',
 		'{$RSM.TLD.EPP.ENABLED}',
 		'{$RSM.TLD.RDDS.ENABLED}',
-		'{$RDAP.TLD.ENABLED}'
+		'{$RDAP.TLD.ENABLED}',
+		'{$RDAP.BASE.URL}',
+		'{$RDAP.TEST.DOMAIN}'
 	);
+
+	my @rows = ();
 
 	foreach my $tld (sort(@tlds))
 	{
+		my @row = ();
+
 		my $services = get_services($tld);
-		print($tld);
+
+		push(@row, $tld);
 
 		foreach my $column (@columns)
 		{
-			print(",", $services->{$column} // "");
+			push(@row, $services->{$column});
 		}
 
-		print("\n");
+		# Obtain rsm.rdds[] item key and extract RDDS(43|80).SERVERS strings.
+		my $template = get_template("Template $tld", 0, 0);
+		my $items = get_items_like($template->{'templateid'}, 'rsm.rdds[', true);
+		my $key = '';
+		foreach my $k (keys %{$items}) # Assuming that only one rsm.rdds[] item is enabled at a time.
+		{
+			if($items->{$k}->{'status'} == 0)
+			{
+				$key = $items->{$k}->{'key_'};
+				last;
+			}
+		}
+
+		pfail("Cannot obtain rsm.rdds[] item key for tld $tld") if $key eq '';
+
+		$key =~ /,"(\S+)","(\S+)"]/;
+
+		push(@row, "$1");
+		push(@row, "$2");
+
+		push(@rows, \@row);
 	}
+
+	my $csv = Text::CSV_XS->new({binary => 1, auto_diag => 1});
+	$csv->eol("\n");
+	$csv->print(*STDOUT, $_) foreach (@rows);
 
 	exit;
 }
@@ -1242,7 +1274,9 @@ Other options
                 if none or all services specified - will disable the whole TLD
 	--list-services
 		list services of each TLD, the output is comma-separated list:
-                <TLD>,<TLD-TYPE>,<TLD-STATUS>,<RDDS.DNS.TESTPREFIX>,<RDDS.NS.STRING>,<RDDS.TESTPREFIX>,<TLD.DNSSEC.ENABLED>,<TLD.EPP.ENABLED>,<TLD.RDDS.ENABLED>,<TLD.RDAP.ENABLED>
+                <TLD>,<TLD-TYPE>,<TLD-STATUS>,<RDDS.DNS.TESTPREFIX>,<RDDS.NS.STRING>,<RDDS.TESTPREFIX>,
+                <TLD.DNSSEC.ENABLED>,<TLD.EPP.ENABLED>,<TLD.RDDS.ENABLED>,<TLD.RDAP.ENABLED>,
+                <RDAP.BASE.URL>,<RDAP.TEST.DOMAIN>,<RDDS43.SERVERS>,<RDDS80.SERVERS>
 	--get-nsservers-list
 		CSV formatted list of NS + IP server pairs for specified TLD:
 		<TLD>,<IP-VERSION>,<NAME-SERVER>,<IP>

@@ -1,6 +1,7 @@
 Changes for rsm1.1.0rc41
 
 Bug fixes:
+....I..... [443] added <RDAP.BASE.URL>,<RDAP.TEST.DOMAIN>,<RDDS43.SERVERS>,<RDDS80.SERVERS> to output of `tld.pl --list-services` (yurii)
 ....I..... [444] fixed NS status in Data Export script (dimir)
 ....I..... [sub-433] added trigger for item rsm.probe.status[manual] to alert on Probe knock out (dimir)
 ....I..... [442] fixed rdds-test-prefix update by tld.pl (yurii)
