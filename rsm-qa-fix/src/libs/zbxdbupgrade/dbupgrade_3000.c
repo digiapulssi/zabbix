@@ -2826,7 +2826,7 @@ static int	DBpatch_3000231(void)
 	zbx_vector_uint64_create(&templateids);
 	zbx_vector_uint64_reserve(&templateids, 1);
 
-	/* Select all "Template <Probe> Status" hosts */
+	/* select all "Template <Probe> Status" hosts */
 	result = DBselect("select h.hostid from hosts h,hosts_groups hg where h.hostid=hg.hostid and h.host like 'Template %% Status' and hg.groupid=240");
 
 	while (NULL != (row = DBfetch(result)))
@@ -2840,8 +2840,8 @@ static int	DBpatch_3000231(void)
 
 	DBfree_result(result);
 
-	next_itemid = DBget_maxid_num("items", templateids.values_num * 2);			/* for Template and host it is linked to */
-	next_itemappid = DBget_maxid_num("items_applications", templateids.values_num * 2);	/* for Template and host it is linked to */
+	next_itemid = DBget_maxid_num("items", templateids.values_num * 2);			/* items for Template and host it is linked to */
+	next_itemappid = DBget_maxid_num("items_applications", templateids.values_num * 2);	/* items_applications for Template and host it is linked to */
 
 	for (i = 0; i < templateids.values_num; i++)
 	{
@@ -2849,8 +2849,6 @@ static int	DBpatch_3000231(void)
 
 		templateid = templateids.values[i];
 		templated_itemid = next_itemid;
-
-		zabbix_log(LOG_LEVEL_CRIT, "DIMIR: " ZBX_FS_UI64, templateid);
 
 		if (ZBX_DB_OK > DBexecute(
 			"insert into items ("
@@ -2923,8 +2921,6 @@ static int	DBpatch_3000231(void)
 		}
 
 		ZBX_STR2UINT64(hostid, row[0]);	/* hostid of "<Probe>" */
-
-		zabbix_log(LOG_LEVEL_CRIT, "DIMIR: " ZBX_FS_UI64, hostid);
 
 		DBfree_result(result);
 
@@ -3064,6 +3060,122 @@ static int	DBpatch_3000234(void)
 	return SUCCEED;
 }
 
+static int	DBpatch_3000235(void)
+{
+	DB_RESULT		result;
+	DB_ROW			row;
+	zbx_vector_uint64_t	templateids;
+	zbx_uint64_t		next_triggerid, next_functionid;
+	size_t			i;
+
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	zbx_vector_uint64_create(&templateids);
+	zbx_vector_uint64_reserve(&templateids, 1);
+
+	/* select all "Template <Probe> Status" hosts */
+	result = DBselect("select h.hostid from hosts h,hosts_groups hg where h.hostid=hg.hostid and h.host like 'Template %% Status' and hg.groupid=240");
+
+	while (NULL != (row = DBfetch(result)))
+	{
+		zbx_uint64_t	templateid;
+
+		ZBX_STR2UINT64(templateid, row[0]);	/* hostid of "Template <Probe> Status" */
+
+		zbx_vector_uint64_append(&templateids, templateid);
+	}
+
+	DBfree_result(result);
+
+	next_triggerid = DBget_maxid_num("triggers", templateids.values_num * 2);	/* triggers for Template and host it is linked to */
+	next_functionid = DBget_maxid_num("functions", templateids.values_num * 2);	/* functions for Template and host it is linked to */
+
+	for (i = 0; i < templateids.values_num; i++)
+	{
+		zbx_uint64_t	templateid, hostid, templated_itemid, itemid, templated_functionid, functionid,
+				templated_triggerid, triggerid;
+
+		templateid = templateids.values[i];
+
+		templated_triggerid = next_triggerid++;
+		triggerid = next_triggerid++;
+		templated_functionid = next_functionid++;
+		functionid = next_functionid++;
+
+		result = DBselect("select hostid from hosts_templates where templateid=" ZBX_FS_UI64, templateid);
+
+		if (NULL == (row = DBfetch(result)))
+		{
+			zabbix_log(LOG_LEVEL_CRIT, "Zabbix configuration in the database is corrupted");
+			return FAIL;
+		}
+
+		ZBX_STR2UINT64(hostid, row[0]);	/* hostid of "<Probe>" */
+
+		DBfree_result(result);
+
+		result = DBselect("select itemid from items where hostid=" ZBX_FS_UI64 " and key_='rsm.probe.status[manual]' and templateid is null", templateid);
+
+		if (NULL == (row = DBfetch(result)))
+		{
+			zabbix_log(LOG_LEVEL_CRIT, "Zabbix configuration in the database is corrupted");
+			return FAIL;
+		}
+
+		ZBX_STR2UINT64(templated_itemid, row[0]);	/* itemid of "Template <Probe> Status" */
+
+		DBfree_result(result);
+
+		result = DBselect("select itemid from items where hostid=" ZBX_FS_UI64 " and key_='rsm.probe.status[manual]' and templateid is not null", hostid);
+
+		if (NULL == (row = DBfetch(result)))
+		{
+			zabbix_log(LOG_LEVEL_CRIT, "Zabbix configuration in the database is corrupted");
+			return FAIL;
+		}
+
+		ZBX_STR2UINT64(itemid, row[0]);	/* itemid of "<Probe>" */
+
+		DBfree_result(result);
+
+		/* add triggers... */
+		if (ZBX_DB_OK > DBexecute(
+				"insert into triggers (triggerid,expression,description,url,status,priority,comments,templateid,type,flags)"
+				" values"
+					" (" ZBX_FS_UI64 ",'{" ZBX_FS_UI64 "}=0','Probe {HOST.NAME} has been knocked out','','0','4','',NULL,'0','0'),"
+					" (" ZBX_FS_UI64 ",'{" ZBX_FS_UI64 "}=0','Probe {HOST.NAME} has been knocked out','','0','4',''," ZBX_FS_UI64 ",'0','0')",
+				templated_triggerid, templated_functionid,
+				triggerid, functionid, templated_triggerid))
+		{
+			return FAIL;
+		}
+
+		/* and trigger functions */
+		if (ZBX_DB_OK > DBexecute(
+				"insert into functions (functionid,itemid,triggerid,function,parameter)"
+				" values"
+					" (" ZBX_FS_UI64 "," ZBX_FS_UI64 "," ZBX_FS_UI64 ",'last','0'),"
+					" (" ZBX_FS_UI64 "," ZBX_FS_UI64 "," ZBX_FS_UI64 ",'last','0')",
+				templated_functionid, templated_itemid, templated_triggerid,
+				functionid, itemid, triggerid))
+		{
+			return FAIL;
+		}
+
+	}
+
+	zbx_vector_uint64_destroy(&templateids);
+
+	if (ZBX_DB_OK > DBexecute("delete from ids where table_name='triggers'"))
+		return FAIL;
+
+	if (ZBX_DB_OK > DBexecute("delete from ids where table_name='functions'"))
+		return FAIL;
+
+	return SUCCEED;
+}
+
 #endif
 
 DBPATCH_START(3000)
@@ -3145,5 +3257,6 @@ DBPATCH_ADD(3000231, 0, 0)	/* add item resolver.status[...] to templates "Templa
 DBPATCH_ADD(3000232, 0, 0)	/* replace error codes -100 and -101 with -390 and -391 */
 DBPATCH_ADD(3000233, 0, 0)	/* change global macro value {$PROBE.INTERNAL.ERROR.INTERVAL}=5m (was 1m) */
 DBPATCH_ADD(3000234, 0, 0)	/* add constraint on lastvalue table to delete obsoleted itemids */
+DBPATCH_ADD(3000235, 0, 0)	/* add trigger for item rsm.probe.status[manual] to alert on Probe knock out */
 
 DBPATCH_END()
