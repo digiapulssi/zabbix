@@ -158,8 +158,8 @@ class CControllerWidgetGraphView extends CControllerWidget {
 			elseif ($fields['source_type'] == ZBX_WIDGET_FIELD_RESOURCE_GRAPH) {
 				// get host
 				$hosts = API::Host()->get([
-					'hostids' => $dynamic_hostid,
-					'output' => ['hostid', 'host', 'name']
+					'output' => ['hostid', 'host', 'name'],
+					'hostids' => $dynamic_hostid
 				]);
 				$host = reset($hosts);
 
@@ -216,8 +216,8 @@ class CControllerWidgetGraphView extends CControllerWidget {
 					if ($new_dynamic) {
 						// Add destination host data required by CMacrosResolver::resolveGraphPositionalMacros().
 						foreach ($new_dynamic as &$item) {
-							$item['host'] = $host['host'];
 							$item['hostid'] = $host['hostid'];
+							$item['host'] = $host['host'];
 						}
 						unset($item);
 
