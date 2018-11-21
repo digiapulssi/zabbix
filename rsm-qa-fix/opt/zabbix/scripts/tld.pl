@@ -282,7 +282,7 @@ if (defined($OPTS{'list-services'}))
 		push(@rows, \@row);
 	}
 
-	my $csv = Text::CSV_XS->new({binary => 1, auto_diag => 1});
+	my $csv = Text::CSV_XS->new({binary => 1, auto_diag => 1, always_quote => 1});
 	$csv->eol("\n");
 	$csv->print(*STDOUT, $_) foreach (@rows);
 
