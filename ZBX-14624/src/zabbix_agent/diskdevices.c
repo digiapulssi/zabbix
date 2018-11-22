@@ -19,9 +19,6 @@
 
 #ifndef _WINDOWS
 
-#define _GNU_SOURCE
-
-#include <sys/mman.h>
 #include "common.h"
 #include "diskdevices.h"
 #include "stats.h"
