@@ -3969,8 +3969,6 @@ svg {
       position: relative;
       right: -10px;
       top: 3px; }
-  .list-vertical-accordion .patternselect {
-    line-height: 14px; }
   .list-vertical-accordion .list-accordion-item-closed {
     height: 30px; }
     .list-vertical-accordion .list-accordion-item-closed .list-accordion-item-body {
@@ -3981,6 +3979,9 @@ svg {
       line-height: 24px;
       padding: 0px 5px;
       height: 24px; }
+
+.patternselect {
+  line-height: 14px; }
 
 .columns-wrapper {
   display: flex;
