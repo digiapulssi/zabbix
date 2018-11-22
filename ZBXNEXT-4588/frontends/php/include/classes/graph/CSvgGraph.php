@@ -494,6 +494,17 @@ class CSvgGraph extends CSvg {
 		if ($this->left_y_max === null) {
 			$this->left_y_max = $this->max_value_left ? : 1;
 		}
+
+		if ($this->left_y_min == $this->left_y_max) {
+			$this->left_y_min -= 0.5;
+			$this->left_y_max += 0.5;
+		}
+
+		if ($this->right_y_min == $this->right_y_max) {
+			$this->right_y_min -= 0.5;
+			$this->right_y_max += 0.5;
+		}
+
 		$grid = $this->getValueGrid($this->left_y_min, $this->left_y_max);
 		$this->left_y_min = $grid[0];
 		$this->left_y_max = end($grid);
