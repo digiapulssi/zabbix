@@ -346,13 +346,16 @@ jQuery(function ($) {
 	// Position hintbox near current mouse position.
 	function repositionHintBox(e, graph) {
 		var hbox = $(graph.hintBoxItem),
+			page_scroll_top = jQuery(window.top).scrollTop(),
 			offset = graph.offset(),
-			page_bottom = jQuery(window.top).scrollTop() + jQuery(window.top).height(),
+			page_bottom = page_scroll_top + jQuery(window.top).height(),
 			l = (document.body.clientWidth >= e.clientX + hbox.outerWidth() + 20)
 				? e.clientX - offset.left + 20
 				: e.clientX - hbox.outerWidth() - offset.left - 15,
-			t = e.pageY - offset.top - graph.parent().scrollTop(),
-			t = page_bottom >= t + offset.top + hbox.outerHeight() + 60 ? t + 60 : t - hbox.height();
+			t = e.pageY - offset.top - graph.parent().scrollTop();
+			t = (page_bottom >= t + offset.top + hbox.outerHeight() + 60)
+				? t + 60
+				: Math.max((offset.top - page_scroll_top - 40) * -1, t - hbox.height());
 
 		hbox.css({'left': l, 'top': t});
 	}
