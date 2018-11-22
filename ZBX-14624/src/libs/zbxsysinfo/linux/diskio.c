@@ -261,16 +261,7 @@ static int	vfs_dev_rw(AGENT_REQUEST *request, AGENT_RESULT *result, int rw)
 	{
 		if (SUCCEED != get_diskstat(kernel_devname, dstats))
 		{
-			SET_MSG_RESULT(result, zbx_strdup(NULL,
-					"Cannot obtain disk information, removing device from agent collector."));
-
-			/* attempt to remove a non-existent or otherwise unreachable device from the collector */
-			if (SUCCEED != collector_diskdevice_remove(kernel_devname))
-			{
-				SET_MSG_RESULT(result, zbx_strdup(NULL,
-						"Cannot remove disk device from agent collector."));
-				return SYSINFO_RET_FAIL;
-			}
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Cannot obtain disk information"));
 
 			return SYSINFO_RET_FAIL;
 		}

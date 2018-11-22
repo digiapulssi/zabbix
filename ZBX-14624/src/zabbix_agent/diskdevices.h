@@ -27,11 +27,13 @@
 #include "sysinfo.h"
 
 #define	MAX_DISKDEVICES	1024
+#define	DISKDEVICE_TTL	3600
 
 typedef struct c_single_diskdevice_data
 {
 	char		name[32];
 	int		index;
+	int 		access; /* used to find and remove stale devices */
 	time_t		clock[MAX_COLLECTOR_HISTORY];
 	zbx_uint64_t	r_sect[MAX_COLLECTOR_HISTORY];
 	zbx_uint64_t	r_oper[MAX_COLLECTOR_HISTORY];
@@ -58,7 +60,6 @@ typedef struct c_diskdevices_data
 
 ZBX_SINGLE_DISKDEVICE_DATA	*collector_diskdevice_get(const char *devname);
 ZBX_SINGLE_DISKDEVICE_DATA	*collector_diskdevice_add(const char *devname);
-int				collector_diskdevice_remove(const char* devname);
 void				collect_stats_diskdevices();
 
 #endif
