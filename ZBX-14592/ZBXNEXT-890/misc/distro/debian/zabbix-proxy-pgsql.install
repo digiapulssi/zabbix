@@ -1,3 +1,0 @@
-debian/tmp-build-PGSQL/src/zabbix_proxy/zabbix_proxy usr/sbin
-create/schema/postgresql.sql usr/share/zabbix-proxy-pgsql
-
