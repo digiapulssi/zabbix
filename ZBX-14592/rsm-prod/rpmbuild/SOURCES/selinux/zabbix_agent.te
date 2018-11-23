@@ -1,0 +1,12 @@
+
+module zabbix_agent 1.0;
+
+require {
+	type zabbix_agent_t;
+	class process setrlimit;
+}
+
+#============= zabbix_agent_t ==============
+
+#!!!! This avc is allowed in the current policy
+allow zabbix_agent_t self:process setrlimit;

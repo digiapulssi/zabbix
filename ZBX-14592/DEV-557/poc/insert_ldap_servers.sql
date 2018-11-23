@@ -1,0 +1,1 @@
+INSERT INTO ldap_servers (server_id,status,display_name,host,port,bind_dn,bind_pw,use_tls,net_timeout,proc_timeout) VALUES (0,0,'Local LDAP','127.0.0.1',389,'cn=admin,dc=zabbix,dc=lan','ldaptestadmin',0,10,10);
