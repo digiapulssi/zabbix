@@ -188,7 +188,7 @@ if (defined($error)) {
 }
 
 if (defined($OPTS{'set-type'})) {
-    if (_set_tld_type($OPTS{'tld'}, $OPTS{'type'}, TLD_TYPE_PROBE_RESULTS_GROUPIDS->{$OPTS{'type'}}) == true)
+    if (set_tld_type($OPTS{'tld'}, $OPTS{'type'}, TLD_TYPE_PROBE_RESULTS_GROUPIDS->{$OPTS{'type'}}) == true)
     {
 	print("${OPTS{'tld'}} set to \"${OPTS{'type'}}\"\n");
     }
