@@ -824,7 +824,7 @@ class testFormAdministrationAuthentication extends CLegacyWebTest {
 			unlink(PHPUNIT_BASEDIR.'/.htaccess');
 		}
 
-		if (file_exists(PHPUNIT_BASEDIR.'/../.pwd')) {
+		if (file_exists(PHPUNIT_BASEDIR.'/.pwd')) {
 			unlink(PHPUNIT_BASEDIR.'/.pwd');
 		}
 
