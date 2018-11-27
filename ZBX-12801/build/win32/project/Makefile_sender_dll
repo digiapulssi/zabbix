@@ -53,7 +53,6 @@ OBJS = \
 
 LIBS = ws2_32.lib psapi.lib pdh.lib Wldap32.lib advapi32.lib uuid.lib Iphlpapi.lib
 
-!INCLUDE Makefile_tls.inc
 !INCLUDE Makefile_targets.inc
 
 # zabbix_sender dynamic link library support
