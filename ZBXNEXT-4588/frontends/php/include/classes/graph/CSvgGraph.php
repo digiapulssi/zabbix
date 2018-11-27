@@ -500,11 +500,6 @@ class CSvgGraph extends CSvg {
 			$this->left_y_max += 0.5;
 		}
 
-		if ($this->right_y_min == $this->right_y_max) {
-			$this->right_y_min -= 0.5;
-			$this->right_y_max += 0.5;
-		}
-
 		$grid = $this->getValueGrid($this->left_y_min, $this->left_y_max);
 		$this->left_y_min = $grid[0];
 		$this->left_y_max = end($grid);
@@ -526,6 +521,12 @@ class CSvgGraph extends CSvg {
 		if ($this->right_y_max === null) {
 			$this->right_y_max = $this->max_value_right ? : 1;
 		}
+
+		if ($this->right_y_min == $this->right_y_max) {
+			$this->right_y_min -= 0.5;
+			$this->right_y_max += 0.5;
+		}
+
 		$grid = $this->getValueGrid($this->right_y_min, $this->right_y_max);
 		$this->right_y_min = $grid[0];
 		$this->right_y_max = end($grid);
@@ -707,7 +708,7 @@ class CSvgGraph extends CSvg {
 		$decimals = $decimals > 4 ? 4 : $decimals;
 		$decimals = $decimals < 2 ? 2 : $decimals;
 		for ($base = 10; $base > .01; $base /= 10) {
-			$mul = $max ? 1 / pow($base, floor(log10($max))) : 1;
+			$mul = ($max > 0) ? 1 / pow($base, floor(log10($max))) : 1;
 			$max10 = ceil($mul * $max) / $mul;
 			$min10 = floor($mul * $min) / $mul;
 			$delta = $max10 - $min10;
