@@ -89,11 +89,13 @@ class CSvgGraph extends CSvg {
 	protected $left_y_min = null;
 	protected $left_y_max = null;
 	protected $left_y_units = null;
+	protected $left_y_empty = true;
 
 	protected $right_y_show = false;
 	protected $right_y_min = null;
 	protected $right_y_max = null;
 	protected $right_y_units = null;
+	protected $right_y_empty = true;
 
 	protected $right_y_zero = null;
 	protected $left_y_zero = null;
@@ -212,11 +214,18 @@ class CSvgGraph extends CSvg {
 	 * @return CSvgGraph
 	 */
 	public function addMetrics(array $metrics = []) {
+		$metrics_for_each_axes = [
+			GRAPH_YAXIS_SIDE_LEFT => 0,
+			GRAPH_YAXIS_SIDE_RIGHT => 0
+		];
+
 		foreach ($metrics as $i => $metric) {
 			$min_value = null;
 			$max_value = null;
 
 			if ($metric['points']) {
+				$metrics_for_each_axes[$metric['options']['axisy']]++;
+
 				foreach ($metric['points'] as $point) {
 					if ($min_value === null || $min_value > $point['value']) {
 						$min_value = $point['value'];
@@ -254,6 +263,9 @@ class CSvgGraph extends CSvg {
 				'options' => ['order' => $i] + $metric['options']
 			];
 		}
+
+		$this->left_y_empty = ($metrics_for_each_axes[GRAPH_YAXIS_SIDE_LEFT] == 0);
+		$this->right_y_show = ($metrics_for_each_axes[GRAPH_YAXIS_SIDE_RIGHT] == 0);
 
 		return $this;
 	}
@@ -406,7 +418,6 @@ class CSvgGraph extends CSvg {
 	 */
 	public function draw() {
 		$this->applyMissingDataFunc();
-		$this->calculateYAxis();
 		$this->calculateDimensions();
 		$this->calculatePaths();
 
@@ -454,27 +465,6 @@ class CSvgGraph extends CSvg {
 				)
 				->setAttribute('id', $areaid)
 		);
-	}
-
-	/**
-	 * Calculate which Y axis will be shown in graph.
-	 */
-	protected function calculateYAxis() {
-		$metrics_for_each_axes = [
-			GRAPH_YAXIS_SIDE_LEFT => 0,
-			GRAPH_YAXIS_SIDE_RIGHT => 0
-		];
-
-		foreach ($this->metrics as $metric) {
-			$metrics_for_each_axes[$metric['options']['axisy']]++;
-		}
-
-		if ($metrics_for_each_axes[GRAPH_YAXIS_SIDE_LEFT] == 0) {
-			$this->left_y_show = false;
-		}
-		if ($metrics_for_each_axes[GRAPH_YAXIS_SIDE_RIGHT] == 0) {
-			$this->right_y_show = false;
-		}
 	}
 
 	/**
@@ -541,22 +531,11 @@ class CSvgGraph extends CSvg {
 			}
 		}
 
-		// If all displayed values are on same height, this position should be vertically centered.
-		if ($this->left_y_min == $this->left_y_max) {
-			$this->left_y_min -= 0.1;
-			$this->left_y_max += 0.1;
-		}
-
-		if ($this->right_y_min == $this->right_y_max) {
-			$this->right_y_min -= 0.1;
-			$this->right_y_max += 0.1;
-		}
-
 		// Define canvas dimensions and offsets, except canvas height and bottom offset.
 		$approx_width = 10;
 
 		if ($this->left_y_show) {
-			$values = $this->getValuesGridWithPosition(GRAPH_YAXIS_SIDE_LEFT);
+			$values = $this->getValuesGridWithPosition(GRAPH_YAXIS_SIDE_LEFT, $this->left_y_empty);
 
 			if ($values) {
 				$offset_left = max($this->offset_left, max(array_map('strlen', $values)) * $approx_width);
@@ -565,7 +544,7 @@ class CSvgGraph extends CSvg {
 		}
 
 		if ($this->right_y_show) {
-			$values = $this->getValuesGridWithPosition(GRAPH_YAXIS_SIDE_RIGHT);
+			$values = $this->getValuesGridWithPosition(GRAPH_YAXIS_SIDE_RIGHT, $this->right_y_empty);
 
 			if ($values) {
 				$offset_right = max($this->offset_right, max(array_map('strlen', $values)) * $approx_width);
@@ -592,8 +571,11 @@ class CSvgGraph extends CSvg {
 	 *
 	 * @return array
 	 */
-	protected function getValuesGridWithPosition($side) {
-		if ($side === GRAPH_YAXIS_SIDE_LEFT) {
+	protected function getValuesGridWithPosition($side, $empty_set = false) {
+		if ($empty_set) {
+			$units = '';
+		}
+		elseif ($side === GRAPH_YAXIS_SIDE_LEFT) {
 			$min_value = $this->left_y_min;
 			$max_value = $this->left_y_max;
 			$units = $this->left_y_units;
@@ -604,7 +586,7 @@ class CSvgGraph extends CSvg {
 			$units = $this->right_y_units;
 		}
 
-		$grid = $this->getValueGrid($min_value, $max_value);
+		$grid = $empty_set ? [0, 1] : $this->getValueGrid($min_value, $max_value);
 		$min_value = $grid[0];
 		$max_value = end($grid);
 		$delta = ($max_value != $min_value)
@@ -656,8 +638,9 @@ class CSvgGraph extends CSvg {
 	 * Add Y axis with labels to left side of graph.
 	 */
 	protected function drawCanvasLeftYaxis() {
+		$grid_values = $this->getValuesGridWithPosition(GRAPH_YAXIS_SIDE_LEFT, $this->left_y_empty);
 		$this->addItem(
-			(new CSvgGraphAxis($this->getValuesGridWithPosition(GRAPH_YAXIS_SIDE_LEFT), GRAPH_YAXIS_SIDE_LEFT))
+			(new CSvgGraphAxis($grid_values, GRAPH_YAXIS_SIDE_LEFT))
 				->setSize($this->offset_left, $this->canvas_height)
 				->setPosition($this->canvas_x - $this->offset_left, $this->canvas_y)
 				->setTextColor($this->text_color)
@@ -669,8 +652,9 @@ class CSvgGraph extends CSvg {
 	 * Add Y axis with labels to right side of graph.
 	 */
 	protected function drawCanvasRightYAxis() {
+		$grid_values = $this->getValuesGridWithPosition(GRAPH_YAXIS_SIDE_RIGHT, $this->right_y_empty);
 		$this->addItem(
-			(new CSvgGraphAxis($this->getValuesGridWithPosition(GRAPH_YAXIS_SIDE_RIGHT), GRAPH_YAXIS_SIDE_RIGHT))
+			(new CSvgGraphAxis($grid_values, GRAPH_YAXIS_SIDE_RIGHT))
 				->setSize($this->offset_right, $this->canvas_height)
 				->setPosition($this->canvas_x + $this->canvas_width, $this->canvas_y)
 				->setTextColor($this->text_color)
@@ -738,12 +722,12 @@ class CSvgGraph extends CSvg {
 		$value_points = [];
 
 		if ($this->left_y_show) {
-			$value_points = $this->getValuesGridWithPosition(GRAPH_YAXIS_SIDE_LEFT);
+			$value_points = $this->getValuesGridWithPosition(GRAPH_YAXIS_SIDE_LEFT, $this->left_y_empty);
 
 			unset($time_points[0]);
 		}
 		elseif ($this->right_y_show) {
-			$value_points = $this->getValuesGridWithPosition(GRAPH_YAXIS_SIDE_RIGHT);
+			$value_points = $this->getValuesGridWithPosition(GRAPH_YAXIS_SIDE_RIGHT, $this->right_y_empty);
 
 			unset($time_points[$this->canvas_width]);
 		}
