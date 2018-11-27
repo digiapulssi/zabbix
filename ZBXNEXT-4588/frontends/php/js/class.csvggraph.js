@@ -352,13 +352,15 @@ jQuery(function ($) {
 			html = null,
 			in_x = false,
 			in_values_area = false,
-			in_problem_area = false;
+			in_problem_area = false,
+			offset = graph.offset();
 
 		if (data.boxing === false) {
 			// Check if mouse in the horizontal area in which hintbox must be shown.
+			var y = e.pageY - offset.top;
 			in_x = (data.dimX <= offsetX && offsetX <= data.dimX + data.dimW);
-			in_problem_area = in_x && (data.dimY + data.dimH <= e.offsetY && e.offsetY <= data.dimY + data.dimH + 15);
-			in_values_area = in_x && (data.dimY <= e.offsetY && e.offsetY <= data.dimY + data.dimH);
+			in_problem_area = in_x && (data.dimY + data.dimH <= y && y <= data.dimY + data.dimH + 20);
+			in_values_area = in_x && (data.dimY <= y && y <= data.dimY + data.dimH);
 
 			// Show problems when mouse is in the 15px high area under the graph canvas.
 			if (data.showProblems && data.isHintBoxFrozen === false && in_problem_area) {
