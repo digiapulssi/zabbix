@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -82,17 +82,21 @@ $triggersForm = (new CForm())
 	->setName('triggersForm')
 	->addVar('hostid', $this->data['hostid']);
 
+$url = (new CUrl('triggers.php'))
+	->setArgument('hostid', $data['hostid'])
+	->getUrl();
+
 // create table
 $triggersTable = (new CTableInfo())
 	->setHeader([
 		(new CColHeader(
 			(new CCheckBox('all_triggers'))->onClick("checkAll('".$triggersForm->getName()."', 'all_triggers', 'g_triggerid');")
 		))->addClass(ZBX_STYLE_CELL_WIDTH),
-		make_sorting_header(_('Severity'), 'priority', $this->data['sort'], $this->data['sortorder']),
+		make_sorting_header(_('Severity'), 'priority', $data['sort'], $data['sortorder'], $url),
 		($this->data['hostid'] == 0) ? _('Host') : null,
-		make_sorting_header(_('Name'), 'description', $this->data['sort'], $this->data['sortorder']),
+		make_sorting_header(_('Name'), 'description', $data['sort'], $data['sortorder'], $url),
 		_('Expression'),
-		make_sorting_header(_('Status'), 'status', $this->data['sort'], $this->data['sortorder']),
+		make_sorting_header(_('Status'), 'status', $data['sort'], $data['sortorder'], $url),
 		$this->data['showInfoColumn'] ? _('Info') : null
 	]);
 
@@ -115,11 +119,16 @@ foreach ($this->data['triggers'] as $tnum => $trigger) {
 			$real_hosts = $this->data['realHosts'][$triggerid];
 			$real_host = reset($real_hosts);
 
-			$description[] = (new CLink(
-				CHtml::encode($real_host['name']),
-				'triggers.php?hostid='.$real_host['hostid']))
-				->addClass(ZBX_STYLE_LINK_ALT)
-				->addClass(ZBX_STYLE_GREY);
+			if (array_key_exists($real_host['hostid'], $data['writable_templates'])) {
+				$description[] = (new CLink(CHtml::encode($real_host['name']),
+					'triggers.php?hostid='.$real_host['hostid']
+				))
+					->addClass(ZBX_STYLE_LINK_ALT)
+					->addClass(ZBX_STYLE_GREY);
+			}
+			else {
+				$description[] = (new CSpan(CHtml::encode($real_host['name'])))->addClass(ZBX_STYLE_GREY);
+			}
 
 			$description[] = NAME_DELIMITER;
 		}

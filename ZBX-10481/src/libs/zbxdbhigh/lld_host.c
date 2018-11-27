@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -679,13 +679,14 @@ static void	lld_simple_groups_get(zbx_uint64_t parent_hostid, zbx_vector_uint64_
  *                                                                            *
  * Function: lld_hostgroups_make                                              *
  *                                                                            *
- * Parameters: groupids         - [IN] sorted list of host groups which       *
+ * Parameters: groupids         - [IN] sorted list of host group ids which    *
  *                                     should be present on the each          *
- *                                     discovered host                        *
+ *                                     discovered host (Groups)               *
  *             hosts            - [IN/OUT] list of hosts                      *
  *                                         should be sorted by hostid         *
- *             del_hostgroupids - [OUT] list of host groups which should be   *
- *                                      deleted                               *
+ *             groups           - [IN]  list of host groups (Group prototypes)*
+ *             del_hostgroupids - [OUT] sorted list of host groups which      *
+ *                                      should be deleted                     *
  *                                                                            *
  ******************************************************************************/
 static void	lld_hostgroups_make(const zbx_vector_uint64_t *groupids, zbx_vector_ptr_t *hosts,
@@ -733,6 +734,12 @@ static void	lld_hostgroups_make(const zbx_vector_uint64_t *groupids, zbx_vector_
 
 			zbx_vector_uint64_append(&host->new_groupids, group->groupid);
 		}
+	}
+
+	for (i = 0; i < hosts->values_num; i++)
+	{
+		host = (zbx_lld_host_t *)hosts->values[i];
+		zbx_vector_uint64_sort(&host->new_groupids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 	}
 
 	if (0 != hostids.values_num)
@@ -2116,12 +2123,13 @@ out:
  * Function: lld_templates_link                                               *
  *                                                                            *
  ******************************************************************************/
-static void	lld_templates_link(const zbx_vector_ptr_t *hosts)
+static void	lld_templates_link(const zbx_vector_ptr_t *hosts, char **error)
 {
 	const char	*__function_name = "lld_templates_link";
 
 	int		i;
 	zbx_lld_host_t	*host;
+	char		*err;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
@@ -2133,10 +2141,22 @@ static void	lld_templates_link(const zbx_vector_ptr_t *hosts)
 			continue;
 
 		if (0 != host->del_templateids.values_num)
-			DBdelete_template_elements(host->hostid, &host->del_templateids);
+		{
+			if (SUCCEED != DBdelete_template_elements(host->hostid, &host->del_templateids, &err))
+			{
+				*error = zbx_strdcatf(*error, "Cannot unlink template: %s.\n", err);
+				zbx_free(err);
+			}
+		}
 
 		if (0 != host->lnk_templateids.values_num)
-			DBcopy_template_elements(host->hostid, &host->lnk_templateids);
+		{
+			if (SUCCEED != DBcopy_template_elements(host->hostid, &host->lnk_templateids, &err))
+			{
+				*error = zbx_strdcatf(*error, "Cannot link template(s) %s.\n", err);
+				zbx_free(err);
+			}
+		}
 	}
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
@@ -2905,7 +2925,7 @@ void	lld_update_hosts(zbx_uint64_t lld_ruleid, const zbx_vector_ptr_t *lld_rows,
 				&del_hostmacroids);
 
 		/* linking of the templates */
-		lld_templates_link(&hosts);
+		lld_templates_link(&hosts, error);
 
 		lld_hosts_remove(&hosts, lifetime, lastcheck);
 		lld_groups_remove(&groups, lifetime, lastcheck);

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -404,11 +404,17 @@ $linkedTemplateTable = (new CTable())
 
 foreach ($data['linkedTemplates'] as $template) {
 	$tmplList->addVar('templates[]', $template['templateid']);
-	$templateLink = (new CLink($template['name'], 'templates.php?form=update&templateid='.$template['templateid']))
-		->setTarget('_blank');
+
+	if (array_key_exists($template['templateid'], $data['writable_templates'])) {
+		$template_link = (new CLink($template['name'], 'templates.php?form=update&templateid='.$template['templateid']))
+			->setTarget('_blank');
+	}
+	else {
+		$template_link = new CSpan($template['name']);
+	}
 
 	$linkedTemplateTable->addRow([
-		$templateLink,
+		$template_link,
 		(new CCol(
 			new CHorList([
 				(new CSimpleButton(_('Unlink')))

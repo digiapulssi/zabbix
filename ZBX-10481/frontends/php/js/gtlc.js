@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -328,6 +328,7 @@ var CTimeLine = Class.create({
 	_isNow:		false,	// state if time is set to NOW (for outside usage)
 	minperiod:	60,		// minimal allowed period
 	maxperiod:	null,	// max period in seconds
+	is_selectall_period: false, // Will be set to true if period 'All' is selected.
 
 	initialize: function(period, starttime, usertime, endtime, maximumPeriod, isNow) {
 		if ((endtime - starttime) < (3 * this.minperiod)) {
@@ -365,16 +366,28 @@ var CTimeLine = Class.create({
 		this._endtime = end;
 		this._usertime = end;
 		this._now = true;
+
+		if (this.is_selectall_period && this._isNow) {
+			this._period = Math.min(this._endtime - this._starttime, this.maxperiod);
+			this._usertime = this._endtime;
+		}
 	},
 
 	refreshEndtime: function() {
 		this._endtime = parseInt(new CDate().getTime() / 1000);
+
+		if (this.is_selectall_period && this._isNow) {
+			this._period = Math.min(this._endtime - this._starttime, this.maxperiod);
+			this._usertime = this._endtime;
+		}
 	},
 
 	period: function(period) {
 		if (empty(period)) {
-			return this._period;
+			return this.is_selectall_period ? this.maxperiod : this._period;
 		}
+
+		this.is_selectall_period = (period == this.maxperiod);
 
 		if ((this._usertime - period) < this._starttime) {
 			period = this._usertime - this._starttime;
@@ -559,7 +572,7 @@ var CScrollBar = Class.create({
 	},
 
 	navigateLeft: function(e, left) {
-		if (this.disabled) {
+		if (this.disabled || timeControl.timeline.is_selectall_period) {
 			return false;
 		}
 
@@ -596,7 +609,7 @@ var CScrollBar = Class.create({
 	},
 
 	navigateRight: function(e, right) {
-		if (this.disabled) {
+		if (this.disabled || timeControl.timeline.is_selectall_period) {
 			return false;
 		}
 

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -79,10 +79,13 @@ $itemFormList->addRow(_('Key'), $key_controls);
 if (!empty($this->data['interfaces'])) {
 	$interfacesComboBox = new CComboBox('interfaceid', $this->data['interfaceid']);
 
-	// set up interface groups
-	$interfaceGroups = [];
-	foreach (zbx_objectValues($this->data['interfaces'], 'type') as $interfaceType) {
-		$interfaceGroups[$interfaceType] = new COptGroup(interfaceType2str($interfaceType));
+	// Set up interface groups sorted by priority.
+	$interface_types = zbx_objectValues($this->data['interfaces'], 'type');
+	$interface_groups = [];
+	foreach ([INTERFACE_TYPE_AGENT, INTERFACE_TYPE_SNMP, INTERFACE_TYPE_JMX, INTERFACE_TYPE_IPMI] as $interface_type) {
+		if (in_array($interface_type, $interface_types)) {
+			$interface_groups[$interface_type] = new COptGroup(interfaceType2str($interface_type));
+		}
 	}
 
 	// add interfaces to groups
@@ -93,10 +96,10 @@ if (!empty($this->data['interfaces'])) {
 			$interface['interfaceid'] == $this->data['interfaceid'] ? 'yes' : 'no'
 		);
 		$option->setAttribute('data-interfacetype', $interface['type']);
-		$interfaceGroups[$interface['type']]->addItem($option);
+		$interface_groups[$interface['type']]->addItem($option);
 	}
-	foreach ($interfaceGroups as $interfaceGroup) {
-		$interfacesComboBox->addItem($interfaceGroup);
+	foreach ($interface_groups as $interface_group) {
+		$interfacesComboBox->addItem($interface_group);
 	}
 
 	$span = (new CSpan(_('No interface found')))
@@ -395,9 +398,14 @@ else {
 		$valuemapComboBox->addItem($valuemap['valuemapid'], CHtml::encode($valuemap['name']));
 	}
 }
-$link = (new CLink(_('show value mappings'), 'adm.valuemapping.php'))
-	->setAttribute('target', '_blank');
-$itemFormList->addRow(_('Show value'), [$valuemapComboBox, SPACE, $link], 'row_valuemap');
+
+if (CWebUser::getType() == USER_TYPE_SUPER_ADMIN) {
+	$valuemapComboBox = [$valuemapComboBox, '&nbsp;',
+		(new CLink(_('show value mappings'), 'adm.valuemapping.php'))->setAttribute('target', '_blank')
+	];
+}
+$itemFormList->addRow(_('Show value'), $valuemapComboBox, 'row_valuemap');
+
 $itemFormList->addRow(_('Allowed hosts'),
 	(new CTextBox('trapper_hosts', $this->data['trapper_hosts']))->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH),
 	'row_trapper_hosts');

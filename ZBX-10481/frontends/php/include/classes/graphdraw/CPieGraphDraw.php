@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -468,9 +468,15 @@ class CPieGraphDraw extends CGraphDraw {
 
 		$anglestart = 0;
 		$angleend = 0;
+
 		foreach ($values as $item => $value) {
+			if ($value == 0) {
+				continue;
+			}
+
 			$angleend += (int) (360 * $value / $sum) + 1;
 			$angleend = ($angleend > 360) ? 360 : $angleend;
+
 			if (($angleend - $anglestart) < 1) {
 				continue;
 			}
@@ -544,9 +550,15 @@ class CPieGraphDraw extends CGraphDraw {
 		// bottom angle line
 		$anglestart = 0;
 		$angleend = 0;
+
 		foreach ($values as $item => $value) {
+			if ($value == 0) {
+				continue;
+			}
+
 			$angleend += (int) (360 * $value / $sum) + 1;
 			$angleend = ($angleend > 360) ? 360 : $angleend;
+
 			if (($angleend - $anglestart) < 1) {
 				continue;
 			}
@@ -554,6 +566,7 @@ class CPieGraphDraw extends CGraphDraw {
 			if ($this->type == GRAPH_TYPE_3D_EXPLODED) {
 				list($x, $y) = $this->calcExplodedCenter($anglestart, $angleend, $xc, $yc, count($values));
 			}
+
 			imagefilledarc(
 				$this->im,
 				$x,
@@ -583,7 +596,12 @@ class CPieGraphDraw extends CGraphDraw {
 		for ($i = $this->graphheight3d; $i > 0; $i--) {
 			$anglestart = 0;
 			$angleend = 0;
+
 			foreach ($values as $item => $value) {
+				if ($value == 0) {
+					continue;
+				}
+
 				$angleend += (int) (360 * $value / $sum) + 1;
 				$angleend = ($angleend > 360) ? 360 : $angleend;
 
@@ -615,9 +633,15 @@ class CPieGraphDraw extends CGraphDraw {
 
 		$anglestart = 0;
 		$angleend = 0;
+
 		foreach ($values as $item => $value) {
+			if ($value == 0) {
+				continue;
+			}
+
 			$angleend += (int) (360 * $value / $sum) + 1;
 			$angleend = ($angleend > 360) ? 360 : $angleend;
+
 			if (($angleend - $anglestart) < 1) {
 				continue;
 			}

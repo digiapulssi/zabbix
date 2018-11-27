@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -165,10 +165,12 @@ function getUserFormData($userId, array $config, $isProfile = false) {
 		// deny beat all, read-write beat read
 		$tmp_permissions = [];
 		while ($db_right = DBfetch($db_rights)) {
-			if (isset($tmp_permissions[$db_right['id']]) && $tmp_permissions[$db_right['id']] != PERM_DENY) {
-				$tmp_permissions[$db_right['id']] = ($db_right['permission'] == PERM_DENY)
-					? PERM_DENY
-					: max($tmp_permissions[$db_right['id']], $db_right['permission']);
+			if (array_key_exists($db_right['id'], $tmp_permissions)) {
+				if ($tmp_permissions[$db_right['id']] != PERM_DENY) {
+					$tmp_permissions[$db_right['id']] = ($db_right['permission'] == PERM_DENY)
+						? PERM_DENY
+						: max($tmp_permissions[$db_right['id']], $db_right['permission']);
+				}
 			}
 			else {
 				$tmp_permissions[$db_right['id']] = $db_right['permission'];
@@ -279,24 +281,23 @@ function prepareSubfilterOutput($label, $data, $subfilter, $subfilterName) {
 						'javascript: create_var("zbx_filter", "subfilter_set", "1", false);'.
 						'create_var("zbx_filter", '.CJs::encodeJson($subfilterName.'['.$id.']').', null, true);'
 					)),
-				SPACE,
+				' ',
 				new CSup($element['count'])
-			]))->addClass(ZBX_STYLE_SUBFILTER_ENABLED);
+			]))
+				->addClass(ZBX_STYLE_SUBFILTER)
+				->addClass(ZBX_STYLE_SUBFILTER_ENABLED);
 		}
 		// isn't activated
 		else {
 			// subfilter has 0 items
 			if ($element['count'] == 0) {
-				$output[] = (new CSpan($element['name']))->addClass(ZBX_STYLE_GREY);
-				$output[] = SPACE;
-				$output[] = new CSup($element['count']);
+				$output[] = (new CSpan([
+					(new CSpan($element['name']))->addClass(ZBX_STYLE_GREY),
+					' ',
+					new CSup($element['count'])
+				]))->addClass(ZBX_STYLE_SUBFILTER);
 			}
 			else {
-				// this level has no active subfilters
-				$nspan = $subfilter
-					? new CSup('+'.$element['count'])
-					: new CSup($element['count']);
-
 				$link = (new CSpan($element['name']))
 					->addClass(ZBX_STYLE_LINK_ACTION)
 					->onClick(CHtml::encode(
@@ -308,16 +309,14 @@ function prepareSubfilterOutput($label, $data, $subfilter, $subfilterName) {
 						');'
 					));
 
-				$output[] = $link;
-				$output[] = SPACE;
-				$output[] = $nspan;
+				$output[] = (new CSpan([
+					$link,
+					' ',
+					new CSup(($subfilter ? '+' : '').$element['count'])
+				]))->addClass(ZBX_STYLE_SUBFILTER);
 			}
 		}
-
-		$output[] = '&nbsp;&nbsp;&nbsp;';
 	}
-
-	array_pop($output);
 
 	return $output;
 }
@@ -1025,28 +1024,55 @@ function getItemFormData(array $item = [], array $options = []) {
 			if (!empty($item)) {
 				$host = reset($item['hosts']);
 				if (!empty($item['hosts'])) {
+					if (bccomp($data['itemid'], $itemid) != 0) {
+						$writable = API::Template()->get([
+							'output' => ['templateid'],
+							'templateids' => [$host['hostid']],
+							'editable' => true,
+							'preservekeys' => true
+						]);
+					}
+
 					$host['name'] = CHtml::encode($host['name']);
 					if (bccomp($data['itemid'], $itemid) == 0) {
 					}
 					// discovery rule
 					elseif ($data['is_discovery_rule']) {
-						$data['templates'][] = new CLink($host['name'],
-							'host_discovery.php?form=update&itemid='.$item['itemid']
-						);
+						if (array_key_exists($host['hostid'], $writable)) {
+							$data['templates'][] = new CLink($host['name'],
+								'host_discovery.php?form=update&itemid='.$item['itemid']
+							);
+						}
+						else {
+							$data['templates'][] = new CSpan($host['name']);
+						}
+
 						$data['templates'][] = SPACE.'&rArr;'.SPACE;
 					}
 					// item prototype
 					elseif ($item['discoveryRule']) {
-						$data['templates'][] = new CLink($host['name'], 'disc_prototypes.php?form=update'.
-							'&itemid='.$item['itemid'].'&parent_discoveryid='.$item['discoveryRule']['itemid']
-						);
+						if (array_key_exists($host['hostid'], $writable)) {
+							$data['templates'][] = new CLink($host['name'], 'disc_prototypes.php?form=update'.
+								'&itemid='.$item['itemid'].'&parent_discoveryid='.$item['discoveryRule']['itemid']
+							);
+						}
+						else {
+							$data['templates'][] = new CSpan($host['name']);
+						}
+
 						$data['templates'][] = SPACE.'&rArr;'.SPACE;
 					}
 					// plain item
 					else {
-						$data['templates'][] = new CLink($host['name'],
-							'items.php?form=update&itemid='.$item['itemid']
-						);
+						if (array_key_exists($host['hostid'], $writable)) {
+							$data['templates'][] = new CLink($host['name'],
+								'items.php?form=update&itemid='.$item['itemid']
+							);
+						}
+						else {
+							$data['templates'][] = new CSpan($host['name']);
+						}
+
 						$data['templates'][] = SPACE.'&rArr;'.SPACE;
 					}
 				}
@@ -1410,7 +1436,8 @@ function getTriggerFormData($exprAction) {
 		'input_method' => getRequest('input_method', IM_ESTABLISHED),
 		'limited' => false,
 		'templates' => [],
-		'hostid' => getRequest('hostid', 0)
+		'hostid' => getRequest('hostid', 0),
+		'groupid' => getRequest('groupid', 0)
 	];
 
 	if (!empty($data['triggerid'])) {
@@ -1437,16 +1464,32 @@ function getTriggerFormData($exprAction) {
 				' WHERE t.triggerid='.zbx_dbstr($tmp_triggerid)
 			));
 			if (bccomp($data['triggerid'], $tmp_triggerid) != 0) {
-				// parent trigger prototype link
-				if ($data['parent_discoveryid']) {
-					$link = 'trigger_prototypes.php?form=update&triggerid='.$db_triggers['triggerid'].'&parent_discoveryid='.$db_triggers['parent_itemid'].'&hostid='.$db_triggers['hostid'];
+				// Test if template is editable by user
+				$writable = API::Template()->get([
+					'output' => ['templateid'],
+					'templateids' => [$db_triggers['hostid']],
+					'preservekeys' => true,
+					'editable' => true
+				]);
+
+				if (array_key_exists($db_triggers['hostid'], $writable)) {
+					// parent trigger prototype link
+					if ($data['parent_discoveryid']) {
+						$link = 'trigger_prototypes.php?form=update&triggerid='.$db_triggers['triggerid'].
+							'&parent_discoveryid='.$db_triggers['parent_itemid'].'&hostid='.$db_triggers['hostid'];
+					}
+					// parent trigger link
+					else {
+						$link = 'triggers.php?form=update&triggerid='.$db_triggers['triggerid'].
+							'&hostid='.$db_triggers['hostid'];
+					}
+
+					$data['templates'][] = new CLink(CHtml::encode($db_triggers['name']), $link);
 				}
-				// parent trigger link
 				else {
-					$link = 'triggers.php?form=update&triggerid='.$db_triggers['triggerid'].'&hostid='.$db_triggers['hostid'];
+					$data['templates'][] = new CSpan(CHtml::encode($db_triggers['name']));
 				}
 
-				$data['templates'][] = new CLink(CHtml::encode($db_triggers['name']), $link);
 				$data['templates'][] = SPACE.'&rArr;'.SPACE;
 			}
 			$tmp_triggerid = $db_triggers['templateid'];
@@ -1461,6 +1504,18 @@ function getTriggerFormData($exprAction) {
 		if (count($hosts) > 0 && !in_array(['hostid' => $data['hostid']], $hosts)) {
 			$host = reset($hosts);
 			$data['hostid'] = $host['hostid'];
+		}
+	}
+
+	if ($data['hostid'] && !$data['groupid']) {
+		$db_hostgroups = API::HostGroup()->get([
+			'output' => ['groupid'],
+			'hostids' => $data['hostid'],
+			'templateids' => $data['hostid']
+		]);
+
+		if ($db_hostgroups) {
+			$data['groupid'] = $db_hostgroups[0]['groupid'];
 		}
 	}
 
@@ -1828,7 +1883,7 @@ function get_timeperiod_form() {
 
 			$cmbCount = new CComboBox('new_timeperiod[every]', $new_timeperiod['every']);
 			$cmbCount->addItem(1, _('First'));
-			$cmbCount->addItem(2, _('Second'));
+			$cmbCount->addItem(2, _x('Second', 'adjective'));
 			$cmbCount->addItem(3, _('Third'));
 			$cmbCount->addItem(4, _('Fourth'));
 			$cmbCount->addItem(5, _('Last'));

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -841,7 +841,7 @@ class CService extends CApiService {
 		$sqlParts = $this->addQueryOrder($this->fieldId('serviceid'), $sqlParts);
 
 		// add permission filter
-		if (CWebUser::getType() != USER_TYPE_SUPER_ADMIN) {
+		if (self::$userData['type'] != USER_TYPE_SUPER_ADMIN) {
 			$sqlParts = $this->addPermissionFilter($sqlParts);
 		}
 
@@ -875,7 +875,7 @@ class CService extends CApiService {
 		$sqlParts = $this->addQueryOrder($this->fieldId('serviceid'), $sqlParts);
 
 		// add permission filter
-		if (CWebUser::getType() != USER_TYPE_SUPER_ADMIN) {
+		if (self::$userData['type'] != USER_TYPE_SUPER_ADMIN) {
 			$sqlParts = $this->addPermissionFilter($sqlParts);
 		}
 
@@ -1274,7 +1274,7 @@ class CService extends CApiService {
 	}
 
 	protected function applyQueryFilterOptions($tableName, $tableAlias, array $options, array $sqlParts) {
-		if (CWebUser::getType() != USER_TYPE_SUPER_ADMIN) {
+		if (self::$userData['type'] != USER_TYPE_SUPER_ADMIN) {
 			// if services with specific trigger IDs were requested, return only the ones accessible to the current user.
 			if ($options['filter']['triggerid']) {
 				$accessibleTriggers = API::Trigger()->get([
@@ -1412,8 +1412,7 @@ class CService extends CApiService {
 	 * @return string
 	 */
 	protected function addPermissionFilter($sqlParts) {
-		$userid = self::$userData['userid'];
-		$userGroups = getUserGroupsByUserId($userid);
+		$userGroups = getUserGroupsByUserId(self::$userData['userid']);
 
 		$sqlParts['where'][] = '(EXISTS ('.
 									'SELECT NULL'.

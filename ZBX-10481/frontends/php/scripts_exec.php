@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -52,9 +52,14 @@ $scripts = API::Script()->get([
 	'output' => ['name', 'command']
 ]);
 
+$db_hosts = API::Host()->get([
+	'output' => [],
+	'hostids' => $hostid
+]);
+
 $error_exist = false;
 
-if ($scripts) {
+if ($scripts && $db_hosts) {
 	$script = $scripts[0];
 
 	$macros_data = CMacrosResolverHelper::resolve([

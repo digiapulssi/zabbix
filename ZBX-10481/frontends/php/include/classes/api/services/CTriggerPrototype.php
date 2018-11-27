@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -41,8 +41,6 @@ class CTriggerPrototype extends CTriggerGeneral {
 	 */
 	public function get(array $options = []) {
 		$result = [];
-		$userType = self::$userData['type'];
-		$userId = self::$userData['userid'];
 
 		$sqlParts = [
 			'select'	=> ['triggers' => 't.triggerid'],
@@ -68,7 +66,7 @@ class CTriggerPrototype extends CTriggerGeneral {
 			'active' 						=> null,
 			'maintenance'					=> null,
 			'nopermissions'					=> null,
-			'editable'						=> null,
+			'editable'						=> false,
 			// filter
 			'group'							=> null,
 			'host'							=> null,
@@ -99,10 +97,9 @@ class CTriggerPrototype extends CTriggerGeneral {
 		$options = zbx_array_merge($defOptions, $options);
 
 		// editable + permission check
-		if ($userType != USER_TYPE_SUPER_ADMIN && !$options['nopermissions']) {
+		if (self::$userData['type'] != USER_TYPE_SUPER_ADMIN && !$options['nopermissions']) {
 			$permission = $options['editable'] ? PERM_READ_WRITE : PERM_READ;
-
-			$userGroups = getUserGroupsByUserId($userId);
+			$userGroups = getUserGroupsByUserId(self::$userData['userid']);
 
 			$sqlParts['where'][] = 'NOT EXISTS ('.
 				'SELECT NULL'.
@@ -468,6 +465,11 @@ class CTriggerPrototype extends CTriggerGeneral {
 		foreach ($triggerPrototypes as $triggerPrototype) {
 			if (!check_db_fields($triggerDbFields, $triggerPrototype)) {
 				self::exception(ZBX_API_ERROR_PARAMETERS, _('Wrong fields for trigger.'));
+			}
+
+			if (array_key_exists('url', $triggerPrototype) && $triggerPrototype['url']
+					&& !CHtmlUrlValidator::validate($triggerPrototype['url'])) {
+				self::exception(ZBX_API_ERROR_PARAMETERS, _('Wrong value for url field.'));
 			}
 
 			if (array_key_exists('templateid', $triggerPrototype)) {
@@ -1449,6 +1451,11 @@ class CTriggerPrototype extends CTriggerGeneral {
 
 			if (!isset($dbTriggerPrototypes[$triggerPrototype['triggerid']])) {
 				self::exception(ZBX_API_ERROR_PARAMETERS, _('No permissions to referred object or it does not exist!'));
+			}
+
+			if (array_key_exists('url', $triggerPrototype) && $triggerPrototype['url']
+					&& !CHtmlUrlValidator::validate($triggerPrototype['url'])) {
+				self::exception(ZBX_API_ERROR_PARAMETERS, _('Wrong value for url field.'));
 			}
 
 			if (array_key_exists('templateid', $triggerPrototype)) {

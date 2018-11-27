@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,11 +23,10 @@ require_once dirname(__FILE__) . '/../include/class.cwebtest.php';
 define('ACTION_GOOD', 0);
 define('ACTION_BAD', 1);
 
+/**
+ * @backup actions
+ */
 class testFormAction extends CWebTest {
-
-	public function testFormAction_Setup() {
-		DBsave_tables('actions');
-	}
 
 	public static function layout() {
 		return [
@@ -447,7 +446,6 @@ class testFormAction extends CWebTest {
 			]
 		];
 	}
-
 
 	/**
 	 * @dataProvider layout
@@ -1404,7 +1402,7 @@ class testFormAction extends CWebTest {
 		if ($new_operation_opcommand_type != null) {
 			$this->zbxTestTextPresent ('Type');
 			$this->zbxTestAssertVisibleXpath('//select[@id=\'new_operation_opcommand_type\']');
-			$this->zbxTestDropdownAssertSelected('new_operation[opcommand][type]', 'Custom script');
+			$this->zbxTestDropdownAssertSelected('new_operation[opcommand][type]', $new_operation_opcommand_type);
 			$this->zbxTestDropdownHasOptions('new_operation_opcommand_type', [
 					'IPMI',
 					'Custom script',
@@ -1473,7 +1471,9 @@ class testFormAction extends CWebTest {
 						'Password',
 						'Public key'
 				]);
-				$this->zbxTestDropdownAssertSelected('new_operation[opcommand][authtype]', 'Password');
+				$this->zbxTestDropdownAssertSelected('new_operation[opcommand][authtype]',
+						$new_operation_opcommand_authtype
+				);
 				break;
 			case 'IPMI':
 			case 'Custom script':
@@ -1920,7 +1920,7 @@ class testFormAction extends CWebTest {
 				switch ($operation['type']) {
 					case 'Send message':
 						$this->zbxTestClickXpathWait('//tr[@id="opmsgUsrgrpListFooter"]//button');
-						$this->zbxTestWaitWindowAndSwitchToIt('zbx_popup');
+						$this->zbxTestSwitchToWindow('zbx_popup');
 						$this->zbxTestClickWait('all_usrgrps');
 						$this->zbxTestClick('select');
 						$this->zbxTestWaitWindowClose();
@@ -1947,8 +1947,11 @@ class testFormAction extends CWebTest {
 		if (isset($data['esc_period'])){
 			$this->zbxTestTabSwitch('Operations');
 			$this->zbxTestInputTypeOverwrite('esc_period', $data['esc_period']);
-			$this->zbxTestWaitForPageToLoad();
-			$this->webDriver->findElement(WebDriverBy::id('search'))->click();
+			// Fire onchange event.
+			$this->webDriver->executeScript('var event = document.createEvent("HTMLEvents");'.
+				'event.initEvent("change", false, true);'.
+				'document.getElementById("esc_period").dispatchEvent(event);'
+			);
 			$this->zbxTestWaitForPageToLoad();
 		}
 
@@ -2085,8 +2088,11 @@ class testFormAction extends CWebTest {
 		$this->zbxTestAssertElementText('//tr[@id="operations_2"]//td', '1 - 2');
 
 		$this->zbxTestInputTypeOverwrite('esc_period', '123');
-		$this->zbxTestWaitForPageToLoad();
-		$this->webDriver->findElement(WebDriverBy::id('search'))->click();
+		// Fire onchange event.
+		$this->webDriver->executeScript('var event = document.createEvent("HTMLEvents");'.
+			'event.initEvent("change", false, true);'.
+			'document.getElementById("esc_period").dispatchEvent(event);'
+		);
 		$this->zbxTestWaitForPageToLoad();
 		$this->zbxTestAssertElementValue('esc_period', '123');
 		$this->zbxTestDoubleClickXpath("//div[@id='operationTab']//button[contains(@onclick, 'new_operation')]", 'new_operation_esc_step_from');
@@ -2096,9 +2102,5 @@ class testFormAction extends CWebTest {
 
 		$sql = "SELECT actionid FROM actions WHERE name='action test'";
 		$this->assertEquals(1, DBcount($sql), 'Action has not been created in the DB.');
-	}
-
-	public function testFormAction_Teardown() {
-		DBrestore_tables('actions');
 	}
 }

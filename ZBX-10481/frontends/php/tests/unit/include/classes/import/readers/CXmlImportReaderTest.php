@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -90,6 +90,26 @@ class CXmlImportReaderTest extends PHPUnit_Framework_TestCase {
 						],
 						'screens' => '',
 						'images' => ''
+					]
+				]
+			],
+			[
+				'<root>'."\n".
+				'    <tag>tag</tag>'."\n".
+				'        <empty_tag></empty_tag>'."\n".
+				'        <empty />'."\n".
+				'        <array>'."\n".
+				'            <tag>tag</tag>'."\n".
+				'        </array>'."\n".
+				'</root>',
+				[
+					'root' => [
+						'tag' => 'tag',
+						'empty_tag' => '',
+						'empty' => '',
+						'array' => [
+							'tag' => 'tag'
+						]
 					]
 				]
 			],

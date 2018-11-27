@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -74,9 +74,14 @@ foreach ($this->data['applications'] as $application) {
 		CArrayHelper::sort($application['sourceTemplates'], ['name']);
 
 		foreach ($application['sourceTemplates'] as $template) {
-			$name[] = (new CLink($template['name'], 'applications.php?hostid='.$template['hostid']))
-				->addClass(ZBX_STYLE_LINK_ALT)
-				->addClass(ZBX_STYLE_GREY);
+			if (array_key_exists($template['hostid'], $data['writable_templates'])) {
+				$name[] = (new CLink($template['name'], 'applications.php?hostid='.$template['hostid']))
+					->addClass(ZBX_STYLE_LINK_ALT)
+					->addClass(ZBX_STYLE_GREY);
+			}
+			else {
+				$name[] = (new CSpan($template['name']))->addClass(ZBX_STYLE_GREY);
+			}
 			$name[] = ', ';
 		}
 		array_pop($name);

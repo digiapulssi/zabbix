@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -128,11 +128,18 @@ function getActionMapBySysmap($sysmap, array $options = []) {
 	]);
 
 	$triggers = API::Trigger()->get([
-		'output' => ['triggerid'],
-		'selectHosts' => ['hostid', 'status'],
+		'output' => [],
 		'triggerids' => $triggerIds,
 		'preservekeys' => true,
 		'nopermissions' => true
+	]);
+
+	$moniored_triggers = API::Trigger()->get([
+		'output' => [],
+		'triggerids' => array_keys($triggers),
+		'monitored' => true,
+		'nopermissions' => true,
+		'preservekeys' => true
 	]);
 
 	$host_groups = API::HostGroup()->get([
@@ -198,15 +205,9 @@ function getActionMapBySysmap($sysmap, array $options = []) {
 			case SYSMAP_ELEMENT_TYPE_TRIGGER:
 				$gotos['showEvents'] = false;
 
-				if (isset($triggers[$elem['elementid']])) {
-					$trigger = $triggers[$elem['elementid']];
-
-					foreach ($trigger['hosts'] as $host) {
-						if ($host['status'] == HOST_STATUS_MONITORED) {
-							$gotos['showEvents'] = true;
-
-							break;
-						}
+				if (array_key_exists($elem['elementid'], $triggers)) {
+					if (array_key_exists($elem['elementid'], $moniored_triggers)) {
+						$gotos['showEvents'] = true;
 					}
 
 					$gotos['events']['triggerid'] = $elem['elementid'];
@@ -942,14 +943,28 @@ function getSelementsInfo($sysmap, array $options = []) {
 			'selectLastEvent' => ['acknowledged'],
 			'triggerids' => array_keys($triggerIdToSelementIds),
 			'filter' => ['state' => null],
-			'nopermissions' => true
+			'nopermissions' => true,
+			'preservekeys' => true
+		]);
+
+		$monitored_triggers = API::Trigger()->get([
+			'output' => [],
+			'triggerids' => array_keys($triggers),
+			'monitored' => true,
+			'nopermissions' => true,
+			'preservekeys' => true
 		]);
 
 		foreach ($triggers as $trigger) {
+			if (!array_key_exists($trigger['triggerid'], $monitored_triggers)) {
+				$trigger['status'] = TRIGGER_STATUS_DISABLED;
+			}
+
 			foreach ($triggerIdToSelementIds[$trigger['triggerid']] as $belongs_to_sel) {
 				$selements[$belongs_to_sel]['triggers'][$trigger['triggerid']] = $trigger;
 			}
 		}
+		unset($triggers, $monitored_triggers);
 	}
 
 	// triggers from submaps, skip dependent
@@ -965,11 +980,24 @@ function getSelementsInfo($sysmap, array $options = []) {
 			'only_true' => true
 		]);
 
+		$monitored_triggers = API::Trigger()->get([
+			'output' => [],
+			'triggerids' => array_keys($triggers),
+			'monitored' => true,
+			'nopermissions' => true,
+			'preservekeys' => true
+		]);
+
 		foreach ($triggers as $trigger) {
 			foreach ($subSysmapTriggerIdToSelementIds[$trigger['triggerid']] as $belongs_to_sel) {
+				if (!array_key_exists($trigger['triggerid'], $monitored_triggers)) {
+					$trigger['status'] = TRIGGER_STATUS_DISABLED;
+				}
+
 				$selements[$belongs_to_sel]['triggers'][$trigger['triggerid']] = $trigger;
 			}
 		}
+		unset($triggers, $monitored_triggers);
 	}
 
 	$monitored_hostids = [];
@@ -1473,7 +1501,7 @@ function drawMapConnectors(&$im, $map, $mapInfo, $drawAll = false) {
 
 			$triggers = [];
 			foreach ($linktriggers as $link_trigger) {
-				if ($link_trigger['triggerid'] == 0) {
+				if (!$link_trigger['monitored']) {
 					continue;
 				}
 
@@ -1733,7 +1761,7 @@ function drawMapLinkLabels(&$im, $map, $mapInfo, $resolveMacros, $graphtheme) {
 
 			$triggers = [];
 			foreach ($linktriggers as $link_trigger) {
-				if ($link_trigger['triggerid'] == 0) {
+				if (!$link_trigger['monitored']) {
 					continue;
 				}
 				$id = $link_trigger['linktriggerid'];
@@ -2331,4 +2359,30 @@ function get_parent_sysmaps($sysmapid) {
 	}
 
 	return [];
+}
+
+/**
+ * Function extends link triggers adding boolean property 'monitored'.
+ *
+ * @param array $map
+ */
+function resolveMapLinksTriggersState(&$map) {
+	$triggerids = [];
+	foreach ($map['links'] as $link) {
+		$triggerids = array_merge($triggerids, zbx_objectValues($link['linktriggers'], 'triggerid'));
+	}
+	$monitored_triggers = API::Trigger()->get([
+		'output' => [],
+		'triggerids' => $triggerids,
+		'monitored' => true,
+		'nopermissions' => true,
+		'preservekeys' => true
+	]);
+
+	foreach ($map['links'] as $linkid => $link) {
+		foreach ($link['linktriggers'] as $link_triggerid => $link_trigger) {
+			$map['links'][$linkid]['linktriggers'][$link_triggerid]['monitored']
+				= array_key_exists($link_trigger['triggerid'], $monitored_triggers);
+		}
+	}
 }

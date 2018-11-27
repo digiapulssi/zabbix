@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ $widget = (new CWidget())
 	->addItem(get_header_host_table('hosts', $discoveryRule['hostid'], $discoveryRule['itemid']));
 
 $divTabs = new CTabView();
-if (!isset($_REQUEST['form_refresh'])) {
+if (!hasRequest('form_refresh')) {
 	$divTabs->setSelected(0);
 }
 
@@ -41,22 +41,28 @@ $frmHost = (new CForm())
 	->addVar('parent_discoveryid', $discoveryRule['itemid'])
 	->addVar('tls_accept', $parentHost['tls_accept']);
 
+if ($hostPrototype['hostid'] != 0) {
+	$frmHost->addVar('hostid', $hostPrototype['hostid']);
+}
+
 $hostList = new CFormList('hostlist');
 
 if ($hostPrototype['templateid'] && $data['parents']) {
 	$parents = [];
 	foreach (array_reverse($data['parents']) as $parent) {
-		$parents[] = new CLink($parent['parentHost']['name'],
-			'?form=update&hostid='.$parent['hostid'].'&parent_discoveryid='.$parent['discoveryRule']['itemid']
-		);
+		if (array_key_exists($parent['parentHost']['hostid'], $hostPrototype['writable_templates'])) {
+			$parents[] = new CLink($parent['parentHost']['name'],
+				'?form=update&hostid='.$parent['hostid'].'&parent_discoveryid='.$parent['discoveryRule']['itemid']
+			);
+		}
+		else {
+			$parents[] = new CSpan($parent['parentHost']['name']);
+		}
+
 		$parents[] = SPACE.'&rArr;'.SPACE;
 	}
 	array_pop($parents);
 	$hostList->addRow(_('Parent discovery rules'), $parents);
-}
-
-if (isset($hostPrototype['hostid'])) {
-	$frmHost->addVar('hostid', $hostPrototype['hostid']);
 }
 
 $hostTB = (new CTextBox('host', $hostPrototype['host'], (bool) $hostPrototype['templateid']))
@@ -229,10 +235,17 @@ if ($hostPrototype['templateid']) {
 
 	foreach ($hostPrototype['templates'] as $template) {
 		$tmplList->addVar('templates['.$template['templateid'].']', $template['templateid']);
-		$templateLink = (new CLink($template['name'], 'templates.php?form=update&templateid='.$template['templateid']))
-			->setTarget('_blank');
 
-		$linkedTemplateTable->addRow([$templateLink]);
+		if (array_key_exists($template['templateid'], $hostPrototype['writable_templates'])) {
+			$template_link = (new CLink($template['name'],
+				'templates.php?form=update&templateid='.$template['templateid']
+			))->setTarget('_blank');
+		}
+		else {
+			$template_link = new CSpan($template['name']);
+		}
+
+		$linkedTemplateTable->addRow([$template_link]);
 	}
 
 	$tmplList->addRow(_('Linked templates'),
@@ -250,11 +263,18 @@ else {
 
 	foreach ($hostPrototype['templates'] as $template) {
 		$tmplList->addVar('templates['.$template['templateid'].']', $template['templateid']);
-		$templateLink = (new CLink($template['name'], 'templates.php?form=update&templateid='.$template['templateid']))
-			->setTarget('_blank');
+
+		if (array_key_exists($template['templateid'], $hostPrototype['writable_templates'])) {
+			$template_link = (new CLink($template['name'],
+				'templates.php?form=update&templateid='.$template['templateid']
+			))->setTarget('_blank');
+		}
+		else {
+			$template_link = new CSpan($template['name']);
+		}
 
 		$linkedTemplateTable->addRow([
-			$templateLink,
+			$template_link,
 			(new CCol(
 				(new CSimpleButton(_('Unlink')))
 					->onClick('javascript: submitFormWithParam('.
@@ -347,7 +367,7 @@ $inventoryFormList = (new CFormList('inventorylist'))
 			->addValue(_('Disabled'), HOST_INVENTORY_DISABLED)
 			->addValue(_('Manual'), HOST_INVENTORY_MANUAL)
 			->addValue(_('Automatic'), HOST_INVENTORY_AUTOMATIC)
-			->setEnabled($hostPrototype['templateid'] == 0)
+			->setReadonly($hostPrototype['templateid'] != 0)
 			->setModern(true)
 	);
 
@@ -396,7 +416,7 @@ $divTabs->addTab('encryptionTab', _('Encryption'), $encryption_form_list);
 /*
  * footer
  */
-if (isset($hostPrototype['hostid'])) {
+if ($hostPrototype['hostid'] != 0) {
 	$btnDelete = new CButtonDelete(
 		_('Delete selected host prototype?'),
 		url_param('form').url_param('hostid').url_param('parent_discoveryid')

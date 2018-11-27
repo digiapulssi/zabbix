@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -125,7 +125,13 @@ foreach ($triggers as $trigger) {
 					$highest_severity2[$group['groupid']] = 0;
 				}
 
-				if ($trigger['priority'] > $highest_severity2[$group['groupid']]) {
+				if ($data['filter']['extAck'] == EXTACK_OPTION_UNACK) {
+					if ($trigger['priority'] > $highest_severity2[$group['groupid']]
+							&& array_key_exists($trigger['triggerid'], $triggers_unack)) {
+						$highest_severity2[$group['groupid']] = $trigger['priority'];
+					}
+				}
+				elseif ($trigger['priority'] > $highest_severity2[$group['groupid']]) {
 					$highest_severity2[$group['groupid']] = $trigger['priority'];
 				}
 
@@ -233,9 +239,8 @@ foreach ($groups as $group) {
 
 	$group_row = new CRow();
 
-	$name = new CLink($group['name'], 'tr_status.php?filter_set=1&groupid='.$group['groupid'].'&hostid=0'.
-		'&show_triggers='.TRIGGERS_OPTION_RECENT_PROBLEM
-	);
+	$name = new CLink($group['name'], 'tr_status.php?filter_set=1&groupid='.$group['groupid'].'&hostid=0');
+
 	$group_row->addItem($name);
 	$group_row->addItem((new CCol($hosts_data[$group['groupid']]['ok']))->addClass(ZBX_STYLE_NORMAL_BG));
 
@@ -270,8 +275,9 @@ foreach ($groups as $group) {
 				$r = new CRow();
 				$r->addItem(
 					(new CCol(
-						new CLink($host_data['host'], 'tr_status.php?filter_set=1&groupid='.$group['groupid'].
-							'&hostid='.$hostid.'&show_triggers='.TRIGGERS_OPTION_RECENT_PROBLEM)
+						new CLink($host_data['host'],
+							'tr_status.php?filter_set=1&groupid='.$group['groupid'].'&hostid='.$hostid
+						)
 					))->addClass(ZBX_STYLE_NOWRAP)
 				);
 
@@ -325,8 +331,8 @@ foreach ($groups as $group) {
 			$host_data = $problematic_host_list[$hostid];
 
 			$r = new CRow();
-			$r->addItem(new CLink($host_data['host'], 'tr_status.php?filter_set=1&groupid='.$group['groupid'].
-				'&hostid='.$hostid.'&show_triggers='.TRIGGERS_OPTION_RECENT_PROBLEM
+			$r->addItem(new CLink($host_data['host'],
+				'tr_status.php?filter_set=1&groupid='.$group['groupid'].'&hostid='.$hostid
 			));
 
 			foreach ($problematic_host_list[$host['hostid']]['severities'] as $severity => $trigger_count) {

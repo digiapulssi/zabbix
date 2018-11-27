@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -190,8 +190,12 @@ class CScreenBuilder {
 				$options['screenitem'] = reset($options['screenitem']);
 			}
 
-			if (array_key_exists('screenitem', $options) && array_key_exists('resourcetype', $options['screenitem'])) {
+			if (is_array($options['screenitem']) && array_key_exists('screenitem', $options)
+					&& array_key_exists('resourcetype', $options['screenitem'])) {
 				$options['resourcetype'] = $options['screenitem']['resourcetype'];
+			}
+			else {
+				return null;
 			}
 		}
 

@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -357,18 +357,24 @@ void	add_regexp_ex(zbx_vector_ptr_t *regexps, const char *name, const char *expr
 static int	regexp_match_ex_regsub(const char *string, const char *pattern, int case_sensitive,
 		const char *output_template, char **output)
 {
-	char	*ptr = NULL;
+	char	*ptr;
 	int	regexp_flags = REG_EXTENDED | REG_NEWLINE;
 
 	if (ZBX_IGNORE_CASE == case_sensitive)
 		regexp_flags |= REG_ICASE;
 
 	if (NULL == output)
-		ptr = zbx_regexp(string, pattern, NULL, regexp_flags);
-	else
-		*output = ptr = regexp_sub(string, pattern, output_template, regexp_flags);
+	{
+		if (NULL != (ptr = zbx_regexp(string, pattern, NULL, regexp_flags)))
+			return SUCCEED;
+	}
+	else if (NULL != (ptr = regexp_sub(string, pattern, output_template, regexp_flags)))
+	{
+		*output = ptr;
+		return SUCCEED;
+	}
 
-	return NULL != ptr ? SUCCEED : FAIL;
+	return FAIL;
 }
 
 /**********************************************************************************
@@ -478,14 +484,15 @@ static int	regexp_match_ex_substring_list(const char *string, char *pattern, int
  *                                                                                *
  * Comments: For regular expressions and global regular expressions with 'Result  *
  *           is TRUE' type the output_template substitution result is stored into *
- *           output variable. For the other global regular expression types the   *
- *           whole string is stored into output variable.                         *
+ *           'output' variable. For the other global regular expression types the *
+ *           whole string is stored into 'output' variable.                       *
  *                                                                                *
  **********************************************************************************/
 int	regexp_sub_ex(const zbx_vector_ptr_t *regexps, const char *string, const char *pattern,
 		int case_sensitive, const char *output_template, char **output)
 {
 	int	i, ret = FAIL;
+	char	*output_accu;		/* accumulator for 'output' when looping over global regexp subexpressions */
 
 	if (NULL == pattern || '\0' == *pattern)
 	{
@@ -494,15 +501,16 @@ int	regexp_sub_ex(const zbx_vector_ptr_t *regexps, const char *string, const cha
 		goto out;
 	}
 
-	if ('@' != *pattern)
+	if ('@' != *pattern)		/* not a global regexp */
 	{
 		ret = regexp_match_ex_regsub(string, pattern, case_sensitive, output_template, output);
 		goto out;
 	}
 
 	pattern++;
+	output_accu = NULL;
 
-	for (i = 0; i < regexps->values_num; i++)
+	for (i = 0; i < regexps->values_num; i++)	/* loop over global regexp subexpressions */
 	{
 		const zbx_expression_t	*regexp = regexps->values[i];
 
@@ -514,8 +522,22 @@ int	regexp_sub_ex(const zbx_vector_ptr_t *regexps, const char *string, const cha
 		switch (regexp->expression_type)
 		{
 			case EXPRESSION_TYPE_TRUE:
-				ret = regexp_match_ex_regsub(string, regexp->expression, regexp->case_sensitive,
-						output_template, output);
+				if (NULL != output)
+				{
+					char	*output_tmp = NULL;
+
+					if (SUCCEED == (ret = regexp_match_ex_regsub(string, regexp->expression,
+							regexp->case_sensitive, output_template, &output_tmp)))
+					{
+						zbx_free(output_accu);
+						output_accu = output_tmp;
+					}
+				}
+				else
+				{
+					ret = regexp_match_ex_regsub(string, regexp->expression, regexp->case_sensitive,
+							NULL, NULL);
+				}
 				break;
 			case EXPRESSION_TYPE_FALSE:
 				ret = regexp_match_ex_regsub(string, regexp->expression, regexp->case_sensitive,
@@ -538,7 +560,16 @@ int	regexp_sub_ex(const zbx_vector_ptr_t *regexps, const char *string, const cha
 		}
 
 		if (FAIL == ret)
+		{
+			zbx_free(output_accu);
 			break;
+		}
+	}
+
+	if (SUCCEED == ret && NULL != output_accu)
+	{
+		*output = output_accu;
+		return SUCCEED;
 	}
 out:
 	if (SUCCEED == ret && NULL != output && NULL == *output)

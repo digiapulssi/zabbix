@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,6 +17,7 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
+#include <sys/dr.h>
 #include "common.h"
 #include "sysinfo.h"
 #include "stats.h"
@@ -26,7 +27,7 @@ int	SYSTEM_CPU_NUM(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
 #ifdef HAVE_LIBPERFSTAT
 	char			*tmp;
-	perfstat_cpu_total_t	ps_cpu_total;
+	lpar_info_format2_t	buf;
 
 	if (1 < request->nparam)
 	{
@@ -43,13 +44,13 @@ int	SYSTEM_CPU_NUM(AGENT_REQUEST *request, AGENT_RESULT *result)
 		return SYSINFO_RET_FAIL;
 	}
 
-	if (-1 == perfstat_cpu_total(NULL, &ps_cpu_total, sizeof(ps_cpu_total), 1))
+	if (0 != lpar_get_info(LPAR_INFO_FORMAT2, &buf, sizeof(buf)))
 	{
 		SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Cannot obtain system information: %s", zbx_strerror(errno)));
 		return SYSINFO_RET_FAIL;
 	}
 
-	SET_UI64_RESULT(result, ps_cpu_total.ncpus);
+	SET_UI64_RESULT(result, buf.online_lcpus);
 
 	return SYSINFO_RET_OK;
 #else

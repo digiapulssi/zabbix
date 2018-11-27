@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -33,7 +33,8 @@ $definedErrorPhrases = [
 	EXPRESSION_HOST_UNKNOWN => _('Unknown host, no such host present in system'),
 	EXPRESSION_HOST_ITEM_UNKNOWN => _('Unknown host item, no such item in selected host'),
 	EXPRESSION_NOT_A_MACRO_ERROR => _('Given expression is not a macro'),
-	EXPRESSION_FUNCTION_UNKNOWN => _('Incorrect function is used')
+	EXPRESSION_FUNCTION_UNKNOWN => _('Incorrect function is used'),
+	EXPRESSION_UNSUPPORTED_VALUE_TYPE => _('Incorrect item value type')
 ];
 
 require_once dirname(__FILE__).'/include/page_header.php';

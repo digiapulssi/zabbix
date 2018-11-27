@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -325,7 +325,7 @@ class CHelpItems {
 					'description' => _('Loading time of full web page (in seconds). Returns float')
 				],
 				[
-					'key' => 'web.page.regexp[host,<path>,<port>,<regexp>,<length>,<output>]',
+					'key' => 'web.page.regexp[host,<path>,<port>,regexp,<length>,<output>]',
 					'description' => _('Find string on a web page. Returns the matched string, or as specified by the optional output parameter')
 				],
 				[
@@ -611,7 +611,7 @@ class CHelpItems {
 					'description' => _('Loading time of full web page (in seconds). Returns float')
 				],
 				[
-					'key' => 'web.page.regexp[host,<path>,<port>,<regexp>,<length>,<output>]',
+					'key' => 'web.page.regexp[host,<path>,<port>,regexp,<length>,<output>]',
 					'description' => _('Find string on a web page. Returns the matched string, or as specified by the optional output parameter')
 				],
 				[
@@ -927,8 +927,8 @@ class CHelpItems {
 					'description' => _('Returns information associated with Zabbix Java gateway. Valid params are: ping, version.')
 				],
 				[
-					'key' => 'zabbix[process,<type>,<num>,<state>]',
-					'description' => _('Time a particular Zabbix process or a group of processes (identified by <type> and <num>) spent in <state> in percentage.')
+					'key' => 'zabbix[process,<type>,<mode>,<state>]',
+					'description' => _('Time a particular Zabbix process or a group of processes (identified by <type> and <mode>) spent in <state> in percentage.')
 				],
 				[
 					'key' => 'zabbix[proxy,<name>,<param>]',

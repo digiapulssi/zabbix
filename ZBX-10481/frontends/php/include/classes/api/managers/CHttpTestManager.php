@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -413,14 +413,15 @@ class CHttpTestManager {
 				elseif (isset($hostHttpTest['byName'][$httpTest['name']])) {
 					$exHttpTest = $hostHttpTest['byName'][$httpTest['name']];
 
-					if ($exHttpTest['templateid'] === $httpTestId) {
+					if (bccomp($exHttpTest['templateid'], $httpTestId) == 0
+							|| $exHttpTest['templateid'] != 0
+							|| !$this->compareHttpSteps($httpTest, $exHttpTest)) {
 						$host = DBfetch(DBselect('SELECT h.name FROM hosts h WHERE h.hostid='.zbx_dbstr($hostId)));
 						throw new Exception(
 							_s('Web scenario "%1$s" already exists on host "%2$s".', $exHttpTest['name'], $host['name'])
 						);
 					}
-					elseif ($this->compareHttpSteps($httpTest, $exHttpTest)
-							&& $this->compareHttpProperties($httpTest, $exHttpTest)) {
+					elseif ($this->compareHttpProperties($httpTest, $exHttpTest)) {
 						$this->createLinkageBetweenHttpTests($httpTestId, $exHttpTest['httptestid']);
 						continue;
 					}
@@ -467,8 +468,8 @@ class CHttpTestManager {
 				&& $httpTest['http_proxy'] === $exHttpTest['http_proxy']
 				&& $httpTest['agent'] === $exHttpTest['agent']
 				&& $httpTest['retries'] == $exHttpTest['retries']
-				&& $httpTest['delay'] == $exHttpTest['delay']
-				&& $httpTest['applicationid'] == $exHttpTest['applicationid']);
+				&& $httpTest['delay'] === $exHttpTest['delay']
+				&& bccomp($httpTest['applicationid'], $exHttpTest['applicationid']) == 0);
 	}
 
 	/**
@@ -576,8 +577,8 @@ class CHttpTestManager {
 		}
 
 		$dbCursor = DBselect(
-			'SELECT ht.httptestid,ht.name,ht.hostid,ht.templateid,ht.applicationid,ht.delay,ht.retries,ht.agent,'.
-				'ht.http_proxy,ht.variables,ht.headers'.
+			'SELECT ht.httptestid,ht.name,ht.applicationid,ht.delay,ht.variables,ht.agent,ht.hostid,ht.templateid,'.
+				'ht.http_proxy,ht.retries,ht.headers'.
 			' FROM httptest ht'.
 			' WHERE '.dbConditionInt('ht.hostid', $hostIds)
 		);
@@ -651,7 +652,10 @@ class CHttpTestManager {
 			}
 		}
 		if (!empty($httpTestsUpdate)) {
-			$this->update($httpTestsUpdate);
+			$updated_http_tests = $this->update($httpTestsUpdate);
+			foreach ($updated_http_tests as $updated_http_test) {
+				$httpTests[$updated_http_test['httptestid']] = $updated_http_test;
+			}
 		}
 
 		return $httpTests;

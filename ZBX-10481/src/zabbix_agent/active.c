@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -261,6 +261,36 @@ out:
 
 /******************************************************************************
  *                                                                            *
+ * Function: mode_parameter_is_skip                                           *
+ *                                                                            *
+ * Purpose: test log[] item key if <mode> parameter is set to 'skip'          *
+ *                                                                            *
+ * Return value: SUCCEED - <mode> parameter is set to 'skip'                  *
+ *               FAIL - <mode> is not 'skip' or error                         *
+ *                                                                            *
+ ******************************************************************************/
+static int	mode_parameter_is_skip(const char *itemkey)
+{
+	AGENT_REQUEST	request;
+	const char	*skip;
+	int		ret = FAIL;
+
+	init_request(&request);
+
+	if (SUCCEED == parse_item_key(itemkey, &request) && 0 < get_rparams_num(&request) &&
+			7 > get_rparams_num(&request) && NULL != (skip = get_rparam(&request, 4)) &&
+			0 == strcmp(skip, "skip"))
+	{
+		ret = SUCCEED;
+	}
+
+	free_request(&request);
+
+	return ret;
+}
+
+/******************************************************************************
+ *                                                                            *
  * Function: parse_list_of_checks                                             *
  *                                                                            *
  * Purpose: Parse list of active checks received from server                  *
@@ -383,6 +413,16 @@ static int	parse_list_of_checks(char *str, const char *host, unsigned short port
 		int	found = 0;
 
 		metric = (ZBX_ACTIVE_METRIC *)active_metrics.values[i];
+
+		/* 'Do-not-delete' exception for log[] item with <mode> parameter set to 'skip'. We need to keep its */
+		/* state, namely 'skip_old_data', in case the item becomes NOTSUPPORTED as server might not send it */
+		/* in a new active check list. */
+
+		if (0 != (ZBX_METRIC_FLAG_LOG_LOG & metric->flags) && ITEM_STATE_NOTSUPPORTED == metric->state &&
+				0 == metric->skip_old_data && SUCCEED == mode_parameter_is_skip(metric->key))
+		{
+			continue;
+		}
 
 		for (j = 0; j < received_metrics.values_num; j++)
 		{
@@ -1637,7 +1677,6 @@ ZBX_THREAD_ENTRY(active_checks_thread, args)
 
 	while (ZBX_IS_RUNNING())
 	{
-
 		zbx_handle_log();
 
 		now = time(NULL);
@@ -1667,8 +1706,9 @@ ZBX_THREAD_ENTRY(active_checks_thread, args)
 			zbx_setproctitle("active checks #%d [processing active checks]", process_num);
 
 			process_active_checks(activechk_args.host, activechk_args.port);
+
 			if (CONFIG_BUFFER_SIZE / 2 <= buffer.pcount)	/* failed to complete processing active checks */
-				continue;
+				goto next;
 
 			nextcheck = get_min_nextcheck();
 			if (FAIL == nextcheck)
@@ -1691,6 +1731,12 @@ ZBX_THREAD_ENTRY(active_checks_thread, args)
 		}
 
 		lastcheck = now;
+next:
+#if !defined(_WINDOWS) && defined(HAVE_RESOLV_H)
+		zbx_update_resolver_conf();	/* handle /etc/resolv.conf update */
+#else
+		;
+#endif
 	}
 
 #ifdef _WINDOWS

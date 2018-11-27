@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -83,7 +83,7 @@ static int	get_function_parameter_int(zbx_uint64_t hostid, const char *parameter
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() parameters:'%s' Nparam:%d", __function_name, parameters, Nparam);
 
-	if (NULL == (parameter = get_param_dyn(parameters, Nparam)))
+	if (NULL == (parameter = zbx_function_get_param_dyn(parameters, Nparam)))
 		goto out;
 
 	if (SUCCEED == substitute_simple_macros(NULL, NULL, NULL, NULL, &hostid, NULL, NULL, NULL,
@@ -143,7 +143,7 @@ static int	get_function_parameter_uint64(zbx_uint64_t hostid, const char *parame
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() parameters:'%s' Nparam:%d", __function_name, parameters, Nparam);
 
-	if (NULL == (parameter = get_param_dyn(parameters, Nparam)))
+	if (NULL == (parameter = zbx_function_get_param_dyn(parameters, Nparam)))
 		goto out;
 
 	if (SUCCEED == substitute_simple_macros(NULL, NULL, NULL, NULL, &hostid, NULL, NULL, NULL,
@@ -172,7 +172,7 @@ static int	get_function_parameter_float(zbx_uint64_t hostid, const char *paramet
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() parameters:'%s' Nparam:%d", __function_name, parameters, Nparam);
 
-	if (NULL == (parameter = get_param_dyn(parameters, Nparam)))
+	if (NULL == (parameter = zbx_function_get_param_dyn(parameters, Nparam)))
 		goto out;
 
 	if (SUCCEED == substitute_simple_macros(NULL, NULL, NULL, NULL, &hostid, NULL, NULL, NULL,
@@ -203,7 +203,7 @@ static int	get_function_parameter_str(zbx_uint64_t hostid, const char *parameter
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() parameters:'%s' Nparam:%d", __function_name, parameters, Nparam);
 
-	if (NULL == (*value = get_param_dyn(parameters, Nparam)))
+	if (NULL == (*value = zbx_function_get_param_dyn(parameters, Nparam)))
 		goto out;
 
 	ret = substitute_simple_macros(NULL, NULL, NULL, NULL, &hostid, NULL, NULL, NULL,

@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -170,7 +170,11 @@ void	DBbegin(void)
  ******************************************************************************/
 void	DBcommit(void)
 {
-	DBtxn_operation(zbx_db_commit);
+	if (ZBX_DB_OK > zbx_db_commit())
+	{
+		zabbix_log(LOG_LEVEL_DEBUG, "commit called on failed transaction, doing a rollback instead");
+		DBrollback();
+	}
 }
 
 /******************************************************************************
@@ -186,7 +190,13 @@ void	DBcommit(void)
  ******************************************************************************/
 void	DBrollback(void)
 {
-	DBtxn_operation(zbx_db_rollback);
+	if (ZBX_DB_OK > zbx_db_rollback())
+	{
+		zabbix_log(LOG_LEVEL_WARNING, "cannot perform transaction rollback, connection will be reset");
+
+		DBclose();
+		DBconnect(ZBX_DB_CONNECT_NORMAL);
+	}
 }
 
 /******************************************************************************
@@ -201,9 +211,9 @@ void	DBrollback(void)
 void	DBend(int ret)
 {
 	if (SUCCEED == ret)
-		DBtxn_operation(zbx_db_commit);
+		DBcommit();
 	else
-		DBtxn_operation(zbx_db_rollback);
+		DBrollback();
 }
 
 #ifdef HAVE_ORACLE
@@ -1244,6 +1254,76 @@ const char	*zbx_host_key_string(zbx_uint64_t itemid)
 
 /******************************************************************************
  *                                                                            *
+ * Function: zbx_check_user_permissions                                       *
+ *                                                                            *
+ * Purpose: check if user has access rights to information - full name, alias,*
+ *          Email, SMS, Jabber, etc                                           *
+ *                                                                            *
+ * Parameters: userid           - [IN] user who owns the information          *
+ *             recipient_userid - [IN] user who will receive the information  *
+ *                                     can be NULL for remote command         *
+ *                                                                            *
+ * Return value: SUCCEED - if information receiving user has access rights    *
+ *               FAIL    - otherwise                                          *
+ *                                                                            *
+ * Comments: Users has access rights or can view personal information only    *
+ *           about themselves and other user who belong to their group.       *
+ *           "Zabbix Super Admin" can view and has access rights to           *
+ *           information about any user.                                      *
+ *                                                                            *
+ ******************************************************************************/
+int	zbx_check_user_permissions(const zbx_uint64_t *userid, const zbx_uint64_t *recipient_userid)
+{
+	const char	*__function_name = "zbx_check_user_permissions";
+
+	DB_RESULT	result;
+	DB_ROW		row;
+	int		user_type = -1, ret = SUCCEED;
+
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
+
+	if (NULL == recipient_userid || *userid == *recipient_userid)
+		goto out;
+
+	result = DBselect("select type from users where userid=" ZBX_FS_UI64, *recipient_userid);
+
+	if (NULL != (row = DBfetch(result)) && FAIL == DBis_null(row[0]))
+		user_type = atoi(row[0]);
+	DBfree_result(result);
+
+	if (-1 == user_type)
+	{
+		zabbix_log(LOG_LEVEL_DEBUG, "%s() cannot check permissions", __function_name);
+		ret = FAIL;
+		goto out;
+	}
+
+	if (USER_TYPE_SUPER_ADMIN != user_type)
+	{
+		/* check if users are from the same user group */
+		result = DBselect(
+				"select null"
+				" from users_groups ug1"
+				" where ug1.userid=" ZBX_FS_UI64
+					" and exists (select null"
+						" from users_groups ug2"
+						" where ug1.usrgrpid=ug2.usrgrpid"
+							" and ug2.userid=" ZBX_FS_UI64
+					")",
+				*userid, *recipient_userid);
+
+		if (NULL == DBfetch(result))
+			ret = FAIL;
+		DBfree_result(result);
+	}
+out:
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, zbx_result_string(ret));
+
+	return ret;
+}
+
+/******************************************************************************
+ *                                                                            *
  * Function: zbx_user_string                                                  *
  *                                                                            *
  * Return value: "Name Surname (Alias)" or "unknown" if user not found        *
@@ -1256,8 +1336,7 @@ const char	*zbx_user_string(zbx_uint64_t userid)
 	DB_RESULT	result;
 	DB_ROW		row;
 
-	result = DBselect("select name,surname,alias from users where userid=" ZBX_FS_UI64,
-			userid);
+	result = DBselect("select name,surname,alias from users where userid=" ZBX_FS_UI64, userid);
 
 	if (NULL != (row = DBfetch(result)))
 		zbx_snprintf(buf_string, sizeof(buf_string), "%s %s (%s)", row[0], row[1], row[2]);
@@ -1582,7 +1661,7 @@ void	DBregister_host_flush(zbx_vector_ptr_t *autoreg_hosts, zbx_uint64_t proxy_h
 		zbx_free(sql);
 	}
 
-	process_events();
+	process_events(NULL);
 exit:
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
@@ -2536,7 +2615,7 @@ retry_oracle:
 		goto retry_oracle;
 	}
 
-	ret = (ZBX_DB_OK == rc ? SUCCEED : FAIL);
+	ret = (ZBX_DB_OK <= rc ? SUCCEED : FAIL);
 
 #else
 	DBbegin_multiple_update(&sql, &sql_alloc, &sql_offset);

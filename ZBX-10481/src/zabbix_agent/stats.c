@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -79,6 +79,7 @@ static int	zbx_get_cpu_num()
 #elif defined(_SC_NPROCESSORS_CONF)
 	/* FreeBSD 7.0 x86 */
 	/* Solaris 10 x86 */
+	/* AIX 6.1 */
 	int	ncpu;
 
 	if (-1 == (ncpu = sysconf(_SC_NPROCESSORS_CONF)))
@@ -117,14 +118,6 @@ static int	zbx_get_cpu_num()
 		goto return_one;
 
 	return ncpu;
-#elif defined(HAVE_LIBPERFSTAT)
-	/* AIX 6.1 */
-	perfstat_cpu_total_t	ps_cpu_total;
-
-	if (-1 == perfstat_cpu_total(NULL, &ps_cpu_total, sizeof(ps_cpu_total), 1))
-		goto return_one;
-
-	return (int)ps_cpu_total.ncpus;
 #endif
 
 #ifndef _WINDOWS
@@ -469,6 +462,10 @@ ZBX_THREAD_ENTRY(collector_thread, args)
 #endif
 		zbx_setproctitle("collector [idle 1 sec]");
 		zbx_sleep(1);
+
+#if !defined(_WINDOWS) && defined(HAVE_RESOLV_H)
+		zbx_update_resolver_conf();	/* handle /etc/resolv.conf update */
+#endif
 	}
 
 #ifdef _WINDOWS

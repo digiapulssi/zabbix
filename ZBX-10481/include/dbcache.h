@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -86,7 +86,7 @@ typedef struct
 	zbx_uint64_t	hostid;
 	zbx_uint64_t	proxy_hostid;
 	char		host[HOST_HOST_LEN_MAX];
-	char		name[HOST_HOST_LEN_MAX];
+	char		name[HOST_NAME_LEN * ZBX_MAX_BYTES_IN_UTF8_CHAR + 1];
 	unsigned char	maintenance_status;
 	unsigned char	maintenance_type;
 	int		maintenance_from;
@@ -145,7 +145,7 @@ typedef struct
 	unsigned char	inventory_link;
 	unsigned char	status;
 	unsigned char	unreachable;
-	char		key_orig[ITEM_KEY_LEN * 4 + 1], *key;
+	char		key_orig[ITEM_KEY_LEN * ZBX_MAX_BYTES_IN_UTF8_CHAR + 1], *key;
 	char		*formula;
 	char		*units;
 	int		delay;
@@ -374,6 +374,8 @@ void	DCconfig_clean_triggers(DC_TRIGGER *triggers, int *errcodes, size_t num);
 int	DCconfig_lock_triggers_by_history_items(zbx_vector_ptr_t *history_items, zbx_vector_uint64_t *triggerids);
 void	DCconfig_unlock_triggers(const zbx_vector_uint64_t *triggerids);
 void	DCconfig_unlock_all_triggers();
+int	DCconfig_lock_lld_rule(zbx_uint64_t lld_ruleid);
+void	DCconfig_unlock_lld_rule(zbx_uint64_t lld_ruleid);
 void	DCconfig_get_triggers_by_itemids(zbx_hashset_t *trigger_info, zbx_vector_ptr_t *trigger_order,
 		const zbx_uint64_t *itemids, const zbx_timespec_t *timespecs, char **errors, int itemids_num,
 		unsigned char expand);
@@ -488,6 +490,6 @@ typedef struct
 }
 zbx_hc_item_t;
 
-void zbx_dc_update_proxy_lastaccess(zbx_uint64_t hostid, int lastaccess);
+void	zbx_dc_update_proxy_lastaccess(zbx_uint64_t hostid, int lastaccess);
 
 #endif

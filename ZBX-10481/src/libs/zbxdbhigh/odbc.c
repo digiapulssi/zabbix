@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -290,31 +290,14 @@ ZBX_ODBC_ROW	odbc_DBfetch(ZBX_ODBC_RESULT pdbh)
 	{
 		size_t		alloc = 0, offset = 0;
 		char		buffer[MAX_STRING_LEN + 1];
-		SQLLEN		len, col_type;
-		SQLSMALLINT	c_type;
+		SQLLEN		len;
 
 		zbx_free(pdbh->row_data[i]);
-
-		if (0 != CALLODBC(SQLColAttribute(pdbh->hstmt, i + 1, SQL_DESC_TYPE, NULL, 0, NULL, &col_type),
-				retcode, SQL_HANDLE_STMT, pdbh->hstmt, "Cannot get column type"))
-		{
-			goto end;
-		}
-
-		/* force col_type to integer value for DB2 compatibility */
-		switch ((int)col_type)
-		{
-			case SQL_WLONGVARCHAR:
-				c_type = SQL_C_DEFAULT;
-				break;
-			default:
-				c_type = SQL_C_CHAR;
-		}
 
 		/* force len to integer value for DB2 compatibility */
 		do
 		{
-			retcode = SQLGetData(pdbh->hstmt, i + 1, c_type, buffer, MAX_STRING_LEN, &len);
+			retcode = SQLGetData(pdbh->hstmt, i + 1, SQL_C_CHAR, buffer, MAX_STRING_LEN, &len);
 
 			if (0 == SQL_SUCCEEDED(retcode))
 			{
@@ -325,8 +308,6 @@ ZBX_ODBC_ROW	odbc_DBfetch(ZBX_ODBC_RESULT pdbh)
 			if (SQL_NULL_DATA == (int)len)
 				break;
 
-			buffer[(int)len] = '\0';
-
 			zbx_strcpy_alloc(&pdbh->row_data[i], &alloc, &offset, buffer);
 		}
 		while (SQL_SUCCESS != retcode);
@@ -334,7 +315,7 @@ ZBX_ODBC_ROW	odbc_DBfetch(ZBX_ODBC_RESULT pdbh)
 		if (NULL != pdbh->row_data[i])
 			zbx_rtrim(pdbh->row_data[i], " ");
 
-		zabbix_log(LOG_LEVEL_DEBUG, "%s() fetched [%i col (%d)]: '%s'", __function_name, i, (int)col_type,
+		zabbix_log(LOG_LEVEL_DEBUG, "%s() fetched [%i col]: '%s'", __function_name, i,
 						NULL == pdbh->row_data[i] ? "NULL" : pdbh->row_data[i]);
 	}
 

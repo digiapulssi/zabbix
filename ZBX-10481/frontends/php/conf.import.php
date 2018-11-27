@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -62,8 +62,12 @@ $data = [
 		'images' => ['updateExisting' => false, 'createMissing' => false],
 		'valueMaps' => ['updateExisting' => false, 'createMissing' => false]
 	],
-	'backurl' => getRequest('backurl', 'zabbix.php?action=dashboard.view')
+	'backurl' => getRequest('backurl', '')
 ];
+
+if (!CHtmlUrlValidator::validate($data['backurl'], false, true)) {
+	$data['backurl'] = 'zabbix.php?action=dashboard.view';
+}
 
 // rules presets
 if (hasRequest('rules_preset') && !hasRequest('rules')) {

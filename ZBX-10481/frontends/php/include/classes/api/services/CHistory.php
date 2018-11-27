@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -38,11 +38,11 @@ class CHistory extends CApiService {
 	/**
 	 * Get history data.
 	 *
-	 * @param array $options
-	 * @param array $options['itemids']
-	 * @param boolean $options['editable']
+	 * @param array  $options
+	 * @param array  $options['itemids']
+	 * @param bool   $options['editable']
 	 * @param string $options['pattern']
-	 * @param int $options['limit']
+	 * @param int    $options['limit']
 	 * @param string $options['order']
 	 *
 	 * @return array|int item data as array or false if error
@@ -63,7 +63,7 @@ class CHistory extends CApiService {
 			'history'					=> ITEM_VALUE_TYPE_UINT64,
 			'hostids'					=> null,
 			'itemids'					=> null,
-			'editable'					=> null,
+			'editable'					=> false,
 			'nopermissions'				=> null,
 			// filter
 			'filter'					=> null,

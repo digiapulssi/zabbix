@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -84,13 +84,10 @@ class testPageSlideShows extends CWebTest {
 		$this->zbxTestTextPresent('Slide shows');
 	}
 
-	public function testPageSlideShows_backup() {
-		DBsave_tables('slideshows');
-	}
-
 	/**
-	* @dataProvider allSlideShows
-	*/
+	 * @dataProvider allSlideShows
+	 * @backup-once slideshows
+	 */
 	public function testPageSlideShows_MassDelete($slideshow) {
 		$slideshowid = $slideshow['slideshowid'];
 		$name = $slideshow['name'];
@@ -99,7 +96,7 @@ class testPageSlideShows extends CWebTest {
 		$this->zbxTestCheckTitle('Configuration of slide shows');
 		$this->zbxTestCheckboxSelect('shows_'.$slideshowid);
 		$this->zbxTestClickButton('slideshow.massdelete');
-		$this->webDriver->switchTo()->alert()->accept();
+		$this->zbxTestAcceptAlert();
 
 		$this->zbxTestCheckTitle('Configuration of slide shows');
 		$this->zbxTestTextPresent('Slide show deleted');
@@ -110,9 +107,4 @@ class testPageSlideShows extends CWebTest {
 		$sql = "select * from slides where slideshowid=$slideshowid";
 		$this->assertEquals(0, DBcount($sql));
 	}
-
-	public function testPageSlideShows_restore() {
-		DBrestore_tables('slideshows');
-	}
-
 }

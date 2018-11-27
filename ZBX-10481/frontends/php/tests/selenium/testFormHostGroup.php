@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -20,12 +20,11 @@
 
 require_once dirname(__FILE__).'/../include/class.cwebtest.php';
 
+/**
+ * @backup groups
+ */
 class testFormHostGroup extends CWebTest {
 	private $hostGroup = 'Test Group';
-
-	public function testFormHostGroup_backup() {
-		DBsave_tables('groups');
-	}
 
 	public function testFormHostGroup_CheckLayout() {
 		$this->zbxTestLogin('hostgroups.php?form=Create+host+group');
@@ -130,14 +129,10 @@ class testFormHostGroup extends CWebTest {
 		$this->zbxTestClickLinkTextWait($this->hostGroup.' 2');
 
 		$this->zbxTestClickWait('delete');
-		$this->webDriver->switchTo()->alert()->accept();
+		$this->zbxTestAcceptAlert();
 		$this->zbxTestWaitUntilMessageTextPresent('msg-good', 'Group deleted');
 
 		$sql = "SELECT * FROM groups WHERE name='$this->hostGroup ". 2 ."'";
 		$this->assertEquals(0, DBcount($sql));
-	}
-
-	public function testFormHostGroup_restore() {
-		DBrestore_tables('groups');
 	}
 }

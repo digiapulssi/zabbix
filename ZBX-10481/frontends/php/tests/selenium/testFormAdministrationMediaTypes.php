@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -20,6 +20,9 @@
 
 require_once dirname(__FILE__) . '/../include/class.cwebtest.php';
 
+/**
+ * @backup media_type
+ */
 class testFormAdministrationMediaTypes extends CWebTest {
 
 	public static function allMediaTypes() {
@@ -55,10 +58,6 @@ class testFormAdministrationMediaTypes extends CWebTest {
 			]
 		];
 		return $data;
-	}
-
-	public function testFormAdministrationMediaTypes_backup() {
-		DBsave_tables('media_type');
 	}
 
 	/**
@@ -221,7 +220,7 @@ class testFormAdministrationMediaTypes extends CWebTest {
 
 		$this->zbxTestClickWait('delete');
 
-		$this->webDriver->switchTo()->alert()->accept();
+		$this->zbxTestAcceptAlert();
 		$this->zbxTestCheckTitle('Configuration of media types');
 		if ($used_by_operations) {
 				$this->zbxTestTextNotPresent('Media type deleted');
@@ -234,9 +233,5 @@ class testFormAdministrationMediaTypes extends CWebTest {
 				$this->assertEquals(0, DBcount($sql), "Chuck Norris: Media type has not been deleted from the DB");
 		}
 
-	}
-
-	public function testFormAdministrationMediaTypes_restore() {
-		DBrestore_tables('media_type');
 	}
 }

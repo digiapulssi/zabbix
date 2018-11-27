@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -3767,8 +3767,8 @@ void	DCsync_configuration(unsigned char mode)
 		zabbix_log(LOG_LEVEL_DEBUG, "%s() strpoolfree: " ZBX_FS_DBL "%%", __function_name,
 				100 * ((double)strpool->mem_info->free_size / strpool->mem_info->orig_size));
 
-		zbx_mem_dump_stats(config_mem);
-		zbx_mem_dump_stats(strpool->mem_info);
+		zbx_mem_dump_stats(LOG_LEVEL_DEBUG, config_mem);
+		zbx_mem_dump_stats(LOG_LEVEL_DEBUG, strpool->mem_info);
 	}
 
 	FINISH_SYNC;
@@ -4173,6 +4173,11 @@ void	init_configuration_cache(void)
 	CREATE_HASHSET_EXT(config->interface_snmpaddrs, 0, __config_interface_addr_hash, __config_interface_addr_compare);
 	CREATE_HASHSET_EXT(config->regexps, 0, __config_regexp_hash, __config_regexp_compare);
 
+	zbx_vector_uint64_create_ext(&config->locked_lld_ruleids,
+			__config_mem_malloc_func,
+			__config_mem_realloc_func,
+			__config_mem_free_func);
+
 #if defined(HAVE_POLARSSL) || defined(HAVE_GNUTLS) || defined(HAVE_OPENSSL)
 	CREATE_HASHSET_EXT(config->psks, 0, __config_psk_hash, __config_psk_compare);
 #endif
@@ -4301,7 +4306,7 @@ static void	DCget_host(DC_HOST *dst_host, const ZBX_DC_HOST *src_host)
 	dst_host->hostid = src_host->hostid;
 	dst_host->proxy_hostid = src_host->proxy_hostid;
 	strscpy(dst_host->host, src_host->host);
-	strscpy(dst_host->name, src_host->name);
+	zbx_strlcpy_utf8(dst_host->name, src_host->name, sizeof(dst_host->name));
 	dst_host->maintenance_status = src_host->maintenance_status;
 	dst_host->maintenance_type = src_host->maintenance_type;
 	dst_host->maintenance_from = src_host->maintenance_from;
@@ -5201,6 +5206,61 @@ void	DCconfig_unlock_all_triggers()
 
 	while (NULL != (dc_trigger = zbx_hashset_iter_next(&iter)))
 		dc_trigger->locked = 0;
+
+	UNLOCK_CACHE;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: DCconfig_lock_lld_rule                                           *
+ *                                                                            *
+ * Purpose: Lock lld rule to avoid parallel processing of a same lld rule     *
+ *          that was causing deadlocks.                                       *
+ *                                                                            *
+ * Parameters: lld_ruleid - [IN] discovery rule id                            *
+ *                                                                            *
+ * Return value: Returns FAIL if lock failed and SUCCEED on successful lock.  *
+ *                                                                            *
+ ******************************************************************************/
+int	DCconfig_lock_lld_rule(zbx_uint64_t lld_ruleid)
+{
+	int	ret = FAIL;
+
+	LOCK_CACHE;
+
+	if (FAIL == zbx_vector_uint64_search(&config->locked_lld_ruleids, lld_ruleid, ZBX_DEFAULT_UINT64_COMPARE_FUNC))
+	{
+		zbx_vector_uint64_append(&config->locked_lld_ruleids, lld_ruleid);
+		ret = SUCCEED;
+	}
+
+	UNLOCK_CACHE;
+
+	return ret;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: DCconfig_unlock_lld_rule                                         *
+ *                                                                            *
+ * Purpose: Unlock (make it available for processing) lld rule.               *
+ *                                                                            *
+ * Parameters: lld_ruleid - [IN] discovery rule id                            *
+ *                                                                            *
+ ******************************************************************************/
+void	DCconfig_unlock_lld_rule(zbx_uint64_t lld_ruleid)
+{
+	int	i;
+
+	LOCK_CACHE;
+
+	if (FAIL != (i = zbx_vector_uint64_search(&config->locked_lld_ruleids, lld_ruleid,
+			ZBX_DEFAULT_UINT64_COMPARE_FUNC)))
+	{
+		zbx_vector_uint64_remove_noorder(&config->locked_lld_ruleids, i);
+	}
+	else
+		THIS_SHOULD_NEVER_HAPPEN;	/* attempt to unlock lld rule that is not locked */
 
 	UNLOCK_CACHE;
 }
@@ -6548,8 +6608,7 @@ int	DCset_hosts_availability(zbx_vector_ptr_t *availabilities)
 	{
 		ha = (zbx_host_availability_t *)availabilities->values[i];
 
-		if (NULL == (dc_host = zbx_hashset_search(&config->hosts, &ha->hostid)) ||
-				HOST_STATUS_MONITORED != dc_host->status)
+		if (NULL == (dc_host = zbx_hashset_search(&config->hosts, &ha->hostid)))
 		{
 			int	j;
 
@@ -8442,7 +8501,7 @@ void	zbx_set_availability_diff_ts(int ts)
  *            lastaccess - [IN] the last time proxy data was received/sent    *
  *                                                                            *
  ******************************************************************************/
-void zbx_dc_update_proxy_lastaccess(zbx_uint64_t hostid, int lastaccess)
+void	zbx_dc_update_proxy_lastaccess(zbx_uint64_t hostid, int lastaccess)
 {
 	ZBX_DC_PROXY	*proxy;
 

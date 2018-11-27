@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -20,6 +20,9 @@
 
 require_once dirname(__FILE__).'/../include/class.cwebtest.php';
 
+/**
+ * @backup triggers
+ */
 class testFormTrigger extends CWebTest {
 
 	/**
@@ -164,13 +167,6 @@ class testFormTrigger extends CWebTest {
 				]
 			]
 		];
-	}
-
-	/**
-	 * Backup the tables that will be modified during the tests.
-	 */
-	public function testFormTrigger_Setup() {
-		DBsave_tables('triggers');
 	}
 
 	/**
@@ -480,7 +476,7 @@ class testFormTrigger extends CWebTest {
 					'description' => 'MyTrigger_allFields',
 					'type' => true,
 					'comments' => 'MyTrigger_allFields -Description textbox for comments',
-					'url' => 'MyTrigger_allFields -URL field for link',
+					'url' => 'http://MyTrigger_allFields.com',
 					'severity' => 'Disaster',
 					'status' => false,
 					'expression' => '{Simple form test host:test-item-reuse.last(0)}<0',
@@ -574,9 +570,41 @@ class testFormTrigger extends CWebTest {
 					'expression' => '{Simple form test host:test-item-reuse.last(0)}<5',
 					'type' => true,
 					'comments' => 'Trigger status (expression) is recalculated every time Zabbix server receives new value, if this value is part of this expression. If time based functions are used in the expression, it is recalculated every 30 seconds by a zabbix timer process.',
-					'url' => 'www.zabbix.com',
+					'url' => 'http://www.zabbix.com',
 					'severity' => 'High',
 					'status' => false
+				]
+			],
+			[
+				[
+					'expected' => TEST_GOOD,
+					'description' => 'MyTrigger_CheckURL',
+					'expression' => '{Simple form test host:test-item-reuse.last(0)}<4',
+					'url' => 'triggers.php',
+				]
+			],
+			[
+				[
+					'expected' => TEST_BAD,
+					'description' => 'MyTrigger_CheckUrl',
+					'expression' => '{Simple form test host:test-item-reuse.last(0)}<5',
+					'url' => 'www.zabbix.com',
+					'error_msg' => 'Cannot add trigger',
+					'errors' => [
+						'Wrong value for url field.'
+					]
+				]
+			],
+			[
+				[
+					'expected' => TEST_BAD,
+					'description' => 'MyTrigger_CheckUrl',
+					'expression' => '{Simple form test host:test-item-reuse.last(0)}<5',
+					'url' => 'zabbix.com',
+					'error_msg' => 'Cannot add trigger',
+					'errors' => [
+						'Wrong value for url field.'
+					]
 				]
 			],
 			[
@@ -911,12 +939,5 @@ class testFormTrigger extends CWebTest {
 				}
 			}
 		}
-	}
-
-	/**
-	 * Restore the original tables.
-	 */
-	public function testFormTrigger_Teardown() {
-		DBrestore_tables('triggers');
 	}
 }

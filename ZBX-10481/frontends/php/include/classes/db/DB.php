@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -132,6 +132,18 @@ class DB {
 				$nextid = bcadd($res['nextid'], 1, 0);
 			}
 		}
+
+		/*
+		 * Detect either the query is executable at all? If query is valid and schema is correct but query still cannot
+		 * be executed, then there is a good chance that previous transaction has left row level lock unreleased or it
+		 * is still running. In such a case execution must be stopped, otherwise it will call self::refreshIds method.
+		 */
+		elseif (!DBexecute($sql)) {
+			self::exception(self::DBEXECUTE_ERROR,
+				_('Your database is not working properly. Please wait a few minutes and try to repeat this action. If the problem still persists, please contact system administrator. The problem might be caused by long running transaction or row level lock accomplished by your database management system.')
+			);
+		}
+		// If query is executable, but still returns false, only then call refreshIds.
 		else {
 			$nextid = self::refreshIds($table, $count);
 		}

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -111,6 +111,16 @@ if (!hasRequest('filter_rst')) {
 	$_REQUEST['filter_timetill'] = getRequest('filter_timetill',
 		CProfile::get('web.avail_report.'.$availabilityReportMode.'.timetill', 0)
 	);
+
+	if ($availabilityReportMode == AVAILABILITY_REPORT_BY_TEMPLATE) {
+		$_REQUEST['tpl_triggerid'] = getRequest('tpl_triggerid',
+			CProfile::get('web.avail_report.'.$availabilityReportMode.'.tpl_triggerid', 0)
+		);
+
+		$_REQUEST['hostgroupid'] = getRequest('hostgroupid',
+			CProfile::get('web.avail_report.'.$availabilityReportMode.'.hostgroupid', 0)
+		);
+	}
 }
 
 CProfile::update('web.avail_report.'.$availabilityReportMode.'.groupid', getRequest('filter_groupid', 0),
@@ -125,6 +135,16 @@ CProfile::update('web.avail_report.'.$availabilityReportMode.'.timetill', getReq
 CProfile::update('web.avail_report.'.$availabilityReportMode.'.hostid', getRequest('filter_hostid', 0),
 	PROFILE_TYPE_ID
 );
+
+if ($availabilityReportMode == AVAILABILITY_REPORT_BY_TEMPLATE) {
+	CProfile::update('web.avail_report.'.$availabilityReportMode.'.tpl_triggerid', getRequest('tpl_triggerid', 0),
+		PROFILE_TYPE_ID
+	);
+
+	CProfile::update('web.avail_report.'.$availabilityReportMode.'.hostgroupid', getRequest('hostgroupid', 0),
+		PROFILE_TYPE_ID
+	);
+}
 
 $config = select_config();
 
@@ -382,7 +402,17 @@ elseif (isset($_REQUEST['filter_hostid'])) {
 
 	$triggers = API::Trigger()->get($triggerOptions);
 
-	CArrayHelper::sort($triggers, ['host', 'description']);
+	if (getRequest('filter_hostid') == 0 || $availabilityReportMode == AVAILABILITY_REPORT_BY_TEMPLATE) {
+		foreach ($triggers as &$trigger) {
+			$trigger['host_name'] = $trigger['hosts'][0]['name'];
+		}
+		unset($trigger);
+
+		CArrayHelper::sort($triggers, ['host_name', 'description']);
+	}
+	else {
+		CArrayHelper::sort($triggers, ['description']);
+	}
 
 	$paging = getPagingLine($triggers, ZBX_SORT_UP, new CUrl('report2.php'));
 
@@ -393,10 +423,14 @@ elseif (isset($_REQUEST['filter_hostid'])) {
 
 		$triggerTable->addRow([
 			($_REQUEST['filter_hostid'] == 0 || $availabilityReportMode == AVAILABILITY_REPORT_BY_TEMPLATE)
-				? $trigger['hosts'][0]['name'] : null,
+				? $trigger['host_name'] : null,
 			new CLink($trigger['description'], 'events.php?filter_set=1&triggerid='.$trigger['triggerid']),
-			$availability['true'] == 0 ? '' : (new CSpan(sprintf('%.4f%%', $availability['true'])))->addClass(ZBX_STYLE_RED),
-			$availability['false'] == 0 ? '' : (new CSpan(sprintf('%.4f%%', $availability['false'])))->addClass(ZBX_STYLE_GREEN),
+			$availability['true'] < 0.00005
+				? ''
+				: (new CSpan(sprintf('%.4f%%', $availability['true'])))->addClass(ZBX_STYLE_RED),
+			$availability['false'] < 0.00005
+				?  ''
+				: (new CSpan(sprintf('%.4f%%', $availability['false'])))->addClass(ZBX_STYLE_GREEN),
 			new CLink(_('Show'), 'report2.php?filter_groupid='.$_REQUEST['filter_groupid'].
 				'&filter_hostid='.$_REQUEST['filter_hostid'].'&triggerid='.$trigger['triggerid'])
 		]);

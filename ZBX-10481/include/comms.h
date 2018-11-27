@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -56,6 +56,12 @@ typedef SOCKET	ZBX_SOCKET;
 typedef int	ZBX_SOCKET;
 #endif
 
+#if defined(HAVE_IPV6)
+#	define ZBX_SOCKADDR struct sockaddr_storage
+#else
+#	define ZBX_SOCKADDR struct sockaddr_in
+#endif
+
 typedef enum
 {
 	ZBX_BUF_TYPE_STAT = 0,
@@ -65,7 +71,6 @@ zbx_buf_type_t;
 
 #define ZBX_SOCKET_COUNT	256
 #define ZBX_STAT_BUF_LEN	2048
-#define ZBX_SOCKET_PEER_BUF_LEN	129
 
 #if defined(HAVE_POLARSSL) || defined(HAVE_GNUTLS) || defined(HAVE_OPENSSL)
 typedef struct zbx_tls_context	zbx_tls_context_t;
@@ -90,9 +95,10 @@ typedef struct
 	int				num_socks;
 	ZBX_SOCKET			sockets[ZBX_SOCKET_COUNT];
 	char				buf_stat[ZBX_STAT_BUF_LEN];
-	/* Peer hostname or IP address for diagnostics (after TCP connection is established). */
+	ZBX_SOCKADDR			peer_info;		/* getpeername() result */
+	/* Peer host DNS name or IP address for diagnostics (after TCP connection is established). */
 	/* TLS connection may be shut down at any time and it will not be possible to get peer IP address anymore. */
-	char				peer[ZBX_SOCKET_PEER_BUF_LEN];
+	char				peer[MAX_ZBX_DNSNAME_LEN + 1];
 }
 zbx_socket_t;
 

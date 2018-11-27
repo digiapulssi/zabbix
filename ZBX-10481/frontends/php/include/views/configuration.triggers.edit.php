@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -61,6 +61,10 @@ $addExpressionButton = (new CButton('insert', ($this->data['input_method'] == IM
 	->addClass(ZBX_STYLE_BTN_GREY)
 	->onClick(
 		'return PopUp("popup_trexpr.php?dstfrm='.$triggersForm->getName().
+			(($data['groupid'] && $data['hostid'])
+				? '&groupid='.$data['groupid'].'&hostid='.$data['hostid']
+				: ''
+			).
 			'&dstfld1='.$this->data['expression_field_name'].'&srctbl=expression&srcfld1=expression'.
 			'&expression=" + encodeURIComponent(jQuery(\'[name="'.$this->data['expression_field_name'].'"]\').val()));'
 	);
@@ -304,7 +308,8 @@ $dependenciesFormList->addRow(_('Dependencies'),
 		$dependenciesTable,
 		(new CButton('bnt1', _('Add')))
 			->onClick('return PopUp("popup.php?srctbl=triggers&srcfld1=triggerid&reference=deptrigger&multiselect=1'.
-				'&with_triggers=1&noempty=1");')
+				'&hostid='.$data['hostid'].'&groupid='.$data['groupid'].'&with_triggers=1&noempty=1");'
+			)
 			->addClass(ZBX_STYLE_BTN_LINK)
 	]))
 		->addClass(ZBX_STYLE_TABLE_FORMS_SEPARATOR)

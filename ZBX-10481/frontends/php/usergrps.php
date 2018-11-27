@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -59,13 +59,10 @@ $fields = [
 	'add' =>				[T_ZBX_STR, O_OPT, P_SYS|P_ACT, null,	null],
 	'update' =>				[T_ZBX_STR, O_OPT, P_SYS|P_ACT, null,	null],
 	'delete' =>				[T_ZBX_STR, O_OPT, P_SYS|P_ACT, null,	null],
-	'delete_selected' =>	[T_ZBX_STR, O_OPT, P_SYS|P_ACT, null,	null],
-	'del_user_group' =>		[T_ZBX_STR, O_OPT, P_SYS|P_ACT, null,	null],
 	'del_user_media' =>		[T_ZBX_STR, O_OPT, P_SYS|P_ACT, null,	null],
 	'del_read_only' =>		[T_ZBX_STR, O_OPT, P_SYS|P_ACT, null,	null],
 	'del_read_write' =>		[T_ZBX_STR, O_OPT, P_SYS|P_ACT, null,	null],
 	'del_deny' =>			[T_ZBX_STR, O_OPT, P_SYS|P_ACT, null,	null],
-	'del_group_user' =>		[T_ZBX_STR, O_OPT, P_SYS|P_ACT, null,	null],
 	'add_read_only' =>		[T_ZBX_STR, O_OPT, P_SYS|P_ACT, null,	null],
 	'add_read_write' =>		[T_ZBX_STR, O_OPT, P_SYS|P_ACT, null,	null],
 	'add_deny' =>			[T_ZBX_STR, O_OPT, P_SYS|P_ACT, null,	null],

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -410,6 +410,28 @@ else {
 		->setArgument('hostid', $data['hostid']);
 
 	$data['paging'] = getPagingLine($data['applications'], $sortOrder, $url);
+
+	// Select writable templates IDs.
+	$hostids = [];
+
+	foreach ($data['applications'] as $application) {
+		if (array_key_exists('sourceTemplates', $application)) {
+			$hostids = array_merge($hostids, zbx_objectValues($application['sourceTemplates'], 'hostid'));
+		}
+
+		$hostids[] = $application['host']['hostid'];
+	}
+
+	$data['writable_templates'] = [];
+
+	if ($hostids) {
+		$data['writable_templates'] = API::Template()->get([
+			'output' => ['templateid'],
+			'templateids' => array_keys(array_flip($hostids)),
+			'editable' => true,
+			'preservekeys' => true
+		]);
+	}
 
 	// render view
 	$applicationView = new CView('configuration.application.list', $data);

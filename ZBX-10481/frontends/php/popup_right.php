@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -43,12 +43,12 @@ $permission = getRequest('permission', PERM_DENY);
  */
 
 // host groups
-$hostGroupForm = (new CForm())->setId('groups');
+$hostGroupForm = (new CForm())->setId('groups_form');
 
 $hostGroupTable = (new CTableInfo())
 	->setHeader([
 		(new CColHeader(
-			(new CCheckBox('all_groups'))->onClick('checkAll(this.checked)')
+			(new CCheckBox('all_groups'))->onClick("checkAll('groups_form', 'all_groups', 'groups');")
 		))->addClass(ZBX_STYLE_CELL_WIDTH),
 		_('Name')
 	]);
@@ -59,14 +59,16 @@ $hostGroups = API::HostGroup()->get([
 
 order_result($hostGroups, 'name');
 
+$i = 0;
 foreach ($hostGroups as $hostGroup) {
 	$hostGroupTable->addRow([
-		(new CCheckBox())
+		(new CCheckBox('groups['.$i.']', $hostGroup['groupid']))
 			->setAttribute('data-id', $hostGroup['groupid'])
 			->setAttribute('data-name', $hostGroup['name'])
 			->setAttribute('data-permission', $permission),
 		$hostGroup['name']
 	]);
+	$i++;
 }
 
 $hostGroupTable->setFooter(
@@ -91,7 +93,7 @@ $hostGroupForm->addItem($hostGroupTable);
 			return close_window();
 		}
 
-		jQuery('#groups input[type=checkbox]').each(function() {
+		jQuery('#groups_form input[type=checkbox]').each(function() {
 			var obj = jQuery(this);
 
 			if (obj.attr('name') !== 'all_groups' && obj.prop('checked')) {
@@ -106,12 +108,6 @@ $hostGroupForm->addItem($hostGroupTable);
 		parentDocument.forms[formName].submit();
 
 		close_window();
-	}
-
-	function checkAll(value) {
-		jQuery('#groups input[type=checkbox]').each(function() {
-			jQuery(this).prop('checked', value);
-		});
 	}
 </script>
 <?php

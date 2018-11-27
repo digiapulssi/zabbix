@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -51,10 +51,13 @@ if ($this->data['displayInterfaces']) {
 	$interfacesComboBox = new CComboBox('interfaceid', $this->data['interfaceid']);
 	$interfacesComboBox->addItem(new CComboItem(0, '', null, false));
 
-	// set up interface groups
-	$interfaceGroups = [];
-	foreach (zbx_objectValues($this->data['hosts']['interfaces'], 'type') as $interfaceType) {
-		$interfaceGroups[$interfaceType] = new COptGroup(interfaceType2str($interfaceType));
+	// Set up interface groups sorted by priority.
+	$interface_types = zbx_objectValues($this->data['hosts']['interfaces'], 'type');
+	$interface_groups = [];
+	foreach ([INTERFACE_TYPE_AGENT, INTERFACE_TYPE_SNMP, INTERFACE_TYPE_JMX, INTERFACE_TYPE_IPMI] as $interface_type) {
+		if (in_array($interface_type, $interface_types)) {
+			$interface_groups[$interface_type] = new COptGroup(interfaceType2str($interface_type));
+		}
 	}
 
 	// add interfaces to groups
@@ -65,10 +68,10 @@ if ($this->data['displayInterfaces']) {
 			$interface['interfaceid'] == $this->data['interfaceid'] ? 'yes' : 'no'
 		);
 		$option->setAttribute('data-interfacetype', $interface['type']);
-		$interfaceGroups[$interface['type']]->addItem($option);
+		$interface_groups[$interface['type']]->addItem($option);
 	}
-	foreach ($interfaceGroups as $interfaceGroup) {
-		$interfacesComboBox->addItem($interfaceGroup);
+	foreach ($interface_groups as $interface_group) {
+		$interfacesComboBox->addItem($interface_group);
 	}
 
 	$span = (new CSpan(_('No interface found')))
@@ -494,7 +497,7 @@ if ($this->data['displayApplications']) {
 			'data' => $appToReplace,
 			'popup' => [
 				'parameters' => 'srctbl=applications&dstfrm='.$itemForm->getName().'&dstfld1=applications_'.
-					'&srcfld1=applicationid&multiselect=1&noempty=1&hostid='.$this->data['hostid']
+					'&srcfld1=applicationid&multiselect=1&noempty=1&only_hostid='.$this->data['hostid']
 			]
 		]))->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
 	))->setId('replaceApp');
@@ -546,7 +549,7 @@ if ($this->data['displayApplications']) {
 			'addNew' => true,
 			'popup' => [
 				'parameters' => 'srctbl=applications&dstfrm='.$itemForm->getName().'&dstfld1=new_applications_'.
-					'&srcfld1=applicationid&multiselect=1&noempty=1&hostid='.$this->data['hostid']
+					'&srcfld1=applicationid&multiselect=1&noempty=1&only_hostid='.$this->data['hostid']
 			]
 		]))->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
 	))->setId('newApp');

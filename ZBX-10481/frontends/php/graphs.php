@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -398,12 +398,8 @@ $pageFilter = new CPageFilter([
 ]);
 
 if (empty($_REQUEST['parent_discoveryid'])) {
-	if ($pageFilter->groupid > 0) {
-		$groupId = $pageFilter->groupid;
-	}
-	if ($pageFilter->hostid > 0) {
-		$hostId = $pageFilter->hostid;
-	}
+	$groupId = $pageFilter->groupid;
+	$hostId = $pageFilter->hostid;
 }
 
 if (hasRequest('action') && getRequest('action') == 'graph.masscopyto' && hasRequest('group_graphid')) {
@@ -422,6 +418,7 @@ elseif (isset($_REQUEST['form'])) {
 		'parent_discoveryid' => getRequest('parent_discoveryid'),
 		'group_gid' => getRequest('group_gid', []),
 		'hostid' => $hostId,
+		'groupid' => $groupId,
 		'normal_only' => getRequest('normal_only')
 	];
 
@@ -600,11 +597,24 @@ elseif (isset($_REQUEST['form'])) {
 
 		$i = $next;
 	}
-	asort_by_key($data['items'], 'sortorder');
+	CArrayHelper::sort($data['items'], ['sortorder']);
 	$data['items'] = array_values($data['items']);
 
 	// is template
 	$data['is_template'] = ($data['hostid'] == 0) ? false : isTemplate($data['hostid']);
+
+	// Read groupid for selected host or template if groupid filter is set to 'All' (is equal 0).
+	if ($data['hostid'] && !$data['groupid']) {
+		$db_hostgroup = API::HostGroup()->get([
+			'output' => ['groupid'],
+			'hostids' => $data['hostid'],
+			'templateids' => $data['hostid']
+		]);
+
+		if ($db_hostgroup) {
+			$data['groupid'] = $db_hostgroup[0]['groupid'];
+		}
+	}
 
 	// render view
 	$graphView = new CView('configuration.graph.edit', $data);
@@ -623,33 +633,34 @@ else {
 	$data = [
 		'pageFilter' => $pageFilter,
 		'hostid' => ($pageFilter->hostid > 0) ? $pageFilter->hostid : $hostId,
-		'parent_discoveryid' => isset($discoveryRule) ? $discoveryRule['itemid'] : null,
+		'parent_discoveryid' => hasRequest('parent_discoveryid') ? $discoveryRule['itemid'] : null,
 		'graphs' => [],
 		'sort' => $sortField,
 		'sortorder' => $sortOrder
 	];
 
-	// get graphs
-	$options = [
-		'hostids' => ($data['hostid'] == 0) ? null : $data['hostid'],
-		'groupids' => ($data['hostid'] == 0 && $pageFilter->groupid > 0) ? $pageFilter->groupid : null,
-		'discoveryids' => isset($discoveryRule) ? $discoveryRule['itemid'] : null,
-		'editable' => true,
-		'output' => ['graphid', 'name', 'graphtype'],
-		'limit' => $config['search_limit'] + 1
-	];
+	if ($data['pageFilter']->hostsSelected) {
+		$options = [
+			'output' => ['graphid', 'name', 'graphtype'],
+			'hostids' => ($data['hostid'] == 0) ? null : $data['hostid'],
+			'groupids' => ($data['hostid'] == 0 && $pageFilter->groupid > 0) ? $pageFilter->groupid : null,
+			'discoveryids' => hasRequest('parent_discoveryid') ? $discoveryRule['itemid'] : null,
+			'editable' => true,
+			'limit' => $config['search_limit'] + 1
+		];
 
-	$data['graphs'] = isset($discoveryRule)
-		? API::GraphPrototype()->get($options)
-		: API::Graph()->get($options);
+		$data['graphs'] = hasRequest('parent_discoveryid')
+			? API::GraphPrototype()->get($options)
+			: API::Graph()->get($options);
 
-	if ($sortField == 'graphtype') {
-		foreach ($data['graphs'] as $gnum => $graph) {
-			$data['graphs'][$gnum]['graphtype'] = graphType($graph['graphtype']);
+		if ($sortField === 'graphtype') {
+			foreach ($data['graphs'] as $gnum => $graph) {
+				$data['graphs'][$gnum]['graphtype'] = graphType($graph['graphtype']);
+			}
 		}
-	}
 
-	order_result($data['graphs'], $sortField, $sortOrder);
+		order_result($data['graphs'], $sortField, $sortOrder);
+	}
 
 	$url = (new CUrl('graphs.php'))
 		->setArgument('groupid', $pageFilter->groupid)
@@ -657,24 +668,26 @@ else {
 
 	$data['paging'] = getPagingLine($data['graphs'], $sortOrder, $url);
 
-	// get graphs after paging
-	$options = [
-		'graphids' => zbx_objectValues($data['graphs'], 'graphid'),
-		'output' => ['graphid', 'name', 'templateid', 'graphtype', 'width', 'height'],
-		'selectDiscoveryRule' => ['itemid', 'name'],
-		'selectHosts' => ($data['hostid'] == 0) ? ['name'] : null,
-		'selectTemplates' => ($data['hostid'] == 0) ? ['name'] : null
-	];
+	if ($data['pageFilter']->hostsSelected) {
+		// Get graphs after paging.
+		$options = [
+			'output' => ['graphid', 'name', 'templateid', 'graphtype', 'width', 'height'],
+			'selectDiscoveryRule' => ['itemid', 'name'],
+			'selectHosts' => ($data['hostid'] == 0) ? ['name'] : null,
+			'selectTemplates' => ($data['hostid'] == 0) ? ['name'] : null,
+			'graphids' => zbx_objectValues($data['graphs'], 'graphid')
+		];
 
-	$data['graphs'] = empty($_REQUEST['parent_discoveryid'])
-		? API::Graph()->get($options)
-		: API::GraphPrototype()->get($options);
+		$data['graphs'] = hasRequest('parent_discoveryid')
+			? API::GraphPrototype()->get($options)
+			: API::Graph()->get($options);
 
-	foreach ($data['graphs'] as $gnum => $graph) {
-		$data['graphs'][$gnum]['graphtype'] = graphType($graph['graphtype']);
+		foreach ($data['graphs'] as $gnum => $graph) {
+			$data['graphs'][$gnum]['graphtype'] = graphType($graph['graphtype']);
+		}
+
+		order_result($data['graphs'], $sortField, $sortOrder);
 	}
-
-	order_result($data['graphs'], $sortField, $sortOrder);
 
 	// render view
 	$graphView = new CView('configuration.graph.list', $data);

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -128,8 +128,6 @@ if (isset($_REQUEST['add_template']) && isset($_REQUEST['add_templates'])) {
 	$_REQUEST['templates'] = array_merge($templateIds, $_REQUEST['add_templates']);
 }
 if (hasRequest('unlink') || hasRequest('unlink_and_clear')) {
-	$_REQUEST['clear_templates'] = getRequest('clear_templates', []);
-
 	$unlinkTemplates = [];
 
 	if (hasRequest('unlink') && is_array(getRequest('unlink'))) {
@@ -137,7 +135,7 @@ if (hasRequest('unlink') || hasRequest('unlink_and_clear')) {
 	}
 	elseif (hasRequest('unlink_and_clear') && is_array(getRequest('unlink_and_clear'))) {
 		$unlinkTemplates = array_keys(getRequest('unlink_and_clear'));
-		$_REQUEST['clear_templates'] = array_merge(getRequest('unlink_and_clear'), $unlinkTemplates);
+		$_REQUEST['clear_templates'] = array_merge($unlinkTemplates, getRequest('clear_templates', []));
 	}
 
 	foreach ($unlinkTemplates as $id) {
@@ -467,14 +465,22 @@ if (hasRequest('form')) {
 		? $data['dbTemplate']['description']
 		: getRequest('description');
 
-	$templateIds = getRequest('templates', hasRequest('form_refresh') ? [] : $data['original_templates']);
+	$templateids = getRequest('templates', hasRequest('form_refresh') ? [] : $data['original_templates']);
 
 	// Get linked templates.
 	$data['linkedTemplates'] = API::Template()->get([
 		'output' => ['templateid', 'name'],
-		'templateids' => $templateIds,
+		'templateids' => $templateids,
 		'preservekeys' => true
 	]);
+
+	$data['writable_templates'] = API::Template()->get([
+		'output' => ['templateid'],
+		'templateids' => $templateids,
+		'editable' => true,
+		'preservekeys' => true
+	]);
+
 	CArrayHelper::sort($data['linkedTemplates'], ['name']);
 
 	// Get user allowed host groups and sort them by name.
@@ -646,6 +652,39 @@ else {
 
 	order_result($templates, $sortField, $sortOrder);
 
+	// Select writable template IDs.
+	$linked_templateids = [];
+	$writable_templates = [];
+	$linked_hostids = [];
+	$writable_hosts = [];
+
+	foreach ($templates as $template) {
+		$linked_templateids = array_merge($linked_templateids,
+			zbx_objectValues($template['parentTemplates'], 'templateid'),
+			zbx_objectValues($template['templates'], 'templateid')
+		);
+
+		$linked_hostids = array_merge($linked_hostids, zbx_objectValues($template['hosts'], 'hostid'));
+	}
+
+	if ($linked_templateids) {
+		$writable_templates = API::Template()->get([
+			'output' => ['templateid'],
+			'templateids' => array_keys(array_flip($linked_templateids)),
+			'editable' => true,
+			'preservekeys' => true
+		]);
+	}
+
+	if ($linked_hostids) {
+		$writable_hosts = API::Host()->get([
+			'output' => ['hostid'],
+			'hostsids' => array_keys(array_flip($linked_hostids)),
+			'editable' => true,
+			'preservekeys' => true
+		]);
+	}
+
 	foreach ($templates as $template) {
 		$templatesOutput = [];
 
@@ -677,11 +716,16 @@ else {
 				$linkedTemplatesOutput[] = ', ';
 			}
 
-			$url = 'templates.php?form=update&templateid='.$parentTemplate['templateid'].url_param('groupid');
+			if (array_key_exists($parentTemplate['templateid'], $writable_templates)) {
+				$url = 'templates.php?form=update&templateid='.$parentTemplate['templateid'].url_param('groupid');
 
-			$linkedTemplatesOutput[] = (new CLink($parentTemplate['name'], $url))
-				->addClass(ZBX_STYLE_LINK_ALT)
-				->addClass(ZBX_STYLE_GREY);
+				$linkedTemplatesOutput[] = (new CLink($parentTemplate['name'], $url))
+					->addClass(ZBX_STYLE_LINK_ALT)
+					->addClass(ZBX_STYLE_GREY);
+			}
+			else {
+				$linkedTemplatesOutput[] = (new CSpan($parentTemplate['name']))->addClass(ZBX_STYLE_GREY);
+			}
 		}
 
 		$i = 0;
@@ -703,18 +747,25 @@ else {
 			}
 
 			if ($linkedToObject['status'] == HOST_STATUS_TEMPLATE) {
-				$url = 'templates.php?form=update&templateid='.$linkedToObject['templateid'].url_param('groupid');
+				if (array_key_exists($linkedToObject['templateid'], $writable_templates)) {
+					$url = 'templates.php?form=update&templateid='.$linkedToObject['templateid'].url_param('groupid');
+					$link = (new CLink($linkedToObject['name'], $url))
+						->addClass(ZBX_STYLE_LINK_ALT)
+						->addClass(ZBX_STYLE_GREY);
+				}
+				else {
+					$link = (new CSpan($linkedToObject['name']))->addClass(ZBX_STYLE_GREY);
+				}
 			}
 			else {
-				$url = 'hosts.php?form=update&hostid='.$linkedToObject['hostid'].url_param('groupid');
-			}
+				if (array_key_exists($linkedToObject['hostid'], $writable_hosts)) {
+					$url = 'hosts.php?form=update&hostid='.$linkedToObject['hostid'].url_param('groupid');
+					$link = (new CLink($linkedToObject['name'], $url))->addClass(ZBX_STYLE_LINK_ALT);
+				}
+				else {
+					$link = new CSpan($linkedToObject['name']);
+				}
 
-			$link = (new CLink($linkedToObject['name'], $url))->addClass(ZBX_STYLE_LINK_ALT);
-
-			if ($linkedToObject['status'] == HOST_STATUS_TEMPLATE) {
-				$link->addClass(ZBX_STYLE_GREY);
-			}
-			else {
 				$link->addClass($linkedToObject['status'] == HOST_STATUS_MONITORED ? ZBX_STYLE_GREEN : ZBX_STYLE_RED);
 			}
 

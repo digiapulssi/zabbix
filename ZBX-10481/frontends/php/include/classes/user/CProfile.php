@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -33,21 +33,6 @@ class CProfile {
 
 		$profilesTableSchema = DB::getSchema('profiles');
 		self::$stringProfileMaxLength = $profilesTableSchema['fields']['value_str']['length'];
-
-		$db_profiles = DBselect(
-			'SELECT p.*'.
-			' FROM profiles p'.
-			' WHERE p.userid='.self::$userDetails['userid'].
-			' ORDER BY p.userid,p.profileid'
-		);
-		while ($profile = DBfetch($db_profiles)) {
-			$value_type = self::getFieldByType($profile['type']);
-
-			if (!isset(self::$profiles[$profile['idx']])) {
-				self::$profiles[$profile['idx']] = [];
-			}
-			self::$profiles[$profile['idx']][$profile['idx2']] = $profile[$value_type];
-		}
 	}
 
 	/**
@@ -88,22 +73,46 @@ class CProfile {
 		self::$update = [];
 	}
 
+	/**
+	 * Return matched idx value for current user.
+	 *
+	 * @param string    $idx           Search pattern.
+	 * @param mixed     $default_value Default value if no rows was found.
+	 * @param int|null  $idx2          Numerical index will be matched against idx2 index.
+	 *
+	 * @return mixed
+	 */
 	public static function get($idx, $default_value = null, $idx2 = 0) {
 		// no user data available, just return the default value
-		if (!CWebUser::$data) {
+		if (!CWebUser::$data || $idx2 === null) {
 			return $default_value;
 		}
 
-		if (is_null(self::$profiles)) {
+		if (self::$profiles === null) {
 			self::init();
 		}
 
-		if (isset(self::$profiles[$idx][$idx2])) {
-			return self::$profiles[$idx][$idx2];
+		if (array_key_exists($idx, self::$profiles)) {
+			// When there is cached data for $idx but $idx2 was not found we should return default value.
+			return array_key_exists($idx2, self::$profiles[$idx]) ? self::$profiles[$idx][$idx2] : $default_value;
 		}
-		else {
-			return $default_value;
+
+		self::$profiles[$idx] = [];
+		// Aggressive caching, cache all items matched $idx key.
+		$query = DBselect(
+			'SELECT type,value_id,value_int,value_str,idx2'.
+			' FROM profiles'.
+			' WHERE userid='.self::$userDetails['userid'].
+				' AND idx='.zbx_dbstr($idx)
+		);
+
+		while ($row = DBfetch($query)) {
+			$value_type = self::getFieldByType($row['type']);
+
+			self::$profiles[$idx][$row['idx2']] = $row[$value_type];
 		}
+
+		return array_key_exists($idx2, self::$profiles[$idx]) ? self::$profiles[$idx][$idx2] : $default_value;
 	}
 
 	/**
@@ -119,15 +128,7 @@ class CProfile {
 			return $defaultValue;
 		}
 
-		$i = 0;
-		$values = [];
-		while (self::get($idx, null, $i) !== null) {
-			$values[] = self::get($idx, null, $i);
-
-			$i++;
-		}
-
-		return $values;
+		return self::$profiles[$idx];
 	}
 
 	/**
@@ -141,31 +142,13 @@ class CProfile {
 			self::init();
 		}
 
-		if (!isset(self::$profiles[$idx])) {
-			return;
-		}
+		$idx2 = (array) $idx2;
+		self::deleteValues($idx, $idx2);
 
-		// pick existing Idx2
-		$deleteIdx2 = [];
-		foreach ((array) $idx2 as $checkIdx2) {
-			if (isset(self::$profiles[$idx][$checkIdx2])) {
-				$deleteIdx2[] = $checkIdx2;
+		if (array_key_exists($idx, self::$profiles)) {
+			foreach ($idx2 as $index) {
+				unset(self::$profiles[$idx][$index]);
 			}
-		}
-
-		if (!$deleteIdx2) {
-			return;
-		}
-
-		// remove from DB
-		self::deleteValues($idx, $deleteIdx2);
-
-		// remove from cache
-		foreach ($deleteIdx2 as $v) {
-			unset(self::$profiles[$idx][$v]);
-		}
-		if (!self::$profiles[$idx]) {
-			unset(self::$profiles[$idx]);
 		}
 	}
 
@@ -179,11 +162,7 @@ class CProfile {
 			self::init();
 		}
 
-		if (!isset(self::$profiles[$idx])) {
-			return;
-		}
-
-		self::deleteValues($idx, array_keys(self::$profiles[$idx]));
+		DB::delete('profiles', ['idx' => $idx, 'userid' => self::$userDetails['userid']]);
 		unset(self::$profiles[$idx]);
 	}
 
@@ -271,7 +250,9 @@ class CProfile {
 			$i++;
 		}
 
-		self::delete($idx, $idx2);
+		if ($idx2) {
+			self::delete($idx, $idx2);
+		}
 	}
 
 	private static function insertDB($idx, $value, $type, $idx2) {
@@ -290,8 +271,6 @@ class CProfile {
 	}
 
 	private static function updateDB($idx, $value, $type, $idx2) {
-		$sqlIdx2 = ($idx2 > 0) ? ' AND idx2='.zbx_dbstr($idx2) : '';
-
 		$valueType = self::getFieldByType($type);
 
 		return DBexecute(
@@ -299,8 +278,8 @@ class CProfile {
 			$valueType.'='.zbx_dbstr($value).','.
 			' type='.$type.
 			' WHERE userid='.self::$userDetails['userid'].
-			' AND idx='.zbx_dbstr($idx).
-			$sqlIdx2
+				' AND idx='.zbx_dbstr($idx).
+				' AND idx2='.zbx_dbstr($idx2)
 		);
 	}
 

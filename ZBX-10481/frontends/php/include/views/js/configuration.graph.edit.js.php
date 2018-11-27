@@ -115,8 +115,14 @@
 			itemTpl = new Template(jQuery('#itemTpl').html());
 
 		jQuery('#itemButtonsRow').before(itemTpl.evaluate(item));
+
+		var items_calc_fnc = jQuery('#items_' + number + '_calc_fnc');
+
+		items_calc_fnc.val(calc_fnc);
+		if (items_calc_fnc[0].selectedIndex < 0) {
+			items_calc_fnc[0].selectedIndex = 0;
+		}
 		jQuery('#items_' + number + '_type').val(type);
-		jQuery('#items_' + number + '_calc_fnc').val(calc_fnc);
 		jQuery('#items_' + number + '_drawtype').val(drawtype);
 		jQuery('#items_' + number + '_yaxisside').val(yaxisside);
 		jQuery('#items_' + number + '_color').val(color);
@@ -186,6 +192,10 @@
 						+ '&srcfld3=flags&dstfld3=items_' + i + '_flags'
 					: '&srctbl=items')
 				+ '<?= !empty($this->data['normal_only']) ? '&normal_only=1' : '' ?>'
+				+ '<?= ((!$data['parent_discoveryid'] && $data['groupid'] && $data['hostid'])
+							? '&groupid='.$data['groupid'].'&hostid='.$data['hostid']
+							: ''
+						) ?>'
 				+ '&srcfld1=itemid&srcfld2=name" + getOnlyHostParam())';
 			jQuery('#items_' + i + '_name').attr('onclick', nameLink);
 		}

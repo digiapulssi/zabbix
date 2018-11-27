@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -51,11 +51,12 @@ static void	process_time_functions(int *triggers_count, int *events_count)
 {
 	const char		*__function_name = "process_time_functions";
 	DC_TRIGGER		*trigger_info = NULL;
-	zbx_vector_ptr_t	trigger_order;
+	zbx_vector_ptr_t	trigger_order, itservice_updates;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
 	zbx_vector_ptr_create(&trigger_order);
+	zbx_vector_ptr_create(&itservice_updates);
 
 	while (1)
 	{
@@ -72,13 +73,17 @@ static void	process_time_functions(int *triggers_count, int *events_count)
 
 		process_triggers(&trigger_order);
 
-		*events_count += process_events();
+		*events_count += process_events(&itservice_updates);
 
 		DBcommit();
+
+		DBupdate_itservices(&itservice_updates);
+		zbx_vector_ptr_clear_ext(&itservice_updates, zbx_ptr_free);
 	}
 
 	zbx_free(trigger_info);
 	zbx_vector_ptr_destroy(&trigger_order);
+	zbx_vector_ptr_destroy(&itservice_updates);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
@@ -343,16 +348,19 @@ static void	generate_events(zbx_uint64_t hostid, int maintenance_from, int maint
 {
 	const char	*__function_name = "generate_events";
 
-	DB_RESULT	result;
-	DB_ROW		row;
-	zbx_uint64_t	triggerid;
-	zbx_timespec_t	ts;
-	unsigned char	value_before, value_inside, value_after;
+	DB_RESULT		result;
+	DB_ROW			row;
+	zbx_uint64_t		triggerid;
+	zbx_timespec_t		ts;
+	unsigned char		value_before, value_inside, value_after;
+	zbx_vector_ptr_t	itservice_updates;
+
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
 	ts.sec = maintenance_to;
 	ts.ns = 0;
 
-	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
+	zbx_vector_ptr_create(&itservice_updates);
 
 	result = DBselect(
 			"select distinct t.triggerid,t.description,t.expression,t.priority,t.type,t.lastchange,t.value"
@@ -386,7 +394,12 @@ static void	generate_events(zbx_uint64_t hostid, int maintenance_from, int maint
 	}
 	DBfree_result(result);
 
-	process_events();
+	process_events(&itservice_updates);
+
+	DBupdate_itservices(&itservice_updates);
+
+	zbx_vector_ptr_clear_ext(&itservice_updates, zbx_ptr_free);
+	zbx_vector_ptr_destroy(&itservice_updates);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
@@ -847,7 +860,7 @@ ZBX_THREAD_ENTRY(timer_thread, args)
 
 		/* only the "timer #1" process evaluates the maintenance periods */
 		if (1 != process_num)
-			continue;
+			goto next;
 
 		/* we process maintenance at every 00 sec */
 		/* process time functions can take long time */
@@ -863,6 +876,12 @@ ZBX_THREAD_ENTRY(timer_thread, args)
 			hm_count += process_maintenance();
 			total_sec_maint += zbx_time() - sec_maint;
 		}
+next:
+#if !defined(_WINDOWS) && defined(HAVE_RESOLV_H)
+		zbx_update_resolver_conf();	/* handle /etc/resolv.conf update */
+#else
+		;
+#endif
 	}
 
 #undef STAT_INTERVAL

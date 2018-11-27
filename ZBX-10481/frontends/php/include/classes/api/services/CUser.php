@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -72,7 +72,7 @@ class CUser extends CApiService {
 			'searchWildcardsEnabled'	=> null,
 			// output
 			'output'					=> API_OUTPUT_EXTEND,
-			'editable'					=> null,
+			'editable'					=> false,
 			'selectUsrgrps'				=> null,
 			'selectMedias'				=> null,
 			'selectMediatypes'			=> null,
@@ -264,6 +264,10 @@ class CUser extends CApiService {
 				}
 
 				$dbUser = $dbUsers[$user['userid']];
+			}
+
+			if (array_key_exists('url', $user) && $user['url'] && !CHtmlUrlValidator::validate($user['url'], false)) {
+				self::exception(ZBX_API_ERROR_PARAMETERS, _('Wrong value for url field.'));
 			}
 
 			// check if user alias
@@ -993,8 +997,10 @@ class CUser extends CApiService {
 			}
 		}
 
-		if (!function_exists('ldap_connect')) {
-			self::exception(ZBX_API_ERROR_PARAMETERS, _('Probably php-ldap module is missing.'));
+		$ldap_status = (new CFrontendSetup())->checkPhpLdapModule();
+
+		if ($ldap_status['result'] != CFrontendSetup::CHECK_OK) {
+			self::exception(ZBX_API_ERROR_PARAMETERS, $ldap_status['error']);
 		}
 
 		$ldapValidator = new CLdapAuthValidator(['conf' => $cnf]);
@@ -1024,7 +1030,7 @@ class CUser extends CApiService {
 	}
 
 	public function logout() {
-		$sessionId = CWebUser::$data['sessionid'];
+		$sessionId = self::$userData['sessionid'];
 
 		$session = DBfetch(DBselect(
 			'SELECT s.userid'.

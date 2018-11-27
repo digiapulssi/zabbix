@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -69,7 +69,7 @@ check_fields($fields);
 // permissions
 if (getRequest('parent_discoveryid')) {
 	$discoveryRule = API::DiscoveryRule()->get([
-		'itemids' => $_REQUEST['parent_discoveryid'],
+		'itemids' => getRequest('parent_discoveryid'),
 		'output' => API_OUTPUT_EXTEND,
 		'selectHosts' => ['flags'],
 		'editable' => true
@@ -87,7 +87,7 @@ if (getRequest('parent_discoveryid')) {
 			'selectGroupPrototypes' => API_OUTPUT_EXTEND,
 			'selectTemplates' => ['templateid', 'name'],
 			'selectParentHost' => ['hostid'],
-			'selectInventory' => API_OUTPUT_EXTEND,
+			'selectInventory' => ['inventory_mode'],
 			'editable' => true
 		]);
 		$hostPrototype = reset($hostPrototype);
@@ -129,10 +129,12 @@ elseif (isset($_REQUEST['delete']) && isset($_REQUEST['hostid'])) {
 }
 elseif (isset($_REQUEST['clone']) && isset($_REQUEST['hostid'])) {
 	unset($_REQUEST['hostid']);
-	foreach ($_REQUEST['group_prototypes'] as &$groupPrototype) {
-		unset($groupPrototype['group_prototypeid']);
+	if (hasRequest('group_prototypes')) {
+		foreach ($_REQUEST['group_prototypes'] as &$groupPrototype) {
+			unset($groupPrototype['group_prototypeid']);
+		}
+		unset($groupPrototype);
 	}
-	unset($groupPrototype);
 	$_REQUEST['form'] = 'clone';
 }
 elseif (hasRequest('add') || hasRequest('update')) {
@@ -260,15 +262,15 @@ $config = select_config();
 /*
  * Display
  */
-if (isset($_REQUEST['form'])) {
+if (hasRequest('form')) {
 	$data = [
 		'discovery_rule' => $discoveryRule,
 		'host_prototype' => [
-			'hostid' => getRequest('hostid'),
-			'templateid' => getRequest('templateid'),
+			'hostid' => getRequest('hostid', 0),
+			'templateid' => getRequest('hostid') ? $hostPrototype['templateid'] : 0,
 			'host' => getRequest('host'),
 			'name' => getRequest('name'),
-			'status' => getRequest('status', HOST_STATUS_MONITORED),
+			'status' => getRequest('status', HOST_STATUS_NOT_MONITORED),
 			'templates' => [],
 			'inventory' => [
 				'inventory_mode' => getRequest('inventory_mode', $config['default_inventory_mode'])
@@ -299,7 +301,7 @@ if (isset($_REQUEST['form'])) {
 
 	if (getRequest('group_links')) {
 		$data['groups'] = API::HostGroup()->get([
-			'output' => API_OUTPUT_EXTEND,
+			'output' => ['groupid', 'name'],
 			'groupids' => getRequest('group_links'),
 			'editable' => true,
 			'preservekeys' => true
@@ -315,41 +317,63 @@ if (isset($_REQUEST['form'])) {
 		$data['proxy'] = reset($proxy);
 	}
 
-	// host prototype edit form
-	if (getRequest('hostid') && !getRequest('form_refresh')) {
-		$data['host_prototype'] = array_merge($data['host_prototype'], $hostPrototype);
+	if (!hasRequest('form_refresh')) {
+		if ($data['host_prototype']['hostid'] != 0) {
+			// When opening existing host prototype, display all values from database.
+			$data['host_prototype'] = array_merge($data['host_prototype'], $hostPrototype);
 
-		if (!array_key_exists('inventory_mode', $data['host_prototype']['inventory'])) {
-			$data['host_prototype']['inventory']['inventory_mode'] = HOST_INVENTORY_DISABLED;
+			if (!array_key_exists('inventory_mode', $data['host_prototype']['inventory'])) {
+				$data['host_prototype']['inventory']['inventory_mode'] = HOST_INVENTORY_DISABLED;
+			}
+
+			$data['groups'] = API::HostGroup()->get([
+				'output' => ['groupid', 'name'],
+				'groupids' => zbx_objectValues($data['host_prototype']['groupLinks'], 'groupid'),
+				'editable' => true,
+				'preservekeys' => true
+			]);
 		}
+		else {
+			// Set default values for new host prototype.
+			$data['host_prototype']['status'] = HOST_STATUS_MONITORED;
+		}
+	}
 
-		$data['groups'] = API::HostGroup()->get([
-			'output' => API_OUTPUT_EXTEND,
-			'groupids' => zbx_objectValues($data['host_prototype']['groupLinks'], 'groupid'),
+	$templateids = [];
+
+	// Add parent templates.
+	if ($data['host_prototype']['templateid'] != 0) {
+		$data['parents'] = [];
+		$hostPrototypeId = $data['host_prototype']['templateid'];
+		while ($hostPrototypeId) {
+			$parentHostPrototype = API::HostPrototype()->get([
+				'output' => ['itemid', 'templateid'],
+				'selectParentHost' => ['hostid', 'name'],
+				'selectDiscoveryRule' => ['itemid'],
+				'hostids' => $hostPrototypeId
+			]);
+			$parentHostPrototype = reset($parentHostPrototype);
+			$hostPrototypeId = null;
+
+			if ($parentHostPrototype) {
+				$data['parents'][] = $parentHostPrototype;
+				$hostPrototypeId = $parentHostPrototype['templateid'];
+				$templateids[] = $parentHostPrototype['parentHost']['hostid'];
+			}
+		}
+	}
+
+	// Select writable templates
+	$templateids = array_merge(zbx_objectValues($data['host_prototype']['templates'], 'templateid'), $templateids);
+	$data['host_prototype']['writable_templates'] = [];
+
+	if ($templateids) {
+		$data['host_prototype']['writable_templates'] = API::Template()->get([
+			'output' => ['templateid'],
+			'templateids' => $templateids,
 			'editable' => true,
 			'preservekeys' => true
 		]);
-
-		// add parent templates
-		if ($hostPrototype['templateid']) {
-			$data['parents'] = [];
-			$hostPrototypeId = $hostPrototype['templateid'];
-			while ($hostPrototypeId) {
-				$parentHostPrototype = API::HostPrototype()->get([
-					'output' => ['itemid', 'templateid'],
-					'selectParentHost' => ['hostid', 'name'],
-					'selectDiscoveryRule' => ['itemid'],
-					'hostids' => $hostPrototypeId
-				]);
-				$parentHostPrototype = reset($parentHostPrototype);
-				$hostPrototypeId = null;
-
-				if ($parentHostPrototype) {
-					$data['parents'][] = $parentHostPrototype;
-					$hostPrototypeId = $parentHostPrototype['templateid'];
-				}
-			}
-		}
 	}
 
 	// order linked templates
@@ -392,15 +416,15 @@ else {
 
 	$data['paging'] = getPagingLine($data['hostPrototypes'], $sortOrder, $url);
 	// fetch templates linked to the prototypes
-	$templateIds = [];
+	$templateids = [];
 	foreach ($data['hostPrototypes'] as $hostPrototype) {
-		$templateIds = array_merge($templateIds, zbx_objectValues($hostPrototype['templates'], 'templateid'));
+		$templateids = array_merge($templateids, zbx_objectValues($hostPrototype['templates'], 'templateid'));
 	}
-	$templateIds = array_unique($templateIds);
+	$templateids = array_keys(array_flip($templateids));
 
 	$linkedTemplates = API::Template()->get([
 		'output' => ['templateid', 'name'],
-		'templateids' => $templateIds,
+		'templateids' => $templateids,
 		'selectParentTemplates' => ['hostid', 'name']
 	]);
 	$data['linkedTemplates'] = zbx_toHash($linkedTemplates, 'templateid');
@@ -425,9 +449,28 @@ else {
 				];
 				$sourceDiscoveryRuleId = get_realrule_by_itemid_and_hostid($discoveryRule['itemid'], $sourceTemplate['hostid']);
 				$hostPrototype['sourceDiscoveryRuleId'] = $sourceDiscoveryRuleId;
+				$templateids[] = $sourceTemplate['parent_hostid'];
 			}
 		}
 		unset($hostPrototype);
+	}
+
+	foreach ($data['linkedTemplates'] as $linked_template) {
+		foreach ($linked_template['parentTemplates'] as $parent_template) {
+			$templateids[] = $parent_template['templateid'];
+		}
+	}
+
+	// Select writable template IDs.
+	$data['writable_templates'] = [];
+
+	if ($templateids) {
+		$data['writable_templates'] = API::Template()->get([
+			'output' => ['templateid'],
+			'templateids' => $templateids,
+			'editable' => true,
+			'preservekeys' => true
+		]);
 	}
 
 	// render view

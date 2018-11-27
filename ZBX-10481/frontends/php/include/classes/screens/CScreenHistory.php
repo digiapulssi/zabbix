@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -108,6 +108,12 @@ class CScreenHistory extends CScreenBase {
 			'webitems' => true,
 			'preservekeys' => true
 		]);
+
+		if (!$items) {
+			show_error_message(_('No permissions to referred object or it does not exist!'));
+
+			return;
+		}
 
 		$items = CMacrosResolverHelper::resolveItemNames($items);
 
@@ -309,7 +315,12 @@ class CScreenHistory extends CScreenBase {
 		if (!$this->plaintext && str_in_array($this->action, [HISTORY_VALUES, HISTORY_GRAPH, HISTORY_BATCH_GRAPH])) {
 			$graphDims = getGraphDims();
 
-			$this->timeline['starttime'] = date(TIMESTAMP_FORMAT, get_min_itemclock_by_itemid($firstItem['itemid']));
+			/*
+			 * Interval start value is non-inclusive, therefore should subtract 1 second to be able to show row with
+			 * minimum clock value.
+			 */
+			$this->timeline['starttime']
+				= date(TIMESTAMP_FORMAT, get_min_itemclock_by_itemid($firstItem['itemid']) - 1);
 
 			$this->dataId = 'historyGraph';
 

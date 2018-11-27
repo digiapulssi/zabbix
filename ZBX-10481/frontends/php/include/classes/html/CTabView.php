@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2017 Zabbix SIA
+** Copyright (C) 2001-2018 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -102,7 +102,7 @@ class CTabView extends CDiv {
 			}
 			else {
 				$activeTab = $this->selectedTab;
-				$createEvent = 'create: function() { jQuery.cookie("tab", '.$this->selectedTab.'); },';
+				$createEvent = 'create: function() { jQuery.cookie("tab", '.CJs::encodeJson($this->selectedTab).'); },';
 			}
 
 			$disabledTabs = ($this->disabledTabs === null) ? '' : 'disabled: '.CJs::encodeJson($this->disabledTabs).',';
@@ -111,7 +111,7 @@ class CTabView extends CDiv {
 				jQuery("#'.$this->id.'").tabs({
 					'.$createEvent.'
 					'.$disabledTabs.'
-					active: '.$activeTab.',
+					active: '.CJs::encodeJson($activeTab).',
 					activate: function(event, ui) {
 						jQuery.cookie("tab", ui.newTab.index().toString());
 					}
