@@ -229,8 +229,7 @@ jQuery(function ($) {
 						points = [];
 
 					for (var c = 0, cl = circle_nodes.length; cl > c; c++) {
-						let cx = parseInt(circle_nodes[c].getAttribute('cx'));
-						if (test_x >= cx - tolerance) {
+						if (test_x >= parseInt(circle_nodes[c].getAttribute('cx')) - tolerance) {
 							points.push(circle_nodes[c]);
 						}
 					}
@@ -401,11 +400,13 @@ jQuery(function ($) {
 				// Set position of mouse following helper line.
 				setHelperPosition(e, graph);
 
-				// Find values.
 				var points = findValues(graph[0], offsetX),
-					points_total = 0,
+					points_total = 0, // Number of data values found.
+					rows_added = 0, // Number of rows included in hintbox.
 					show_hint = false,
-					xy_point = false;
+					xy_point = false,
+					x = e.offsetX,
+					y = e.offsetY;
 
 				/**
 				 * Decide if one specific value or list of all matching Xs should be highlighted and either to show or
@@ -420,12 +421,14 @@ jQuery(function ($) {
 						show_hint = true;
 					}
 
-					let x = e.offsetX, y = e.offsetY;
 					if ((p.x + p.t) >= x && x >= (p.x - p.t) && (p.y + p.t) >= y && y >= (p.y - p.t)
 							&& (xy_point === false || (Math.abs(xy_point.x - x) > Math.abs(p.x - x)
 								&& Math.abs(xy_point.y - y) > Math.abs(p.y - y)))) {
 						xy_point = p;
 						points_total = 1;
+					}
+					else if (xy_point === false) {
+						points_total++;
 					}
 				});
 
@@ -433,12 +436,8 @@ jQuery(function ($) {
 				if (show_hint) {
 					html = $('<ul></ul>');
 				}
-				var rows_added = 0;
-				points.forEach(function(point) {
-					if (point.v !== null) {
-						points_total++;
-					}
 
+				points.forEach(function(point) {
 					var point_highlight = point.g.querySelectorAll('.svg-point-highlight')[0];
 					if (point.v !== null && (xy_point === false || xy_point === point)) {
 						point_highlight.setAttribute('cx', point.x);
