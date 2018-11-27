@@ -42,32 +42,18 @@ jQuery(function ($) {
 	// Cancel SBox and unset its variables.
 	function destroySBox(e, graph) {
 		var graph = graph || e.data.graph,
-			data = graph.data('options'),
-			widget = graph.data('widget'),
-			widgets_boxing = 0; // Number of widgets with active SBox.
+			data = graph.data('options');
 
-		$('.dashbrd-grid-widget-container').data('dashboardGrid')['widgets'].forEach(function(w) {
-			if (w !== widget && w['type'] === 'svggraph') {
-				let svg_graph = $('svg', w['content_body']);
-				if (svg_graph.length && svg_graph.data('options')['boxing']) {
-					widgets_boxing++;
-				}
-			}
-		});
-
-		if (widgets_boxing == 0) {
-			$(document)
-				.off('selectstart', disableSelect)
-				.off('keydown', sBoxKeyboardInteraction)
-				.off('mousemove', moveSBoxMouse)
-				.off('mouseup', destroySBox);
-		}
+		$(document)
+			.off('selectstart', disableSelect)
+			.off('keydown', sBoxKeyboardInteraction)
+			.off('mousemove', moveSBoxMouse)
+			.off('mouseup', destroySBox);
 
 		if (data) {
 			$('.svg-graph-selection', graph).attr({'width': 0, 'height': 0});
 			$('.svg-graph-selection-text', graph).text('');
 			graph.data('options').boxing = false;
-			$('.dashbrd-grid-widget-container').dashboardGrid('unpauseWidgetRefresh', widget['uniqueid']);
 		}
 	}
 
@@ -139,8 +125,7 @@ jQuery(function ($) {
 
 		var graph = e.data.graph,
 			offsetX = e.clientX - graph.offset().left,
-			data = graph.data('options'),
-			widget = graph.data('widget');
+			data = graph.data('options');
 
 		if (data.dimX <= offsetX && offsetX <= data.dimX + data.dimW && data.dimY <= e.offsetY
 				&& e.offsetY <= data.dimY + data.dimH) {
@@ -151,7 +136,6 @@ jQuery(function ($) {
 				.on('mouseup', {graph: graph}, endSBoxDrag);
 
 			data.start = offsetX - data.dimX;
-			$('.dashbrd-grid-widget-container').dashboardGrid('pauseWidgetRefresh', widget['uniqueid']);
 		}
 	}
 
@@ -533,7 +517,7 @@ jQuery(function ($) {
 	}
 
 	var methods = {
-		init: function(options, widget) {
+		init: function(options) {
 			options = $.extend({}, {
 				sbox: false,
 				show_problems: true,
@@ -557,16 +541,15 @@ jQuery(function ($) {
 					};
 
 				graph
-					.data('options', data)
-					.data('widget', widget)
-					.attr('unselectable', 'on')
-					.css('user-select', 'none')
-					.on('mousemove', {graph: graph}, showHintbox)
 					.on('mouseleave', function(e) {
 						var graph = $(this);
 						destroyHintbox(graph);
 						hideHelper(graph);
 					})
+					.data('options', data)
+					.on('mousemove', {graph: graph}, showHintbox)
+					.attr('unselectable', 'on')
+					.css('user-select', 'none')
 					.on('selectstart', false);
 
 				if (options.sbox) {

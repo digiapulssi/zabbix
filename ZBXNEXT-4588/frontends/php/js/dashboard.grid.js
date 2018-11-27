@@ -463,11 +463,6 @@
 		if (++widget['update_attempts'] > 1) {
 			return;
 		}
-		else if (widget['update_paused'] == true) {
-			widget['update_attempts'] = 0;
-			startWidgetRefreshTimer($obj, data, widget, widget['rf_rate']);
-			return;
-		}
 
 		var url = new Curl('zabbix.php'),
 			ajax_data;
@@ -1135,7 +1130,6 @@
 				'preloader_timeout': 10000,	// in milliseconds
 				'preloader_fadespeed': 500,
 				'update_attempts': 0,
-				'update_paused': false,
 				'initial_load': true,
 				'ready': false,
 				'fields': {},
@@ -1185,34 +1179,6 @@
 				$.each(data['widgets'], function(index, widget) {
 					if (widget['widgetid'] == widgetid || widget['uniqueid'] === widgetid) {
 						refreshWidget($this, data, widget);
-					}
-				});
-			});
-		},
-
-		// Pause specific widget refresh.
-		pauseWidgetRefresh: function(widgetid) {
-			return this.each(function() {
-				var	$this = $(this),
-					data = $this.data('dashboardGrid');
-
-				$.each(data['widgets'], function(index, widget) {
-					if (widget['widgetid'] == widgetid || widget['uniqueid'] === widgetid) {
-						widget['update_paused'] = true;
-					}
-				});
-			});
-		},
-
-		// Unpause specific widget refresh.
-		unpauseWidgetRefresh: function(widgetid) {
-			return this.each(function() {
-				var	$this = $(this),
-					data = $this.data('dashboardGrid');
-
-				$.each(data['widgets'], function(index, widget) {
-					if (widget['widgetid'] == widgetid || widget['uniqueid'] === widgetid) {
-						widget['update_paused'] = false;
 					}
 				});
 			});
