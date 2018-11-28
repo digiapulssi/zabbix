@@ -2420,6 +2420,18 @@ function uncheckTableRows($cookieId = null) {
 }
 
 /**
+ * Update table rows selection's cookies.
+ *
+ * @param string $cookie_id		parent ID, is used as cookie suffix
+ * @param array $checked_ids	checked rows ids [id1 => id1, id2 => id2, ...]
+ */
+function updateCookiesByIds($cookie_id = null, array $checked_ids = []) {
+	insert_js('cookie.createJSON("cb_'.basename($_SERVER['SCRIPT_NAME'], '.php').
+		($cookie_id === null ? '' : '_'.$cookie_id).'", '.json_encode($checked_ids).')'
+	);
+}
+
+/**
  * Trim each element of the script path. For example, " a / b / c d " => "a/b/c d"
  *
  * @param string $name

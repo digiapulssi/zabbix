@@ -1307,6 +1307,16 @@ elseif (hasRequest('action') && getRequest('action') === 'item.massdelete' && ha
 	if ($result) {
 		uncheckTableRows(getRequest('hostid'));
 	}
+	elseif (hasErrorMesssages()) {
+		$restToDelete = API::Item()->get([
+			'output' => ['key_', 'itemid'],
+			'selectHosts' => ['name'],
+			'itemids' => $group_itemid,
+			'preservekeys' => true
+		]);
+
+		updateCookiesByIds(getRequest('hostid'), array_column($restToDelete, 'itemid', 'itemid'));
+	}
 	show_messages($result, _('Items deleted'), _('Cannot delete items'));
 }
 elseif (hasRequest('action') && getRequest('action') === 'item.masscheck_now' && hasRequest('group_itemid')) {
