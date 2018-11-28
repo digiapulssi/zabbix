@@ -366,7 +366,7 @@ jQuery(function ($) {
 			if (data.showProblems && data.isHintBoxFrozen === false && in_problem_area) {
 				hideHelper(graph);
 
-				var problems = findProblems(graph[0], e.offsetX),
+				var problems = findProblems(graph[0], offsetX),
 					problems_total = problems.length;
 				if (problems_total > 0) {
 					var tbody = $('<tbody>');
