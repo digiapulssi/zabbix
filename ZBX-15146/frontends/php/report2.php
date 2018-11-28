@@ -420,8 +420,12 @@ elseif (isset($_REQUEST['filter_hostid'])) {
 			($_REQUEST['filter_hostid'] == 0 || $availabilityReportMode == AVAILABILITY_REPORT_BY_TEMPLATE)
 				? $trigger['host_name'] : null,
 			new CLink($trigger['description'], 'events.php?filter_set=1&triggerid='.$trigger['triggerid']),
-			$availability['true'] == 0 ? '' : (new CSpan(sprintf('%.4f%%', $availability['true'])))->addClass(ZBX_STYLE_RED),
-			$availability['false'] == 0 ? '' : (new CSpan(sprintf('%.4f%%', $availability['false'])))->addClass(ZBX_STYLE_GREEN),
+			$availability['true'] < 0.00005
+				? ''
+				: (new CSpan(sprintf('%.4f%%', $availability['true'])))->addClass(ZBX_STYLE_RED),
+			$availability['false'] < 0.00005
+				?  ''
+				: (new CSpan(sprintf('%.4f%%', $availability['false'])))->addClass(ZBX_STYLE_GREEN),
 			new CLink(_('Show'), 'report2.php?filter_groupid='.$_REQUEST['filter_groupid'].
 				'&filter_hostid='.$_REQUEST['filter_hostid'].'&triggerid='.$trigger['triggerid'])
 		]);
