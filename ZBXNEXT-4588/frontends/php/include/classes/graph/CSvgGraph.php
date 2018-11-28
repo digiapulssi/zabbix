@@ -26,6 +26,10 @@ class CSvgGraph extends CSvg {
 
 	const SVG_GRAPH_X_AXIS_HEIGHT = 20;
 
+	const SVG_GRAPH_X_AXIS_LABEL_MARGIN = 5;
+	const SVG_GRAPH_Y_AXIS_LEFT_LABEL_MARGIN = 5;
+	const SVG_GRAPH_Y_AXIS_RIGHT_LABEL_MARGIN = 12;
+
 	protected $canvas_height;
 	protected $canvas_width;
 	protected $canvas_x;
@@ -548,6 +552,7 @@ class CSvgGraph extends CSvg {
 
 			if ($values) {
 				$offset_right = max($this->offset_right, max(array_map('strlen', $values)) * $approx_width);
+				$offset_right += self::SVG_GRAPH_Y_AXIS_RIGHT_LABEL_MARGIN;
 				$this->offset_right = (int) min($offset_right, $this->max_yaxis_width);
 			}
 		}
