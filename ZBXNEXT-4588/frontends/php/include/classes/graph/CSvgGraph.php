@@ -265,7 +265,7 @@ class CSvgGraph extends CSvg {
 		}
 
 		$this->left_y_empty = ($metrics_for_each_axes[GRAPH_YAXIS_SIDE_LEFT] == 0);
-		$this->right_y_show = ($metrics_for_each_axes[GRAPH_YAXIS_SIDE_RIGHT] == 0);
+		$this->right_y_empty = ($metrics_for_each_axes[GRAPH_YAXIS_SIDE_RIGHT] == 0);
 
 		return $this;
 	}
@@ -426,7 +426,7 @@ class CSvgGraph extends CSvg {
 		if ($this->left_y_show) {
 			$this->drawCanvasLeftYAxis();
 		}
-		if ($this->right_y_show && (!$this->left_y_show || $this->max_value_right !== null)) {
+		if ($this->right_y_show) {
 			$this->drawCanvasRightYAxis();
 		}
 		if ($this->x_show) {
