@@ -13,6 +13,7 @@ our @EXPORT = qw(zbx_connect check_api_error get_proxies_list
 		create_passive_proxy probe_exists get_host_group get_template get_probe get_host
 		remove_templates remove_hosts remove_hostgroups remove_probes remove_items
 		disable_host disable_hosts
+		enable_items
 		disable_items disable_triggers
 		rename_host rename_proxy rename_template rename_hostgroup
 		macro_value get_global_macro_value get_host_macro
@@ -191,18 +192,31 @@ sub remove_probes($) {
     return $result;
 }
 
+sub update_items_status($$) {
+	my $items = shift;
+	my $status = shift;
+
+	return unless scalar(@{$items});
+
+	my $result;
+
+	foreach my $itemid (@{$items}) {
+		$result->{$itemid} = $zabbix->update('item', {'itemid' => $itemid, 'status' => $status});
+	}
+
+	return $result;
+}
+
+sub enable_items($) {
+    my $items = shift;
+
+    return update_items_status($items, ITEM_STATUS_ACTIVE);
+}
+
 sub disable_items($) {
     my $items = shift;
 
-    return unless scalar(@{$items});
-
-    my $result;
-
-    foreach my $itemid (@{$items}) {
-	$result->{$itemid} = $zabbix->update('item', {'itemid' => $itemid, 'status' => ITEM_STATUS_DISABLED});
-    }
-
-    return $result;
+    return update_items_status($items, ITEM_STATUS_DISABLED);
 }
 
 sub disable_triggers($) {
@@ -348,30 +362,6 @@ sub update_root_servers(;$) {
 	create_macro('{$RSM.IP4.ROOTSERVERS1}', $macro_value_v4, undef, 1);	# global, force
 	create_macro('{$RSM.IP6.ROOTSERVERS1}', $macro_value_v6, undef, 1);	# global, force
     }
-    else
-    {
-    my $content = LWP::UserAgent->new->get('http://www.internic.net/zones/named.root')->{'_content'};
-
-    return unless defined $content;
-
-    for my $str (split("\n", $content)) {
-	if ($str=~/.+ROOT\-SERVERS.+\sA\s+(.+)$/) {
-	    $macro_value_v4 .= ',' if ($macro_value_v4 ne "");
-	    $macro_value_v4 .= $1;
-	}
-
-	if ($str=~/.+ROOT\-SERVERS.+AAAA\s+(.+)$/) {
-	    $macro_value_v6 .= ',' if ($macro_value_v6 ne "");
-	    $macro_value_v6 .= $1;
-        }
-    }
-
-# Temporary disable the check
-#    return unless create_macro('{$RSM.IP4.ROOTSERVERS1}', $macro_value_v4) eq true;
-#    return unless create_macro('{$RSM.IP6.ROOTSERVERS1}', $macro_value_v6) eq true;
-    create_macro('{$RSM.IP4.ROOTSERVERS1}', $macro_value_v4);
-    create_macro('{$RSM.IP6.ROOTSERVERS1}', $macro_value_v6);
-    }
 
     return '"{$RSM.IP4.ROOTSERVERS1}","{$RSM.IP6.ROOTSERVERS1}"';
 }
@@ -506,13 +496,15 @@ sub create_macro {
 	return $result->{'hostmacroids'}[0];
     }
     else {
-	$result = $zabbix->get('usermacro',{'countOutput' => 1, 'globalmacro' => 1, 'filter' => {'macro' => $name}});
+	    $result = $zabbix->get('usermacro',{'countOutput' => 1, 'globalmacro' => 1, 'filter' => {'macro' => $name}});
+
 	return $result if (check_api_error($result) eq true);
 
 	if ($result) {
-            $result = $zabbix->get('usermacro',{'output' => 'globalmacroid', 'globalmacro' => 1, 'filter' => {'macro' => $name}} );
-            $zabbix->macro_global_update({'globalmacroid' => $result->{'globalmacroid'}, 'value' => $value}) if defined $result->{'globalmacroid'}
-															and defined($force_update);
+            $result = $zabbix->get('usermacro',{'output' => ['globalmacroid','value'], 'globalmacro' => 1, 'filter' => {'macro' => $name}} );
+
+            $zabbix->macro_global_update({'globalmacroid' => $result->{'globalmacroid'}, 'value' => $value})
+		    if (defined($force_update) && defined($result->{'globalmacroid'}) && ($value ne $result->{'value'}));
         }
         else {
             $result = $zabbix->macro_global_create({'macro' => $name, 'value' => $value});
@@ -526,7 +518,7 @@ sub create_macro {
 sub get_host_macro {
     my $templateid = shift;
     my $name = shift;
-    
+
     my $result;
 
     $result = $zabbix->get('usermacro',{'hostids' => $templateid, 'output' => 'extend', 'filter' => {'macro' => $name}});
@@ -545,7 +537,7 @@ sub create_passive_proxy($$$$$) {
 
     if (defined($probe->{'proxyid'})) {
 	my $vars = {'proxyid' => $probe->{'proxyid'}, 'status' => HOST_STATUS_PROXY_PASSIVE};
-	
+
 	if (defined($probe->{'interface'}) and 'HASH' eq ref($probe->{'interface'})) {
 		$vars->{'interface'} = {'interfaceid' => $probe->{'interface'}->{'interfaceid'},
 					'ip' => $probe_ip, 'dns' => '', 'useip' => true, 'port' => $probe_port};
@@ -630,40 +622,62 @@ sub create_probe_status_template {
 
     my $templateid = create_template($template_name, $child_templateid);
 
-    my $options = {'name' => 'Probe status ($1)',
-                                              'key_'=> 'rsm.probe.status[automatic,'.$root_servers_macros.']',
-                                              'hostid' => $templateid,
-                                              'applications' => [get_application_id('Probe status', $templateid)],
-                                              'type' => 3, 'value_type' => 3, 'delay' => cfg_probe_status_delay,
-                                              'valuemapid' => rsm_value_mappings->{'rsm_probe'}};
+    my $options = {
+	'name' => 'Probe status ($1)',
+	'key_'=> 'rsm.probe.status[automatic,'.$root_servers_macros.']',
+	'hostid' => $templateid,
+	'applications' => [get_application_id('Probe status', $templateid)],
+	'type' => 3, 'value_type' => 3, 'delay' => cfg_probe_status_delay,
+	'valuemapid' => rsm_value_mappings->{'rsm_probe'}
+    };
 
     create_item($options);
 
-    $options = {'name' => 'Probe status ($1)',
-                                              'key_'=> 'rsm.probe.status[manual]',
-                                              'hostid' => $templateid,
-                                              'applications' => [get_application_id('Probe status', $templateid)],
-                                              'type' => 2, 'value_type' => 3,
-                                              'valuemapid' => rsm_value_mappings->{'rsm_probe'}};
+    $options = {
+	'name' => 'Probe status ($1)',
+	'key_'=> 'rsm.probe.status[manual]',
+	'hostid' => $templateid,
+	'applications' => [get_application_id('Probe status', $templateid)],
+	'type' => 2, 'value_type' => 3,
+	'valuemapid' => rsm_value_mappings->{'rsm_probe'}
+    };
 
     create_item($options);
 
-    $options = { 'description' => 'Probe {HOST.NAME} has been disabled for more than {$RSM.PROBE.MAX.OFFLINE}',
-                         'expression' => '{'.$template_name.':rsm.probe.status[manual].max({$RSM.PROBE.MAX.OFFLINE})}=0',
-                        'priority' => '3',
-                };
+    $options = {
+	'name' => 'Local resolver status ($1)',
+	'key_'=> 'resolver.status[{$RSM.RESOLVER},{$RESOLVER.STATUS.TIMEOUT},{$RESOLVER.STATUS.TRIES},{$RSM.IP4.ENABLED},{$RSM.IP6.ENABLED}]',
+	'hostid' => $templateid,
+	'applications' => [get_application_id('Probe status', $templateid)],
+	'type' => 3, 'value_type' => 3, 'delay' => cfg_probe_status_delay,
+	'valuemapid' => rsm_value_mappings->{'service_state'}
+    };
+
+    create_item($options);
+
+    $options = {
+	'description' => 'Probe {HOST.NAME} has been knocked out',
+	'expression' => '{'.$template_name.':rsm.probe.status[manual].last(0)}=0',
+	'priority' => '4',
+    };
 
     create_trigger($options, $template_name);
 
-
-    $options = { 'description' => 'Probe {HOST.NAME} has been disabled by tests',
-                         'expression' => '{'.$template_name.':rsm.probe.status[automatic,"{$RSM.IP4.ROOTSERVERS1}","{$RSM.IP6.ROOTSERVERS1}"].last(0)}=0',
-                        'priority' => '4',
-                };
+    $options = {
+	'description' => 'Probe {HOST.NAME} has been disabled for more than {$RSM.PROBE.MAX.OFFLINE}',
+	'expression' => '{'.$template_name.':rsm.probe.status[manual].max({$RSM.PROBE.MAX.OFFLINE})}=0',
+	'priority' => '3',
+    };
 
     create_trigger($options, $template_name);
 
+    $options = {
+	'description' => 'Probe {HOST.NAME} has been disabled by tests',
+	'expression' => '{'.$template_name.':rsm.probe.status[automatic,"{$RSM.IP4.ROOTSERVERS1}","{$RSM.IP6.ROOTSERVERS1}"].last(0)}=0',
+	'priority' => '4',
+    };
 
+    create_trigger($options, $template_name);
 
     return $templateid;
 }
@@ -889,7 +903,13 @@ sub create_probe_health_tmpl()
 	create_trigger(
 		{
 			'description'	=> 'Probe {$RSM.PROXY_NAME} is unavailable',
-			'expression'	=> '{' . $host_name . ':' . $item_key . '.fuzzytime(2m)}=0',
+			'expression'	=>
+					"{TRIGGER.VALUE}=0 and {$host_name:$item_key.fuzzytime(2m)}=0 or\r\n" .
+					"{TRIGGER.VALUE}=1 and (\r\n" .
+					"\t{$host_name:$item_key.now()}-{$host_name:$item_key.last(#1)}>1m or\r\n" .
+					"\t{$host_name:$item_key.now()}-{$host_name:$item_key.last(#2)}>2m or\r\n" .
+					"\t{$host_name:$item_key.now()}-{$host_name:$item_key.last(#3)}>3m\r\n" .
+					")",
 			'priority'	=> 4
 		},
 		$host_name
@@ -901,7 +921,9 @@ sub create_probe_health_tmpl()
 		'key_'		=> PROBE_KEY_ONLINE,
 		'status'	=> ITEM_STATUS_ACTIVE,
 		'hostid'	=> $templateid,
-		'applications'	=> [get_application_id('Probe Availability', $templateid)],
+		'applications'	=> [
+			get_application_id('Probe Availability', $templateid)
+		],
 		'type'		=> 2,
 		'value_type'	=> 3,
 		'valuemapid'	=> rsm_value_mappings->{'rsm_probe'}

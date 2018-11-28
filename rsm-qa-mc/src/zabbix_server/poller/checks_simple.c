@@ -163,17 +163,22 @@ int	get_value_simple(DC_ITEM *item, AGENT_RESULT *result, zbx_vector_ptr_t *add_
 
 	if (0 == strcmp(request.key, "rsm.dns.udp"))
 	{
-		if (SYSINFO_RET_OK == check_rsm_dns(item, &request, result, ZBX_RSM_UDP))
+		if (SYSINFO_RET_OK == check_rsm_dns(item, &request, result, RSM_UDP))
 			ret = SUCCEED;
 	}
 	else if (0 == strcmp(request.key, "rsm.dns.tcp"))
 	{
-		if (SYSINFO_RET_OK == check_rsm_dns(item, &request, result, ZBX_RSM_TCP))
+		if (SYSINFO_RET_OK == check_rsm_dns(item, &request, result, RSM_TCP))
 			ret = SUCCEED;
 	}
 	else if (0 == strcmp(request.key, "rsm.rdds"))
 	{
 		if (SYSINFO_RET_OK == check_rsm_rdds(item, &request, result))
+			ret = SUCCEED;
+	}
+	else if (0 == strcmp(request.key, "rdap"))
+	{
+		if (SYSINFO_RET_OK == check_rsm_rdap(item, &request, result))
 			ret = SUCCEED;
 	}
 	else if (0 == strcmp(request.key, "rsm.epp"))
@@ -184,6 +189,16 @@ int	get_value_simple(DC_ITEM *item, AGENT_RESULT *result, zbx_vector_ptr_t *add_
 	else if (0 == strcmp(request.key, "rsm.probe.status"))
 	{
 		if (SYSINFO_RET_OK == check_rsm_probe_status(item, &request, result))
+			ret = SUCCEED;
+	}
+	else if (0 == strcmp(request.key, "rsm.errors"))
+	{
+		SET_UI64_RESULT(result, zbx_dc_rsm_errors_get());
+		ret = SUCCEED;
+	}
+	else if (0 == strcmp(request.key, "resolver.status"))
+	{
+		if (SYSINFO_RET_OK == check_rsm_resolver_status(item, &request, result))
 			ret = SUCCEED;
 	}
 	else if (0 == strcmp(request.key, "net.tcp.service") || 0 == strcmp(request.key, "net.udp.service"))

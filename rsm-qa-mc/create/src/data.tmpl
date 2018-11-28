@@ -25,6 +25,8 @@ ROW   |10050 |NULL        |Template App Zabbix Agent |3     |0            |2    
 ROW   |10056 |NULL        |Template App Agentless    |3     |0            |2             |             |             |Template App Agentless    |0    |NULL      |           |1          |1         |          |           |                |       |
 ROW   |10057 |NULL        |Zabbix Server             |0     |-1           |2             |             |             |Zabbix Server             |0    |NULL      |           |1          |1         |          |           |                |       |
 ROW   |10058 |NULL        |Template App Zabbix Proxy |3     |0            |2             |             |             |Template App Zabbix Proxy |0    |NULL      |           |1          |1         |          |           |                |       |
+ROW   |99980 |NULL        |Template RDAP             |3     |0            |2             |             |             |Template RDAP             |0    |NULL      |           |1          |1         |          |           |                |       |
+ROW   |99990 |NULL        |Template Probe Errors     |3     |0            |2             |             |             |Template Probe Errors     |0    |NULL      |           |1          |1         |          |           |                |       |
 ROW   |100000|NULL        |Global macro history      |0     |-1           |2             |             |             |Global macro history      |0    |NULL      |           |1          |1         |          |           |                |       |
 ROW   |100001|NULL        |Probe statuses            |0     |-1           |2             |             |             |Probe statuses            |0    |NULL      |           |1          |1         |          |           |                |       |
 
@@ -97,6 +99,8 @@ ROW   |223          |10057 |Processes         |0    |
 ROW   |224          |10057 |Security          |0    |
 ROW   |225          |10057 |Zabbix agent      |0    |
 ROW   |226          |10058 |Zabbix proxy      |0    |
+ROW   |998          |99980 |RDAP              |0    |
+ROW   |999          |99990 |Internal errors   |0    |
 ROW   |1000         |100000|Configuration     |0    |
 ROW   |1001         |100001|Probe availability|0    |
 
@@ -115,6 +119,7 @@ ROW   |100       |RSM Probe status          |
 ROW   |110       |RSM Service Availability  |
 ROW   |120       |RSM DNS rtt               |
 ROW   |130       |RSM RDDS rtt              |
+ROW   |135       |RSM RDAP rtt              |
 ROW   |140       |RSM RDDS result           |
 ROW   |150       |RSM EPP rtt               |
 ROW   |160       |RSM EPP result            |
@@ -303,6 +308,11 @@ ROW   |23397 |5   |              |        |10057 |Zabbix value cache misses     
 ROW   |23398 |5   |              |        |10057 |Zabbix value cache operating mode           |zabbix[vcache,cache,mode]                    |60   |7      |365   |0     |3         |             |        |0         |0    |                   |0                   |                     |                     |1      |          |23391     |15        |          |      |           |0        |0       |        |        |         |          |0    |NULL       |    |                                                                                                                                 |0             |30      |0                  |0                  |                  |0       |
 ROW   |23399 |5   |              |        |10057 |Zabbix vmware cache, % free                 |zabbix[vmware,buffer,pfree]                  |60   |7      |365   |1     |0         |             |%       |0         |0    |                   |0                   |                     |                     |1      |          |23392     |NULL      |          |      |           |0        |0       |        |        |         |          |0    |NULL       |    |                                                                                                                                 |0             |30      |0                  |0                  |                  |0       |
 ROW   |23400 |5   |              |        |10057 |Zabbix history index cache, % free          |zabbix[wcache,index,pfree]                   |60   |7      |365   |0     |0         |             |%       |0         |0    |                   |0                   |                     |                     |1      |          |23393     |NULL      |          |      |           |0        |0       |        |        |         |          |0    |NULL       |    |                                                                                                                                 |0             |30      |0                  |0                  |                  |0       |
+ROW   |99980 |3   |              |        |99980 |RDAP availability                           |rdap[{$RSM.TLD},{$RDAP.TEST.DOMAIN},{$RDAP.BASE.URL},{$RSM.RDDS.MAXREDIRS},{$RSM.RDDS.RTT.HIGH},{$RDAP.TLD.ENABLED},{$RSM.RDDS.ENABLED},{$RSM.IP4.ENABLED},{$RSM.IP6.ENABLED},{$RSM.RESOLVER}]|300|7|365|0|3| | |0|0| |0| | |1|     |NULL      |1         |          |                              |           |0        |0       |        |        |         |          |0    |NULL       |    |Status of Registration Data Access Protocol service.                                                                             |0             |0       |0                  |0                  |                  |0       |
+ROW   |99981 |2   |              |        |99980 |RDAP IP                                     |rdap.ip                                      |0    |7      |365   |0     |1         |             |        |0         |0    |                   |0                   |                     |                     |1      |          |NULL      |NULL      |          |                              |           |0        |0       |        |        |         |          |0    |NULL       |    |IP address of Registration Data Access Protocol service provider domain used to perform the test.                                |0             |0       |0                  |0                  |                  |0       |
+ROW   |99982 |2   |              |        |99980 |RDAP RTT                                    |rdap.rtt                                     |0    |7      |365   |0     |0         |             |        |0         |0    |                   |0                   |                     |                     |1      |          |NULL      |135       |          |                              |           |0        |0       |        |        |         |          |0    |NULL       |    |Round-Trip Time of Registration Data Access Protocol service test.                                                               |0             |0       |0                  |0                  |                  |0       |
+ROW   |99983 |15  |              |        |99980 |RDAP enabled/disabled                       |rdap.enabled                                 |60   |7      |365   |0     |3         |             |        |0         |0    |                   |0                   |                     |                     |1      |          |NULL      |NULL      |          |{$RDAP.TLD.ENABLED}           |           |0        |0       |        |        |         |          |0    |NULL       |    |History of Registration Data Access Protocol being enabled or disabled.                                                          |0             |0       |0                  |0                  |                  |0       |
+ROW   |99990 |3   |              |        |99990 |Internal error rate                         |rsm.errors                                   |60   |90     |365   |0     |0         |             |        |0         |1    |                   |0                   |                     |                     |1      |          |NULL      |NULL      |          |                              |           |0        |0       |        |        |         |          |0    |NULL       |    |                                                                                                                                 |0             |30      |0                  |0                  |                  |0       |
 ROW   |100000|15  |              |        |100000|$1 value                                    |rsm.configvalue[RSM.INCIDENT.DNS.FAIL]       |60   |7      |365   |0     |3         |             |        |0         |0    |                   |0                   |                     |                     |1      |          |NULL      |NULL      |          |{$RSM.INCIDENT.DNS.FAIL}      |           |0        |0       |        |        |         |          |0    |NULL       |    |                                                                                                                                 |0             |0       |0                  |0                  |                  |0       |
 ROW   |100001|15  |              |        |100000|$1 value                                    |rsm.configvalue[RSM.INCIDENT.DNS.RECOVER]    |60   |7      |365   |0     |3         |             |        |0         |0    |                   |0                   |                     |                     |1      |          |NULL      |NULL      |          |{$RSM.INCIDENT.DNS.RECOVER}   |           |0        |0       |        |        |         |          |0    |NULL       |    |                                                                                                                                 |0             |0       |0                  |0                  |                  |0       |
 ROW   |100002|15  |              |        |100000|$1 value                                    |rsm.configvalue[RSM.INCIDENT.DNSSEC.FAIL]    |60   |7      |365   |0     |3         |             |        |0         |0    |                   |0                   |                     |                     |1      |          |NULL      |NULL      |          |{$RSM.INCIDENT.DNSSEC.FAIL}   |           |0        |0       |        |        |         |          |0    |NULL       |    |                                                                                                                                 |0             |0       |0                  |0                  |                  |0       |
@@ -374,20 +384,25 @@ TABLE |actions
 FIELDS|actionid|name           |esc_period|def_shortdata                                                           |def_longdata                 |recovery_msg|r_shortdata                                                             |r_longdata                                     |
 ROW   |100     |Probes-Critical|3600      |system-critical#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}|{EVENT.DATE} {EVENT.TIME} UTC|1           |system-critical#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}|{EVENT.RECOVERY.DATE} {EVENT.RECOVERY.TIME} UTC|
 ROW   |110     |Probes-Mon     |3600      |probes#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}         |{EVENT.DATE} {EVENT.TIME} UTC|1           |probes#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}         |{EVENT.RECOVERY.DATE} {EVENT.RECOVERY.TIME} UTC|
+ROW   |115     |Probes         |3600      |probes#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}         |{EVENT.DATE} {EVENT.TIME} UTC|1           |probes#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}         |{EVENT.RECOVERY.DATE} {EVENT.RECOVERY.TIME} UTC|
 ROW   |120     |Central-Server |3600      |system#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}         |{EVENT.DATE} {EVENT.TIME} UTC|1           |system#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}         |{EVENT.RECOVERY.DATE} {EVENT.RECOVERY.TIME} UTC|
 ROW   |130     |TLDs           |3600      |tld#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}            |{EVENT.DATE} {EVENT.TIME} UTC|1           |tld#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}            |{EVENT.RECOVERY.DATE} {EVENT.RECOVERY.TIME} UTC|
+ROW   |140     |Probes-Knockout|3600      |probes#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}         |{EVENT.DATE} {EVENT.TIME} UTC|1           |probes#{TRIGGER.STATUS}#{HOST.NAME1}#{ITEM.NAME1}#{ITEM.VALUE1}         |{EVENT.RECOVERY.DATE} {EVENT.RECOVERY.TIME} UTC|
 
 TABLE |operations
-FIELDS|operationid|actionid|
-ROW   |100        |100     |
-ROW   |110        |110     |
-ROW   |120        |120     |
-ROW   |130        |130     |
+FIELDS|operationid|actionid|operationtype|
+ROW   |100        |100     |0            |
+ROW   |110        |110     |0            |
+ROW   |115        |115     |0            |
+ROW   |120        |120     |0            |
+ROW   |130        |130     |0            |
+ROW   |140        |140     |1            |
 
 TABLE |opmessage
 FIELDS|operationid|default_msg|subject|message|mediatypeid|
 ROW   |100        |1          |       |       |10         |
 ROW   |110        |1          |       |       |10         |
+ROW   |115        |1          |       |       |10         |
 ROW   |120        |1          |       |       |10         |
 ROW   |130        |1          |       |       |10         |
 
@@ -395,8 +410,17 @@ TABLE |opmessage_usr
 FIELDS|opmessage_usrid|operationid|userid|
 ROW   |100            |100        |100   |
 ROW   |110            |110        |100   |
+ROW   |115            |115        |100   |
 ROW   |120            |120        |100   |
 ROW   |130            |130        |100   |
+
+TABLE |opcommand
+FIELDS|operationid|type|scriptid|execute_on|port|authtype|username|password|publickey|privatekey|command                                                          |
+ROW   |140        |0   |NULL    |1         |    |0       |        |        |         |          |/opt/zabbix/scripts/probe-manual.pl --probe '{HOST.HOST}' --set 0|
+
+TABLE |opcommand_hst
+FIELDS|opcommand_hstid|operationid|hostid|
+ROW   |140            |140        |NULL  |
 
 TABLE |conditions
 FIELDS|conditionid|actionid|conditiontype|operator|value |
@@ -408,6 +432,10 @@ ROW   |110        |110     |16           |7       |      |
 ROW   |111        |110     |5            |0       |1     |
 ROW   |112        |110     |4            |5       |2     |
 ROW   |113        |110     |0            |0       |130   |
+ROW   |115        |115     |16           |7       |      |
+ROW   |116        |115     |5            |0       |1     |
+ROW   |117        |115     |4            |5       |2     |
+ROW   |118        |115     |0            |0       |120   |
 ROW   |120        |120     |16           |7       |      |
 ROW   |121        |120     |5            |0       |1     |
 ROW   |122        |120     |4            |5       |2     |
@@ -415,10 +443,15 @@ ROW   |123        |120     |0            |0       |110   |
 ROW   |130        |130     |16           |7       |      |
 ROW   |131        |130     |5            |0       |1     |
 ROW   |132        |130     |0            |0       |140   |
+ROW   |140        |140     |16           |7       |      |
+ROW   |141        |140     |5            |0       |1     |
+ROW   |142        |140     |4            |5       |2     |
+ROW   |143        |140     |0            |0       |120   |
+ROW   |144        |140     |2            |0       |99990 |
 
 TABLE |config
 FIELDS|configid|refresh_unsupported|work_period     |alert_usrgrpid|discovery_groupid|hk_history_mode|hk_trends_mode|
-ROW   |1       |600                |1-5,09:00-18:00;|7             |5                |0              |0             |
+ROW   |1       |60                 |1-5,09:00-18:00;|7             |5                |0              |0             |
 
 TABLE |triggers
 FIELDS|triggerid|expression                                                              |description                                                     |url|status|priority|comments                                                                                                                              |templateid|type|flags|
@@ -546,11 +579,17 @@ ROW   |13602    |({TRIGGER.VALUE}=0 and {13031}>75) or ({TRIGGER.VALUE}=1 and {1
 ROW   |13603    |({TRIGGER.VALUE}=0 and {13032}>75) or ({TRIGGER.VALUE}=1 and {13032}>65)|Zabbix unreachable poller processes more than 75% busy          |   |0     |3       |                                                                                                                                      |13576     |0   |0    |
 ROW   |13604    |{13033}=1                                                               |Zabbix value cache working in low memory mode                   |   |0     |4       |                                                                                                                                      |13577     |0   |0    |
 ROW   |13605    |({TRIGGER.VALUE}=0 and {13034}>75) or ({TRIGGER.VALUE}=1 and {13034}>65)|Zabbix vmware collector processes more than 75% busy            |   |0     |3       |                                                                                                                                      |13578     |0   |0    |
+ROW   |99990    |{99990}>0                                                               |Internal errors happening for {$PROBE.INTERNAL.ERROR.INTERVAL}  |   |0     |4       |                                                                                                                                      |NULL      |0   |0    |
+ROW   |99991    |{99991}>0                                                               |Internal errors happening                                       |   |0     |2       |                                                                                                                                      |NULL      |0   |0    |
 ROW   |100100   |{100100}<{$RSM.DNS.PROBE.ONLINE}                                        |Number of DNS-enabled online probes is less than $1             |   |0     |5       |                                                                                                                                      |NULL      |0   |0    |
 ROW   |100101   |{100101}<{$RSM.EPP.PROBE.ONLINE}                                        |Number of EPP-enabled online probes is less than $1             |   |0     |5       |                                                                                                                                      |NULL      |0   |0    |
 ROW   |100102   |{100102}<{$RSM.IP4.MIN.PROBE.ONLINE}                                    |Number of IP4-enabled online probes is less than $1             |   |0     |5       |                                                                                                                                      |NULL      |0   |0    |
 ROW   |100103   |{100103}<{$RSM.IP6.MIN.PROBE.ONLINE}                                    |Number of IP6-enabled online probes is less than $1             |   |0     |5       |                                                                                                                                      |NULL      |0   |0    |
 ROW   |100104   |{100104}<{$RSM.RDDS.PROBE.ONLINE}                                       |Number of RDDS-enabled online probes is less than $1            |   |0     |5       |                                                                                                                                      |NULL      |0   |0    |
+
+TABLE |trigger_depends
+FIELDS|triggerdepid|triggerid_down|triggerid_up|
+ROW   |1           |99991         |99990       |
 
 TABLE |functions
 FIELDS|functionid|itemid|triggerid|function |parameter|
@@ -678,6 +717,8 @@ ROW   |13050     |23412 |13621    |avg      |10m      |
 ROW   |13051     |23413 |13622    |avg      |10m      |
 ROW   |13052     |23414 |13623    |avg      |10m      |
 ROW   |13053     |23415 |13624    |avg      |10m      |
+ROW   |99990     |99990 |99990    |min      |{$PROBE.INTERNAL.ERROR.INTERVAL}|
+ROW   |99991     |99990 |99991    |last     |                                |
 ROW   |100100    |100100|100100   |last     |         |
 ROW   |100101    |100101|100101   |last     |         |
 ROW   |100102    |100102|100102   |last     |         |
@@ -904,12 +945,15 @@ ROW   |62           |{$MIN_FREE_MEMORY}            |20                 |
 ROW   |63           |{$MAX_CPU_IOWAIT}             |20                 |
 ROW   |64           |{$FREE_DISK_SPACE}            |20                 |
 ROW   |65           |{$FREE_DISK_INODES}           |20                 |
+ROW   |66           |{$PROBE.INTERNAL.ERROR.INTERVAL}|1m               |
+ROW   |100          |{$RESOLVER.STATUS.TIMEOUT}    |5                  |
+ROW   |101          |{$RESOLVER.STATUS.TRIES}      |3                  |
 
 TABLE |hostmacro
 FIELDS|hostmacroid|hostid|macro               |value|
 ROW   |1          |10057 |{$MAX_CPU_LOAD}     |5    |
 ROW   |2          |10057 |{$MAX_RUN_PROCESSES}|30   |
-ROW   |3          |10057 |{$MAX_PROCESSES}    |300  |
+ROW   |3          |10057 |{$MAX_PROCESSES}    |1500 |
 
 TABLE |hosts_groups
 FIELDS|hostgroupid|hostid|groupid|
@@ -919,6 +963,8 @@ ROW   |50         |10050 |1      |
 ROW   |56         |10056 |1      |
 ROW   |57         |10057 |110    |
 ROW   |58         |10058 |1      |
+ROW   |998        |99980 |1      |
+ROW   |999        |99990 |1      |
 ROW   |1000       |100000|100    |
 ROW   |1001       |100001|110    |
 
@@ -1146,6 +1192,11 @@ ROW   |5680     |226          |23419 |
 ROW   |5681     |226          |23420 |
 ROW   |5682     |226          |23421 |
 ROW   |5683     |219          |23331 |
+ROW   |99980    |998          |99980 |
+ROW   |99981    |998          |99981 |
+ROW   |99982    |998          |99982 |
+ROW   |99983    |998          |99983 |
+ROW   |99990    |999          |99990 |
 ROW   |100000   |1000         |100000|
 ROW   |100001   |1000         |100001|
 ROW   |100002   |1000         |100002|
@@ -1194,23 +1245,292 @@ ROW   |10000    |100       |1    |Online                                        
 ROW   |10001    |100       |0    |Offline                                                                                                         |
 ROW   |11000    |110       |0    |Down                                                                                                            |
 ROW   |11001    |110       |1    |Up                                                                                                              |
+ROW   |11002    |110       |2    |Up-inconclusive-no-data                                                                                         |
+ROW   |11003    |110       |3    |Up-inconclusive-no-probes                                                                                       |
 ROW   |12000    |120       |-1   |Internal error                                                                                                  |
-ROW   |12001    |120       |-205 |No reply from resolver                                                                                          |
-ROW   |12002    |120       |-206 |No AD bit in the answer from resolver                                                                           |
-ROW   |12003    |120       |-200 |No reply from Name Server                                                                                       |
-ROW   |12004    |120       |-201 |Invalid reply from Name Server                                                                                  |
-ROW   |12005    |120       |-202 |No UNIX timestamp                                                                                               |
-ROW   |12006    |120       |-203 |Invalid UNIX timestamp                                                                                          |
-ROW   |12007    |120       |-204 |DNSSEC error                                                                                                    |
+ROW   |12042    |120       |-2   |DNS UDP - Expecting NOERROR RCODE but got unexpected from local resolver                                        |
+ROW   |12096    |120       |-3   |DNS TCP - Expecting NOERROR RCODE but got unexpected from local resolver                                        |
+ROW   |12001    |120       |-200 |DNS UDP - No reply from name server                                                                             |
+ROW   |12002    |120       |-201 |Invalid reply from Name Server (obsolete)                                                                       |
+ROW   |12003    |120       |-202 |No UNIX timestamp (obsolete)                                                                                    |
+ROW   |12004    |120       |-203 |Invalid UNIX timestamp (obsolete)                                                                               |
+ROW   |12005    |120       |-204 |DNSSEC error (obsolete)                                                                                         |
+ROW   |12006    |120       |-205 |No reply from resolver (obsolete)                                                                               |
+ROW   |12007    |120       |-206 |Keyset is not valid (obsolete)                                                                                  |
+ROW   |12008    |120       |-207 |DNS UDP - Expecting DNS CLASS IN but got CHAOS                                                                  |
+ROW   |12009    |120       |-208 |DNS UDP - Expecting DNS CLASS IN but got HESIOD                                                                 |
+ROW   |12010    |120       |-209 |DNS UDP - Expecting DNS CLASS IN but got something different than IN, CHAOS or HESIOD                           |
+ROW   |12011    |120       |-210 |DNS UDP - Header section incomplete                                                                             |
+ROW   |12012    |120       |-211 |DNS UDP - Question section incomplete                                                                           |
+ROW   |12013    |120       |-212 |DNS UDP - Answer section incomplete                                                                             |
+ROW   |12014    |120       |-213 |DNS UDP - Authority section incomplete                                                                          |
+ROW   |12015    |120       |-214 |DNS UDP - Additional section incomplete                                                                         |
+ROW   |12016    |120       |-215 |DNS UDP - Malformed DNS response                                                                                |
+ROW   |12017    |120       |-250 |DNS UDP - Querying for a non existent domain - AA flag not present in response                                  |
+ROW   |12018    |120       |-251 |DNS UDP - Querying for a non existent domain - Domain name being queried not present in question section        |
+-- Error code for every assigned, non private DNS RCODE (with the exception of RCODE/NXDOMAIN)
+-- as per: https://www.iana.org/assignments/dns-parameters/dns-parameters.xhtml
+ROW   |12019    |120       |-252 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got NOERROR                         |
+ROW   |12020    |120       |-253 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got FORMERR                         |
+ROW   |12021    |120       |-254 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got SERVFAIL                        |
+ROW   |12022    |120       |-255 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got NOTIMP                          |
+ROW   |12023    |120       |-256 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got REFUSED                         |
+ROW   |12024    |120       |-257 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got YXDOMAIN                        |
+ROW   |12025    |120       |-258 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got YXRRSET                         |
+ROW   |12026    |120       |-259 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got NXRRSET                         |
+ROW   |12027    |120       |-260 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got NOTAUTH                         |
+ROW   |12028    |120       |-261 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got NOTZONE                         |
+ROW   |12029    |120       |-262 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADVERS or BADSIG               |
+ROW   |12030    |120       |-263 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADKEY                          |
+ROW   |12031    |120       |-264 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADTIME                         |
+ROW   |12032    |120       |-265 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADMODE                         |
+ROW   |12033    |120       |-266 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADNAME                         |
+ROW   |12034    |120       |-267 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADALG                          |
+ROW   |12035    |120       |-268 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADTRUNC                        |
+ROW   |12036    |120       |-269 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADCOOKIE                       |
+ROW   |12037    |120       |-270 |DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got unexpected                      |
+ROW   |12038    |120       |-400 |DNS UDP - No server could be reached by local resolver                                                          |
+ROW   |12039    |120       |-401 |DNS UDP - The TLD is configured as DNSSEC-enabled, but no DNSKEY was found in the apex                          |
+ROW   |12040    |120       |-402 |DNS UDP - No AD bit from local resolver                                                                         |
+ROW   |12041    |120       |-403 |DNS UDP - Expecting NOERROR RCODE but got NXDOMAIN from local resolver                                          |
+ROW   |12043    |120       |-405 |DNS UDP - Unknown cryptographic algorithm                                                                       |
+ROW   |12044    |120       |-406 |DNS UDP - Cryptographic algorithm not implemented                                                               |
+ROW   |12045    |120       |-407 |DNS UDP - No RRSIGs where found in any section, and the TLD has the DNSSEC flag enabled                         |
+ROW   |12053    |120       |-408 |DNS UDP - Querying for a non existent domain - No NSEC/NSEC3 RRs were found in the authority section            |
+ROW   |12046    |120       |-410 |DNS UDP - The signature does not cover this RRset                                                               |
+ROW   |12047    |120       |-414 |DNS UDP - The RRSIG found is not signed by a DNSKEY from the KEYSET of the TLD                                  |
+ROW   |12048    |120       |-415 |DNS UDP - Bogus DNSSEC signature                                                                                |
+ROW   |12049    |120       |-416 |DNS UDP - DNSSEC signature has expired                                                                          |
+ROW   |12050    |120       |-417 |DNS UDP - DNSSEC signature not incepted yet                                                                     |
+ROW   |12051    |120       |-418 |DNS UDP - DNSSEC signature has expiration date earlier than inception date                                      |
+ROW   |12052    |120       |-419 |DNS UDP - Error in NSEC3 denial of existence proof                                                              |
+ROW   |12054    |120       |-422 |DNS UDP - RR not covered by the given NSEC RRs                                                                  |
+ROW   |12055    |120       |-423 |DNS UDP - Wildcard not covered by the given NSEC RRs                                                            |
+ROW   |12056    |120       |-425 |DNS UDP - The RRSIG has too few RDATA fields                                                                    |
+ROW   |12058    |120       |-427 |DNS UDP - Malformed DNSSEC response                                                                             |
+ROW   |12060    |120       |-600 |DNS TCP - Timeout reply from name server                                                                        |
+ROW   |12061    |120       |-601 |DNS TCP - Error opening connection to name server                                                               |
+ROW   |12062    |120       |-607 |DNS TCP - Expecting DNS CLASS IN but got CHAOS                                                                  |
+ROW   |12063    |120       |-608 |DNS TCP - Expecting DNS CLASS IN but got HESIOD                                                                 |
+ROW   |12064    |120       |-609 |DNS TCP - Expecting DNS CLASS IN but got something different than IN, CHAOS or HESIOD                           |
+ROW   |12065    |120       |-610 |DNS TCP - Header section incomplete                                                                             |
+ROW   |12066    |120       |-611 |DNS TCP - Question section incomplete                                                                           |
+ROW   |12067    |120       |-612 |DNS TCP - Answer section incomplete                                                                             |
+ROW   |12068    |120       |-613 |DNS TCP - Authority section incomplete                                                                          |
+ROW   |12069    |120       |-614 |DNS TCP - Additional section incomplete                                                                         |
+ROW   |12070    |120       |-615 |DNS TCP - Malformed DNS response                                                                                |
+ROW   |12071    |120       |-650 |DNS TCP - Querying for a non existent domain - AA flag not present in response                                  |
+ROW   |12072    |120       |-651 |DNS TCP - Querying for a non existent domain - Domain name being queried not present in question section        |
+-- Error code for every assigned, non private DNS RCODE (with the exception of RCODE/NXDOMAIN)
+-- as per: https://www.iana.org/assignments/dns-parameters/dns-parameters.xhtml
+ROW   |12073    |120       |-652 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got NOERROR                         |
+ROW   |12074    |120       |-653 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got FORMERR                         |
+ROW   |12075    |120       |-654 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got SERVFAIL                        |
+ROW   |12076    |120       |-655 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got NOTIMP                          |
+ROW   |12077    |120       |-656 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got REFUSED                         |
+ROW   |12078    |120       |-657 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got YXDOMAIN                        |
+ROW   |12079    |120       |-658 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got YXRRSET                         |
+ROW   |12080    |120       |-659 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got NXRRSET                         |
+ROW   |12081    |120       |-660 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got NOTAUTH                         |
+ROW   |12082    |120       |-661 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got NOTZONE                         |
+ROW   |12083    |120       |-662 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADVERS or BADSIG               |
+ROW   |12084    |120       |-663 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADKEY                          |
+ROW   |12085    |120       |-664 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADTIME                         |
+ROW   |12086    |120       |-665 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADMODE                         |
+ROW   |12087    |120       |-666 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADNAME                         |
+ROW   |12088    |120       |-667 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADALG                          |
+ROW   |12089    |120       |-668 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADTRUNC                        |
+ROW   |12090    |120       |-669 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got BADCOOKIE                       |
+ROW   |12091    |120       |-670 |DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got unexpected                      |
+ROW   |12092    |120       |-800 |DNS TCP - No server could be reached by local resolver                                                          |
+ROW   |12093    |120       |-801 |DNS TCP - The TLD is configured as DNSSEC-enabled, but no DNSKEY was found in the apex                          |
+ROW   |12094    |120       |-802 |DNS TCP - No AD bit from local resolver                                                                         |
+ROW   |12095    |120       |-803 |DNS TCP - Expecting NOERROR RCODE but got NXDOMAIN from local resolver                                          |
+ROW   |12097    |120       |-805 |DNS TCP - Unknown cryptographic algorithm                                                                       |
+ROW   |12098    |120       |-806 |DNS TCP - Cryptographic algorithm not implemented                                                               |
+ROW   |12099    |120       |-807 |DNS TCP - No RRSIGs where found in any section, and the TLD has the DNSSEC flag enabled                         |
+ROW   |12107    |120       |-808 |DNS TCP - Querying for a non existent domain - No NSEC/NSEC3 RRs were found in the authority section            |
+ROW   |12100    |120       |-810 |DNS TCP - The signature does not cover this RRset                                                               |
+ROW   |12101    |120       |-814 |DNS TCP - The RRSIG found is not signed by a DNSKEY from the KEYSET of the TLD                                  |
+ROW   |12102    |120       |-815 |DNS TCP - Bogus DNSSEC signature                                                                                |
+ROW   |12103    |120       |-816 |DNS TCP - DNSSEC signature has expired                                                                          |
+ROW   |12104    |120       |-817 |DNS TCP - DNSSEC signature not incepted yet                                                                     |
+ROW   |12105    |120       |-818 |DNS TCP - DNSSEC signature has expiration date earlier than inception date                                      |
+ROW   |12106    |120       |-819 |DNS TCP - Error in NSEC3 denial of existence proof                                                              |
+ROW   |12108    |120       |-822 |DNS TCP - RR not covered by the given NSEC RRs                                                                  |
+ROW   |12109    |120       |-823 |DNS TCP - Wildcard not covered by the given NSEC RRs                                                            |
+ROW   |12110    |120       |-825 |DNS TCP - The RRSIG has too few RDATA fields                                                                    |
+ROW   |12112    |120       |-827 |DNS TCP - Malformed DNSSEC response                                                                             |
 ROW   |13000    |130       |-1   |Internal error                                                                                                  |
-ROW   |13001    |130       |-200 |No reply from RDDS43 server                                                                                     |
+ROW   |13018    |130       |-2   |RDDS - IP addresses for the hostname are not supported by the IP versions supported by the probe node           |
+ROW   |13013    |130       |-3   |RDDS43 - Expecting NOERROR RCODE but got unexpected error when resolving hostname                               |
+ROW   |13021    |130       |-4   |RDDS80 - Expecting NOERROR RCODE but got unexpected error when resolving hostname                               |
+ROW   |13507    |135       |-5   |RDAP - Expecting NOERROR RCODE but got unexpected error when resolving hostname                                 |
+ROW   |13001    |130       |-200 |No reply from RDDS43 server (obsolete)                                                                          |
 ROW   |13002    |130       |-201 |Whois server returned no NS                                                                                     |
-ROW   |13003    |130       |-202 |No Unix timestamp                                                                                               |
-ROW   |13004    |130       |-203 |Invalid Unix timestamp                                                                                          |
-ROW   |13005    |130       |-204 |No reply from RDDS80 server                                                                                     |
-ROW   |13006    |130       |-205 |Cannot resolve a Whois host name                                                                                |
+ROW   |13003    |130       |-202 |No Unix timestamp (obsolete)                                                                                    |
+ROW   |13004    |130       |-203 |Invalid Unix timestamp (obsolete)                                                                               |
+ROW   |13005    |130       |-204 |No reply from RDDS80 server (obsolete)                                                                          |
+ROW   |13006    |130       |-205 |Cannot resolve a Whois host name (obsolete)                                                                     |
 ROW   |13007    |130       |-206 |no HTTP status code                                                                                             |
-ROW   |13008    |130       |-207 |invalid HTTP status code                                                                                        |
+ROW   |13008    |130       |-207 |invalid HTTP status code (obsolete)                                                                             |
+ROW   |13009    |130       |-222 |RDDS43 - No server could be reached by local resolver                                                           |
+ROW   |13011    |130       |-224 |RDDS43 - Expecting NOERROR RCODE but got SERVFAIL when resolving hostname                                       |
+ROW   |13012    |130       |-225 |RDDS43 - Expecting NOERROR RCODE but got NXDOMAIN when resolving hostname                                       |
+ROW   |13014    |130       |-227 |RDDS43 - Timeout                                                                                                |
+ROW   |13015    |130       |-228 |RDDS43 - Error opening connection to server                                                                     |
+ROW   |13016    |130       |-229 |RDDS43 - Empty response                                                                                         |
+ROW   |13017    |130       |-250 |RDDS80 - No server could be reached by local resolver                                                           |
+ROW   |13019    |130       |-252 |RDDS80 - Expecting NOERROR RCODE but got SERVFAIL when resolving hostname                                       |
+ROW   |13020    |130       |-253 |RDDS80 - Expecting NOERROR RCODE but got NXDOMAIN when resolving hostname                                       |
+ROW   |13022    |130       |-255 |RDDS80 - Timeout                                                                                                |
+ROW   |13023    |130       |-256 |RDDS80 - Error opening connection to server                                                                     |
+ROW   |13024    |130       |-257 |RDDS80 - Error in HTTP protocol                                                                                 |
+ROW   |13025    |130       |-258 |RDDS80 - Error in HTTPS protocol                                                                                |
+ROW   |13576    |130       |-259 |RDDS80 - Maximum HTTP redirects were hit while trying to connect to RDDS server                                 |
+-- Error code for every assigned HTTP status code (with the exception of HTTP/200)
+-- as per: http://www.iana.org/assignments/http-status-codes/http-status-codes.xhtml
+ROW   |13026    |130       |-300 |RDDS80 - Expecting HTTP status code 200 but got 100                                                             |
+ROW   |13027    |130       |-301 |RDDS80 - Expecting HTTP status code 200 but got 101                                                             |
+ROW   |13028    |130       |-302 |RDDS80 - Expecting HTTP status code 200 but got 102                                                             |
+ROW   |13029    |130       |-303 |RDDS80 - Expecting HTTP status code 200 but got 103                                                             |
+ROW   |13030    |130       |-304 |RDDS80 - Expecting HTTP status code 200 but got 201                                                             |
+ROW   |13031    |130       |-305 |RDDS80 - Expecting HTTP status code 200 but got 202                                                             |
+ROW   |13032    |130       |-306 |RDDS80 - Expecting HTTP status code 200 but got 203                                                             |
+ROW   |13033    |130       |-307 |RDDS80 - Expecting HTTP status code 200 but got 204                                                             |
+ROW   |13034    |130       |-308 |RDDS80 - Expecting HTTP status code 200 but got 205                                                             |
+ROW   |13035    |130       |-309 |RDDS80 - Expecting HTTP status code 200 but got 206                                                             |
+ROW   |13036    |130       |-310 |RDDS80 - Expecting HTTP status code 200 but got 207                                                             |
+ROW   |13037    |130       |-311 |RDDS80 - Expecting HTTP status code 200 but got 208                                                             |
+ROW   |13038    |130       |-312 |RDDS80 - Expecting HTTP status code 200 but got 226                                                             |
+ROW   |13039    |130       |-313 |RDDS80 - Expecting HTTP status code 200 but got 300                                                             |
+-- 17.10.2018: 301, 302 and 303 were obsoleted because we follow redirects
+--ROW |13040    |130       |-314 |RDDS80 - Expecting HTTP status code 200 but got 301                                                             |
+--ROW |13041    |130       |-315 |RDDS80 - Expecting HTTP status code 200 but got 302                                                             |
+--ROW |13042    |130       |-316 |RDDS80 - Expecting HTTP status code 200 but got 303                                                             |
+ROW   |13043    |130       |-317 |RDDS80 - Expecting HTTP status code 200 but got 304                                                             |
+ROW   |13044    |130       |-318 |RDDS80 - Expecting HTTP status code 200 but got 305                                                             |
+ROW   |13045    |130       |-319 |RDDS80 - Expecting HTTP status code 200 but got 306                                                             |
+ROW   |13046    |130       |-320 |RDDS80 - Expecting HTTP status code 200 but got 307                                                             |
+ROW   |13047    |130       |-321 |RDDS80 - Expecting HTTP status code 200 but got 308                                                             |
+ROW   |13048    |130       |-322 |RDDS80 - Expecting HTTP status code 200 but got 400                                                             |
+ROW   |13049    |130       |-323 |RDDS80 - Expecting HTTP status code 200 but got 401                                                             |
+ROW   |13050    |130       |-324 |RDDS80 - Expecting HTTP status code 200 but got 402                                                             |
+ROW   |13051    |130       |-325 |RDDS80 - Expecting HTTP status code 200 but got 403                                                             |
+ROW   |13052    |130       |-326 |RDDS80 - Expecting HTTP status code 200 but got 404                                                             |
+ROW   |13053    |130       |-327 |RDDS80 - Expecting HTTP status code 200 but got 405                                                             |
+ROW   |13054    |130       |-328 |RDDS80 - Expecting HTTP status code 200 but got 406                                                             |
+ROW   |13055    |130       |-329 |RDDS80 - Expecting HTTP status code 200 but got 407                                                             |
+ROW   |13056    |130       |-330 |RDDS80 - Expecting HTTP status code 200 but got 408                                                             |
+ROW   |13057    |130       |-331 |RDDS80 - Expecting HTTP status code 200 but got 409                                                             |
+ROW   |13058    |130       |-332 |RDDS80 - Expecting HTTP status code 200 but got 410                                                             |
+ROW   |13059    |130       |-333 |RDDS80 - Expecting HTTP status code 200 but got 411                                                             |
+ROW   |13060    |130       |-334 |RDDS80 - Expecting HTTP status code 200 but got 412                                                             |
+ROW   |13061    |130       |-335 |RDDS80 - Expecting HTTP status code 200 but got 413                                                             |
+ROW   |13062    |130       |-336 |RDDS80 - Expecting HTTP status code 200 but got 414                                                             |
+ROW   |13063    |130       |-337 |RDDS80 - Expecting HTTP status code 200 but got 415                                                             |
+ROW   |13064    |130       |-338 |RDDS80 - Expecting HTTP status code 200 but got 416                                                             |
+ROW   |13065    |130       |-339 |RDDS80 - Expecting HTTP status code 200 but got 417                                                             |
+ROW   |13066    |130       |-340 |RDDS80 - Expecting HTTP status code 200 but got 421                                                             |
+ROW   |13067    |130       |-341 |RDDS80 - Expecting HTTP status code 200 but got 422                                                             |
+ROW   |13068    |130       |-342 |RDDS80 - Expecting HTTP status code 200 but got 423                                                             |
+ROW   |13069    |130       |-343 |RDDS80 - Expecting HTTP status code 200 but got 424                                                             |
+ROW   |13070    |130       |-344 |RDDS80 - Expecting HTTP status code 200 but got 426                                                             |
+ROW   |13071    |130       |-345 |RDDS80 - Expecting HTTP status code 200 but got 428                                                             |
+ROW   |13072    |130       |-346 |RDDS80 - Expecting HTTP status code 200 but got 429                                                             |
+ROW   |13073    |130       |-347 |RDDS80 - Expecting HTTP status code 200 but got 431                                                             |
+ROW   |13074    |130       |-348 |RDDS80 - Expecting HTTP status code 200 but got 451                                                             |
+ROW   |13075    |130       |-349 |RDDS80 - Expecting HTTP status code 200 but got 500                                                             |
+ROW   |13076    |130       |-350 |RDDS80 - Expecting HTTP status code 200 but got 501                                                             |
+ROW   |13077    |130       |-351 |RDDS80 - Expecting HTTP status code 200 but got 502                                                             |
+ROW   |13078    |130       |-352 |RDDS80 - Expecting HTTP status code 200 but got 503                                                             |
+ROW   |13079    |130       |-353 |RDDS80 - Expecting HTTP status code 200 but got 504                                                             |
+ROW   |13080    |130       |-354 |RDDS80 - Expecting HTTP status code 200 but got 505                                                             |
+ROW   |13081    |130       |-355 |RDDS80 - Expecting HTTP status code 200 but got 506                                                             |
+ROW   |13082    |130       |-356 |RDDS80 - Expecting HTTP status code 200 but got 507                                                             |
+ROW   |13083    |130       |-357 |RDDS80 - Expecting HTTP status code 200 but got 508                                                             |
+ROW   |13084    |130       |-358 |RDDS80 - Expecting HTTP status code 200 but got 510                                                             |
+ROW   |13085    |130       |-359 |RDDS80 - Expecting HTTP status code 200 but got 511                                                             |
+ROW   |13086    |130       |-360 |RDDS80 - Expecting HTTP status code 200 but got unexpected status code                                          |
+ROW   |13500    |135       |-1   |Internal error                                                                                                  |
+ROW   |13578    |135       |-2   |RDAP - IP addresses for the hostname are not supported by the IP versions supported by the probe node           |
+ROW   |13501    |135       |-390 |The TLD is not listed in the Bootstrap Service Registry for Domain Name Space                                   |
+ROW   |13502    |135       |-391 |The RDAP base URL obtained from Bootstrap Service Registry for Domain Name Space does not use HTTPS             |
+ROW   |13503    |135       |-400 |RDAP - No server could be reached by local resolver                                                             |
+ROW   |13505    |135       |-402 |RDAP - Expecting NOERROR RCODE but got SERVFAIL when resolving hostname                                         |
+ROW   |13506    |135       |-403 |RDAP - Expecting NOERROR RCODE but got NXDOMAIN when resolving hostname                                         |
+ROW   |13508    |135       |-405 |RDAP - Timeout                                                                                                  |
+ROW   |13509    |135       |-406 |RDAP - Error opening connection to server                                                                       |
+ROW   |13510    |135       |-407 |RDAP - Invalid JSON format in response                                                                          |
+ROW   |13511    |135       |-408 |RDAP - ldhName member not found in response                                                                     |
+ROW   |13512    |135       |-409 |RDAP - ldhName member doesn't match query in response                                                           |
+ROW   |13513    |135       |-413 |RDAP - Error in HTTP protocol                                                                                   |
+ROW   |13514    |135       |-414 |RDAP - Error in HTTPS protocol                                                                                  |
+ROW   |13577    |135       |-415 |RDAP - Maximum HTTP redirects were hit while trying to connect to RDAP server                                   |
+-- Error code for every assigned HTTP status code (with the exception of HTTP/200)
+-- as per: http://www.iana.org/assignments/http-status-codes/http-status-codes.xhtml
+ROW   |13515    |135       |-500 |RDAP - Expecting HTTP status code 200 but got 100                                                               |
+ROW   |13516    |135       |-501 |RDAP - Expecting HTTP status code 200 but got 101                                                               |
+ROW   |13517    |135       |-502 |RDAP - Expecting HTTP status code 200 but got 102                                                               |
+ROW   |13518    |135       |-503 |RDAP - Expecting HTTP status code 200 but got 103                                                               |
+ROW   |13519    |135       |-504 |RDAP - Expecting HTTP status code 200 but got 201                                                               |
+ROW   |13520    |135       |-505 |RDAP - Expecting HTTP status code 200 but got 202                                                               |
+ROW   |13521    |135       |-506 |RDAP - Expecting HTTP status code 200 but got 203                                                               |
+ROW   |13522    |135       |-507 |RDAP - Expecting HTTP status code 200 but got 204                                                               |
+ROW   |13523    |135       |-508 |RDAP - Expecting HTTP status code 200 but got 205                                                               |
+ROW   |13524    |135       |-509 |RDAP - Expecting HTTP status code 200 but got 206                                                               |
+ROW   |13525    |135       |-510 |RDAP - Expecting HTTP status code 200 but got 207                                                               |
+ROW   |13526    |135       |-511 |RDAP - Expecting HTTP status code 200 but got 208                                                               |
+ROW   |13527    |135       |-512 |RDAP - Expecting HTTP status code 200 but got 226                                                               |
+ROW   |13528    |135       |-513 |RDAP - Expecting HTTP status code 200 but got 300                                                               |
+-- 17.10.2018: 301, 302 and 303 were obsoleted because we follow redirects
+--ROW |13529    |135       |-514 |RDAP - Expecting HTTP status code 200 but got 301                                                               |
+--ROW |13530    |135       |-515 |RDAP - Expecting HTTP status code 200 but got 302                                                               |
+--ROW |13531    |135       |-516 |RDAP - Expecting HTTP status code 200 but got 303                                                               |
+ROW   |13532    |135       |-517 |RDAP - Expecting HTTP status code 200 but got 304                                                               |
+ROW   |13533    |135       |-518 |RDAP - Expecting HTTP status code 200 but got 305                                                               |
+ROW   |13534    |135       |-519 |RDAP - Expecting HTTP status code 200 but got 306                                                               |
+ROW   |13535    |135       |-520 |RDAP - Expecting HTTP status code 200 but got 307                                                               |
+ROW   |13536    |135       |-521 |RDAP - Expecting HTTP status code 200 but got 308                                                               |
+ROW   |13537    |135       |-522 |RDAP - Expecting HTTP status code 200 but got 400                                                               |
+ROW   |13538    |135       |-523 |RDAP - Expecting HTTP status code 200 but got 401                                                               |
+ROW   |13539    |135       |-524 |RDAP - Expecting HTTP status code 200 but got 402                                                               |
+ROW   |13540    |135       |-525 |RDAP - Expecting HTTP status code 200 but got 403                                                               |
+ROW   |13541    |135       |-526 |RDAP - Expecting HTTP status code 200 but got 404                                                               |
+ROW   |13542    |135       |-527 |RDAP - Expecting HTTP status code 200 but got 405                                                               |
+ROW   |13543    |135       |-528 |RDAP - Expecting HTTP status code 200 but got 406                                                               |
+ROW   |13544    |135       |-529 |RDAP - Expecting HTTP status code 200 but got 407                                                               |
+ROW   |13545    |135       |-530 |RDAP - Expecting HTTP status code 200 but got 408                                                               |
+ROW   |13546    |135       |-531 |RDAP - Expecting HTTP status code 200 but got 409                                                               |
+ROW   |13547    |135       |-532 |RDAP - Expecting HTTP status code 200 but got 410                                                               |
+ROW   |13548    |135       |-533 |RDAP - Expecting HTTP status code 200 but got 411                                                               |
+ROW   |13549    |135       |-534 |RDAP - Expecting HTTP status code 200 but got 412                                                               |
+ROW   |13550    |135       |-535 |RDAP - Expecting HTTP status code 200 but got 413                                                               |
+ROW   |13551    |135       |-536 |RDAP - Expecting HTTP status code 200 but got 414                                                               |
+ROW   |13552    |135       |-537 |RDAP - Expecting HTTP status code 200 but got 415                                                               |
+ROW   |13553    |135       |-538 |RDAP - Expecting HTTP status code 200 but got 416                                                               |
+ROW   |13554    |135       |-539 |RDAP - Expecting HTTP status code 200 but got 417                                                               |
+ROW   |13555    |135       |-540 |RDAP - Expecting HTTP status code 200 but got 421                                                               |
+ROW   |13556    |135       |-541 |RDAP - Expecting HTTP status code 200 but got 422                                                               |
+ROW   |13557    |135       |-542 |RDAP - Expecting HTTP status code 200 but got 423                                                               |
+ROW   |13558    |135       |-543 |RDAP - Expecting HTTP status code 200 but got 424                                                               |
+ROW   |13559    |135       |-544 |RDAP - Expecting HTTP status code 200 but got 426                                                               |
+ROW   |13560    |135       |-545 |RDAP - Expecting HTTP status code 200 but got 428                                                               |
+ROW   |13561    |135       |-546 |RDAP - Expecting HTTP status code 200 but got 429                                                               |
+ROW   |13562    |135       |-547 |RDAP - Expecting HTTP status code 200 but got 431                                                               |
+ROW   |13563    |135       |-548 |RDAP - Expecting HTTP status code 200 but got 451                                                               |
+ROW   |13564    |135       |-549 |RDAP - Expecting HTTP status code 200 but got 500                                                               |
+ROW   |13565    |135       |-550 |RDAP - Expecting HTTP status code 200 but got 501                                                               |
+ROW   |13566    |135       |-551 |RDAP - Expecting HTTP status code 200 but got 502                                                               |
+ROW   |13567    |135       |-552 |RDAP - Expecting HTTP status code 200 but got 503                                                               |
+ROW   |13568    |135       |-553 |RDAP - Expecting HTTP status code 200 but got 504                                                               |
+ROW   |13569    |135       |-554 |RDAP - Expecting HTTP status code 200 but got 505                                                               |
+ROW   |13570    |135       |-555 |RDAP - Expecting HTTP status code 200 but got 506                                                               |
+ROW   |13571    |135       |-556 |RDAP - Expecting HTTP status code 200 but got 507                                                               |
+ROW   |13572    |135       |-557 |RDAP - Expecting HTTP status code 200 but got 508                                                               |
+ROW   |13573    |135       |-558 |RDAP - Expecting HTTP status code 200 but got 510                                                               |
+ROW   |13574    |135       |-559 |RDAP - Expecting HTTP status code 200 but got 511                                                               |
+ROW   |13575    |135       |-560 |RDAP - Expecting HTTP status code 200 but got unexpected status code                                            |
 ROW   |14000    |140       |0    |Down                                                                                                            |
 ROW   |14001    |140       |1    |Up                                                                                                              |
 ROW   |14002    |140       |2    |RDDS43 only                                                                                                     |
@@ -1227,6 +1547,7 @@ ROW   |15008    |150       |-208 |Invalid reply to UPDATE command               
 ROW   |15009    |150       |-209 |INFO command timeout                                                                                            |
 ROW   |15010    |150       |-210 |Invalid reply to INFO command                                                                                   |
 ROW   |15011    |150       |-1   |Internal error                                                                                                  |
+ROW   |15013    |150       |-2   |EPP - IP addresses for the hostname are not supported by the IP versions supported by the probe node            |
 ROW   |15012    |150       |-211 |Server certificate validation failed                                                                            |
 ROW   |16000    |160       |0    |Down                                                                                                            |
 ROW   |16001    |160       |1    |Up                                                                                                              |
@@ -1338,6 +1659,10 @@ ROW   |3 |Down     |
 ROW   |4 |No result|
 ROW   |5 |Online   |
 ROW   |6 |Offline  |
+ROW   |7 |Activated|
+ROW   |8 |Deactivated|
+ROW   |9 |Up-inconclusive-no-data  |
+ROW   |10|Up-inconclusive-no-probes|
 
 TABLE |rsm_test_type
 FIELDS|id|name        |
@@ -1347,6 +1672,7 @@ ROW   |3 |rdds80      |
 ROW   |4 |eppsession  |
 ROW   |5 |eppinfo     |
 ROW   |6 |epptransform|
+ROW   |7 |rdap        |
 
 TABLE |rsm_tld_type
 FIELDS|id|name    |

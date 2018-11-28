@@ -81,7 +81,7 @@ $headers = [
 	_('Incident ID'),
 	_('Status'),
 	_('Start time'),
-	_('End Time'),
+	_('End time'),
 	_('Failed tests within incident'),
 	_('Total number of tests')
 ];
@@ -105,8 +105,15 @@ if (isset($this->data['tld'])) {
 		$dnsTable = new CTableInfo($noData);
 		$dnsTable->setHeader($headers);
 
+		$delayTime = $this->data['dns']['delay'];
+
 		foreach ($this->data['dns']['events'] as $event) {
 			$incidentStatus = getIncidentStatus($event['false_positive'], $event['status']);
+
+			$startTime = date(DATE_TIME_FORMAT_SECONDS, $event['startTime'] - $event['startTime'] % $delayTime);
+			$endTime = array_key_exists('endTime', $event)
+				? date(DATE_TIME_FORMAT_SECONDS, $event['endTime'] - $event['endTime'] % $delayTime + $delayTime - 1)
+				: '-';
 
 			$row = [
 				new CLink(
@@ -117,8 +124,8 @@ if (isset($this->data['tld'])) {
 						'&availItemId='.$this->data['dns']['availItemId'].'&filter_set=1&sid='.$this->data['sid'].'&set_sid=1'
 				),
 				$incidentStatus,
-				date(DATE_TIME_FORMAT_SECONDS, $event['startTime']),
-				isset($event['endTime']) ? date(DATE_TIME_FORMAT_SECONDS, $event['endTime']) : '-',
+				$startTime,
+				$endTime,
 				$event['incidentFailedTests'],
 				$event['incidentTotalTests']
 			];
@@ -140,6 +147,7 @@ if (isset($this->data['tld'])) {
 			$testsDown,
 			SPACE,
 			_n('test', 'tests', $this->data['dns']['totalTests']),
+			SPACE,
 			'('._s(
 				'%1$s in incidents, %2$s outside incidents',
 				$this->data['dns']['inIncident'],
@@ -181,8 +189,15 @@ if (isset($this->data['tld'])) {
 		$dnssecTable = new CTableInfo($noData);
 		$dnssecTable->setHeader($headers);
 
+		$delayTime = $this->data['dnssec']['delay'];
+
 		foreach ($this->data['dnssec']['events'] as $event) {
 			$incidentStatus = getIncidentStatus($event['false_positive'], $event['status']);
+
+			$startTime = date(DATE_TIME_FORMAT_SECONDS, $event['startTime'] - $event['startTime'] % $delayTime);
+			$endTime = array_key_exists('endTime', $event)
+				? date(DATE_TIME_FORMAT_SECONDS, $event['endTime'] - $event['endTime'] % $delayTime + $delayTime - 1)
+				: '-';
 
 			$row = [
 				new CLink(
@@ -193,8 +208,8 @@ if (isset($this->data['tld'])) {
 						'&availItemId='.$this->data['dnssec']['availItemId'].'&filter_set=1&sid='.$this->data['sid'].'&set_sid=1'
 				),
 				$incidentStatus,
-				date(DATE_TIME_FORMAT_SECONDS, $event['startTime']),
-				isset($event['endTime']) ? date(DATE_TIME_FORMAT_SECONDS, $event['endTime']) : '-',
+				$startTime,
+				$endTime,
 				$event['incidentFailedTests'],
 				$event['incidentTotalTests']
 			];
@@ -216,6 +231,7 @@ if (isset($this->data['tld'])) {
 			$testsDown,
 			SPACE,
 			_n('test', 'tests', $this->data['dnssec']['totalTests']),
+			SPACE,
 			'('._s(
 				'%1$s in incidents, %2$s outside incidents',
 				$this->data['dnssec']['inIncident'],
@@ -257,8 +273,15 @@ if (isset($this->data['tld'])) {
 		$rddsTable = new CTableInfo($noData);
 		$rddsTable->setHeader($headers);
 
+		$delayTime = $this->data['rdds']['delay'];
+
 		foreach ($this->data['rdds']['events'] as $event) {
 			$incidentStatus = getIncidentStatus($event['false_positive'], $event['status']);
+
+			$startTime = date(DATE_TIME_FORMAT_SECONDS, $event['startTime'] - $event['startTime'] % $delayTime);
+			$endTime = array_key_exists('endTime', $event)
+				? date(DATE_TIME_FORMAT_SECONDS, $event['endTime'] - $event['endTime'] % $delayTime + $delayTime - 1)
+				: '-';
 
 			$row = [
 				new CLink(
@@ -269,8 +292,8 @@ if (isset($this->data['tld'])) {
 						'&availItemId='.$this->data['rdds']['availItemId'].'&filter_set=1&sid='.$this->data['sid'].'&set_sid=1'
 				),
 				$incidentStatus,
-				date(DATE_TIME_FORMAT_SECONDS, $event['startTime']),
-				isset($event['endTime']) ? date(DATE_TIME_FORMAT_SECONDS, $event['endTime']) : '-',
+				$startTime,
+				$endTime,
 				$event['incidentFailedTests'],
 				$event['incidentTotalTests']
 			];
@@ -292,6 +315,7 @@ if (isset($this->data['tld'])) {
 			$testsDown,
 			SPACE,
 			_n('test', 'tests', $this->data['rdds']['totalTests']),
+			SPACE,
 			'('._s(
 				'%1$s in incidents, %2$s outside incidents',
 				$this->data['rdds']['inIncident'],
@@ -333,8 +357,15 @@ if (isset($this->data['tld'])) {
 		$eppTable = new CTableInfo($noData);
 		$eppTable->setHeader($headers);
 
+		$delayTime = $this->data['epp']['delay'];
+
 		foreach ($this->data['epp']['events'] as $event) {
 			$incidentStatus = getIncidentStatus($event['false_positive'], $event['status']);
+
+			$startTime = date(DATE_TIME_FORMAT_SECONDS, $event['startTime'] - $event['startTime'] % $delayTime);
+			$endTime = array_key_exists('endTime', $event)
+				? date(DATE_TIME_FORMAT_SECONDS, $event['endTime'] - $event['endTime'] % $delayTime + $delayTime - 1)
+				: '-';
 
 			$row = [
 				new CLink(
@@ -345,8 +376,8 @@ if (isset($this->data['tld'])) {
 						'&availItemId='.$this->data['epp']['availItemId'].'&filter_set=1&sid='.$this->data['sid'].'&set_sid=1'
 				),
 				$incidentStatus,
-				date(DATE_TIME_FORMAT_SECONDS, $event['startTime']),
-				isset($event['endTime']) ? date(DATE_TIME_FORMAT_SECONDS, $event['endTime']) : '-',
+				$startTime,
+				$endTime,
 				$event['incidentFailedTests'],
 				$event['incidentTotalTests']
 			];
@@ -368,6 +399,7 @@ if (isset($this->data['tld'])) {
 			$testsDown,
 			SPACE,
 			_n('test', 'tests', $this->data['epp']['totalTests']),
+			SPACE,
 			'('._s(
 				'%1$s in incidents, %2$s outside incidents',
 				$this->data['epp']['inIncident'],

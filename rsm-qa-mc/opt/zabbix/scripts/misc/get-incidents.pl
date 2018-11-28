@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl
 
 BEGIN
 {
@@ -9,6 +9,8 @@ use lib $MYDIR;
 use lib $MYDIR2;
 
 use strict;
+use warnings;
+
 use RSM;
 use RSMSLV;
 
@@ -30,7 +32,13 @@ db_connect();
 my $from = getopt('from');
 my $till = getopt('till');
 
-my $tlds_ref = opt('tld') ? [ getopt('tld') ] : get_tlds();
+my $tlds_ref = opt('tld') ? [ getopt('tld') ] : get_tlds(undef, $till);
+
+my $delays = {
+	'dns'	=> get_dns_udp_delay(),
+	'rdds'	=> get_rdds_delay(),
+	'epp'	=> get_epp_delay()
+};
 
 foreach (@$tlds_ref)
 {
@@ -38,12 +46,12 @@ foreach (@$tlds_ref)
 
 	foreach my $service ('dns', 'rdds', 'epp')
 	{
-		next unless (SUCCESS == tld_service_enabled($tld, $service));
+		next unless (tld_service_enabled($tld, $service, $till));
 
 		my $key = "rsm.slv.$service.avail";
 
 		my $itemid = get_itemid_by_host($tld, $key);
-		my $incidents = get_incidents($itemid, $from, $till);
+		my $incidents = get_incidents($itemid, $delays->{$service}, $from, $till);
 
 		foreach (@$incidents)
 		{
@@ -51,8 +59,6 @@ foreach (@$tlds_ref)
 			my $start = $_->{'start'};
 			my $end = $_->{'end'};
 			my $false_positive = $_->{'false_positive'};
-
-			my $time_condition = defined($end) ? "clock between $start and $end" : "clock>=$start";
 
 			my $rows_ref = db_select(
 				"select count(*)".

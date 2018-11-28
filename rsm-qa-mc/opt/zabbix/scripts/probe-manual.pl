@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl
 
 BEGIN
 {
@@ -8,15 +8,14 @@ use lib $MYDIR;
 
 use strict;
 use warnings;
+
 use RSM;
+use RSMSLV;
 use TLD_constants qw(:api);
 use Data::Dumper;
 use Pusher qw(push_to_trapper);
-use RSMSLV;
 
 # todo phase 1: use these 3 from RSMSLV.pm, e. g. create function there that will do what's done in this script
-use constant ONLINE => 1;
-use constant OFFLINE => 0;
 use constant PROBE_KEY_MANUAL => 'rsm.probe.status[manual]';
 
 parse_opts('server-id=s', 'probe=s', 'set=n');
@@ -38,11 +37,11 @@ set_slv_config($config);
 
 my $server_id = getopt('server-id');
 
-$server_key = get_rsm_server_key($server_id);
+$server_key = defined($server_id) ? get_rsm_server_key($server_id) : get_rsm_local_key($config);
 
 my $section = $config->{$server_key};
 
-fail("Error: server-id \"$server_id\" not found in configuration file") if (!defined($section));
+fail("server-id \"$server_id\" not found in configuration file") unless (defined($section));
 
 db_connect($server_key);
 
@@ -50,7 +49,7 @@ my $probe = getopt('probe');
 
 my $rows_ref = db_select("select hostid from hosts where host='$probe' and status=".HOST_STATUS_MONITORED);
 
-fail("Error: Probe \"$probe\" not found on Server with ID $server_id.") if (scalar(@{$rows_ref}) != 1);
+fail("Error: Probe \"$probe\" not found.") if (scalar(@{$rows_ref}) != 1);
 
 my $hostid = $rows_ref->[0]->[0];
 
@@ -114,7 +113,7 @@ db_disconnect();
 
 sub __validate_input
 {
-	if (!opt('server-id') || !opt('probe'))
+	if (!opt('probe'))
 	{
 		usage();
 	}
@@ -157,7 +156,7 @@ probe-manual.pl - set Probe status to Online/Offline
 
 =head1 SYNOPSIS
 
-probe-manual.pl --server-id <num> --probe <name> [--set <0/1>] [--debug] [--help]
+probe-manual.pl [--server-id <num>] --probe <name> [--set <0/1>] [--debug] [--help]
 
 =head1 OPTIONS
 

@@ -16,6 +16,7 @@ void	exit_usage(const char *progname)
 	fprintf(stderr, "       -r <res_ip>       IP address of resolver to use (default: %s)\n", DEFAULT_RES_IP);
 	fprintf(stderr, "       -p <testprefix>   domain testprefix to use (default: %s)\n", DEFAULT_TESTPREFIX);
 	fprintf(stderr, "       -d                enable DNSSEC\n");
+	fprintf(stderr, "       -c                use TCP instead of UDP\n");
 	fprintf(stderr, "       -g                ignore errors, try to finish the test\n");
 	fprintf(stderr, "       -f                log packets to files (%s, %s) instead of stdout\n", LOG_FILE1, LOG_FILE2);
 	fprintf(stderr, "       -h                show this message and quit\n");
@@ -25,16 +26,16 @@ void	exit_usage(const char *progname)
 int	main(int argc, char *argv[])
 {
 	char		err[256], *res_ip = DEFAULT_RES_IP, *tld = NULL, *ns = NULL, *ns_ip = NULL, proto = ZBX_RSM_UDP,
-			ipv4_enabled = 1, ipv6_enabled = 1, *testprefix = DEFAULT_TESTPREFIX, dnssec_enabled = 0, ignore_err = 0,
-			log_to_file = 0;
-	int		c, index, res_ec, rtt;
+			ipv4_enabled = 1, ipv6_enabled = 1, *testprefix = DEFAULT_TESTPREFIX, dnssec_enabled = 0,
+			ignore_err = 0, log_to_file = 0;
+	int		c, index, rtt;
 	ldns_resolver	*res = NULL;
 	ldns_rr_list	*keys = NULL;
 	FILE		*log_fd = stdout;
 
 	opterr = 0;
 
-	while ((c = getopt (argc, argv, "t:n:i:r:p:dgfh")) != -1)
+	while ((c = getopt (argc, argv, "t:n:i:r:p:dcgfh")) != -1)
 	{
 		switch (c)
 		{
@@ -55,6 +56,9 @@ int	main(int argc, char *argv[])
 				break;
 			case 'd':
 				dnssec_enabled = 1;
+				break;
+			case 'c':
+				proto = ZBX_RSM_TCP;
 				break;
 			case 'g':
 				ignore_err = 1;
@@ -86,8 +90,8 @@ int	main(int argc, char *argv[])
 	zbx_rsm_infof(log_fd, "tld:%s, ns:%s, ip:%s, res:%s, testprefix:%s", tld, ns, ns_ip, res_ip, testprefix);
 
 	/* create resolver */
-	if (SUCCEED != zbx_create_resolver(&res, "resolver", res_ip, proto, ipv4_enabled, ipv6_enabled, log_fd,
-			err, sizeof(err)))
+	if (SUCCEED != zbx_create_resolver(&res, "resolver", res_ip, proto, ipv4_enabled, ipv6_enabled, dnssec_enabled,
+			log_fd, err, sizeof(err)))
 	{
 		zbx_rsm_errf(stderr, "cannot create resolver: %s", err);
 		goto out;
@@ -95,6 +99,8 @@ int	main(int argc, char *argv[])
 
 	if (0 != dnssec_enabled)
 	{
+		zbx_dnskeys_error_t	dnskeys_ec;
+
 		if (log_to_file != 0)
 		{
 			if (NULL == (log_fd = fopen(LOG_FILE1, "w")))
@@ -104,9 +110,9 @@ int	main(int argc, char *argv[])
 			}
 		}
 
-		if (SUCCEED != zbx_get_dnskeys(res, tld, res_ip, &keys, log_fd, &res_ec, err, sizeof(err)))
+		if (SUCCEED != zbx_get_dnskeys(res, tld, res_ip, &keys, log_fd, &dnskeys_ec, err, sizeof(err)))
 		{
-			zbx_rsm_err(stderr, err);
+			zbx_rsm_errf(stderr, "%s (error=%d)", err, DNS[DNS_PROTO(res)].dnskeys_error(dnskeys_ec));
 			if (0 == ignore_err)
 				goto out;
 		}

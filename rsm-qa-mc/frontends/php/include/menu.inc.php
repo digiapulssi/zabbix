@@ -146,7 +146,8 @@ function zbx_construct_menu(&$main_menu, &$sub_menus, &$page, $action = null) {
 						'rsm.incidentdetails.php',
 						'rsm.tests.php',
 						'rsm.particulartests.php',
-						'rsm.particularproxys.php'
+						'rsm.particularproxys.php',
+						'rsm.aggregatedetails.php'
 					)
 				),
 				array(

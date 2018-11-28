@@ -256,7 +256,7 @@ if ($host || $data['filter_search']) {
 					' AND i.hostid = '.zbx_dbstr($data['tld']['hostid'])
 			);
 
-			$history_union = [];
+			$itemids = [];
 			while ($item = DBfetch($db_items)) {
 				$items[$item['itemid']] = [
 					'itemid' => $item['itemid'],
@@ -266,21 +266,19 @@ if ($host || $data['filter_search']) {
 					'lastclock' => null
 				];
 
-				$history_union[] = 'SELECT itemid, value, clock'.
-					' FROM history'.
-					' WHERE itemid = '.$item['itemid'].
-						' AND clock = (SELECT MAX(clock) FROM history WHERE itemid = '.$item['itemid'].')';
+				$itemids[] = $item['itemid'];
 			}
 
-			if ($history_union) {
-				$db_histories = DBselect(
+			if ($itemids) {
+				$db_lastvalues = DBselect(
 					'SELECT itemid, value, clock'.
-					' FROM ('.implode(' UNION ', $history_union).') result'
+					' FROM lastvalue'.
+					' WHERE '.dbConditionString('itemid', $itemids)
 				);
 
-				while ($history = DBfetch($db_histories)) {
-					$items[$history['itemid']]['lastvalue'] = $history['value'];
-					$items[$history['itemid']]['lastclock'] = $history['clock'];
+				while ($lastvalue = DBfetch($db_lastvalues)) {
+					$items[$lastvalue['itemid']]['lastvalue'] = $lastvalue['value'];
+					$items[$lastvalue['itemid']]['lastclock'] = $lastvalue['clock'];
 				}
 			}
 
@@ -402,7 +400,7 @@ if ($host || $data['filter_search']) {
 						'SELECT e.eventid,e.value'.
 						' FROM events e'.
 						' WHERE e.objectid='.$triggerId.
-							' AND e.clock>'.$filterTimeFrom.
+							' AND e.clock<'.$filterTimeFrom.
 							' AND e.object='.EVENT_OBJECT_TRIGGER.
 							' AND source='.EVENT_SOURCE_TRIGGERS.
 						' ORDER BY e.clock DESC',

@@ -40,7 +40,8 @@ our %CATALOGS = (
 	ID_SERVICE_CATEGORY() => 'serviceCategory.csv',
 	ID_TLD_TYPE() => 'tldTypes.csv',
 	ID_STATUS_MAP() => 'statusMaps.csv',
-	ID_IP_VERSION() => 'ipVersions.csv');
+	ID_IP_VERSION() => 'ipVersions.csv'
+);
 
 our %DATAFILES = (
 	DATA_TEST() => 'tests.csv',
@@ -49,16 +50,19 @@ our %DATAFILES = (
 	DATA_INCIDENT() => 'incidents.csv',
 	DATA_INCIDENT_END() => 'incidentsEndTime.csv',
 	DATA_FALSE_POSITIVE() => 'falsePositiveChanges.csv',
-	DATA_PROBE_CHANGES() => 'probeChanges.csv');
+	DATA_PROBE_CHANGES() => 'probeChanges.csv'
+);
 
 use base 'Exporter';
 
-our @EXPORT = qw(ID_PROBE ID_TLD ID_NS_NAME ID_NS_IP ID_TRANSPORT_PROTOCOL ID_TEST_TYPE ID_SERVICE_CATEGORY
+our @EXPORT = qw(
+		ID_PROBE ID_TLD ID_NS_NAME ID_NS_IP ID_TRANSPORT_PROTOCOL ID_TEST_TYPE ID_SERVICE_CATEGORY
 		ID_TLD_TYPE ID_STATUS_MAP ID_IP_VERSION DATA_TEST DATA_NSTEST DATA_CYCLE DATA_INCIDENT DATA_INCIDENT_END
 		DATA_FALSE_POSITIVE DATA_PROBE_CHANGES
 		%CATALOGS %DATAFILES
 		dw_csv_init dw_append_csv dw_load_ids_from_db dw_get_id dw_get_name dw_write_csv_files
-		dw_write_csv_catalogs dw_delete_csvs dw_get_cycle_id dw_translate_cycle_id dw_error dw_set_date);
+		dw_write_csv_catalogs dw_delete_csvs dw_get_cycle_id dw_translate_cycle_id dw_set_date
+);
 
 my %_MAX_IDS = (
 	ID_PROBE() => 32767,
@@ -70,8 +74,10 @@ my %_MAX_IDS = (
 	ID_SERVICE_CATEGORY() => 127,
 	ID_TLD_TYPE() => 127,
 	ID_STATUS_MAP() => 127,
-	ID_IP_VERSION() => 127);
+	ID_IP_VERSION() => 127
+);
 
+# this is needed to construct Cycle ID
 use constant _DIGITS_CLOCK			=> 10;
 use constant _DIGITS_SERVICE_CATEGORY_ID	=> 3;
 use constant _DIGITS_TLD_ID			=> 5;
@@ -82,16 +88,10 @@ my (%_csv_files, %_csv_catalogs, $_csv);
 
 my ($_year, $_month, $_day);
 
-my $_dw_error = "";
-
-my $_catalogs_loaded = 1;
-
 sub dw_csv_init
 {
 	$_csv = Text::CSV_XS->new({binary => 1, auto_diag => 1});
 	$_csv->eol("\n");
-
-	$_catalogs_loaded = 0;
 }
 
 # only works with data files
@@ -135,8 +135,6 @@ sub dw_load_ids_from_db
 			$_csv_catalogs{$id_type}{$row_ref->[0]} = $row_ref->[1];
 		}
 	}
-
-	$_catalogs_loaded = 1;
 }
 
 # only works with catalogs
@@ -222,10 +220,7 @@ sub __csv_file_full_path
 
 	$path .= $tld  . '/' if ($tld);
 
-	if (!__make_path($path))
-	{
-		die(dw_error());
-	}
+	__make_path($path);
 
 	return $path . $DATAFILES{$id_type};
 }
@@ -238,10 +233,7 @@ sub __csv_catalog_full_path
 
 	my $path = CSV_FILES_DIR . '/';
 
-	if (!__make_path($path))
-	{
-		die(dw_error());
-	}
+	__make_path($path);
 
 	return $path . $CATALOGS{$id_type};
 }
@@ -345,11 +337,6 @@ sub dw_translate_cycle_id
 	my $ip = dw_get_name(ID_NS_IP, int(substr($cycle_id, $from, $len))) || '';
 
 	return "$clock-$service_category-$tld-$ns-$ip";
-}
-
-sub dw_error
-{
-	return $_dw_error;
 }
 
 sub dw_set_date
@@ -515,18 +502,7 @@ sub __make_path
 
 	make_path($path, {error => \my $err});
 
-	if (@$err)
-	{
-		__set_dw_error(__get_file_error($err));
-		return;
-	}
-
-	return 1;
-}
-
-sub __set_dw_error
-{
-	$_dw_error = join('', @_);
+	die(__get_file_error($err)) if (@$err);
 }
 
 # todo phase 1: taken from RSMSLV.pm phase 2

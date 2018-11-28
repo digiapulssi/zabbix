@@ -116,7 +116,7 @@ int	main(int argc, char *argv[])
 
 	zbx_snprintf(testname, sizeof(testname), "%s.%s", testprefix, tld);
 
-	if (SUCCEED != zbx_resolve_host(res, testname, &ips43, 1, 1, log_fd, &internal, err, sizeof(err)))
+	if (SUCCEED != zbx_resolver_resolve_host(res, testname, &ips43, 1, 1, log_fd, &internal, err, sizeof(err)))
 	{
 		zbx_rsm_errf(stderr, "RDDS43 \"%s\": %s", testname, err);
 		if (0 == ignore_err)

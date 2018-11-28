@@ -8,8 +8,6 @@ use base 'Exporter';
 use JSON::XS;
 use Types::Serialiser;
 
-use constant AH_DEBUG => 0;
-
 use constant AH_SUCCESS => 0;
 use constant AH_FAIL => 1;
 
@@ -32,18 +30,30 @@ use constant AH_AUDIT_FILE_PREFIX	=> 'last_audit_';	# file containing timestamp 
 use constant JSON_VALUE_INCIDENT_ACTIVE => 'Active';
 use constant JSON_VALUE_INCIDENT_RESOLVED => 'Resolved';
 
-our @EXPORT = qw(AH_SUCCESS AH_FAIL ah_get_error ah_save_state
+use constant JSON_OBJECT_DISABLED_SERVICE => {
+	'status'	=> 'Disabled'
+};
+
+our @EXPORT = qw(AH_SUCCESS AH_FAIL AH_BASE_DIR AH_TMP_DIR ah_set_debug ah_get_error ah_state_file_json ah_save_state
 		ah_save_alarmed ah_save_downtime ah_create_incident_json ah_save_incident
 		ah_save_false_positive ah_save_measurement ah_get_continue_file ah_get_api_tld ah_get_last_audit
-		ah_save_audit ah_save_continue_file ah_encode_pretty_json);
+		ah_save_audit ah_save_continue_file ah_encode_pretty_json JSON_OBJECT_DISABLED_SERVICE);
 
 use constant AH_JSON_FILE_VERSION => 1;
 
-my $error_string = "";
+my $_error_string = "";
+my $_debug = 0;
+
+sub ah_set_debug
+{
+	my $value = shift;
+
+	$_debug = (defined($value) && $value != 0 ? 1 : 0);
+}
 
 sub ah_get_error
 {
-	return $error_string;
+	return $_error_string;
 }
 
 sub __ts_str
@@ -134,7 +144,7 @@ sub __make_inc_path($$$$$)
 
 sub __set_error
 {
-	$error_string = join('', @_);
+	$_error_string = join('', @_);
 }
 
 # todo phase 1: this improved version was taken from the same file of phase 2
@@ -142,7 +152,7 @@ sub __set_file_error
 {
 	my $err = shift;
 
-	$error_string = "";
+	$_error_string = "";
 
 	if (ref($err) eq "ARRAY")
 	{
@@ -151,18 +161,18 @@ sub __set_file_error
 			my ($file, $message) = %$diag;
 			if ($file eq '')
 			{
-				$error_string .= "$message. ";
+				$_error_string .= "$message. ";
 			}
 			else
 			{
-				$error_string .= "$file: $message. ";
+				$_error_string .= "$file: $message. ";
 			}
 
 			return;
 		}
 	}
 
-	$error_string = join('', $err, @_);
+	$_error_string = join('', $err, @_);
 }
 
 sub __write_file
@@ -187,6 +197,8 @@ sub __write_file
 
 	close($OUTFILE);
 
+	dbg("wrote file \"$full_path\"");
+
 	utime($clock, $clock, $full_path) if (defined($clock));
 
 	return AH_SUCCESS;
@@ -209,7 +221,22 @@ sub __save_inc_false_positive($$$)
 	return __write_file($false_positive_path, __encode_json($json));
 }
 
-sub ah_save_state
+sub ah_state_file_json($$)
+{
+	my $ah_tld = shift;
+	my $json_ref = shift;
+
+	my $state_path = AH_BASE_DIR . '/' . __gen_base_path($ah_tld, undef, undef) . '/' . AH_STATE_FILE;
+	my $buf;
+
+	return AH_FAIL unless (__read_file($state_path, \$buf) == AH_SUCCESS);
+
+	$$json_ref = decode_json($buf);
+
+	return AH_SUCCESS;
+}
+
+sub ah_save_state($$)
 {
 	my $ah_tld = shift;
 	my $state_ref = shift;
@@ -220,9 +247,7 @@ sub ah_save_state
 
 	my $state_path = "$base_path/" . AH_STATE_FILE;
 
-	my $json = $state_ref;
-
-	return __write_file($state_path, __encode_json($json));
+	return __write_file($state_path, __encode_json($state_ref));
 }
 
 sub ah_save_alarmed
@@ -296,6 +321,7 @@ sub ah_save_incident
 	my $tld = shift;
 	my $service = shift;
 	my $eventid = shift;	# incident is identified by event ID
+	my $event_clock = shift;
 	my $start = shift;
 	my $end = shift;
 	my $false_positive = shift;
@@ -303,7 +329,7 @@ sub ah_save_incident
 
 	my $inc_path;
 
-	return AH_FAIL unless (__make_inc_path($tld, $service, $start, $eventid, \$inc_path) == AH_SUCCESS);
+	return AH_FAIL unless (__make_inc_path($tld, $service, $event_clock, $eventid, \$inc_path) == AH_SUCCESS);
 
 	my $json = {'incidents' => [ah_create_incident_json($eventid, $start, $end, $false_positive)]};
 
@@ -320,19 +346,10 @@ sub ah_save_incident
 	}
 }
 
-# read an old file from incident directory
-sub __read_inc_file($$$$$$)
+sub __read_file($$)
 {
-	my $tld = shift;
-	my $service = shift;
-	my $eventid = shift;
-	my $start = shift;
 	my $file = shift;
 	my $buf_ref = shift;
-
-	$file = AH_BASE_DIR . '/' . __gen_inc_path($tld, $service, $eventid, $start) . '/' . $file;
-
-	dbg("file: $file");
 
 	$$buf_ref = do
 	{
@@ -347,9 +364,24 @@ sub __read_inc_file($$$$$$)
 		<$fh>;
 	};
 
-	dbg("buf: ", $$buf_ref);
-
 	return AH_SUCCESS;
+}
+
+# read an old file from incident directory
+sub __read_inc_file($$$$$$)
+{
+	my $tld = shift;
+	my $service = shift;
+	my $eventid = shift;
+	my $start = shift;
+	my $file = shift;
+	my $buf_ref = shift;
+
+	$file = AH_BASE_DIR . '/' . __gen_inc_path($tld, $service, $eventid, $start) . '/' . $file;
+
+	dbg("file: $file");
+
+	return __read_file($file, $buf_ref);
 }
 
 # When saving false positiveness, read from AH_BASE_DIR, write to AH_TMP_DIR.
@@ -430,7 +462,7 @@ sub ah_save_measurement
 
 sub dbg
 {
-	return if (AH_DEBUG == 0);
+	return if ($_debug == 0);
 
 	my @args = @_;
 
@@ -455,7 +487,8 @@ sub ah_save_continue_file
 
 sub ah_encode_pretty_json
 {
-	return encode_json(shift);
+	return JSON::XS->new->pretty(1)->encode(shift);
+	#return encode_json(shift);
 }
 
 sub ah_get_api_tld

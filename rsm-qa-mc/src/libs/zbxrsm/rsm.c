@@ -23,7 +23,6 @@ int	rsm_ssl_init()
 		ERR_load_BIO_strings();
 		ERR_load_crypto_strings();
 		SSL_load_error_strings();
-		OPENSSL_config(NULL);
 
 		/* initialize SSL library and register algorithms */
 		if (0 > SSL_library_init())
