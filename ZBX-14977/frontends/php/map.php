@@ -167,6 +167,8 @@ else {
 	$allLinks = false;
 }
 
+resolveMapLinksTriggersState($map);
+
 /*
  * Draw map
  */

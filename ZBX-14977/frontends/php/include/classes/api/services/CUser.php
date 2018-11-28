@@ -1148,7 +1148,7 @@ class CUser extends CApiService {
 				'UPDATE users'.
 				' SET attempt_failed='.zbx_dbstr($userInfo['attempt_failed']).','.
 					' attempt_clock='.time().','.
-					' attempt_ip='.zbx_dbstr($ip).
+					' attempt_ip='.zbx_dbstr(substr($ip, 0, 39)).
 				' WHERE userid='.zbx_dbstr($userInfo['userid'])
 			);
 

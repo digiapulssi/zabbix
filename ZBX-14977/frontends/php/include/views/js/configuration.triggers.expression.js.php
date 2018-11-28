@@ -16,23 +16,25 @@
 	}
 
 	jQuery(function($) {
-		function setReadOnly() {
-			var selected_fn = $('#function option:selected');
+		$('#function').change(function() {
+			$('#spec_paramtype').remove();
+			$(this).closest('form').submit();
+		});
 
-			if (selected_fn.val() === 'last' || selected_fn.val() === 'strlen' || selected_fn.val() === 'band') {
-				if ($('#paramtype option:selected').val() == <?= PARAM_TYPE_COUNTS ?>) {
-					$('#params_0').removeAttr('readonly');
-				}
-				else {
-					$('#params_0').attr('readonly', 'readonly');
-				}
+		$.valHooks.input = {
+			get: function(elem) {
+				return elem.value;
+			},
+			set: function(elem, value) {
+				var tmp = elem.value;
+					elem.value = value;
+
+				'description' === elem.id && tmp !== value && $(elem).trigger('change');
 			}
-		}
+		};
 
-		setReadOnly();
-
-		$('#paramtype').change(function() {
-			setReadOnly();
+		$('#description').change(function() {
+			$(this).closest('form').submit();
 		});
 	});
 </script>

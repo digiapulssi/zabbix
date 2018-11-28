@@ -63,7 +63,7 @@ if (!empty($this->data['parent_discoveryid'])) {
 
 $expressionFormList->addRow(_('Item'), $item);
 
-$function_combobox = new CComboBox('function', $data['function'], 'submit()');
+$function_combobox = new CComboBox('function', $data['function']);
 
 foreach ($data['functions'] as $id => $function) {
 	$function_combobox->addItem($id, $function['description']);
@@ -71,46 +71,63 @@ foreach ($data['functions'] as $id => $function) {
 
 $expressionFormList->addRow(_('Function'), $function_combobox);
 
-if (isset($this->data['functions'][$this->data['selectedFunction']]['params'])) {
-	foreach ($this->data['functions'][$this->data['selectedFunction']]['params'] as $paramId => $paramFunction) {
-		$paramValue = isset($this->data['params'][$paramId]) ? $this->data['params'][$paramId] : null;
+if (array_key_exists('params', $data['functions'][$data['selectedFunction']])) {
+	$paramid = 0;
 
-		if ($paramFunction['T'] == T_ZBX_INT) {
-			$paramTypeElement = null;
+	foreach ($data['functions'][$data['selectedFunction']]['params'] as $param_name => $param_function) {
+		if (array_key_exists($param_name, $data['params'])) {
+			$param_value = $data['params'][$param_name];
+		}
+		else {
+			$param_value = array_key_exists($paramid, $data['params']) ? $data['params'][$paramid] : null;
+		}
 
-			if ($paramId == 0 || ($paramId == 1 && in_array($data['function'], ['regexp', 'iregexp', 'str']))) {
-				if (isset($paramFunction['M'])) {
-					$paramTypeElement = new CComboBox('paramtype', $this->data['paramtype'], null, $paramFunction['M']);
+		if ($param_function['T'] == T_ZBX_INT) {
+			$param_type_element = null;
+
+			if (in_array($param_name, ['last'])) {
+				if ($data['paramtype'] == PARAM_TYPE_COUNTS && $param_value !== null && $param_value !== ''
+						&& $param_value[0] === '#' && $data['is_valid']) {
+					$param_value = substr($param_value, 1);
+				}
+				if (array_key_exists('M', $param_function)) {
+					if (in_array($data['selectedFunction'], ['last', 'band', 'strlen'])) {
+						$param_type_element = $param_function['M'][PARAM_TYPE_COUNTS];
+						$expressionFormList->addItem(new CVar('paramtype', PARAM_TYPE_COUNTS, 'spec_paramtype'));
+					}
+					else {
+						$param_type_element = new CComboBox('paramtype', $data['paramtype'], null,
+							$param_function['M']
+						);
+					}
 				}
 				else {
-					$expressionForm->addVar('paramtype', PARAM_TYPE_TIME);
-					$paramTypeElement = _('Time');
+					$expressionForm->addItem((new CVar('paramtype', PARAM_TYPE_TIME))->removeId());
+					$param_type_element = _('Time');
 				}
 			}
-
-			if ($paramId == 1 && !in_array($data['function'], ['regexp', 'iregexp', 'str'])) {
-				$paramTypeElement = _('Time');
-				$paramField = (new CTextBox('params['.$paramId.']', $paramValue))->setWidth(ZBX_TEXTAREA_SMALL_WIDTH);
-			}
-			else {
-				$paramField = ($this->data['paramtype'] == PARAM_TYPE_COUNTS)
-					? (new CNumericBox('params['.$paramId.']', (int) $paramValue, 10))
-						->setWidth(ZBX_TEXTAREA_NUMERIC_STANDARD_WIDTH)
-					: (new CTextBox('params['.$paramId.']', $paramValue))->setWidth(ZBX_TEXTAREA_SMALL_WIDTH);
+			elseif (in_array($param_name, ['shift'])) {
+				$param_type_element = _('Time');
 			}
 
-			$expressionFormList->addRow($paramFunction['C'], [
-				$paramField,
+			$param_field = (new CTextBox('params['.$param_name.']', $param_value))->setWidth(ZBX_TEXTAREA_SMALL_WIDTH);
+
+			$expressionFormList->addRow($param_function['C'], [
+				$param_field,
 				(new CDiv())->addClass(ZBX_STYLE_FORM_INPUT_MARGIN),
-				$paramTypeElement
+				$param_type_element
 			]);
 		}
 		else {
-			$expressionFormList->addRow($paramFunction['C'],
-				(new CTextBox('params['.$paramId.']', $paramValue))->setWidth(ZBX_TEXTAREA_SMALL_WIDTH)
+			$expressionFormList->addRow($param_function['C'],
+				(new CTextBox('params['.$param_name.']', $param_value))->setWidth(ZBX_TEXTAREA_SMALL_WIDTH)
 			);
-			$expressionForm->addVar('paramtype', PARAM_TYPE_TIME);
+			if ($paramid === 0) {
+				$expressionForm->addItem((new CVar('paramtype', PARAM_TYPE_TIME))->removeId());
+			}
 		}
+
+		$paramid++;
 	}
 }
 else {
