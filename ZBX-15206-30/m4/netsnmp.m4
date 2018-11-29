@@ -17,6 +17,44 @@
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
+AC_DEFUN([LIBNETSNMP_PEERNAME_ACCEPT],
+[
+	# minimal supported version of full format peername: "udp://dhost:port"
+	minimal_netsnmp_version_major=4
+	minimal_netsnmp_version_minor=2
+	minimal_netsnmp_version_micro=1
+
+	# get version
+	LIBNETSNMP_VERSION=`$1 --version`
+        netsnmp_version_major=`expr $LIBNETSNMP_VERSION : '\([[0-9]]*\)'`
+        netsnmp_version_minor=`expr $LIBNETSNMP_VERSION : '[[0-9]]*\.\([[0-9]]*\)'`
+        netsnmp_version_micro=`expr $LIBNETSNMP_VERSION : '[[0-9]]*\.[[0-9]]*\.\([[0-9]]*\)'`
+        if test "x$netsnmp_version_minor" = "x"; then
+            netsnmp_version_minor="0"
+        fi
+        if test "x$netsnmp_version_micro" = "x"; then
+            netsnmp_version_micro="0"
+        fi
+
+	if test $((netsnmp_version_major)) -gt $((minimal_netsnmp_version_major)); then
+		accept_netsnmp_peername="yes"
+	elif test $((netsnmp_version_major)) -lt $((minimal_netsnmp_version_major)); then
+		accept_netsnmp_peername="no"
+	elif test $((netsnmp_version_minor)) -gt $((minimal_netsnmp_version_minor)); then
+		accept_netsnmp_peername="yes"
+	elif test $((netsnmp_version_minor)) -lt $((minimal_netsnmp_version_minor)); then
+		accept_netsnmp_peername="no"
+	elif test $((netsnmp_version_micro)) -ge $((minimal_netsnmp_version_micro)); then
+		accept_netsnmp_peername="yes"
+	else
+		accept_netsnmp_peername="no"
+	fi;
+	
+	if test "$accept_netsnmp_peername" = "yes"; then
+		AC_DEFINE(HAVE_NETSNMP_SESSION_PEERNAME, 1, [Define to 1 if remote port in 'session.peername' is supported.])
+	fi
+])dnl
+
 AC_DEFUN([LIBNETSNMP_CHECK_CONFIG],
 [
   _libnetsnmp_config="no"
@@ -107,6 +145,8 @@ session.localname = "";
 		AC_DEFINE(HAVE_NETSNMP_SESSION_LOCALNAME, 1, [Define to 1 if 'session.localname' exist.])
 		AC_MSG_RESULT(yes),
 		AC_MSG_RESULT(no))
+
+		LIBNETSNMP_PEERNAME_ACCEPT([$_libnetsnmp_config])
 
 		CFLAGS="$_save_netsnmp_cflags"
 		LDFLAGS="$_save_netsnmp_ldflags"
