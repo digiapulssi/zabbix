@@ -39,11 +39,14 @@ OverlayCollection.prototype._write = function(overlay, position) {
 
 /**
  * before push it is checked if existing id is in stack
+ *
+ * @param overlay Overlay object
  */
 OverlayCollection.prototype.pushUnique = function(overlay) {
 	if (this.map[overlay.dialogueid]) {
 		this.restackEnd(overlay.dialogueid);
-	} else {
+	}
+	else {
 		this._write(overlay, this.length)
 	}
 }
@@ -51,6 +54,8 @@ OverlayCollection.prototype.pushUnique = function(overlay) {
 /**
  * stack control,
  * reorders given overlay address onto the top of stack (end of queue)
+ *
+ * @param id Overlay id
  */
 OverlayCollection.prototype.restackEnd = function(id) {
 	this.stack.splice(this._fetchIndex(id), 1);
@@ -59,6 +64,8 @@ OverlayCollection.prototype.restackEnd = function(id) {
 
 /**
  * Removes overlay object, returns reference, that will be garbage collected if not used.
+ *
+ * @param id Overlay id
  */
 OverlayCollection.prototype.removeById = function(id) {
 	var overlay = this.getById(id);
