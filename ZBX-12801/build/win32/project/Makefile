@@ -10,13 +10,8 @@ agent:
 sender:
 	nmake /f Makefile_sender
 
-!IF "$(TLS)" == ""
 sender_dll:
 	nmake /f Makefile_sender_dll
-!ELSE
-sender_dll:
-!	ERROR Cannot build zabbix_sender.dll with TLS support.
-!ENDIF
 
 get:
 	nmake /f Makefile_get
