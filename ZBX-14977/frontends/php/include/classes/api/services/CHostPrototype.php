@@ -386,12 +386,6 @@ class CHostPrototype extends CHostBase {
 		// TODO: permissions should be checked using the $dbHostPrototypes array
 		$this->checkHostPrototypePermissions(zbx_objectValues($hostPrototypes, 'hostid'));
 
-		foreach ($dbHostPrototypes as  $db_host_prototype) {
-			if ($db_host_prototype['templateid'] != 0) {
-				self::exception(ZBX_API_ERROR_PARAMETERS, _('Cannot update templated host prototype.'));
-			}
-		}
-
 		$hostPrototypes = $this->extendFromObjects(zbx_toHash($hostPrototypes, 'hostid'), $dbHostPrototypes, [
 			'host', 'name'
 		]);
@@ -472,7 +466,7 @@ class CHostPrototype extends CHostBase {
 
 		// fetch updated objects from the DB
 		$dbHostPrototypes = $this->get([
-			'output' => ['host', 'name', 'templateid'],
+			'output' => ['host', 'name'],
 			'selectGroupLinks' => API_OUTPUT_EXTEND,
 			'selectGroupPrototypes' => API_OUTPUT_EXTEND,
 			'selectDiscoveryRule' => ['itemid'],
