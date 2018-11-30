@@ -602,7 +602,7 @@
 			ajax_data['fields'] = JSON.stringify(fields);
 		}
 
-		$.ajax({
+		overlays_stack.getById('widgetConfg').xhr = $.ajax({
 			url: url.getUrl(),
 			method: 'POST',
 			dataType: 'json',

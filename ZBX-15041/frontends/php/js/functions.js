@@ -475,12 +475,17 @@ function stripslashes(str) {
  * Function to close overlay dialogue and moves focus to IU element that was clicked to open it.
  *
  * @param string   dialogueid	Dialogue identifier to identify dialogue.
- * @param {object} xhr			(optional) XHR request that must be aborted.
+ * @param {object} xhr  (optional) XHR request that must be aborted.
  */
 function overlayDialogueDestroy(dialogueid, xhr) {
 	if (typeof dialogueid !== 'undefined') {
-		if (typeof xhr !== 'undefined') {
-			xhr.abort();
+		var overlay = overlays_stack.getById(dialogueid)
+		if (!overlay) {
+			return;
+		}
+		if (typeof overlay.xhr !== 'undefined') {
+			overlay.xhr.abort();
+			delete overlay.xhr
 		}
 
 		jQuery('[data-dialogueid='+dialogueid+']').remove();
