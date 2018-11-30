@@ -784,6 +784,8 @@ sub tld_interface_enabled_create_cache
 		@tlds_cache = uniq(values(%enabled_hosts_cache)) if (scalar(@tlds_cache) == 0);
 	}
 
+	return if (scalar(keys(%enabled_hosts_cache)) == 0);
+
 	foreach my $interface (@interfaces)
 	{
 		$interface = lc($interface);
