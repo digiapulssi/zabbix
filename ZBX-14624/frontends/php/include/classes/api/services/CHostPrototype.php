@@ -165,6 +165,7 @@ class CHostPrototype extends CHostBase {
 	 * @return array
 	 */
 	protected function getHostPrototypeSchema() {
+		$valid_inventory_modes = [HOST_INVENTORY_DISABLED, HOST_INVENTORY_MANUAL, HOST_INVENTORY_AUTOMATIC];
 		return [
 			'validators' => [
 				'host' => new CLldMacroStringValidator([
@@ -196,7 +197,11 @@ class CHostPrototype extends CHostBase {
 				]),
 				'inventory' => new CSchemaValidator([
 					'validators' => [
-						'inventory_mode' => null,
+						'inventory_mode' => new CLimitedSetValidator([
+							'values' => $valid_inventory_modes,
+							'messageInvalid' => _s('Incorrect value for field "%1$s": %2$s.', 'inventory_mode',
+								_s('value must be one of %1$s', implode(', ', $valid_inventory_modes)))
+						])
 					],
 					'messageUnsupported' => _('Unsupported parameter "%2$s" for host prototype %1$s host inventory.'),
 				]),
@@ -318,7 +323,9 @@ class CHostPrototype extends CHostBase {
 			];
 
 			// inventory
-			if (isset($hostPrototype['inventory']) && $hostPrototype['inventory']) {
+			if (isset($hostPrototype['inventory']['inventory_mode'])
+					&& ($hostPrototype['inventory']['inventory_mode'] == HOST_INVENTORY_MANUAL
+						|| $hostPrototype['inventory']['inventory_mode'] == HOST_INVENTORY_AUTOMATIC)) {
 				$hostPrototypeInventory[] = [
 					'hostid' => $hostPrototype['hostid'],
 					'inventory_mode' => $hostPrototype['inventory']['inventory_mode']
@@ -576,21 +583,20 @@ class CHostPrototype extends CHostBase {
 			// inventory
 			if (isset($hostPrototype['inventory']) ) {
 				$inventory = zbx_array_mintersect(['inventory_mode'], $hostPrototype['inventory']);
-				$inventory['hostid'] = $hostPrototype['hostid'];
 
-				if ($hostPrototype['inventory']
-					&& (!isset($hostPrototype['inventory']['inventory_mode']) || $hostPrototype['inventory']['inventory_mode'] != HOST_INVENTORY_DISABLED)) {
+				if (array_key_exists('inventory_mode', $inventory)
+					&& ($inventory['inventory_mode'] == HOST_INVENTORY_MANUAL
+						|| $inventory['inventory_mode'] == HOST_INVENTORY_AUTOMATIC)) {
 
 					if ($exHostPrototype['inventory']) {
 						DB::update('host_inventory', [
 							'values' => $inventory,
-							'where' => ['hostid' => $inventory['hostid']]
+							'where' => ['hostid' => $hostPrototype['hostid']]
 						]);
 					}
 					else {
-						$inventoryCreate[] = $inventory;
+						$inventoryCreate[] = $inventory + ['hostid' => $hostPrototype['hostid']];
 					}
-
 				}
 				else {
 					$inventoryDeleteIds[] = $hostPrototype['hostid'];

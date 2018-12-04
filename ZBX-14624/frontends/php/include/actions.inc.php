@@ -649,6 +649,7 @@ function getActionOperationDescriptions(array $actions) {
 
 					$result[$i][$j][] = [implode(', ', $templateList), BR()];
 					break;
+
 				case OPERATION_TYPE_HOST_INVENTORY:
 					$host_inventory_modes = getHostInventoryModes();
 					$result[$i][$j][] = bold(operation_type2str(OPERATION_TYPE_HOST_INVENTORY).': ');
