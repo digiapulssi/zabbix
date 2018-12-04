@@ -27,13 +27,19 @@
 #include "sysinfo.h"
 
 #define	MAX_DISKDEVICES	1024
-#define	DISKDEVICE_TTL	10800
+
+/* Disk device time to live: if disk statistics is being collected but not polled (using passive  */
+/* or active check) DISKDEVICE_TTL or more seconds then delete this disk from collector.          */
+/* Update interval for vfs.dev.read[] and vfs.dev.write[] items must be less than DISKDEVICE_TTL. */
+#define	DISKDEVICE_TTL	(3 * SEC_PER_HOUR)
 
 typedef struct c_single_diskdevice_data
 {
 	char		name[32];
 	int		index;
-	int 		access; /* used to find and remove stale devices */
+	/* Counter used to detect devices no longer polled and to delete them from collector. It is set  */
+	/* to 0 when disk statistics is polled ("used") and incremented when disk statistics is updated. */
+	int 		ticks_unused;
 	time_t		clock[MAX_COLLECTOR_HISTORY];
 	zbx_uint64_t	r_sect[MAX_COLLECTOR_HISTORY];
 	zbx_uint64_t	r_oper[MAX_COLLECTOR_HISTORY];
