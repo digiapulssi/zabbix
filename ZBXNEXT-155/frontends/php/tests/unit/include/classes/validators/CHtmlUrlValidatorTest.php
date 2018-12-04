@@ -50,7 +50,8 @@ class CHtmlUrlValidatorTest extends PHPUnit_Framework_TestCase {
 			['jav&#x09;ascript:alert(1];', 		true, false, false],
 			['{INVENTORY.URL.A}',				false, true, true],
 			['{INVENTORY.URL.A}',				false, false, false],
-			['http://localhost?host={HOST.NAME}', false, false, true]
+			['http://localhost?host={HOST.NAME}', false, false, true],
+			['http://{INVENTORY.URL.A}',		false, false, true]
 		];
 	}
 

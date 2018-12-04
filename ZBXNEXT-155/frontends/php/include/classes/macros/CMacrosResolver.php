@@ -2005,12 +2005,14 @@ class CMacrosResolver extends CMacrosResolverGeneral {
 				break;
 
 			default:
-				$macros = false;
+				$macros = [];
 		}
 
 		if ($selement['elementtype'] == SYSMAP_ELEMENT_TYPE_HOST
 				|| $selement['elementtype'] == SYSMAP_ELEMENT_TYPE_TRIGGER) {
 			$hostids_to_resolve = [];
+			$hosts_by_itemids = [];
+			$itemids_by_functionids = [];
 
 			// Find host if element is trigger.
 			if ($selement['elementtype'] == SYSMAP_ELEMENT_TYPE_TRIGGER) {
@@ -2286,9 +2288,9 @@ class CMacrosResolver extends CMacrosResolverGeneral {
 			'OS(\.(FULL|SHORT))?|'.
 			'POC\.(PRIMARY|SECONDARY)\.(CELL|EMAIL|NAME|NOTES|PHONE\.(A|B)|SCREEN)|'.
 			'SERIALNO\.(A|B)|'.
-			'SITE\.(ADDRESS\.[A-C]|'.'CITY|COUNTRY|NOTES|RACK|STATE|ZIP)|'.
+			'SITE\.(ADDRESS\.[A-C]|CITY|COUNTRY|NOTES|RACK|STATE|ZIP)|'.
 			'SOFTWARE(\.(APP\.[A-E]|FULL))?|'.
-			'TAG|TYPE|TYPE\.FULL|URL\.[A-C]|VENDOR'.
+			'TAG|TYPE(\.FULL)?|URL\.[A-C]|VENDOR'.
 		'))' . ($elementtype == SYSMAP_ELEMENT_TYPE_TRIGGER ? '[1-9]?' : '') . '}/';
 	}
 }
