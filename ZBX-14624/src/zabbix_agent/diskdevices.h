@@ -27,7 +27,7 @@
 #include "sysinfo.h"
 
 #define	MAX_DISKDEVICES	1024
-#define	DISKDEVICE_TTL	3600
+#define	DISKDEVICE_TTL	10800
 
 typedef struct c_single_diskdevice_data
 {
