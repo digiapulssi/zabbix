@@ -107,7 +107,7 @@ static void	process_diskstat(ZBX_SINGLE_DISKDEVICE_DATA *device)
 
 	apply_diskstat(device, now, dstat);
 
-	device->ticks_unused++;
+	device->ticks_since_polled++;
 }
 
 void	collect_stats_diskdevices(void)
@@ -122,7 +122,7 @@ void	collect_stats_diskdevices(void)
 		process_diskstat(&diskdevices->device[i]);
 
 		/* remove device from collector if not being polled for long time */
-		if (DISKDEVICE_TTL <= diskdevices->device[i].ticks_unused)
+		if (DISKDEVICE_TTL <= diskdevices->device[i].ticks_since_polled)
 		{
 			if ((diskdevices->count - 1) > i)
 			{
@@ -159,7 +159,7 @@ ZBX_SINGLE_DISKDEVICE_DATA	*collector_diskdevice_get(const char *devname)
 		if (0 == strcmp(devname, diskdevices->device[i].name))
 		{
 			device = &diskdevices->device[i];
-			device->ticks_unused = 0;
+			device->ticks_since_polled = 0;
 			zabbix_log(LOG_LEVEL_DEBUG, "%s() device '%s' found", __function_name, devname);
 			break;
 		}
@@ -199,7 +199,7 @@ ZBX_SINGLE_DISKDEVICE_DATA	*collector_diskdevice_add(const char *devname)
 	memset(device, 0, sizeof(ZBX_SINGLE_DISKDEVICE_DATA));
 	zbx_strlcpy(device->name, devname, sizeof(device->name));
 	device->index = -1;
-	device->ticks_unused = 0;
+	device->ticks_since_polled = 0;
 	(diskdevices->count)++;
 
 	process_diskstat(device);

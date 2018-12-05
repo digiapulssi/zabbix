@@ -37,10 +37,10 @@ typedef struct c_single_diskdevice_data
 {
 	char		name[32];
 	int		index;
-	/* Counter used to detect devices no longer polled and to delete them from collector. It is set  */
-	/* to 0 when disk statistics is polled ("used") and incremented when disk statistics is updated. */
-	/* For example, value 3600 means that approximately 1 hour statistics was not polled for this disk. */
-	int 		ticks_unused;
+	/* Counter used to detect devices no longer polled and to delete them from collector. It is set */
+	/* to 0 when disk statistics is polled and incremented when disk statistics is updated. For     */
+	/* example, value 3600 means that approximately 1 hour statistics was not polled for this disk. */
+	int 		ticks_since_polled;
 	time_t		clock[MAX_COLLECTOR_HISTORY];
 	zbx_uint64_t	r_sect[MAX_COLLECTOR_HISTORY];
 	zbx_uint64_t	r_oper[MAX_COLLECTOR_HISTORY];
