@@ -124,6 +124,8 @@ static const char	*decode_type(int q_type)
 	{
 		case T_A:
 			return "A";	/* address */
+		case T_A6:
+			return "AAAA";	/* v6 address */
 		case T_NS:
 			return "NS";	/* name server */
 		case T_MD:
@@ -187,6 +189,7 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 	int			res, type, retrans, retry, use_tcp, i, ret = SYSINFO_RET_FAIL;
 	char			*ip, zone[MAX_STRING_LEN], buffer[MAX_STRING_LEN], *zone_str, *param;
 	struct in_addr		inaddr;
+	struct in6_addr		in6addr;
 #ifndef _WINDOWS
 #if defined(HAVE_RES_NINIT) && !defined(_AIX)
 	/* It seems that on some AIX systems with no updates installed res_ninit() can */
@@ -196,7 +199,15 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 	int			saved_nscount = 0, saved_retrans, saved_retry;
 	unsigned long		saved_options;
 	struct sockaddr_in	saved_ns;
+	struct sockaddr_in6	*saved_ns6;
 #endif
+	struct sockaddr_in6	sockaddrin6;
+	int			ip_type = AF_INET;
+	struct addrinfo		hint, *hres = NULL;
+
+	memset(&hint, '\0', sizeof(hint));
+	hint.ai_family = PF_UNSPEC;
+	hint.ai_flags = AI_NUMERICHOST;
 #endif
 	typedef struct
 	{
@@ -209,6 +220,7 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 	{
 		{"ANY",		T_ANY},
 		{"A",		T_A},
+		{"AAAA",	T_A6},
 		{"NS",		T_NS},
 		{"MD",		T_MD},
 		{"MF",		T_MF},
@@ -233,10 +245,10 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 #ifdef _WINDOWS
 	PDNS_RECORD	pQueryResults, pDnsRecord;
 	wchar_t		*wzone;
-	char		tmp2[MAX_STRING_LEN], tmp[MAX_STRING_LEN];
+	char		tmp2[MAX_STRING_LEN];
 	DWORD		options;
 #else
-	char		*name;
+	char		*name, tmp[MAX_STRING_LEN];
 	unsigned char	*msg_end, *msg_ptr, *p;
 	int		num_answers, num_query, q_type, q_class, q_len, value, c, n;
 	struct servent	*s;
@@ -275,6 +287,13 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 	ip = get_rparam(request, 0);
 	zone_str = get_rparam(request, 1);
 
+#ifndef _WINDOWS
+	if (NULL != ip && '\0' != *ip && 0 == getaddrinfo(ip, NULL, &hint, &hres) && AF_INET6 == hres->ai_family)
+		ip_type = hres->ai_family;
+
+	if (NULL != hres)
+		freeaddrinfo(hres);
+#endif
 	if (NULL == zone_str || '\0' == *zone_str)
 		strscpy(zone, "zabbix.com");
 	else
@@ -380,6 +399,11 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 				inaddr.s_addr = pDnsRecord->Data.A.IpAddress;
 				offset += zbx_snprintf(buffer + offset, sizeof(buffer) - offset, " %s",
 						inet_ntoa(inaddr));
+				break;
+			case T_A6:
+				in6addr.s6_addr = pDnsRecord->Data.AAAA.Ip6Address;
+				offset += zbx_snprintf(buffer + offset, sizeof(buffer) - offset, " %s",
+						inet_ntop(AF_INET6, &in6addr, tmp, sizeof(tmp)));
 				break;
 			case T_NS:
 				offset += zbx_snprintf(buffer + offset, sizeof(buffer) - offset, " %s",
@@ -492,7 +516,7 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 		return SYSINFO_RET_FAIL;
 	}
 
-	if (NULL != ip && '\0' != *ip)
+	if (NULL != ip && '\0' != *ip && AF_INET == ip_type)
 	{
 		if (0 == inet_aton(ip, &inaddr))
 		{
@@ -513,6 +537,29 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 		_res.nsaddr_list[0].sin_family = AF_INET;
 		_res.nsaddr_list[0].sin_port = htons(ZBX_DEFAULT_DNS_PORT);
 		_res.nscount = 1;
+#endif
+	}
+	else if (NULL != ip && '\0' != *ip && AF_INET6 == ip_type)
+	{
+		if (0 == inet_pton(ip_type, ip, &in6addr))
+		{
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid IPv6 address."));
+			return SYSINFO_RET_FAIL;
+		}
+
+		memset(&sockaddrin6, '\0', sizeof(sockaddrin6));
+		sockaddrin6.sin6_addr = in6addr;
+		sockaddrin6.sin6_family = AF_INET6;
+		sockaddrin6.sin6_port = htons(ZBX_DEFAULT_DNS_PORT);
+#if defined(HAVE_RES_NINIT) && !defined(_AIX)
+		res_state_local._u._ext.nsaddrs[0] = &sockaddrin6;
+		res_state_local._u._ext.nscount6 = 1;
+#else	/* thread-unsafe resolver API */
+		saved_ns6 = _res._u._ext.nsaddrs[0];
+		saved_nscount = _res.nscount;
+
+		_res._u._ext.nsaddrs[0] = &sockaddrin6;
+		_res._u._ext.nscount6 = 1;
 #endif
 	}
 
@@ -548,7 +595,11 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 
 	if (NULL != ip && '\0' != *ip)
 	{
-		memcpy(&(_res.nsaddr_list[0]), &saved_ns, sizeof(struct sockaddr_in));
+		if (AF_INET6 == ip_type)
+			memcpy(&(_res.nsaddr_list[0]), &saved_ns, sizeof(struct sockaddr_in));
+		else
+			_res._u._ext.nsaddrs[0] = saved_ns6;
+
 		_res.nscount = saved_nscount;
 	}
 
@@ -602,7 +653,24 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 					case C_IN:
 					case C_HS:
 						memcpy(&inaddr, msg_ptr, INADDRSZ);
-						offset += zbx_snprintf(buffer + offset, sizeof(buffer) - offset, " %s", inet_ntoa(inaddr));
+						offset += zbx_snprintf(buffer + offset, sizeof(buffer) - offset, " %s",
+								inet_ntoa(inaddr));
+						break;
+					default:
+						;
+				}
+
+				msg_ptr += q_len;
+
+				break;
+			case T_A6:
+				switch (q_class)
+				{
+					case C_IN:
+					case C_HS:
+						memcpy(&in6addr, msg_ptr, IN6ADDRSZ);
+						offset += zbx_snprintf(buffer + offset, sizeof(buffer) - offset, " %s",
+								inet_ntop(AF_INET6, &in6addr, tmp, sizeof(tmp)));
 						break;
 					default:
 						;
