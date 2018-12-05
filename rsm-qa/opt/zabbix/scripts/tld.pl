@@ -231,7 +231,7 @@ if (defined($OPTS{'get-nsservers-list'}))
 
 if (defined($OPTS{'list-services'}))
 {
-	my @tlds = get_tld_list();
+	my @tlds = ($OPTS{'tld'} // get_tld_list());
 
 	my @columns = (
 		'tld_type',
