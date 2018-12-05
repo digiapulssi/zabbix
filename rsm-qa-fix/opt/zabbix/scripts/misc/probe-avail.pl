@@ -136,11 +136,11 @@ foreach my $probe (keys(%$probe_times_ref))
 
 	if ($offline == 0)
 	{
-		print("$probe: ", PROBE_ONLINE_STR, "\n");
+		print("$probe: Online\n");
 	}
 	else
 	{
-		print("$probe: ", PROBE_OFFLINE_STR, "\n");
+		print("$probe: Offline\n");
 	}
 }
 

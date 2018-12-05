@@ -49,6 +49,13 @@ foreach (@server_keys)
 
 	$total_tlds += $tlds;
 
+	print("  ") unless (opt('server-id'));
+	print("$tlds TLDs");
+	print(" with ", uc(getopt('service')), " enabled") if (opt('service'));
+	print(" on $server_key");
+	print(":") if (opt('verbose'));
+	print("\n");
+
 	if (opt('verbose'))
 	{
 		# sort alphabetically ('abc' cmp 'xyz'), then numerically (tld1 <=> tld2)
@@ -59,11 +66,6 @@ foreach (@server_keys)
 	}
 
 	db_disconnect();
-
-	print("  ") unless (opt('server-id'));
-	print("$tlds TLDs");
-	print(" with ", uc(getopt('service')), " enabled") if (opt('service'));
-	print(" on $server_key\n");
 }
 
 unless (opt('server-id'))
