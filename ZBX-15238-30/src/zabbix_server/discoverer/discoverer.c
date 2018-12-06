@@ -698,7 +698,7 @@ static int	process_discovery(void)
 	zbx_uint64_t	druleid;
 	int		now;
 
-	now = time(NULL);
+	now = (int)time(NULL);
 	result = DBselect(
 			"select distinct r.druleid,r.iprange,r.name,c.dcheckid,r.proxy_hostid"
 			" from drules r"
