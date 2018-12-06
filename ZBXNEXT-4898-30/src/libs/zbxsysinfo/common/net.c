@@ -124,7 +124,7 @@ static const char	*decode_type(int q_type)
 	{
 		case T_A:
 			return "A";	/* address */
-		case T_A6:
+		case T_AAAA:
 			return "AAAA";	/* v6 address */
 		case T_NS:
 			return "NS";	/* name server */
@@ -186,7 +186,8 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 #if defined(HAVE_RES_QUERY) || defined(_WINDOWS)
 
 	size_t			offset = 0;
-	int			res, type, retrans, retry, use_tcp, i, ret = SYSINFO_RET_FAIL;
+	int			res, type, retrans, retry, use_tcp, i, ret = SYSINFO_RET_FAIL, saved_nscount = 0,
+				ip_type = AF_INET;
 	char			*ip, zone[MAX_STRING_LEN], buffer[MAX_STRING_LEN], *zone_str, *param;
 	struct in_addr		inaddr;
 	struct in6_addr		in6addr;
@@ -196,18 +197,13 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 	/* corrupt stack (see ZBX-14559). Use res_init() on AIX. */
 	struct __res_state	res_state_local;
 #else	/* thread-unsafe resolver API */
-	int			saved_nscount = 0, saved_retrans, saved_retry;
+	int			saved_retrans, saved_retry;
 	unsigned long		saved_options;
 	struct sockaddr_in	saved_ns;
-	struct sockaddr_in6	*saved_ns6;
 #endif
+	struct sockaddr_in6	*saved_ns6;
 	struct sockaddr_in6	sockaddrin6;
-	int			ip_type = AF_INET;
 	struct addrinfo		hint, *hres = NULL;
-
-	memset(&hint, '\0', sizeof(hint));
-	hint.ai_family = PF_UNSPEC;
-	hint.ai_flags = AI_NUMERICHOST;
 #endif
 	typedef struct
 	{
@@ -220,7 +216,7 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 	{
 		{"ANY",		T_ANY},
 		{"A",		T_A},
-		{"AAAA",	T_A6},
+		{"AAAA",	T_AAAA},
 		{"NS",		T_NS},
 		{"MD",		T_MD},
 		{"MF",		T_MF},
@@ -288,6 +284,10 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 	zone_str = get_rparam(request, 1);
 
 #ifndef _WINDOWS
+	memset(&hint, '\0', sizeof(hint));
+	hint.ai_family = PF_UNSPEC;
+	hint.ai_flags = AI_NUMERICHOST;
+
 	if (NULL != ip && '\0' != *ip && 0 == getaddrinfo(ip, NULL, &hint, &hres) && AF_INET6 == hres->ai_family)
 		ip_type = hres->ai_family;
 
@@ -400,7 +400,7 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 				offset += zbx_snprintf(buffer + offset, sizeof(buffer) - offset, " %s",
 						inet_ntoa(inaddr));
 				break;
-			case T_A6:
+			case T_AAAA:
 				in6addr.s6_addr = pDnsRecord->Data.AAAA.Ip6Address;
 				offset += zbx_snprintf(buffer + offset, sizeof(buffer) - offset, " %s",
 						inet_ntop(AF_INET6, &in6addr, tmp, sizeof(tmp)));
@@ -552,14 +552,20 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 		sockaddrin6.sin6_family = AF_INET6;
 		sockaddrin6.sin6_port = htons(ZBX_DEFAULT_DNS_PORT);
 #if defined(HAVE_RES_NINIT) && !defined(_AIX)
+		saved_ns6 = res_state_local._u._ext.nsaddrs[0];
 		res_state_local._u._ext.nsaddrs[0] = &sockaddrin6;
-		res_state_local._u._ext.nscount6 = 1;
+		res_state_local._u._ext.nssocks[0] = -1;
+		memset(&res_state_local.nsaddr_list[0], '\0', sizeof(res_state_local.nsaddr_list[0]));
+		saved_nscount = res_state_local.nscount;
+		res_state_local.nscount = 1;
 #else	/* thread-unsafe resolver API */
+		memcpy(&saved_ns, &(_res.nsaddr_list[0]), sizeof(struct sockaddr_in));
 		saved_ns6 = _res._u._ext.nsaddrs[0];
 		saved_nscount = _res.nscount;
 
+		memset(&_res.nsaddr_list[0], '\0', sizeof(_res.nsaddr_list[0]));
 		_res._u._ext.nsaddrs[0] = &sockaddrin6;
-		_res._u._ext.nscount6 = 1;
+		_res.nscount = 1;
 #endif
 	}
 
@@ -571,6 +577,12 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 	res_state_local.retry = retry;
 
 	res = res_nsend(&res_state_local, buf, res, answer.buffer, sizeof(answer.buffer));
+
+	if (NULL != ip && '\0' != *ip && AF_INET6 == ip_type)
+	{
+		res_state_local._u._ext.nsaddrs[0] = saved_ns6;
+		res_state_local.nscount = saved_nscount;
+	}
 #	ifdef HAVE_RES_NDESTROY
 	res_ndestroy(&res_state_local);
 #	else
@@ -596,10 +608,9 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 	if (NULL != ip && '\0' != *ip)
 	{
 		if (AF_INET6 == ip_type)
-			memcpy(&(_res.nsaddr_list[0]), &saved_ns, sizeof(struct sockaddr_in));
-		else
 			_res._u._ext.nsaddrs[0] = saved_ns6;
 
+		memcpy(&(_res.nsaddr_list[0]), &saved_ns, sizeof(struct sockaddr_in));
 		_res.nscount = saved_nscount;
 	}
 
@@ -663,7 +674,7 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 				msg_ptr += q_len;
 
 				break;
-			case T_A6:
+			case T_AAAA:
 				switch (q_class)
 				{
 					case C_IN:
