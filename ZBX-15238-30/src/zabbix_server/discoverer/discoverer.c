@@ -733,7 +733,7 @@ static int	process_discovery(void)
 		if (0 != (program_type & ZBX_PROGRAM_TYPE_SERVER))
 			discovery_clean_services(druleid);
 
-		DBexecute("update drules set nextcheck=%d+delay where druleid=" ZBX_FS_UI64, time(NULL), druleid);
+		DBexecute("update drules set nextcheck=%d+delay where druleid=" ZBX_FS_UI64, (int)time(NULL), druleid);
 
 		rule_count++;
 	}
