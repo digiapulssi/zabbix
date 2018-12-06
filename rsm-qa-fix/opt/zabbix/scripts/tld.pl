@@ -1665,7 +1665,7 @@ sub get_nsservers_list($) {
 
     my $templateid = get_template('Template '.$TLD, false, false);
 
-    return unless defined $templateid->{'templateid'};
+    pfail("TLD \"$TLD\" does not exist on \"$server_key\"") unless ($templateid->{'templateid'});
 
     $templateid = $templateid->{'templateid'};
 
@@ -1867,6 +1867,8 @@ sub get_services($) {
     my $result;
 
     my $main_templateid = get_template('Template '.$tld, false, false);
+
+    pfail("TLD \"$tld\" does not exist on \"$server_key\"") unless ($main_templateid->{'templateid'});
 
     my $macros = get_host_macro($main_templateid, undef);
 
