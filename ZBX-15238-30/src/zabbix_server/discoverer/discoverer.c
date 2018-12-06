@@ -693,9 +693,7 @@ static int	process_discovery(void)
 {
 	DB_RESULT	result;
 	DB_ROW		row;
-	DB_DRULE	drule;
 	int		rule_count = 0;
-	zbx_uint64_t	druleid;
 	int		now;
 
 	now = (int)time(NULL);
@@ -716,10 +714,14 @@ static int	process_discovery(void)
 
 	while (NULL != (row = DBfetch(result)))
 	{
+		zbx_uint64_t	druleid;
+
 		ZBX_STR2UINT64(druleid, row[0]);
 
 		if (SUCCEED == DBis_null(row[4]))
 		{
+			DB_DRULE	drule;
+
 			memset(&drule, 0, sizeof(drule));
 
 			drule.druleid = druleid;
