@@ -10,17 +10,10 @@ use strict;
 use warnings;
 use RSM;
 use RSMSLV;
-use TLD_constants qw(:ec :api :items);
+use TLD_constants qw(:ec :api :items :config);
 use ApiHelper;
 use Parallel::ForkManager;
 use Data::Dumper;
-
-use constant JSON_INTERFACE_DNS => 'DNS';
-use constant JSON_INTERFACE_DNSSEC => 'DNSSEC';
-use constant JSON_INTERFACE_RDDS43 => 'RDDS43';
-use constant JSON_INTERFACE_RDDS80 => 'RDDS80';
-use constant JSON_INTERFACE_RDAP => 'RDAP';
-use constant JSON_INTERFACE_EPP => 'EPP';
 
 use constant JSON_VALUE_UP => 'Up';
 use constant JSON_VALUE_DOWN => 'Down';
@@ -29,7 +22,7 @@ use constant JSON_VALUE_ALARMED_NO => 'No';
 use constant JSON_VALUE_ALARMED_DISABLED => 'Disabled';
 
 use constant JSON_OBJECT_NORESULT_PROBE => {
-	'status' => 'No result'
+	'status' => AH_CITY_NO_RESULT
 };
 
 use constant CONFIGVALUE_DNS_UDP_RTT_HIGH_ITEMID	=> 100011;	# itemid of rsm.configvalue[RSM.DNS.UDP.RTT.HIGH] item
@@ -258,18 +251,18 @@ foreach my $service (keys(%services))
 		$services{$service}{'delay'} = get_rdds_delay($check_from);
 		$services{$service}{'key_statuses'} = ['rsm.rdds[{$RSM.TLD}', 'rdap['];
 
-		$services{$service}{+JSON_INTERFACE_RDDS43}{'valuemaps'} = get_valuemaps('rdds');
-		$services{$service}{+JSON_INTERFACE_RDDS43}{'key_rtt'} = 'rsm.rdds.43.rtt[{$RSM.TLD}]';
-		$services{$service}{+JSON_INTERFACE_RDDS43}{'key_ip'} = 'rsm.rdds.43.ip[{$RSM.TLD}]';
-		$services{$service}{+JSON_INTERFACE_RDDS43}{'key_upd'} = 'rsm.rdds.43.upd[{$RSM.TLD}]';
+		$services{$service}{+AH_INTERFACE_RDDS43}{'valuemaps'} = get_valuemaps('rdds');
+		$services{$service}{+AH_INTERFACE_RDDS43}{'key_rtt'} = 'rsm.rdds.43.rtt[{$RSM.TLD}]';
+		$services{$service}{+AH_INTERFACE_RDDS43}{'key_ip'} = 'rsm.rdds.43.ip[{$RSM.TLD}]';
+		$services{$service}{+AH_INTERFACE_RDDS43}{'key_upd'} = 'rsm.rdds.43.upd[{$RSM.TLD}]';
 
-		$services{$service}{+JSON_INTERFACE_RDDS80}{'valuemaps'} = $services{$service}{+JSON_INTERFACE_RDDS43}{'valuemaps'};
-		$services{$service}{+JSON_INTERFACE_RDDS80}{'key_rtt'} = 'rsm.rdds.80.rtt[{$RSM.TLD}]';
-		$services{$service}{+JSON_INTERFACE_RDDS80}{'key_ip'} = 'rsm.rdds.80.ip[{$RSM.TLD}]';
+		$services{$service}{+AH_INTERFACE_RDDS80}{'valuemaps'} = $services{$service}{+AH_INTERFACE_RDDS43}{'valuemaps'};
+		$services{$service}{+AH_INTERFACE_RDDS80}{'key_rtt'} = 'rsm.rdds.80.rtt[{$RSM.TLD}]';
+		$services{$service}{+AH_INTERFACE_RDDS80}{'key_ip'} = 'rsm.rdds.80.ip[{$RSM.TLD}]';
 
-		$services{$service}{+JSON_INTERFACE_RDAP}{'valuemaps'} = get_valuemaps('rdap');
-		$services{$service}{+JSON_INTERFACE_RDAP}{'key_rtt'} = 'rdap.rtt';
-		$services{$service}{+JSON_INTERFACE_RDAP}{'key_ip'} = 'rdap.ip';
+		$services{$service}{+AH_INTERFACE_RDAP}{'valuemaps'} = get_valuemaps('rdap');
+		$services{$service}{+AH_INTERFACE_RDAP}{'key_rtt'} = 'rdap.rtt';
+		$services{$service}{+AH_INTERFACE_RDAP}{'key_ip'} = 'rdap.ip';
 	}
 	elsif ($service eq 'epp')
 	{
@@ -894,12 +887,12 @@ foreach (@server_keys)
 
 									if (probe_offline_at($probe_times_ref, $probe, $clock) != 0)
 									{
-										$tr_ref->{'probes'}->{$probe}->{'status'} = PROBE_OFFLINE_STR;
+										$tr_ref->{'probes'}->{$probe}->{'status'} = AH_CITY_OFFLINE;
 										dbg("    ", ts_str($clock), ": OFFLINE");
 									}
 									else
 									{
-										push(@{$tr_ref->{'probes'}->{$probe}->{'details'}->{$ns}}, {'clock' => $clock, 'rtt' => $endvalues_ref->{$clock}, 'ip' => $ip});
+										push(@{$tr_ref->{'probes'}->{$probe}->{'details'}->{$ns}}, {'testDateTime' => $clock, 'rtt' => $endvalues_ref->{$clock}, 'targetIP' => $ip});
 										dbg("    ", ts_str($clock), ": ", $endvalues_ref->{$clock});
 									}
 								}
@@ -936,7 +929,7 @@ foreach (@server_keys)
 
 							$tr_ref->{'service'} = uc($service);
 
-							my $interface = (uc($service) eq 'DNS' ? JSON_INTERFACE_DNS : JSON_INTERFACE_DNSSEC);
+							my $interface = (uc($service) eq 'DNS' ? AH_INTERFACE_DNS : AH_INTERFACE_DNSSEC);
 
 							$tr_ref->{'testedInterface'} = [
 								{
@@ -953,7 +946,7 @@ foreach (@server_keys)
 								{
 									my $probe_status = $statuses_ref->{$probe}->{$tr_start}->{$interface};
 
-									$tr_probe_status = (defined($probe_status) ? $probe_status : "No result");
+									$tr_probe_status = (defined($probe_status) ? $probe_status : AH_CITY_NO_RESULT);
 								}
 
 								my $probe_ref = {
@@ -1024,14 +1017,14 @@ foreach (@server_keys)
 
 								foreach my $endvalues_ref (@{$subservices_ref->{$subservice}})
 								{
-									push(@clocks, $endvalues_ref->{'clock'});
+									push(@clocks, $endvalues_ref->{'testDateTime'});
 								}
 
 								my $matches = match_clocks_with_results(\@clocks, \@test_results);
 
 								foreach my $endvalues_ref (@{$subservices_ref->{$subservice}})
 								{
-									my $clock = $endvalues_ref->{'clock'};
+									my $clock = $endvalues_ref->{'testDateTime'};
 
 									unless (exists($matches->{$clock}))
 									{
@@ -1045,7 +1038,7 @@ foreach (@server_keys)
 
 									if (probe_offline_at($probe_times_ref, $probe, $clock) != 0)
 									{
-										$tr_ref->{'subservices'}->{$subservice}->{$probe}->{'status'} = PROBE_OFFLINE_STR;
+										$tr_ref->{'subservices'}->{$subservice}->{$probe}->{'status'} = AH_CITY_OFFLINE;
 									}
 									else
 									{
@@ -1091,17 +1084,17 @@ foreach (@server_keys)
 							dbg("enabled at ", ts_str($tr_start), " RDDS:$rdds_enabled RDAP:$rdap_enabled");
 
 							my $rdds43_ref = {
-								'interface'	=> JSON_INTERFACE_RDDS43,
+								'interface'	=> AH_INTERFACE_RDDS43,
 								'probes'	=> []
 							};
 
 							my $rdds80_ref = {
-								'interface'	=> JSON_INTERFACE_RDDS80,
+								'interface'	=> AH_INTERFACE_RDDS80,
 								'probes'	=> []
 							};
 
 							my $rdap_ref = {
-								'interface'	=> JSON_INTERFACE_RDAP,
+								'interface'	=> AH_INTERFACE_RDAP,
 								'probes'	=> []
 							};
 
@@ -1118,7 +1111,7 @@ foreach (@server_keys)
 									{
 										my $probe_status = $statuses_ref->{$probe}->{$tr_start}->{$subservice};
 
-										$tr_probe_status = (defined($probe_status) ? $probe_status : "No result");
+										$tr_probe_status = (defined($probe_status) ? $probe_status : AH_CITY_NO_RESULT);
 									}
 
 									my $probe_ref = {
@@ -1133,15 +1126,15 @@ foreach (@server_keys)
 											$probe_ref->{'testData'});
 									}
 
-									if ($subservice eq JSON_INTERFACE_RDDS43)
+									if ($subservice eq AH_INTERFACE_RDDS43)
 									{
 										push(@{$rdds43_ref->{'probes'}}, $probe_ref);
 									}
-									elsif ($subservice eq JSON_INTERFACE_RDDS80)
+									elsif ($subservice eq AH_INTERFACE_RDDS80)
 									{
 										push(@{$rdds80_ref->{'probes'}}, $probe_ref);
 									}
-									elsif ($subservice eq JSON_INTERFACE_RDAP)
+									elsif ($subservice eq AH_INTERFACE_RDAP)
 									{
 										push(@{$rdap_ref->{'probes'}}, $probe_ref);
 									}
@@ -1203,7 +1196,7 @@ foreach (@server_keys)
 
 								if (probe_offline_at($probe_times_ref, $probe, $clock) != 0)
 								{
-									$tr_ref->{'probes'}->{$probe}->{'status'} = PROBE_OFFLINE_STR;
+									$tr_ref->{'probes'}->{$probe}->{'status'} = AH_CITY_OFFLINE;
 								}
 								else
 								{
@@ -1245,9 +1238,9 @@ foreach (@server_keys)
 
 								if (!defined($tr_probe_status))
 								{
-									my $probe_status = $statuses_ref->{$probe}->{$tr_start}->{+JSON_INTERFACE_EPP};
+									my $probe_status = $statuses_ref->{$probe}->{$tr_start}->{+AH_INTERFACE_EPP};
 
-									$tr_probe_status = (defined($probe_status) ? $probe_status : "No result");
+									$tr_probe_status = (defined($probe_status) ? $probe_status : AH_CITY_NO_RESULT);
 								}
 							}
 
@@ -1410,18 +1403,18 @@ sub fill_test_data_dns($$$)
 
 		foreach my $test (@{$src->{$ns}})
 		{
-			dbg("ns:$ns ip:$test->{'ip'} clock:", $test->{'clock'} // "UNDEF", " rtt:", $test->{'rtt'} // "UNDEF");
+			dbg("ns:$ns ip:$test->{'targetIP'} clock:", $test->{'testDateTime'} // "UNDEF", " rtt:", $test->{'rtt'} // "UNDEF");
 
 			# if Name Server has no data yet clock and rtt should be both undefined
-			if (defined($test->{'rtt'}) && !defined($test->{'clock'}) ||
-					defined($test->{'clock'}) && !defined($test->{'rtt'}))
+			if (defined($test->{'rtt'}) && !defined($test->{'testDateTime'}) ||
+					defined($test->{'testDateTime'}) && !defined($test->{'rtt'}))
 			{
 				fail("dimir was wrong, DNS test clock and rtt can be undefined independently");
 			}
 
 			my $metric = {
-				'testDateTime'	=> $test->{'clock'},
-				'targetIP'	=> $test->{'ip'}
+				'testDateTime'	=> $test->{'testDateTime'},
+				'targetIP'	=> $test->{'targetIP'}
 			};
 
 			if (!defined($test->{'rtt'}))
@@ -1464,7 +1457,7 @@ sub fill_test_data_dns($$$)
 			push(@{$test_data_ref->{'metrics'}}, $metric);
 		}
 
-		$test_data_ref->{'status'} //= "No result";
+		$test_data_ref->{'status'} //= AH_CITY_NO_RESULT;
 
 		push(@{$dst}, $test_data_ref);
 	}
@@ -1485,18 +1478,18 @@ sub fill_test_data_dnssec($$)
 
 		foreach my $test (@{$src->{$ns}})
 		{
-			dbg("ns:$ns ip:$test->{'ip'} clock:", $test->{'clock'} // "UNDEF", " rtt:", $test->{'rtt'} // "UNDEF");
+			dbg("ns:$ns ip:$test->{'targetIP'} clock:", $test->{'testDateTime'} // "UNDEF", " rtt:", $test->{'rtt'} // "UNDEF");
 
 			# if Name Server has no data yet clock and rtt should be both undefined
-			if (defined($test->{'rtt'}) && !defined($test->{'clock'}) ||
-					defined($test->{'clock'}) && !defined($test->{'rtt'}))
+			if (defined($test->{'rtt'}) && !defined($test->{'testDateTime'}) ||
+					defined($test->{'testDateTime'}) && !defined($test->{'rtt'}))
 			{
 				fail("dimir was wrong, DNS test clock and rtt can be undefined independently");
 			}
 
 			my $metric = {
-				'testDateTime'	=> $test->{'clock'},
-				'targetIP'	=> $test->{'ip'}
+				'testDateTime'	=> $test->{'testDateTime'},
+				'targetIP'	=> $test->{'targetIP'}
 			};
 
 			if (!defined($test->{'rtt'}))
@@ -1537,7 +1530,7 @@ sub fill_test_data_dnssec($$)
 			push(@{$test_data_ref->{'metrics'}}, $metric);
 		}
 
-		$test_data_ref->{'status'} //= "No result";
+		$test_data_ref->{'status'} //= AH_CITY_NO_RESULT;
 
 		push(@{$dst}, $test_data_ref);
 	}
@@ -1577,8 +1570,8 @@ sub fill_test_data_rdds($$$)
 		my $test = $src->[0];
 
 		my $metric = {
-			'testDateTime'	=> $test->{'clock'},
-			'targetIP'	=> exists($test->{'ip'}) ? $test->{'ip'} : undef
+			'testDateTime'	=> $test->{'testDateTime'},
+			'targetIP'	=> exists($test->{'targetIP'}) ? $test->{'targetIP'} : undef
 		};
 
 		if (!defined($test->{'rtt'}))
@@ -1611,7 +1604,7 @@ sub fill_test_data_rdds($$$)
 		push(@{$test_data_ref->{'metrics'}}, $metric);
 	}
 
-	$test_data_ref->{'status'} //= "No result";
+	$test_data_ref->{'status'} //= AH_CITY_NO_RESULT;
 
 	push(@{$dst}, $test_data_ref);
 }
@@ -1739,20 +1732,20 @@ sub __find_probe_key_by_itemid
 #           'WashingtonDC' => {
 #                               '80' => {
 #                                         '1418994206' => {
-#                                                           'ip' => '192.0.34.201',
+#                                                           'targetIP' => '192.0.34.201',
 #                                                           'rtt' => '127.0000'
 #                                                         },
 #                                         '1418994086' => {
-#                                                           'ip' => '192.0.34.201',
+#                                                           'targetIP' => '192.0.34.201',
 #                                                           'rtt' => '127.0000'
 #                                                         },
 #                               '43' => {
 #                                         '1418994206' => {
-#                                                           'ip' => '192.0.34.201',
+#                                                           'targetIP' => '192.0.34.201',
 #                                                           'rtt' => '127.0000'
 #                                                         },
 #                                         '1418994086' => {
-#                                                           'ip' => '192.0.34.201',
+#                                                           'targetIP' => '192.0.34.201',
 #                                                           'rtt' => '127.0000'
 #                                                         },
 # ...
@@ -1805,31 +1798,19 @@ sub __get_rdds_test_values
 
 		my ($probe, $key) = __find_probe_key_by_itemid($itemid, $rdds_dbl_items_ref);
 
-		fail("internal error: cannot get Probe-key pair by itemid:$itemid") unless (defined($probe) and defined($key));
+		fail("internal error: no Item or Host reference of itemid $itemid") unless (defined($probe) && defined($key));
 
-		my $port = __get_rdds_port($key);
-		my $type = __get_rdds_dbl_type($key);
+		if (substr($key, 0, length("rsm.rdds.43.upd")) eq "rsm.rdds.43.upd")
+		{
+			fail("EPP not implemented yet");
+		}
 
-		my $interface;
-		if ($port eq '43')
-		{
-			$interface = JSON_INTERFACE_RDDS43;
-		}
-		elsif ($port eq '80')
-		{
-			$interface = JSON_INTERFACE_RDDS80;
-		}
-		elsif ($port eq 'rdap')
-		{
-			$interface = JSON_INTERFACE_RDAP;
-		}
-		else
-		{
-			fail("unknown RDDS port in item (id:$itemid)");
-		}
+		my $interface = ah_get_rdds_interface($key);
+
+		fail("unknown item key \"$key\" when trying to identify RDDS interface") unless (defined($interface));
 
 		# convert to integer to get rid of ".000"
-		$pre_result{$probe}->{$interface}->{$clock}->{$type} = int($value);
+		$pre_result{$probe}->{$interface}->{$clock}->{'rtt'} = int($value);
 	}
 
 	my $str_rows_ref = db_select("select itemid,value,clock from history_str where itemid in ($str_itemids_str) and " . sql_time_condition($start, $end). " order by clock");
@@ -1842,30 +1823,13 @@ sub __get_rdds_test_values
 
 		my ($probe, $key) = __find_probe_key_by_itemid($itemid, $rdds_str_items_ref);
 
-		fail("internal error: cannot get Probe-key pair by itemid:$itemid") unless (defined($probe) and defined($key));
+		fail("internal error: no Item or Host reference of itemid $itemid") unless (defined($probe) && defined($key));
 
-		my $port = __get_rdds_port($key);
-		my $type = __get_rdds_str_type($key);
+		my $interface = ah_get_rdds_interface($key);
 
-		my $interface;
-                if ($port eq '43')
-                {
-                        $interface = JSON_INTERFACE_RDDS43;
-                }
-                elsif ($port eq '80')
-                {
-                        $interface = JSON_INTERFACE_RDDS80;
-                }
-                elsif ($port eq 'rdap')
-                {
-                        $interface = JSON_INTERFACE_RDAP;
-                }
-                else
-                {
-                        fail("unknown RDDS port in item (id:$itemid)");
-                }
+		fail("unknown item key \"$key\" when trying to identify RDDS interface") unless (defined($interface));
 
-		$pre_result{$probe}->{$interface}->{$clock}->{$type} = $value;
+		$pre_result{$probe}->{$interface}->{$clock}->{'targetIP'} = $value;
 	}
 
 	foreach my $probe (keys(%pre_result))
@@ -1880,7 +1844,7 @@ sub __get_rdds_test_values
 				{
 					$h->{$key} = $clock_ref->{$key};
 				}
-				$h->{'clock'} = $clock;
+				$h->{'testDateTime'} = $clock;
 
 				push(@{$result{$probe}->{$interface}}, $h);
 			}
@@ -1894,13 +1858,13 @@ sub __get_rdds_test_values
 # {
 #         'WashingtonDC' => {
 #                 '1418994206' => {
-#                               'ip' => '192.0.34.201',
+#                               'targetIP' => '192.0.34.201',
 #                               'login' => '127.0000',
 #                               'update' => '366.0000'
 #                               'info' => '366.0000'
 #                 },
 #                 '1418994456' => {
-#                               'ip' => '192.0.34.202',
+#                               'targetIP' => '192.0.34.202',
 #                               'login' => '121.0000',
 #                               'update' => '263.0000'
 #                               'info' => '321.0000'
@@ -1952,12 +1916,12 @@ sub __get_epp_test_values
 
 		my ($probe, $key) = __find_probe_key_by_itemid($itemid, $epp_dbl_items_ref);
 
-		fail("internal error: cannot get Probe-key pair by itemid:$itemid") unless (defined($probe) and defined($key));
+		fail("internal error: no Item or Host reference of itemid $itemid") unless (defined($probe) && defined($key));
 
-		my $type = __get_epp_dbl_type($key);
+		# NB! Replace 'UNKNOWN' with appropreate key when EPP gets implemented
 
 		# convert to integer to get rid of ".000"
-		$result{$probe}->{$clock}->{$type} = int($value);
+		$result{$probe}->{$clock}->{'UNKNOWN'} = int($value);
 	}
 
 	my $str_rows_ref = db_select("select itemid,value,clock from history_str where itemid in ($str_itemids_str) and " . sql_time_condition($start, $end). " order by clock");
@@ -1970,11 +1934,9 @@ sub __get_epp_test_values
 
 		my ($probe, $key) = __find_probe_key_by_itemid($itemid, $epp_str_items_ref);
 
-		fail("internal error: cannot get Probe-key pair by itemid:$itemid") unless (defined($probe) and defined($key));
+		fail("internal error: no Item or Host reference of itemid $itemid") unless (defined($probe) && defined($key));
 
-		my $type = __get_epp_str_type($key);
-
-		$result{$probe}->{$clock}->{$type} = $value;
+		$result{$probe}->{$clock}->{'targetIP'} = $value;
 	}
 
 	return \%result;
@@ -2034,48 +1996,6 @@ sub __get_dns_itemids
 	return \%result;
 }
 
-sub __get_rdds_port
-{
-	my $key = shift;
-
-	return 'rdap' if (substr($key, 0, length('rdap')) eq 'rdap');
-
-	# rsm.rdds.43... <-- returns 43 or 80
-	return substr($key, 9, 2);
-}
-
-sub __get_rdds_dbl_type
-{
-	my $key = shift;
-
-	return 'rtt' if (substr($key, 0, length('rdap')) eq 'rdap');
-
-	# rsm.rdds.43.rtt... rsm.rdds.43.upd[... <-- returns "rtt" or "upd"
-	return substr($key, 12, 3);
-}
-
-sub __get_rdds_str_type
-{
-	# NB! This is done for consistency, perhaps in the future there will be more string items, not just "ip".
-	return 'ip';
-}
-
-sub __get_epp_dbl_type
-{
-	my $key = shift;
-
-	chop($key); # remove last char ']'
-
-	# rsm.epp.rtt[{$RSM.TLD},login <-- returns "login" (other options: "update", "info")
-        return substr($key, 23);
-}
-
-sub __get_epp_str_type
-{
-	# NB! This is done for consistency, perhaps in the future there will be more string items, not just "ip".
-	return 'ip';
-}
-
 # return itemids of dbl items grouped by Probes:
 #
 # {
@@ -2098,10 +2018,10 @@ sub __get_rdds_dbl_itemids
 	return __get_itemids_by_complete_key(
 		$tld,
 		$probe,
-		$services{'rdds'}{+JSON_INTERFACE_RDDS43}{'key_rtt'},
-		$services{'rdds'}{+JSON_INTERFACE_RDDS80}{'key_rtt'},
-		$services{'rdds'}{+JSON_INTERFACE_RDDS43}{'key_upd'},
-		$services{'rdds'}{+JSON_INTERFACE_RDAP}{'key_rtt'});
+		$services{'rdds'}{+AH_INTERFACE_RDDS43}{'key_rtt'},
+		$services{'rdds'}{+AH_INTERFACE_RDDS80}{'key_rtt'},
+		$services{'rdds'}{+AH_INTERFACE_RDDS43}{'key_upd'},
+		$services{'rdds'}{+AH_INTERFACE_RDAP}{'key_rtt'});
 }
 
 # return itemids of string items grouped by Probes:
@@ -2124,9 +2044,9 @@ sub __get_rdds_str_itemids
 	return __get_itemids_by_complete_key(
 		$tld,
 		$probe,
-		$services{'rdds'}{+JSON_INTERFACE_RDDS43}{'key_ip'},
-		$services{'rdds'}{+JSON_INTERFACE_RDDS80}{'key_ip'},
-		$services{'rdds'}{+JSON_INTERFACE_RDAP}{'key_ip'});
+		$services{'rdds'}{+AH_INTERFACE_RDDS43}{'key_ip'},
+		$services{'rdds'}{+AH_INTERFACE_RDDS80}{'key_ip'},
+		$services{'rdds'}{+AH_INTERFACE_RDAP}{'key_ip'});
 }
 
 sub __get_epp_dbl_itemids
@@ -2373,33 +2293,35 @@ sub __get_probe_statuses($$$$$;$)
 				{
 					my $status = ($statuses{$probe}->{$cycle_start}->{$key} >= $minns ? "Up" : "Down");
 
-					$result{$probe}->{$cycle_start}->{+JSON_INTERFACE_DNS} = $status;
+					$result{$probe}->{$cycle_start}->{+AH_INTERFACE_DNS} = $status;
 				}
 				elsif (uc($service) eq 'DNSSEC')
 				{
 					# TODO: for dnssec interface->probe->status calculation should be different
 					my $status = ($statuses{$probe}->{$cycle_start}->{$key} >= $minns ? "Up" : "Down");
 
-					$result{$probe}->{$cycle_start}->{+JSON_INTERFACE_DNSSEC} = $status;
+					$result{$probe}->{$cycle_start}->{+AH_INTERFACE_DNSSEC} = $status;
 				}
 				elsif (uc($service) eq 'RDDS')
 				{
 					if (substr($key, 0, length("rsm.rdds")) eq "rsm.rdds")
 					{
-						# 0 - down, 1 - up, 2 - rdds43 only, 3 - rdds80 only
-						my $status = (($statuses{$probe}->{$cycle_start}->{$key} == 1 || $statuses{$probe}->{$cycle_start}->{$key} == 2) ? "Up" : "Down");
+						# 0 - Down, 1 - Up, 2 - RDDS43 only, 3 - RDDS80 only
+						my $status = (($statuses{$probe}->{$cycle_start}->{$key} == RDDS_UP ||
+							$statuses{$probe}->{$cycle_start}->{$key} == RDDS_43_ONLY) ? "Up" : "Down");
 
-						$result{$probe}->{$cycle_start}->{+JSON_INTERFACE_RDDS43} = $status;
+						$result{$probe}->{$cycle_start}->{+AH_INTERFACE_RDDS43} = $status;
 
-						$status = (($statuses{$probe}->{$cycle_start}->{$key} == 1 || $statuses{$probe}->{$cycle_start}->{$key} == 3) ? "Up" : "Down");
+						$status = (($statuses{$probe}->{$cycle_start}->{$key} == RDDS_UP ||
+							$statuses{$probe}->{$cycle_start}->{$key} == RDDS_80_ONLY) ? "Up" : "Down");
 
-						$result{$probe}->{$cycle_start}->{+JSON_INTERFACE_RDDS80} = $status;
+						$result{$probe}->{$cycle_start}->{+AH_INTERFACE_RDDS80} = $status;
 					}
 					elsif (substr($key, 0, length("rdap")) eq "rdap")
 					{
-						my $status = ($statuses{$probe}->{$cycle_start}->{$key} == 1 ? "Up" : "Down");
+						my $status = ($statuses{$probe}->{$cycle_start}->{$key} == UP ? "Up" : "Down");
 
-						$result{$probe}->{$cycle_start}->{+JSON_INTERFACE_RDAP} = $status;
+						$result{$probe}->{$cycle_start}->{+AH_INTERFACE_RDAP} = $status;
 					}
 					else
 					{
@@ -2431,7 +2353,7 @@ sub __prnt_json
 	}
 	else
 	{
-		__prnt(ts_str($tr_ref->{'clock'}), " ", $tr_ref->{'status'});
+		__prnt(ts_str($tr_ref->{'testDateTime'}), " ", $tr_ref->{'status'});
 	}
 }
 

@@ -90,6 +90,12 @@ use constant rsm_value_mappings => {
 	'rsm_probe' => 100
 };
 
+# 'RSM RDDS result' value mappings
+use constant RDDS_DOWN		=> 0;
+use constant RDDS_UP		=> 1;
+use constant RDDS_43_ONLY	=> 2;
+use constant RDDS_80_ONLY	=> 3;
+
 use constant rsm_trigger_rollweek_thresholds => {
 	'1' => {'threshold' => '10', 'priority' => 2},
 	'2' => {'threshold' => '25', 'priority' => 3},
@@ -157,6 +163,7 @@ our @EXPORT_OK = qw(
 	ITEM_VALUE_TYPE_FLOAT ITEM_VALUE_TYPE_STR ITEM_VALUE_TYPE_LOG ITEM_VALUE_TYPE_UINT64 ITEM_VALUE_TYPE_TEXT
 	ITEM_TYPE_ZABBIX ITEM_TYPE_TRAPPER ITEM_TYPE_SIMPLE ITEM_TYPE_INTERNAL ITEM_TYPE_ZABBIX_ACTIVE ITEM_TYPE_AGGREGATE ITEM_TYPE_EXTERNAL ITEM_TYPE_CALCULATED
 	APP_SLV_MONTHLY APP_SLV_ROLLWEEK APP_SLV_PARTTEST APP_SLV_CURMON TLD_TYPE_G TLD_TYPE_CC TLD_TYPE_OTHER TLD_TYPE_TEST
+	RDDS_DOWN RDDS_UP RDDS_43_ONLY RDDS_80_ONLY
 );
 
 our %EXPORT_TAGS = (
@@ -190,9 +197,10 @@ our %EXPORT_TAGS = (
 			ITEM_TYPE_AGGREGATE ITEM_TYPE_EXTERNAL ITEM_TYPE_CALCULATED
 			TRIGGER_STATUS_DISABLED TRIGGER_STATUS_ENABLED)],
 	config => [ qw(cfg_probe_status_delay cfg_default_rdds_ns_string rsm_value_mappings rsm_trigger_rollweek_thresholds
-			cfg_global_macros TLD_TYPE_G TLD_TYPE_CC TLD_TYPE_OTHER TLD_TYPE_TEST) ],
+			cfg_global_macros TLD_TYPE_G TLD_TYPE_CC TLD_TYPE_OTHER TLD_TYPE_TEST
+			RDDS_DOWN RDDS_UP RDDS_43_ONLY RDDS_80_ONLY) ],
 	slv => [ qw(APP_SLV_MONTHLY APP_SLV_ROLLWEEK APP_SLV_PARTTEST APP_SLV_CURMON) ],
-	tls => [ qw(HOST_ENCRYPTION_PSK)]
+	tls => [ qw(HOST_ENCRYPTION_PSK) ]
 );
 
 1;

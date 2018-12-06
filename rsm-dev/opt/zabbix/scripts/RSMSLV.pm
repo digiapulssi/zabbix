@@ -66,8 +66,6 @@ use constant AVAIL_SHIFT_BACK		=> 120;	# seconds (must be divisible by 60) to go
 use constant ROLLWEEK_SHIFT_BACK	=> 180;	# seconds (must be divisible by 60) to go back for Rolling Week calculation
 
 use constant PROBE_ONLINE_STR => 'Online';
-use constant PROBE_OFFLINE_STR => 'Offline';
-use constant PROBE_NORESULT_STR => 'No result';
 
 use constant DETAILED_RESULT_DELIM => ', ';
 
@@ -76,10 +74,10 @@ our ($result, $dbh, $tld, $server_key);
 our %OPTS; # specified command-line options
 
 our @EXPORT = qw($result $dbh $tld $server_key
-		SUCCESS E_FAIL E_ID_NONEXIST E_ID_MULTIPLE UP DOWN RDDS_UP SLV_UNAVAILABILITY_LIMIT MIN_LOGIN_ERROR
+		SUCCESS E_FAIL E_ID_NONEXIST E_ID_MULTIPLE UP DOWN SLV_UNAVAILABILITY_LIMIT MIN_LOGIN_ERROR
 		UP_INCONCLUSIVE_NO_DATA PROTO_UDP PROTO_TCP
-		MAX_LOGIN_ERROR MIN_INFO_ERROR MAX_INFO_ERROR PROBE_ONLINE_STR PROBE_OFFLINE_STR
-		PROBE_NORESULT_STR AVAIL_SHIFT_BACK PROBE_ONLINE_SHIFT
+		MAX_LOGIN_ERROR MIN_INFO_ERROR MAX_INFO_ERROR PROBE_ONLINE_STR
+		AVAIL_SHIFT_BACK PROBE_ONLINE_SHIFT
 		ONLINE OFFLINE
 		get_macro_minns get_macro_dns_probe_online get_macro_rdds_probe_online get_macro_dns_rollweek_sla
 		get_macro_rdds_rollweek_sla get_macro_dns_udp_rtt_high get_macro_dns_udp_rtt_low
