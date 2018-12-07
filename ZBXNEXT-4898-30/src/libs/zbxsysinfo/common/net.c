@@ -179,6 +179,30 @@ static char	*get_name(unsigned char *msg, unsigned char *msg_end, unsigned char 
 }
 #endif	/* !defined(_WINDOWS) */
 
+#if (_WIN32_WINNT < _WIN32_WINNT_VISTA)
+const char *inet_ntop(int af, const void *src, char *dst, size_t size)
+{
+	struct sockaddr_storage ss;
+	unsigned long s = size;
+
+	memset(&ss, '\0', sizeof(ss));
+	ss.ss_family = af;
+
+	switch(af)
+	{
+		case AF_INET:
+			((struct sockaddr_in *)&ss)->sin_addr = *(struct in_addr *)src;
+			break;
+		case AF_INET6:
+			((struct sockaddr_in6 *)&ss)->sin6_addr = *(struct in6_addr *)src;
+			break;
+		default:
+			return NULL;
+	}
+
+	return (WSAAddressToStringA((struct sockaddr *)&ss, sizeof(ss), NULL, dst, &s) == 0)? dst : NULL;
+}
+#endif
 #endif	/* defined(HAVE_RES_QUERY) || defined(_WINDOWS) */
 
 static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_answer)
@@ -402,7 +426,7 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 						inet_ntoa(inaddr));
 				break;
 			case T_AAAA:
-				in6addr.s6_addr = pDnsRecord->Data.AAAA.Ip6Address;
+				memcpy(&in6addr.s6_addr, &(pDnsRecord->Data.AAAA.Ip6Address), sizeof(in6addr.s6_addr));
 				offset += zbx_snprintf(buffer + offset, sizeof(buffer) - offset, " %s",
 						inet_ntop(AF_INET6, &in6addr, tmp, sizeof(tmp)));
 				break;
