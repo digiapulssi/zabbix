@@ -197,7 +197,7 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 	/* corrupt stack (see ZBX-14559). Use res_init() on AIX. */
 	struct __res_state	res_state_local;
 #else	/* thread-unsafe resolver API */
-	int			saved_retrans, saved_retry;
+	int			saved_retrans, saved_retry, save_nssocks;
 	unsigned long		saved_options;
 	struct sockaddr_in	saved_ns;
 #endif
@@ -561,10 +561,12 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 #else	/* thread-unsafe resolver API */
 		memcpy(&saved_ns, &(_res.nsaddr_list[0]), sizeof(struct sockaddr_in));
 		saved_ns6 = _res._u._ext.nsaddrs[0];
+		save_nssocks = _res._u._ext.nssocks[0];
 		saved_nscount = _res.nscount;
 
 		memset(&_res.nsaddr_list[0], '\0', sizeof(_res.nsaddr_list[0]));
 		_res._u._ext.nsaddrs[0] = &sockaddrin6;
+		_res._u._ext.nssocks[0] = -1;
 		_res.nscount = 1;
 #endif
 	}
@@ -608,7 +610,10 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 	if (NULL != ip && '\0' != *ip)
 	{
 		if (AF_INET6 == ip_type)
+		{
 			_res._u._ext.nsaddrs[0] = saved_ns6;
+			_res._u._ext.nssocks[0] = save_nssocks;
+		}
 
 		memcpy(&(_res.nsaddr_list[0]), &saved_ns, sizeof(struct sockaddr_in));
 		_res.nscount = saved_nscount;
