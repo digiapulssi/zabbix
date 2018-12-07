@@ -200,7 +200,7 @@ const char *inet_ntop(int af, const void *src, char *dst, size_t size)
 			return NULL;
 	}
 
-	return (WSAAddressToStringA((struct sockaddr *)&ss, sizeof(ss), NULL, dst, &s) == 0)? dst : NULL;
+	return (0 == WSAAddressToStringA((struct sockaddr *)&ss, sizeof(ss), NULL, dst, &s))? dst : NULL;
 }
 #endif
 #endif	/* defined(HAVE_RES_QUERY) || defined(_WINDOWS) */
