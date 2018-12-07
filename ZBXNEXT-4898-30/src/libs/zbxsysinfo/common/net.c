@@ -179,7 +179,7 @@ static char	*get_name(unsigned char *msg, unsigned char *msg_end, unsigned char 
 }
 #endif	/* !defined(_WINDOWS) */
 
-#if (_WIN32_WINNT < _WIN32_WINNT_VISTA)
+#if defined(_WINDOWS) && (_WIN32_WINNT < _WIN32_WINNT_VISTA)
 const char *inet_ntop(int af, const void *src, char *dst, size_t size)
 {
 	struct sockaddr_storage ss;
