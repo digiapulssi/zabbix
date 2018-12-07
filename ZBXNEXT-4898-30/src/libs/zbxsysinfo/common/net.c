@@ -188,7 +188,8 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 	size_t			offset = 0;
 	int			res, type, retrans, retry, use_tcp, i, ret = SYSINFO_RET_FAIL, saved_nscount = 0,
 				ip_type = AF_INET;
-	char			*ip, zone[MAX_STRING_LEN], buffer[MAX_STRING_LEN], *zone_str, *param;
+	char			*ip, zone[MAX_STRING_LEN], buffer[MAX_STRING_LEN], *zone_str, *param,
+				tmp[MAX_STRING_LEN];
 	struct in_addr		inaddr;
 	struct in6_addr		in6addr;
 #ifndef _WINDOWS
@@ -244,7 +245,7 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 	char		tmp2[MAX_STRING_LEN];
 	DWORD		options;
 #else
-	char		*name, tmp[MAX_STRING_LEN];
+	char		*name;
 	unsigned char	*msg_end, *msg_ptr, *p;
 	int		num_answers, num_query, q_type, q_class, q_len, value, c, n;
 	struct servent	*s;
