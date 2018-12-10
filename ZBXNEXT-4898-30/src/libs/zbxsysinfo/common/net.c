@@ -609,7 +609,7 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 		_res._u._ext.nssocks[0] = -1;
 #elif defined(HAVE_RES_EXT)		/* thread-unsafe resolver API /BSD/ */
 		memcpy(&saved_ns6, &(_res_ext.nsaddr_list[0]), sizeof(saved_ns6));
-		memcpy(&_res_ext.nsaddrs[0], &sockaddrin6, sizeof(sockaddrin6));
+		memcpy(&_res_ext.nsaddr_list[0], &sockaddrin6, sizeof(sockaddrin6));
 #elif defined(HAVE_RES_EXT_EXT)		/* thread-unsafe resolver API /AIX/ */
 		memcpy(&saved_ns6, &(_res._ext.ext.nsaddrs[0]), sizeof(saved_ns6));
 		memcpy(&_res._ext.ext.nsaddrs[0], &sockaddrin6, sizeof(sockaddrin6));
@@ -661,7 +661,7 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 			_res._u._ext.nsaddrs[0] = saved_ns6;
 			_res._u._ext.nssocks[0] = save_nssocks;
 #elif defined(HAVE_RES_EXT)
-			memcpy(&_res_ext.nsaddrs[0], &saved_ns6, sizeof(saved_ns6));
+			memcpy(&_res_ext.nsaddr_list[0], &saved_ns6, sizeof(saved_ns6));
 #elif defined(HAVE_RES_EXT_EXT)
 			memcpy(&_res._ext.ext.nsaddrs[0], &saved_ns6, sizeof(saved_ns6));
 #endif
