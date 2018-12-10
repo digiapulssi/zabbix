@@ -1776,7 +1776,7 @@ class CMacrosResolver extends CMacrosResolverGeneral {
 		$has_host_macros = preg_match('/{(HOSTNAME|HOST\.(ID|NAME|HOST|DESCRIPTION))'.$host_nr.'}/', $label);
 
 		// Resolve host and host inventory macros if found.
-		if (($inventory_macros || $has_host_macros)
+		if (($inventory_macros || $has_host_macros || $has_interface_macros)
 				&& ($selement['elementtype'] == SYSMAP_ELEMENT_TYPE_HOST
 					|| $selement['elementtype'] == SYSMAP_ELEMENT_TYPE_TRIGGER)) {
 			$hostids_to_resolve = [];
