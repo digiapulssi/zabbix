@@ -318,3 +318,78 @@ INSERT INTO items (itemid,type,hostid,name,description,key_,delay,interfaceid,pa
 INSERT INTO hosts (hostid,host,name,status,description) VALUES (120003,'Template with item and lld rule','Template with item',3,'');
 INSERT INTO items (itemid,type,hostid,name,description,key_,delay,interfaceid,params,formula,url,posts,query_fields,headers) VALUES (110004,0,120003,'templated-item','','agent.ping[]',30,NULL,'','','','','','');
 INSERT INTO items (itemid,type,hostid,name,description,key_,delay,interfaceid,params,formula,url,posts,query_fields,headers,flags) VALUES (110005,0,120003,'templated-lld-rule','','agent.ping[-]',30,NULL,'','','','','','',1);
+
+-- testTriggerFilter
+INSERT INTO hstgrp (groupid,name,internal) VALUES (139000,'TriggersTester',0);
+INSERT INTO hosts (hostid,host,name,status,description) VALUES (130000,'TriggersTester','TriggersTester',0,'');
+INSERT INTO hosts (hostid,host,name,status,description) VALUES (131000,'TriggersTesterTmpl','TriggersTesterTmpl',3,'');
+INSERT INTO hosts_groups (hostgroupid, hostid, groupid) VALUES (139100, 130000, 139000);
+INSERT INTO hosts_groups (hostgroupid, hostid, groupid) VALUES (139200, 131000, 139000);
+INSERT INTO items (itemid,hostid,type,name,key_) VALUES (132000,130000,2,'TriggersTesterItem','TriggersTesterItem');
+INSERT INTO items (itemid,hostid,type,name,key_) VALUES (132001,131000,2,'TriggersTesterItemTmpl','TriggersTesterItemTmpl');
+INSERT INTO items (itemid,hostid,type,name,key_,flags) VALUES (132002,130000,2,'TriggersTesterItemLLD','TriggersTesterItemLLD',1);
+INSERT INTO items (itemid,hostid,type,name,key_,flags) VALUES (132003,131000,2,'TriggersTesterItemLLDTmpl','TriggersTesterItemLLDTmpl',1);
+INSERT INTO items (itemid,hostid,type,name,key_,flags) VALUES (132004,130000,2,'TriggersTesterItemProto[{#T}]','TriggersTesterItemProto[{#T}]',2);
+INSERT INTO items (itemid,hostid,type,name,key_,flags) VALUES (132005,131000,2,'TriggersTesterItemProtoTmpl[{#T}]','TriggersTesterItemProtoTmpl[{#T}]',2);
+INSERT INTO item_discovery (itemdiscoveryid,itemid,parent_itemid,key_) VALUES (138000,132004,132002,'TriggersTesterItemProto[{#T}]');
+INSERT INTO item_discovery (itemdiscoveryid,itemid,parent_itemid,key_) VALUES (138001,132005,132003,'TriggersTesterItemProtoTmpl[{#T}]');
+
+INSERT INTO triggers (triggerid,expression,description,priority) VALUES (134000,'{135000}=0','TriggersTester_T0',0);
+INSERT INTO functions (functionid,itemid,triggerid,name,parameter) VALUES (135000,132000,134000,'now','0');
+INSERT INTO triggers (triggerid,expression,description,priority) VALUES (134001,'{135001}=0','TriggersTester_T1',1);
+INSERT INTO functions (functionid,itemid,triggerid,name,parameter) VALUES (135001,132000,134001,'now','0');
+INSERT INTO triggers (triggerid,expression,description,priority) VALUES (134002,'{135002}=0','TriggersTester_T2',2);
+INSERT INTO functions (functionid,itemid,triggerid,name,parameter) VALUES (135002,132000,134002,'now','0');
+INSERT INTO triggers (triggerid,expression,description,priority) VALUES (134003,'{135003}=0','TriggersTester_T3',3);
+INSERT INTO functions (functionid,itemid,triggerid,name,parameter) VALUES (135003,132000,134003,'now','0');
+INSERT INTO triggers (triggerid,expression,description,priority) VALUES (134004,'{135004}=0','TriggersTester_T4',4);
+INSERT INTO functions (functionid,itemid,triggerid,name,parameter) VALUES (135004,132000,134004,'now','0');
+INSERT INTO triggers (triggerid,expression,description,priority) VALUES (134005,'{135005}=0','TriggersTester_T5',5);
+INSERT INTO functions (functionid,itemid,triggerid,name,parameter) VALUES (135005,132000,134005,'now','0');
+
+INSERT INTO triggers (triggerid,expression,description,priority) VALUES (134100,'{135100}=0','TriggersTesterTmpl_T0',0);
+INSERT INTO functions (functionid,itemid,triggerid,name,parameter) VALUES (135100,132001,134100,'now','0');
+INSERT INTO triggers (triggerid,expression,description,priority) VALUES (134101,'{135101}=0','TriggersTesterTmpl_T1',1);
+INSERT INTO functions (functionid,itemid,triggerid,name,parameter) VALUES (135101,132001,134101,'now','0');
+INSERT INTO triggers (triggerid,expression,description,priority) VALUES (134102,'{135102}=0','TriggersTesterTmpl_T2',2);
+INSERT INTO functions (functionid,itemid,triggerid,name,parameter) VALUES (135102,132001,134102,'now','0');
+INSERT INTO triggers (triggerid,expression,description,priority) VALUES (134103,'{135103}=0','TriggersTesterTmpl_T3',3);
+INSERT INTO functions (functionid,itemid,triggerid,name,parameter) VALUES (135103,132001,134103,'now','0');
+INSERT INTO triggers (triggerid,expression,description,priority) VALUES (134104,'{135104}=0','TriggersTesterTmpl_T4',4);
+INSERT INTO functions (functionid,itemid,triggerid,name,parameter) VALUES (135104,132001,134104,'now','0');
+INSERT INTO triggers (triggerid,expression,description,priority) VALUES (134105,'{135105}=0','TriggersTesterTmpl_T5',5);
+INSERT INTO functions (functionid,itemid,triggerid,name,parameter) VALUES (135105,132001,134105,'now','0');
+
+INSERT INTO triggers (triggerid,expression,description,priority,flags) VALUES (134106,'{135106}=0','TriggersTesterLLD_T0',0,2);
+INSERT INTO functions (functionid,itemid,triggerid,name,parameter) VALUES (135106,132004,134106,'now','0');
+INSERT INTO triggers (triggerid,expression,description,priority,flags) VALUES (134107,'{135107}=0','TriggersTesterLLD_T1',1,2);
+INSERT INTO functions (functionid,itemid,triggerid,name,parameter) VALUES (135107,132004,134107,'now','0');
+INSERT INTO triggers (triggerid,expression,description,priority,flags) VALUES (134108,'{135108}=0','TriggersTesterLLD_T2',2,2);
+INSERT INTO functions (functionid,itemid,triggerid,name,parameter) VALUES (135108,132004,134108,'now','0');
+INSERT INTO triggers (triggerid,expression,description,priority,flags) VALUES (134109,'{135109}=0','TriggersTesterLLD_T3',3,2);
+INSERT INTO functions (functionid,itemid,triggerid,name,parameter) VALUES (135109,132004,134109,'now','0');
+INSERT INTO triggers (triggerid,expression,description,priority,flags) VALUES (134110,'{135110}=0','TriggersTesterLLD_T4',4,2);
+INSERT INTO functions (functionid,itemid,triggerid,name,parameter) VALUES (135110,132004,134110,'now','0');
+INSERT INTO triggers (triggerid,expression,description,priority,flags) VALUES (134111,'{135111}=0','TriggersTesterLLD_T5',5,2);
+INSERT INTO functions (functionid,itemid,triggerid,name,parameter) VALUES (135111,132004,134111,'now','0');
+
+INSERT INTO triggers (triggerid,expression,description,priority,flags) VALUES (134112,'{135112}=0','TriggersTesterLLDTmpl_T0',0,2);
+INSERT INTO functions (functionid,itemid,triggerid,name,parameter) VALUES (135112,132005,134112,'now','0');
+INSERT INTO triggers (triggerid,expression,description,priority,flags) VALUES (134113,'{135113}=0','TriggersTesterLLDTmpl_T1',1,2);
+INSERT INTO functions (functionid,itemid,triggerid,name,parameter) VALUES (135113,132005,134113,'now','0');
+INSERT INTO triggers (triggerid,expression,description,priority,flags) VALUES (134114,'{135114}=0','TriggersTesterLLDTmpl_T2',2,2);
+INSERT INTO functions (functionid,itemid,triggerid,name,parameter) VALUES (135114,132005,134114,'now','0');
+INSERT INTO triggers (triggerid,expression,description,priority,flags) VALUES (134115,'{135115}=0','TriggersTesterLLDTmpl_T3',3,2);
+INSERT INTO functions (functionid,itemid,triggerid,name,parameter) VALUES (135115,132005,134115,'now','0');
+INSERT INTO triggers (triggerid,expression,description,priority,flags) VALUES (134116,'{135116}=0','TriggersTesterLLDTmpl_T4',4,2);
+INSERT INTO functions (functionid,itemid,triggerid,name,parameter) VALUES (135116,132005,134116,'now','0');
+INSERT INTO triggers (triggerid,expression,description,priority,flags) VALUES (134117,'{135117}=0','TriggersTesterLLDTmpl_T5',5,2);
+INSERT INTO functions (functionid,itemid,triggerid,name,parameter) VALUES (135117,132005,134117,'now','0');
+-- discovered
+INSERT INTO items (itemid,hostid,type,name,key_,flags) VALUES (132006,130000,2,'TriggersTesterItemLLDDiscovered[res1]','TriggersTesterItemLLDDiscovered[res1]',4);
+INSERT INTO triggers (triggerid,expression,description,priority,flags) VALUES (134118,'{135118}=0','TriggersTesterLLDTmpl_T0[res1]',0,4);
+INSERT INTO functions (functionid,itemid,triggerid,name,parameter) VALUES (135118,132006,134118,'now','0');
+INSERT INTO trigger_discovery (triggerid,parent_triggerid) VALUES (134118,134106);
+-- T4 depends on T5 depends on T0 (LLD discovered version)
+INSERT INTO trigger_depends (triggerdepid,triggerid_down,triggerid_up) VALUES (138888,134004,134005);
+INSERT INTO trigger_depends (triggerdepid,triggerid_down,triggerid_up) VALUES (138889,134005,134118);
