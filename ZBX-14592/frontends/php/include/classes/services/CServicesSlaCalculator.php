@@ -30,13 +30,14 @@ class CServicesSlaCalculator {
 	public function calculateSla(array $serviceAlarms, array $serviceTimes, $periodStart, $periodEnd, $startValue) {
 		/**
 		 * structure of "$data":
-		 * - key	- unique value to sort by
 		 * - alarm	- on/off status (0,1 - off; >1 - on)
 		 * - dt_s	- count of downtime starts
 		 * - dt_e	- count of downtime ends
 		 * - ut_s	- count of uptime starts
 		 * - ut_e	- count of uptime ends
 		 * - clock	- time stamp
+		 *
+		 * Key in $data array contains unique value to sort by.
 		 */
 		$data = [];
 		$latest = 0; // Timestamp of last database record.
@@ -162,10 +163,7 @@ class CServicesSlaCalculator {
 			}
 
 			// Calculate the duration of current state. Negative durations are ignored.
-			$duration = $val['clock'] - $prevTime;
-			if (0 > $duration) {
-				$duration = 0;
-			}
+			$duration = max($val['clock'] - $prevTime, 0);
 
 			// state=0,1 [OK] (1 - information severity of trigger), >1 [PROBLEMS] (trigger severity)
 			if ($startValue > 1) {
