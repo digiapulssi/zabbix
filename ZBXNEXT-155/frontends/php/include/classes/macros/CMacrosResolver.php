@@ -2281,7 +2281,7 @@ class CMacrosResolver extends CMacrosResolverGeneral {
 			'HOST\.(NETMASK|NETWORKS|ROUTER)|'.
 			'HW\.(ARCH|DATE\.(DECOMM|EXPIRY|INSTALL|PURCHASE))|'.
 			'INSTALLER\.NAME|'.
-			'LOCATION(\.(LAT|LON|A|B))?|'.
+			'LOCATION(\.(LAT|LON))?|'.
 			'MACADDRESS\.(A|B)|'.
 			'MODEL|NAME|NOTES|'.
 			'OOB\.(IP|NETMASK|ROUTER)|'.
