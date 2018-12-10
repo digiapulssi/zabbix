@@ -226,7 +226,15 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 	unsigned long		saved_options;
 	struct sockaddr_in	saved_ns;
 #endif
-	struct sockaddr_in6	*saved_ns6;
+
+#if defined(HAVE_RES_EXT)		/* BSD */
+	struct sockaddr_storage		saved_ns6;
+#elif defined(HAVE_RES_EXT_EXT)		/* AIX */
+	union res_sockaddr_union	saved_ns6;
+#else
+	struct sockaddr_in6		*saved_ns6;
+#endif
+
 	struct sockaddr_in6	sockaddrin6;
 	struct addrinfo		hint, *hres = NULL;
 #endif
@@ -573,27 +581,40 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 		}
 
 		memset(&sockaddrin6, '\0', sizeof(sockaddrin6));
+#if defined(HAVE_RES_SIN6_LEN)
+		sockaddrin6.sin6_len = sizeof(sockaddrin6);
+#endif
 		sockaddrin6.sin6_addr = in6addr;
 		sockaddrin6.sin6_family = AF_INET6;
 		sockaddrin6.sin6_port = htons(ZBX_DEFAULT_DNS_PORT);
-#if defined(HAVE_RES_NINIT) && !defined(_AIX)
+#if defined(HAVE_RES_NINIT) && !defined(_AIX) && defined(HAVE_RES_U_EXT)
 		saved_ns6 = res_state_local._u._ext.nsaddrs[0];
+		saved_nscount = res_state_local.nscount;
+
+		memset(&res_state_local.nsaddr_list[0], '\0', sizeof(res_state_local.nsaddr_list[0]));
 		res_state_local._u._ext.nsaddrs[0] = &sockaddrin6;
 		res_state_local._u._ext.nssocks[0] = -1;
-		memset(&res_state_local.nsaddr_list[0], '\0', sizeof(res_state_local.nsaddr_list[0]));
-		saved_nscount = res_state_local.nscount;
 		res_state_local.nscount = 1;
-#else	/* thread-unsafe resolver API */
+#else
+#if defined(HAVE_RES_U_EXT) || defined(HAVE_RES_U_EXT) || defined(HAVE_RES_EXT) || defined(HAVE_RES_EXT_EXT)
 		memcpy(&saved_ns, &(_res.nsaddr_list[0]), sizeof(struct sockaddr_in));
-		saved_ns6 = _res._u._ext.nsaddrs[0];
-		save_nssocks = _res._u._ext.nssocks[0];
 		saved_nscount = _res.nscount;
-
 		memset(&_res.nsaddr_list[0], '\0', sizeof(_res.nsaddr_list[0]));
-		_res._u._ext.nsaddrs[0] = &sockaddrin6;
-		_res._u._ext.nssocks[0] = -1;
 		_res.nscount = 1;
 #endif
+#if defined(HAVE_RES_U_EXT)		/* thread-unsafe resolver API /Linux/ */
+		saved_ns6 = _res._u._ext.nsaddrs[0];
+		save_nssocks = _res._u._ext.nssocks[0];
+		_res._u._ext.nsaddrs[0] = &sockaddrin6;
+		_res._u._ext.nssocks[0] = -1;
+#elif defined(HAVE_RES_EXT)		/* thread-unsafe resolver API /BSD/ */
+		memcpy(&saved_ns6, &(_res_ext.nsaddr_list[0]), sizeof(saved_ns6));
+		memcpy(&_res_ext.nsaddrs[0], &sockaddrin6, sizeof(sockaddrin6));
+#elif defined(HAVE_RES_EXT_EXT)		/* thread-unsafe resolver API /AIX/ */
+		memcpy(&saved_ns6, &(_res._ext.ext.nsaddrs[0]), sizeof(saved_ns6));
+		memcpy(&_res._ext.ext.nsaddrs[0], &sockaddrin6, sizeof(sockaddrin6));
+#endif /* #if defined(HAVE_RES_U_EXT) */
+#endif /* #if defined(HAVE_RES_NINIT) && !defined(_AIX) && defined(HAVE_RES_U_EXT) */
 	}
 
 #if defined(HAVE_RES_NINIT) && !defined(_AIX)
@@ -636,12 +657,20 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 	{
 		if (AF_INET6 == ip_type)
 		{
+#if defined(HAVE_RES_U_EXT)
 			_res._u._ext.nsaddrs[0] = saved_ns6;
 			_res._u._ext.nssocks[0] = save_nssocks;
+#elif defined(HAVE_RES_EXT)
+			memcpy(&_res_ext.nsaddrs[0], &saved_ns6, sizeof(saved_ns6));
+#elif defined(HAVE_RES_EXT_EXT)
+			memcpy(&_res._ext.ext.nsaddrs[0], &saved_ns6, sizeof(saved_ns6));
+#endif
 		}
 
+#if defined(HAVE_RES_U_EXT) || defined(HAVE_RES_EXT) || defined(HAVE_RES_EXT_EXT)
 		memcpy(&(_res.nsaddr_list[0]), &saved_ns, sizeof(struct sockaddr_in));
 		_res.nscount = saved_nscount;
+#endif
 	}
 
 #endif
