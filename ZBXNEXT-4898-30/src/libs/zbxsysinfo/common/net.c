@@ -229,6 +229,8 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 
 #if defined(HAVE_RES_EXT_EXT)		/* AIX */
 	union res_sockaddr_union	saved_ns6;
+#elif defined(HAVE_RES_U_EXT_EXT)	/* BSD */
+	struct __res_state_ext		*saved_ns6;
 #else
 	struct sockaddr_in6		*saved_ns6;
 #endif
@@ -597,7 +599,7 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 #		ifdef HAVE_RES_U_EXT	/* Linux */
 		res_state_local._u._ext.nsaddrs[0] = &sockaddrin6;
 #		else			/* BSD */
-		res_state_local._u._ext.ext = &sockaddrin6;
+		res_state_local._u._ext.ext = (struct __res_state_ext*)&sockaddrin6;
 #		endif
 		res_state_local._u._ext.nssocks[0] = -1;
 		res_state_local.nscount = 1;
