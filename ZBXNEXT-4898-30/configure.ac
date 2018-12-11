@@ -344,7 +344,7 @@ AC_DEFINE(HAVE_RES_U_EXT,1,[Define to 1 if '_res._u._ext.nsaddrs[]' exists. /Lin
 AC_MSG_RESULT(yes),
 AC_MSG_RESULT(no))
 
-AC_MSG_CHECKING(for _res_ext.nsaddr_list[])
+AC_MSG_CHECKING(for _res._u._ext.ext)
 AC_TRY_LINK(
 [
 #ifdef HAVE_SYS_TYPES_H
@@ -367,11 +367,11 @@ AC_TRY_LINK(
 #endif	/* T_SOA */
 ],
 [
-	struct sockaddr_storeage	*ss;
+	struct __res_state_ext	*ext;
 
-	ss = &_res_ext.nsaddr_list[0];
+	ext = _res._u._ext.ext;
 ],
-AC_DEFINE(HAVE_RES_EXT,1,[Define to 1 if '_res_ext.nsaddr_list[]' exists. /BSD/])
+AC_DEFINE(HAVE_RES_U_EXT_EXT,1,[Define to 1 if '_res._u._ext.ext' exists. /BSD/])
 AC_MSG_RESULT(yes),
 AC_MSG_RESULT(no))
 

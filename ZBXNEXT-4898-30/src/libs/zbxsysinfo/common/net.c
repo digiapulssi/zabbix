@@ -227,9 +227,7 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 	struct sockaddr_in	saved_ns;
 #endif
 
-#if defined(HAVE_RES_EXT)		/* BSD */
-	struct sockaddr_storage		saved_ns6;
-#elif defined(HAVE_RES_EXT_EXT)		/* AIX */
+#if defined(HAVE_RES_EXT_EXT)		/* AIX */
 	union res_sockaddr_union	saved_ns6;
 #else
 	struct sockaddr_in6		*saved_ns6;
@@ -587,37 +585,47 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 		sockaddrin6.sin6_addr = in6addr;
 		sockaddrin6.sin6_family = AF_INET6;
 		sockaddrin6.sin6_port = htons(ZBX_DEFAULT_DNS_PORT);
-#if defined(HAVE_RES_NINIT) && !defined(_AIX) && defined(HAVE_RES_U_EXT)
+#if defined(HAVE_RES_NINIT) && !defined(_AIX) && (defined(HAVE_RES_U_EXT) || defined(HAVE_RES_U_EXT_EXT))
+#		ifdef HAVE_RES_U_EXT	/* Linux */
 		saved_ns6 = res_state_local._u._ext.nsaddrs[0];
+#		else			/* BSD */
+		saved_ns6 = res_state_local._u._ext.ext;
+#		endif
 		saved_nscount = res_state_local.nscount;
 
 		memset(&res_state_local.nsaddr_list[0], '\0', sizeof(res_state_local.nsaddr_list[0]));
+#		ifdef HAVE_RES_U_EXT	/* Linux */
 		res_state_local._u._ext.nsaddrs[0] = &sockaddrin6;
+#		else			/* BSD */
+		res_state_local._u._ext.ext = &sockaddrin6;
+#		endif
 		res_state_local._u._ext.nssocks[0] = -1;
 		res_state_local.nscount = 1;
 #else
-#if defined(HAVE_RES_U_EXT) || defined(HAVE_RES_U_EXT) || defined(HAVE_RES_EXT) || defined(HAVE_RES_EXT_EXT)
+#		if defined(HAVE_RES_U_EXT) || defined(HAVE_RES_U_EXT_EXT) || defined(HAVE_RES_EXT_EXT)
 		memcpy(&saved_ns, &(_res.nsaddr_list[0]), sizeof(struct sockaddr_in));
 		saved_nscount = _res.nscount;
 		memset(&_res.nsaddr_list[0], '\0', sizeof(_res.nsaddr_list[0]));
 		_res.nscount = 1;
-#endif
-#if defined(HAVE_RES_U_EXT)		/* thread-unsafe resolver API /Linux/ */
+#		endif
+#		if defined(HAVE_RES_U_EXT)		/* thread-unsafe resolver API /Linux/ */
 		saved_ns6 = _res._u._ext.nsaddrs[0];
 		save_nssocks = _res._u._ext.nssocks[0];
 		_res._u._ext.nsaddrs[0] = &sockaddrin6;
 		_res._u._ext.nssocks[0] = -1;
-#elif defined(HAVE_RES_EXT)		/* thread-unsafe resolver API /BSD/ */
-		memcpy(&saved_ns6, &(_res_ext.nsaddr_list[0]), sizeof(saved_ns6));
-		memcpy(&_res_ext.nsaddr_list[0], &sockaddrin6, sizeof(sockaddrin6));
-#elif defined(HAVE_RES_EXT_EXT)		/* thread-unsafe resolver API /AIX/ */
+#		elif defined(HAVE_RES_U_EXT_EXT)		/* thread-unsafe resolver API /BSD/ */
+		saved_ns6 = _res._u._ext.ext;
+		save_nssocks = _res._u._ext.nssocks[0];
+		_res._u._ext.ext = &sockaddrin6;
+		_res._u._ext.nssocks[0] = -1;
+#		elif defined(HAVE_RES_EXT_EXT)		/* thread-unsafe resolver API /AIX/ */
 		memcpy(&saved_ns6, &(_res._ext.ext.nsaddrs[0]), sizeof(saved_ns6));
 		memcpy(&_res._ext.ext.nsaddrs[0], &sockaddrin6, sizeof(sockaddrin6));
-#endif /* #if defined(HAVE_RES_U_EXT) */
+#		endif /* #if defined(HAVE_RES_U_EXT) */
 #endif /* #if defined(HAVE_RES_NINIT) && !defined(_AIX) && defined(HAVE_RES_U_EXT) */
 	}
 
-#if defined(HAVE_RES_NINIT) && !defined(_AIX)
+#if defined(HAVE_RES_NINIT) && !defined(_AIX) && (defined(HAVE_RES_U_EXT) || defined(HAVE_RES_U_EXT_EXT))
 	if (0 != use_tcp)
 		res_state_local.options |= RES_USEVC;
 
@@ -625,10 +633,13 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 	res_state_local.retry = retry;
 
 	res = res_nsend(&res_state_local, buf, res, answer.buffer, sizeof(answer.buffer));
-
 	if (NULL != ip && '\0' != *ip && AF_INET6 == ip_type)
 	{
+#		ifdef HAVE_RES_U_EXT	/* Linux */
 		res_state_local._u._ext.nsaddrs[0] = saved_ns6;
+#		else			/* BSD */
+		res_state_local._u._ext.ext = saved_ns6;
+#		endif
 		res_state_local.nscount = saved_nscount;
 	}
 #	ifdef HAVE_RES_NDESTROY
@@ -657,20 +668,21 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 	{
 		if (AF_INET6 == ip_type)
 		{
-#if defined(HAVE_RES_U_EXT)
+#			if defined(HAVE_RES_U_EXT)		/* Linux */
 			_res._u._ext.nsaddrs[0] = saved_ns6;
 			_res._u._ext.nssocks[0] = save_nssocks;
-#elif defined(HAVE_RES_EXT)
-			memcpy(&_res_ext.nsaddr_list[0], &saved_ns6, sizeof(saved_ns6));
-#elif defined(HAVE_RES_EXT_EXT)
+#			elif defined(HAVE_RES_U_EXT_EXT)	/* BSD */
+			_res._u._ext.ext = saved_ns6;
+			_res._u._ext.nssocks[0] = save_nssocks;
+#			elif defined(HAVE_RES_EXT_EXT)		/* AIX */
 			memcpy(&_res._ext.ext.nsaddrs[0], &saved_ns6, sizeof(saved_ns6));
-#endif
+#			endif
 		}
 
-#if defined(HAVE_RES_U_EXT) || defined(HAVE_RES_EXT) || defined(HAVE_RES_EXT_EXT)
+#		if defined(HAVE_RES_U_EXT) || defined(HAVE_RES_U_EXT_EXT) || defined(HAVE_RES_EXT_EXT)
 		memcpy(&(_res.nsaddr_list[0]), &saved_ns, sizeof(struct sockaddr_in));
 		_res.nscount = saved_nscount;
-#endif
+#		endif
 	}
 
 #endif
