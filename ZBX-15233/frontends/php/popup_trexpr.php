@@ -283,7 +283,7 @@ $functions = [
 		'operators' => ['=', '<>', '>', '<', '>=', '<=']
 	],
 	'fuzzytime' => [
-		'description' => _('fuzzytime() - Difference between item timestamp value and Zabbix server timestamp is over T seconds (1 - true, 0 - false)'),
+		'description' => _('fuzzytime() - Difference between item value (as timestamp) and Zabbix server timestamp is less than or equal to T seconds (1 - true, 0 - false)'),
 		'params' => $param1Sec,
 		'allowed_types' => $allowedTypesNumeric,
 		'operators' => ['=', '<>']
