@@ -1218,20 +1218,24 @@ output {
   -moz-border-radius: 2px;
   border-radius: 2px; }
 
-.list-check-radio li, .list-hor-check-radio li {
+.list-check-radio li, .grid-check-radio li, .list-hor-check-radio li {
   display: block;
   padding: .3em 0; }
-.list-check-radio label, .list-hor-check-radio label {
+.list-check-radio label, .grid-check-radio label, .list-hor-check-radio label {
   padding: 0 0 0 18px;
   display: inline-block;
   text-indent: -18px;
   max-width: 600px; }
-  .list-check-radio label input[type="checkbox"], .list-hor-check-radio label input[type="checkbox"] {
+  .list-check-radio label input[type="checkbox"], .grid-check-radio label input[type="checkbox"], .list-hor-check-radio label input[type="checkbox"] {
     left: -3px;
     margin: 0; }
-  .list-check-radio label input[type="radio"], .list-hor-check-radio label input[type="radio"] {
+  .list-check-radio label input[type="radio"], .grid-check-radio label input[type="radio"], .list-hor-check-radio label input[type="radio"] {
     left: -3px;
     margin: 0; }
+
+.grid-check-radio {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, 170px); }
 
 .list-hor-check-radio li {
   display: inline-block;
@@ -1300,7 +1304,7 @@ output {
       position: relative;
       z-index: 2; }
     .radio-segmented input[type="radio"]:checked + label {
-      color: #fff;
+      color: white;
       border-color: #4f4f4f;
       background-color: #4f4f4f;
       position: relative;
@@ -1585,7 +1589,7 @@ button {
     box-shadow: 0 0 0 0px !important; }
   .btn-link[disabled] {
     background-color: transparent; }
-    .btn-link[disabled]:hover {
+    [disabled].btn-link:hover {
       background-color: transparent; }
 
 .btn-search {
@@ -1832,7 +1836,7 @@ button {
       box-shadow: 0 0 0 2px rgba(66, 154, 227, 0.35); }
     .time-quick li a.selected {
       background: #4f4f4f;
-      color: #fff;
+      color: white;
       -webkit-transition: background-color 0.2s ease-out;
       -moz-transition: background-color 0.2s ease-out;
       transition: background-color 0.2s ease-out; }
@@ -2295,36 +2299,46 @@ button[disabled], button[disabled]:hover, button[disabled]:active {
 @-webkit-keyframes zoom-in-out {
   0% {
     transform: scale(1); }
+
   50% {
     transform: scale(1.05); }
+
   100% {
     transform: scale(1); } }
 @-moz-keyframes zoom-in-out {
   0% {
     transform: scale(1); }
+
   50% {
     transform: scale(1.05); }
+
   100% {
     transform: scale(1); } }
 @-o-keyframes zoom-in-out {
   0% {
     transform: scale(1); }
+
   50% {
     transform: scale(1.05); }
+
   100% {
     transform: scale(1); } }
 @keyframes zoom-in-out {
   0% {
     transform: scale(1); }
+
   50% {
     transform: scale(1.05); }
+
   100% {
     transform: scale(1); } }
 @keyframes zoom-in-out {
   0% {
     transform: scale(1); }
+
   50% {
     transform: scale(1.05); }
+
   100% {
     transform: scale(1); } }
 .new-widget {
@@ -2743,7 +2757,7 @@ button[disabled], button[disabled]:hover, button[disabled]:active {
     margin: 0 0 0 10px; }
 
 .overlay-bg {
-  background-color: #000;
+  background-color: black;
   width: 100%;
   height: 100%;
   position: fixed;
@@ -2775,7 +2789,7 @@ button[disabled], button[disabled]:hover, button[disabled]:active {
         transition: background-color 0.2s ease-out; }
         .calendar table tbody td.selected {
           background-color: #4f4f4f;
-          color: #fff; }
+          color: white; }
           .calendar table tbody td.selected:hover {
             background-color: #454545; }
         .calendar table tbody td:hover {
@@ -3155,7 +3169,7 @@ a.link-action {
 
 .progress-bar-label {
   display: none;
-  color: #fff;
+  color: white;
   font-size: 0.917em; }
   .progress-bar-label span {
     position: absolute; }
@@ -3188,12 +3202,12 @@ a.link-action {
       border-radius: 0 2px 2px 0; }
 
 .status-green {
-  color: #fff;
+  color: white;
   border: 1px solid #2f9f5e;
   background-color: #34af67; }
 
 .status-red {
-  color: #fff;
+  color: white;
   border: 1px solid #d23d3d;
   background-color: #d64e4e; }
 
@@ -3207,7 +3221,7 @@ a.link-action {
   background-color: #8a9397; }
 
 .status-yellow {
-  color: #fff;
+  color: white;
   border: 1px solid #e79e0b;
   background-color: #f1a50b; }
 
@@ -3273,13 +3287,13 @@ td.na-bg ~ td.na-bg, td.normal-bg ~ td.na-bg, td.info-bg ~ td.na-bg, td.average-
     color: #0e4123; }
 
 .info-bg {
-  color: #00268e; }
+  color: #00268d; }
   .info-bg a.link-action,
   .info-bg input[type="radio"]:checked + label {
-    color: #00268e; }
+    color: #00268d; }
 
 .log-info-bg {
-  color: #00268e;
+  color: #00268d;
   background-color: #7499ff; }
 
 .average-bg {
@@ -3362,10 +3376,10 @@ td.na-bg ~ td.na-bg, td.normal-bg ~ td.na-bg, td.info-bg ~ td.na-bg, td.average-
   color: #ff3333; }
 
 .ok-unack-fg {
-  color: #00ff00; }
+  color: lime; }
 
 .ok-ack-fg {
-  color: #00ff00; }
+  color: lime; }
 
 .list-table tbody tr.row-selected, .drag-drop-area, .navtree .tree .tree-item.selected > .tree-row, .navtree .tree .tree-item.selected > .tree-row:hover {
   background-color: #2f280a; }
@@ -3388,7 +3402,7 @@ td.na-bg ~ td.na-bg, td.normal-bg ~ td.na-bg, td.info-bg ~ td.na-bg, td.average-
   .msg-good ul {
     border-top-color: #344e3f; }
   .msg-good button {
-    background-color: #fff;
+    background-color: white;
     color: #2f9f5e;
     border-color: #344e3f; }
 
@@ -3431,7 +3445,7 @@ td.na-bg ~ td.na-bg, td.normal-bg ~ td.na-bg, td.info-bg ~ td.na-bg, td.average-
   .msg-bad ul {
     border-top-color: #503434; }
   .msg-bad button {
-    background-color: #fff;
+    background-color: white;
     color: #ae2929;
     border-color: #503434; }
 
@@ -3640,9 +3654,9 @@ td.na-bg ~ td.na-bg, td.normal-bg ~ td.na-bg, td.info-bg ~ td.na-bg, td.average-
   .subfilter-disable-btn:hover {
     color: #e5e5e5; }
   .subfilter-disable-btn:focus {
-    color: #d9d9d9; }
+    color: #d8d8d8; }
   .subfilter-disable-btn:active {
-    color: #d9d9d9; }
+    color: #d8d8d8; }
 
 .color-picker {
   height: 20px;
@@ -3707,7 +3721,7 @@ td.na-bg ~ td.na-bg, td.normal-bg ~ td.na-bg, td.info-bg ~ td.na-bg, td.average-
     height: 100%;
     opacity: 0;
     animation: fadein 2s ease-in 0.5s normal forwards; }
-  .in-progress.delayed-15s::before {
+  .delayed-15s.in-progress::before {
     animation-delay: 15s; }
   .in-progress:after {
     z-index: 3;
@@ -3726,7 +3740,7 @@ td.na-bg ~ td.na-bg, td.normal-bg ~ td.na-bg, td.info-bg ~ td.na-bg, td.average-
     border-bottom: 2px solid #0275b8;
     opacity: 0;
     animation: fadein 2s ease-in 0.5s normal forwards,load 0.6s infinite linear; }
-  .in-progress.delayed-15s::after {
+  .delayed-15s.in-progress::after {
     animation-delay: 15s; }
 
 .preloader-container {
@@ -4046,29 +4060,29 @@ svg {
     max-width: 95%; }
 
 @keyframes fadein {
-  from {
+  .navtree from {
     opacity: 0; }
-  to {
+  .navtree to {
     opacity: 1; } }
 @-moz-keyframes fadein {
-  from {
+  .navtree from {
     opacity: 0; }
-  to {
+  .navtree to {
     opacity: 1; } }
 @-webkit-keyframes fadein {
-  from {
+  .navtree from {
     opacity: 0; }
-  to {
+  .navtree to {
     opacity: 1; } }
 @-ms-keyframes fadein {
-  from {
+  .navtree from {
     opacity: 0; }
-  to {
+  .navtree to {
     opacity: 1; } }
 @-o-keyframes fadein {
-  from {
+  .navtree from {
     opacity: 0; }
-  to {
+  .navtree to {
     opacity: 1; } }
 .navtree .tree {
   width: 100%;
@@ -4183,7 +4197,7 @@ svg {
         flex: 0 0 7px;
         -ms-flex: 0 0 auto;
         background: gray;
-        color: #fff;
+        color: white;
         padding: 3px 4px 2px;
         font-size: 12px;
         line-height: 1;
@@ -4518,7 +4532,7 @@ svg {
   border-color: #404040; }
 
 .top-subnav a:focus {
-  border-bottom: 4px solid #787878 !important;
+  border-bottom: 4px solid #777777 !important;
   outline: none; }
 
 .list-table.compact-view tr:hover td.na-bg, .list-table.compact-view tr:hover td.normal-bg, .list-table.compact-view tr:hover td.info-bg, .list-table.compact-view tr:hover td.average-bg, .list-table.compact-view tr:hover td.warning-bg, .list-table.compact-view tr:hover td.high-bg, .list-table.compact-view tr:hover td.disaster-bg, .list-table.compact-view tr:hover td.info-bg, .list-table.compact-view tr:hover td.warning-bg, .list-table.compact-view tr:hover td.average-bg, .list-table.compact-view tr:hover td.high-bg, .list-table.compact-view tr:hover td.disaster-bg {
@@ -4538,7 +4552,7 @@ svg {
   background-position: -87px -547px; }
 
 .time-quick li a:focus {
-  color: #fff; }
+  color: white; }
 
 .icon-action-msgs[data-count]::after {
   color: #f2f2f2; }
