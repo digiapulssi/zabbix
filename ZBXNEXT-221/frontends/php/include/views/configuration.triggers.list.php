@@ -28,20 +28,54 @@ else {
 	$create_button = new CSubmit('form', _('Create trigger'));
 }
 
-
-$severities_filter = new CCheckBoxList('filter_severity');
-$severities_filter
-	->addCheckBox(_('Not classified'), TRIGGER_SEVERITY_NOT_CLASSIFIED)
-	->addCheckBox(_('Information'), TRIGGER_SEVERITY_INFORMATION)
-	->addCheckBox(_('Warning'), TRIGGER_SEVERITY_WARNING)
-	->addCheckBox(_('Average'), TRIGGER_SEVERITY_AVERAGE)
-	->addCheckBox(_('High'), TRIGGER_SEVERITY_HIGH)
-	->addCheckBox(_('Disaster'), TRIGGER_SEVERITY_DISASTER);
-
 $filter_column1 = (new CFormList())
-	->addRow(_('Severity'), $severities_filter
+	->addRow((new CLabel(_('Host group'), 'filter_groupid_ms')),
+		(new CMultiSelect([
+			'name' => 'filter_groupid',
+			'object_name' => 'hostGroup',
+			'multiple' => false,
+			'data' => [],
+			'popup' => [
+				'parameters' => [
+					'srctbl' => 'host_groups',
+					'srcfld1' => 'groupid',
+					'dstfrm' => 'ASD',
+					'dstfld1' => 'filter_groupid',
+					'editable' => true
+				]
+			]
+		]))->setWidth(ZBX_TEXTAREA_FILTER_SMALL_WIDTH)
 	)
-	->addRow(_('State'),
+	->addRow((new CLabel(_('Host'), 'filter_hostid_ms')),
+		(new CMultiSelect([
+			'name' => 'filter_hostid',
+			'object_name' => 'hosts',
+			'multiple' => false,
+			'data' => [],
+			'popup' => [
+				'parameters' => [
+					'srctbl' => 'host_templates',
+					'srcfld1' => 'hostid',
+					'dstfrm' => 'ASD',
+					'dstfld1' => 'filter_hostid',
+					'editable' => true,
+					'templated_hosts' => true
+				]
+			]
+		]))->setWidth(ZBX_TEXTAREA_FILTER_SMALL_WIDTH)
+	)
+	->addRow(_('Name'),
+		(new CTextBox('filter_name', 'ASD'))->setWidth(ZBX_TEXTAREA_FILTER_SMALL_WIDTH)
+	)
+	->addRow(_('Severity'),
+		(new CCheckBoxList('filter_severity'))
+			->addCheckBox(_('Not classified'), TRIGGER_SEVERITY_NOT_CLASSIFIED)
+			->addCheckBox(_('Information'), TRIGGER_SEVERITY_INFORMATION)
+			->addCheckBox(_('Warning'), TRIGGER_SEVERITY_WARNING)
+			->addCheckBox(_('Average'), TRIGGER_SEVERITY_AVERAGE)
+			->addCheckBox(_('High'), TRIGGER_SEVERITY_HIGH)
+			->addCheckBox(_('Disaster'), TRIGGER_SEVERITY_DISASTER)
+	)->addRow(_('State'),
 		(new CRadioButtonList('filter_state', (int) $data['filter_state']))
 			->addValue(_('all'), -1)
 			->addValue(_('Normal'), TRIGGER_STATE_NORMAL)
@@ -55,6 +89,8 @@ $filter_column1 = (new CFormList())
 			->addValue(triggerIndicator(TRIGGER_STATUS_DISABLED), TRIGGER_STATUS_DISABLED)
 			->setModern(true)
 	);
+
+
 
 if ($data['show_value_column']) {
 	$filter_column1->addRow(_('Value'),
@@ -111,7 +147,26 @@ $filter_tags_table->addRow(
 	))->setColSpan(3)
 );
 
-$filter_column2 = (new CFormList())->addRow(_('Tags'), $filter_tags_table);
+$filter_column2 = (new CFormList())
+	->addRow(_('Tags'), $filter_tags_table)
+	->addRow(_('Inherited'),
+		(new CRadioButtonList('filter_inherited', -1))
+			->addValue(_('all'), -1)
+			->addValue(_('Yes'), 1)
+			->addValue(_('No'), 0)
+			->setModern(true))
+	->addRow(_('Discovered'),
+		(new CRadioButtonList('filter_discovered', -1))
+			->addValue(_('all'), -1)
+			->addValue(_('Yes'), 1)
+			->addValue(_('No'), 0)
+			->setModern(true))
+	->addRow(_('With dependencies'),
+		(new CRadioButtonList('filter_dependent', -1))
+			->addValue(_('all'), -1)
+			->addValue(_('Yes'), 1)
+			->addValue(_('No'), 0)
+			->setModern(true));
 
 $filter = (new CFilter(new CUrl('triggers.php')))
 	->setProfile($data['profileIdx'])
