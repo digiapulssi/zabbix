@@ -67,6 +67,7 @@ class CTrigger extends CTriggerGeneral {
 			'applicationids'				=> null,
 			'functions'						=> null,
 			'inherited'						=> null,
+			'dependent'						=> null,
 			'templated'						=> null,
 			'monitored'						=> null,
 			'active'						=> null,
@@ -328,6 +329,18 @@ class CTrigger extends CTriggerGeneral {
 			}
 			else {
 				$sqlParts['where'][] = 't.templateid IS NULL';
+			}
+		}
+
+		// dependent
+		if (!is_null($options['dependent'])) {
+			if ($options['dependent']) {
+				$sqlParts['where'][] = 't.triggerid IN (SELECT td.triggerid_down FROM trigger_depends td WHERE '.
+					dbConditionInt('td.triggerid_down', $options['triggerids']).')';
+			}
+			else {
+				$sqlParts['where'][] = 't.triggerid NOT IN (SELECT td.triggerid_down FROM trigger_depends td WHERE '.
+					dbConditionInt('td.triggerid_down', $options['triggerids']).')';
 			}
 		}
 
