@@ -1403,9 +1403,8 @@ static int	make_logfile_list(unsigned char flags, const char *filename, const in
 			}
 			else
 			{
-				zabbix_log(LOG_LEVEL_WARNING,
-						"there are no recently modified files matching \"%s\" in \"%s\"",
-						format, directory);
+				zabbix_log(LOG_LEVEL_WARNING, "there are no recently modified files matching \"%s\" in"
+						" \"%s\"", format, directory);
 				ret = ZBX_NO_FILE_ERROR;
 			}
 #endif
