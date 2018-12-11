@@ -1820,6 +1820,12 @@ output {
 	}
 }
 
+.grid-check-radio {
+	@extend .list-check-radio;
+	display: grid;
+	grid-template-columns: repeat(auto-fit, 170px);
+}
+
 .list-hor-check-radio {
 	@extend .list-check-radio;
 
