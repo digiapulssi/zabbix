@@ -230,7 +230,7 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 #if defined(HAVE_RES_EXT_EXT)		/* AIX */
 	union res_sockaddr_union	saved_ns6;
 #elif defined(HAVE_RES_U_EXT_EXT)	/* BSD */
-	struct __res_state_ext		*saved_ns6;
+	struct sockaddr_in6		saved_ns6;
 #else
 	struct sockaddr_in6		*saved_ns6;
 #endif
@@ -590,8 +590,6 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 #if defined(HAVE_RES_NINIT) && !defined(_AIX) && (defined(HAVE_RES_U_EXT) || defined(HAVE_RES_U_EXT_EXT))
 #		ifdef HAVE_RES_U_EXT	/* Linux */
 		saved_ns6 = res_state_local._u._ext.nsaddrs[0];
-#		else			/* BSD */
-		saved_ns6 = res_state_local._u._ext.ext;
 #		endif
 		saved_nscount = res_state_local.nscount;
 
@@ -599,7 +597,8 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 #		ifdef HAVE_RES_U_EXT	/* Linux */
 		res_state_local._u._ext.nsaddrs[0] = &sockaddrin6;
 #		else			/* BSD */
-		res_state_local._u._ext.ext = (struct __res_state_ext*)&sockaddrin6;
+		memcpy(res_state_local._u._ext.ext, &sockaddrin6, sizeof(sockaddrin6));
+		res_state_local.nsaddr_list[0].sin_port = htons(ZBX_DEFAULT_DNS_PORT);
 #		endif
 		res_state_local._u._ext.nssocks[0] = -1;
 		res_state_local.nscount = 1;
@@ -615,10 +614,10 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 		save_nssocks = _res._u._ext.nssocks[0];
 		_res._u._ext.nsaddrs[0] = &sockaddrin6;
 		_res._u._ext.nssocks[0] = -1;
-#		elif defined(HAVE_RES_U_EXT_EXT)		/* thread-unsafe resolver API /BSD/ */
-		saved_ns6 = _res._u._ext.ext;
+#		elif defined(HAVE_RES_U_EXT_EXT)	/* thread-unsafe resolver API /BSD/ */
+		memcpy(&saved_ns6, _res._u._ext.ext, sizeof(saved_ns6));
 		save_nssocks = _res._u._ext.nssocks[0];
-		_res._u._ext.ext = &sockaddrin6;
+		memcpy(_res._u._ext.ext, &sockaddrin6, sizeof(sockaddrin6));
 		_res._u._ext.nssocks[0] = -1;
 #		elif defined(HAVE_RES_EXT_EXT)		/* thread-unsafe resolver API /AIX/ */
 		memcpy(&saved_ns6, &(_res._ext.ext.nsaddrs[0]), sizeof(saved_ns6));
@@ -639,8 +638,6 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 	{
 #		ifdef HAVE_RES_U_EXT	/* Linux */
 		res_state_local._u._ext.nsaddrs[0] = saved_ns6;
-#		else			/* BSD */
-		res_state_local._u._ext.ext = saved_ns6;
 #		endif
 		res_state_local.nscount = saved_nscount;
 	}
@@ -674,7 +671,7 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 			_res._u._ext.nsaddrs[0] = saved_ns6;
 			_res._u._ext.nssocks[0] = save_nssocks;
 #			elif defined(HAVE_RES_U_EXT_EXT)	/* BSD */
-			_res._u._ext.ext = saved_ns6;
+			memcpy(_res._u._ext.ext, &saved_ns6, sizeof(saved_ns6));
 			_res._u._ext.nssocks[0] = save_nssocks;
 #			elif defined(HAVE_RES_EXT_EXT)		/* AIX */
 			memcpy(&_res._ext.ext.nsaddrs[0], &saved_ns6, sizeof(saved_ns6));
