@@ -28,13 +28,18 @@ else {
 	$create_button = new CSubmit('form', _('Create trigger'));
 }
 
+
+$severities_filter = new CCheckBoxList('filter_severity');
+$severities_filter
+	->addCheckBox(_('Not classified'), TRIGGER_SEVERITY_NOT_CLASSIFIED)
+	->addCheckBox(_('Information'), TRIGGER_SEVERITY_INFORMATION)
+	->addCheckBox(_('Warning'), TRIGGER_SEVERITY_WARNING)
+	->addCheckBox(_('Average'), TRIGGER_SEVERITY_AVERAGE)
+	->addCheckBox(_('High'), TRIGGER_SEVERITY_HIGH)
+	->addCheckBox(_('Disaster'), TRIGGER_SEVERITY_DISASTER);
+
 $filter_column1 = (new CFormList())
-	->addRow(_('Severity'),
-		new CSeverity([
-			'name' => 'filter_priority',
-			'value' => (int) $data['filter_priority'],
-			'all' => true
-		])
+	->addRow(_('Severity'), $severities_filter
 	)
 	->addRow(_('State'),
 		(new CRadioButtonList('filter_state', (int) $data['filter_state']))

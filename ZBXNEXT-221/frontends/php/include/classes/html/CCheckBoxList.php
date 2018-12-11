@@ -30,7 +30,7 @@ class CCheckBoxList extends CList {
 		$this->name = $name;
 	}
 
-	public function addItem($label, $name, $checked = false) {
+	public function addCheckBox($label, $name, $checked = false) {
 		parent::addItem((new CCheckBox($this->name.'['.$name.']'))
 			->setLabel($label)
 			->setChecked($checked));
