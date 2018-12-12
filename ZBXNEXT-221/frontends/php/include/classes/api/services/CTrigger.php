@@ -335,12 +335,12 @@ class CTrigger extends CTriggerGeneral {
 		// dependent
 		if (!is_null($options['dependent'])) {
 			if ($options['dependent']) {
-				$sqlParts['where'][] = 't.triggerid IN (SELECT td.triggerid_down FROM trigger_depends td WHERE '.
-					dbConditionInt('td.triggerid_down', $options['triggerids']).')';
+				$sqlParts['where'][] = 'EXISTS (SELECT NULL FROM trigger_depends td WHERE '.
+					'td.triggerid_down = t.triggerid)';
 			}
 			else {
-				$sqlParts['where'][] = 't.triggerid NOT IN (SELECT td.triggerid_down FROM trigger_depends td WHERE '.
-					dbConditionInt('td.triggerid_down', $options['triggerids']).')';
+				$sqlParts['where'][] = 'NOT EXISTS (SELECT NULL FROM trigger_depends td WHERE '.
+					'td.triggerid_down = t.triggerid)';
 			}
 		}
 

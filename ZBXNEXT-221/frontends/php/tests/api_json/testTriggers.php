@@ -63,6 +63,28 @@ class testTriggers extends CAPITest {
 					'error' => null,
 					'triggerids' => array_diff($triggerids, $dependent_triggerids)
 				]
+			],
+			[
+				'params' => [
+					'output' => ['triggerids'],
+					'hostids' => [130000],
+					'dependent' => true
+				],
+				'expect' => [
+					'error' => null,
+					'triggerids' => $dependent_triggerids
+				]
+			],
+			[
+				'params' => [
+					'output' => ['triggerids'],
+					'hostids' => [130000],
+					'dependent' => false
+				],
+				'expect' => [
+					'error' => null,
+					'triggerids' => array_diff($triggerids, $dependent_triggerids)
+				]
 			]
 		];
 	}
