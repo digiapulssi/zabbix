@@ -42,7 +42,7 @@ if (!opt('period') && !opt('from'))
 	# only calculate once a cycle
 	if ($from % $delay != 0)
 	{
-		dbg("will NOT calculate");
+		dbg("not yet time to calculate");
 		slv_exit(SUCCESS);
 	}
 }
@@ -61,7 +61,7 @@ else
 	$tlds_ref = get_tlds('RDDS', $till);
 }
 
-my $rdap_items = get_templated_items_like("RDAP", $cfg_rdap_key_in);;
+my $rdap_items = get_templated_items_like("RDAP", $cfg_rdap_key_in);
 
 while ($period > 0)
 {

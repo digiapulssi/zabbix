@@ -43,7 +43,7 @@ if (!opt('period') && !opt('from'))
 	# only calculate once a cycle
 	if ($from % $delay != 0)
 	{
-		dbg("will NOT calculate");
+		dbg("not yet time to calculate");
 		slv_exit(SUCCESS);
 	}
 }

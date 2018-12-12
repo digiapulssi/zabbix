@@ -4,15 +4,15 @@ rsm.slv.*.rollweek.pl - scripts to calculate different service rolling week unav
 
 =head1 SYNOPSIS
 
-rsm.slv.*.rollweek.pl [--from <timestamp>] [--tld <tld>] [--dry-run] [--warnslow <seconds>] [--debug] [--help]
+rsm.slv.*.rollweek.pl [--now <timestamp>] [--tld <tld>] [--dry-run] [--warnslow <seconds>] [--debug] [--help]
 
 =head1 OPTIONS
 
 =over 8
 
-=item B<--from> timestamp
+=item B<--now> timestamp
 
-Specify Unix timestamp of the beginning of the rolling week.
+Specify time at which calculation should take place in Unix timestamp.
 
 =item B<--tld> tld
 
@@ -44,6 +44,6 @@ time periods when cron was not running.
 
 =head1 EXAMPLES
 
-./rsm.slv.*.rollweek.pl --from 1420063200 --period 10
+./rsm.slv.*.rollweek.pl --now 1420063200 --period 10
 
 =cut

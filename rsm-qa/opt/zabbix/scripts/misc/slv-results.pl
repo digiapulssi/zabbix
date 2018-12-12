@@ -10,6 +10,8 @@ use lib $MYDIR2;
 
 use strict;
 use warnings;
+
+use Data::Dumper;
 use TLD_constants qw(:api);
 use RSM;
 use RSMSLV;
@@ -18,37 +20,12 @@ my @months = (
 	qw/Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec/
 );
 
-parse_opts('tld=s', 'from=n', 'till=n');
+parse_opts('tld=s', 'service=s', 'from=n', 'till=n');
 
 setopt('nolog');
 setopt('dry-run');
 
-$tld = getopt('tld');
-my $from = getopt('from');
-my $till = getopt('till');
-
-usage() unless ($tld);
-
-if (!$from || substr(getopt('from'), 0, length("-")) eq "-")
-{
-	my $t = time();
-
-	print("Current time: ", __ts_human($t), "\n");
-
-	$from = cycle_start($t - 180 - 300, 300);
-
-	if (substr(getopt('from'), 0, length("-")) eq "-")
-	{
-		my $mult = substr(getopt('from'), 1);
-
-		$from -= ($mult * 300);
-	}
-}
-
-if (!$till)
-{
-	$till = $from + 299;	# 5 minutes
-}
+my $delay;
 
 set_slv_config(get_rsm_config());
 
@@ -56,12 +33,72 @@ db_connect();
 
 fail("TLD \"" . getopt('tld') . "\" not found") unless (tld_exists(getopt('tld')));
 
+if (opt('service'))
+{
+	if (getopt('service') eq 'dns')
+	{
+		$delay = get_dns_udp_delay();
+	}
+	elsif (getopt('service') eq 'rdds')
+	{
+		$delay = get_rdds_delay();
+	}
+	else
+	{
+		fail("unknown service \"", getopt('service'), "\" expected: dns, rdds");
+	}
+}
+else
+{
+	$delay = 60;
+}
+
+$tld = getopt('tld');
+my $from = getopt('from');
+my $till = getopt('till');
+
+usage() unless ($tld);
+
+my $now = time();
+
+print("Current time: ", __ts_human($now), "\n");
+
+if (!$from)
+{
+	$from = cycle_start($now - 5 * $delay, $delay);
+}
+elsif (substr($from, 0, length("-")) eq "-")
+{
+	my $mult = substr($from, length("-"));
+
+	$from = cycle_start($now, $delay);
+
+	$from -= ($mult * $delay);
+}
+
+if (!$till)
+{
+	$till = cycle_end($now, $delay);
+}
+
+my $incidents;
+
+if (opt('service'))
+{
+	my $itemid = get_itemid_by_host(getopt('tld'), 'rsm.slv.rdds.avail');
+
+	$incidents = get_incidents($itemid, get_rdds_delay(), $from, $till);
+}
+
+my $service_cond = (opt('service') ? " and i.key_ like '%." . getopt('service') . ".%'" : "");
+
 my %uint_itemids;
 
 my $rows_ref = db_select(
 	"select i.itemid,i.key_".
 	" from items i,hosts h".
 	" where i.hostid=h.hostid".
+		$service_cond.
 		" and h.host='$tld'".
 		" and i.value_type=" . ITEM_VALUE_TYPE_UINT64);
 
@@ -75,6 +112,7 @@ $rows_ref = db_select(
 	"select i.itemid,i.key_".
 	" from items i,hosts h".
 	" where i.hostid=h.hostid".
+		$service_cond.
 		" and h.host='$tld'".
 		" and i.value_type=" . ITEM_VALUE_TYPE_FLOAT);
 
@@ -100,8 +138,8 @@ $rows_ref = db_select(
 		") as b".
 	" order by clock,itemid");
 
-my $prev_cycle_clock = 0;
-my $cycle_values;
+my %cycles;
+my %uniq_items;
 
 foreach my $row_ref (@$rows_ref)
 {
@@ -165,27 +203,29 @@ foreach my $row_ref (@$rows_ref)
 		}
 	}
 
-	my $cycle_clock = cycle_start($clock, 60);
-
-	if ($cycle_clock != $prev_cycle_clock)
-	{
-		printf("%30s\n", "calculated values: $cycle_values") if (defined($cycle_values));
-
-		$cycle_values = 0;
-		__print_header($cycle_clock) unless ($cycle_clock == $prev_cycle_clock);
-	}
-
-	$cycle_values++;
+	my $cycle_clock = cycle_start($clock, $delay);
 
 	$value = "($clock) $value" if (opt('debug'));
 	$service = "($itemid) $service" if (opt('debug'));
 
-	printf("%-40s %s\n", "$service $type", $value);
+	my $item = "$service $type";
 
-	$prev_cycle_clock = $cycle_clock;
+	$cycles{$cycle_clock}{$item} = $value;
+
+	$uniq_items{$item} = 1;
 }
 
-printf("%30s\n", "calculated values: $cycle_values") if (defined($cycle_values));
+foreach my $cycle_clock (sort {$b <=> $a} (keys(%cycles)))
+{
+	__print_header($cycle_clock, __in_incident($cycle_clock));
+
+	foreach my $key (sort(keys(%uniq_items)))
+	{
+		printf("%-30s %s\n", $key, $cycles{$cycle_clock}{$key} // "");
+	}
+}
+
+#printf("%30s\n", "calculated values: $cycle_values") if (defined($cycle_values));
 
 sub __ts_human
 {
@@ -202,10 +242,46 @@ sub __ts_human
 sub __print_header
 {
 	my $clock = shift;
+	my $in_incident = shift;
 
+	my $incident_str;
+
+	if ($in_incident == 1)
+	{
+		$incident_str = ", INCIDENT";
+	}
+	elsif ($in_incident == 2)
+	{
+		$incident_str = ", incident (FP)";
+	}
+	else
+	{
+		$incident_str = "";
+	}
+
+	print("====================================================================================================\n");
+	print("Cycle ", __ts_human($clock), " ($clock)$incident_str\n");
 	print("----------------------------------------------------------------------------------------------------\n");
-	print("Cycle: ", __ts_human($clock), "\n");
-	print("----------------------------------------------------------------------------------------------------\n");
+}
+
+# 0 - clock not in incident
+# 1 - clock in incident
+# 2 - clock in false_positive incident
+sub __in_incident
+{
+	my $clock = shift || die("__in_incident() called without specifying clock");
+
+	foreach my $i (@{$incidents})
+	{
+		if ($clock >= $i->{'start'} && (!defined($i->{'end'}) || $clock <= $i->{'end'}))
+		{
+			return 2 if ($i->{'false_positive'});
+
+			return 1;
+		}
+	}
+
+	return 0;
 }
 
 __END__
@@ -216,7 +292,7 @@ slv-results.pl - show accumulated results stored by cron
 
 =head1 SYNOPSIS
 
-slv-results.pl --tld <tld> [--from <unixtime>] [--till <unixtime>] [--debug] [--help]
+slv-results.pl --tld <tld> [--service <service>] [--from <unixtime>] [--till <unixtime>] [--debug] [--help]
 
 =head1 OPTIONS
 
@@ -226,11 +302,17 @@ slv-results.pl --tld <tld> [--from <unixtime>] [--till <unixtime>] [--debug] [--
 
 Show results of specified TLD.
 
+=item B<--service> tld
+
+Show results of specified service.
+
 =item B<--from> timestamp
 
 There are 2 types of value you can specify with --from:
-- Unix timestamp within the cycle
-- negative number representing number of cycles to go back from @from
+
+  - Unix timestamp within the cycle
+  - negative number representing number of cycles to go back from @from
+
 By default @from is the last complete 5-minute cycle. E. g.
 
 --from -2

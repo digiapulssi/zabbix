@@ -16,18 +16,32 @@ use RSMSLV;
 my $cfg_key_in = 'rsm.slv.rdds.avail';
 my $cfg_key_out = 'rsm.slv.rdds.downtime';
 
-parse_opts();
+parse_opts('tld=s', 'now=n');
 exit_if_running();
 
 set_slv_config(get_rsm_config());
 
 db_connect();
 
-my ($from, $till, $value_ts) = get_downtime_bounds();
+my $now = getopt('now') // time();
+
+my $delay = get_rdds_delay($now - ROLLWEEK_SHIFT_BACK);
+
+my ($from, $till, $value_ts) = get_downtime_bounds($delay, getopt('now'));	# do not pass $now here
 
 my %tld_items;
 
-my $tlds_ref = get_tlds('RDDS', $till);
+my $tlds_ref;
+if (opt('tld'))
+{
+        fail("TLD ", getopt('tld'), " does not exist.") if (tld_exists(getopt('tld')) == 0);
+
+        $tlds_ref = [ getopt('tld') ];
+}
+else
+{
+	$tlds_ref = get_tlds('RDDS', $till);
+}
 
 # just collect itemids
 foreach (@$tlds_ref)

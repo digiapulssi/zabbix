@@ -604,7 +604,7 @@ foreach (@server_keys)
 				}
 
 				# we need down time in minutes, not percent, that's why we can't use "rsm.slv.$service.rollweek" value
-				my ($rollweek_from, $rollweek_till) = get_rollweek_bounds();
+				my ($rollweek_from, $rollweek_till) = get_rollweek_bounds($delay);
 
 				my $rollweek_incidents = get_incidents($avail_itemid, $delay, $rollweek_from, $rollweek_till);
 

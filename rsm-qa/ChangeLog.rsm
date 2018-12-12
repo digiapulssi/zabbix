@@ -1,3 +1,9 @@
+Changes for rsm1.1.0rc46
+
+Bug fixes:
+....I..... [450] improved calculation of RDDS Rolling Week and Monthly Downtime by respecting item delay (dimir)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.1.0rc45
 
 Bug fixes:
