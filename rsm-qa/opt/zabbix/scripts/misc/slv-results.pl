@@ -31,6 +31,7 @@ set_slv_config(get_rsm_config());
 
 db_connect();
 
+fail("TLD must be specified") unless (opt('tld'));
 fail("TLD \"" . getopt('tld') . "\" not found") unless (tld_exists(getopt('tld')));
 
 if (opt('service'))
