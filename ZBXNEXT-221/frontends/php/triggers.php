@@ -27,6 +27,7 @@ require_once dirname(__FILE__).'/include/forms.inc.php';
 
 $page['title'] = _('Configuration of triggers');
 $page['file'] = 'triggers.php';
+$page['scripts'] = ['multiselect.js'];
 
 require_once dirname(__FILE__).'/include/page_header.php';
 
@@ -78,6 +79,12 @@ $fields = [
 														TRIGGER_SEVERITY_DISASTER
 													]), null
 												],
+	'filter_groupids' =>						[T_ZBX_INT, O_OPT, null, DB_ID, null],
+	'filter_hostids' =>							[T_ZBX_INT, O_OPT, null, DB_ID, null],
+	'filter_inherited' =>						[T_ZBX_INT, O_OPT, null, IN([-1, 0, 1]), null],
+	'filter_discovered' =>						[T_ZBX_INT, O_OPT, null, IN([-1, 0, 1]), null],
+	'filter_dependent' =>						[T_ZBX_INT, O_OPT, null, IN([-1, 0, 1]), null],
+	'filter_name' =>							[T_ZBX_STR, O_OPT, null, null, null],
 	'filter_state' =>							[T_ZBX_INT, O_OPT, null,
 													IN([-1, TRIGGER_STATE_NORMAL, TRIGGER_STATE_UNKNOWN]), null
 												],
@@ -649,7 +656,13 @@ else {
 	CProfile::update('web.'.$page['file'].'.sortorder', $data['sortorder'], PROFILE_TYPE_STR);
 
 	if (hasRequest('filter_set')) {
-		CProfile::update('web.triggers.filter_priority', getRequest('filter_priority', -1), PROFILE_TYPE_INT);
+		CProfile::update('web.triggers.filter_inherited', getRequest('filter_inherited', -1), PROFILE_TYPE_INT);
+		CProfile::update('web.triggers.filter_discovered', getRequest('filter_discovered', -1), PROFILE_TYPE_INT);
+		CProfile::update('web.triggers.filter_dependent', getRequest('filter_dependent', -1), PROFILE_TYPE_INT);
+		CProfile::update('web.triggers.filter_name', getRequest('filter_name', ''), PROFILE_TYPE_STR);
+		CProfile::updateArray('web.triggers.filter_priority', getRequest('filter_priority', []), PROFILE_TYPE_INT);
+		CProfile::updateArray('web.triggers.filter_groupids', getRequest('filter_groupids', []), PROFILE_TYPE_INT);
+		CProfile::updateArray('web.triggers.filter_hostids', getRequest('filter_hostids', []), PROFILE_TYPE_INT);
 		CProfile::update('web.triggers.filter_state', getRequest('filter_state', -1), PROFILE_TYPE_INT);
 		CProfile::update('web.triggers.filter_status', getRequest('filter_status', -1), PROFILE_TYPE_INT);
 
@@ -676,7 +689,13 @@ else {
 		CProfile::updateArray('web.triggers.filter.tags.operator', $filter_tags['operators'], PROFILE_TYPE_INT);
 	}
 	elseif (hasRequest('filter_rst')) {
+		CProfile::delete('web.triggers.filter_inherited');
+		CProfile::delete('web.triggers.filter_discovered');
+		CProfile::delete('web.triggers.filter_dependent');
+		CProfile::delete('web.triggers.filter_name');
 		CProfile::delete('web.triggers.filter_priority');
+		CProfile::delete('web.triggers.filter_groupids');
+		CProfile::delete('web.triggers.filter_hostids');
 		CProfile::delete('web.triggers.filter_state');
 		CProfile::delete('web.triggers.filter_status');
 
@@ -691,7 +710,13 @@ else {
 	}
 
 	$data += [
-		'filter_priority' => CProfile::get('web.triggers.filter_priority', -1),
+		'filter_inherited' => CProfile::get('web.triggers.filter_inherited', -1),
+		'filter_discovered' => CProfile::get('web.triggers.filter_discovered', -1),
+		'filter_dependent' => CProfile::get('web.triggers.filter_dependent', -1),
+		'filter_name' => CProfile::get('web.triggers.filter_name', ''),
+		'filter_priority' => CProfile::getArray('web.triggers.filter_priority', []),
+		'filter_groupids' => CProfile::getArray('web.triggers.filter_groupids', []),
+		'filter_hostids' => CProfile::getArray('web.triggers.filter_hostids', []),
 		'filter_state' => CProfile::get('web.triggers.filter_state', -1),
 		'filter_status' => CProfile::get('web.triggers.filter_status', -1)
 	];
@@ -719,6 +744,24 @@ else {
 			'limit' => $config['search_limit'] + 1
 		];
 
+		if ($data['filter_dependent'] != -1) {
+			$options['dependent'] = $data['filter_dependent'];
+		}
+
+		if ($data['filter_inherited'] != -1) {
+			$options['inherited'] = $data['filter_inherited'];
+		}
+
+		if ($data['filter_discovered'] != -1) {
+			$options['filter']['flags'] = $data['filter_discovered'] == 1
+				? ZBX_FLAG_DISCOVERY_CREATED
+				: ZBX_FLAG_DISCOVERY_NORMAL;
+		}
+
+		if ($data['filter_name'] !== '') {
+			$options['search']['description'] = $data['filter_name'];
+		}
+
 		if ($data['sort'] === 'status') {
 			$options['output'] = ['triggerid', 'status', 'state'];
 		}
@@ -726,7 +769,7 @@ else {
 			$options['output'] = ['triggerid', $data['sort']];
 		}
 
-		if ($data['filter_priority'] != -1) {
+		if ($data['filter_priority']) {
 			$options['filter']['priority'] = $data['filter_priority'];
 		}
 
@@ -757,6 +800,30 @@ else {
 		}
 		elseif ($data['pageFilter']->groupid > 0) {
 			$options['groupids'] = $data['pageFilter']->groupids;
+		}
+
+		if ($data['filter_groupids']) {
+			$options['groupids'] = $data['filter_groupids'];
+
+			$data['filter_groupids_ms'] = CArrayHelper::renameObjectsKeys(API::HostGroup()->get([
+				'output' => ['groupid', 'name'],
+				'groupids' => $data['filter_groupids'],
+			]), ['groupid' => 'id']);
+		}
+		else {
+			$data['filter_groupids_ms'] = [];
+		}
+
+		if ($data['filter_hostids']) {
+			$options['hostids'] = $data['filter_hostids'];
+
+			$data['filter_hostids_ms'] = CArrayHelper::renameObjectsKeys(API::Host()->get([
+				'output' => ['hostid', 'name'],
+				'hostids' => $data['filter_hostids'],
+			]), ['hostid' => 'id']);
+		}
+		else {
+			$data['filter_hostids_ms'] = [];
 		}
 
 		if ($data['show_value_column'] && $data['filter_value'] != -1) {

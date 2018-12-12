@@ -29,46 +29,43 @@ else {
 }
 
 $filter_column1 = (new CFormList())
-	->addRow((new CLabel(_('Host group'), 'filter_groupid_ms')),
+	->addRow((new CLabel(_('Host group'), 'filter_groupids')),
 		(new CMultiSelect([
-			'name' => 'filter_groupid',
+			'name' => 'filter_groupids[]',
 			'object_name' => 'hostGroup',
-			'multiple' => false,
-			'data' => [],
+			'data' => $data['filter_groupids_ms'],
 			'popup' => [
 				'parameters' => [
 					'srctbl' => 'host_groups',
 					'srcfld1' => 'groupid',
-					'dstfrm' => 'ASD',
-					'dstfld1' => 'filter_groupid',
+					'dstfrm' => 'groupids',
+					'dstfld1' => 'filter_groupids_',
 					'editable' => true
 				]
 			]
 		]))->setWidth(ZBX_TEXTAREA_FILTER_SMALL_WIDTH)
 	)
-	->addRow((new CLabel(_('Host'), 'filter_hostid_ms')),
+	->addRow((new CLabel(_('Host'), 'filter_hostids')),
 		(new CMultiSelect([
-			'name' => 'filter_hostid',
+			'name' => 'filter_hostids[]',
 			'object_name' => 'hosts',
-			'multiple' => false,
-			'data' => [],
+			'data' => $data['filter_hostids_ms'],
 			'popup' => [
 				'parameters' => [
-					'srctbl' => 'host_templates',
+					'srctbl' => 'hosts',
 					'srcfld1' => 'hostid',
-					'dstfrm' => 'ASD',
-					'dstfld1' => 'filter_hostid',
-					'editable' => true,
-					'templated_hosts' => true
+					'dstfrm' => 'hostids',
+					'dstfld1' => 'filter_hostids_',
+					'editable' => true
 				]
 			]
 		]))->setWidth(ZBX_TEXTAREA_FILTER_SMALL_WIDTH)
 	)
 	->addRow(_('Name'),
-		(new CTextBox('filter_name', 'ASD'))->setWidth(ZBX_TEXTAREA_FILTER_SMALL_WIDTH)
+		(new CTextBox('filter_name', $data['filter_name']))->setWidth(ZBX_TEXTAREA_FILTER_SMALL_WIDTH)
 	)
 	->addRow(_('Severity'),
-		(new CCheckBoxList('filter_severity'))
+		(new CCheckBoxList('filter_priority', $data['filter_priority']))
 			->addCheckBox(_('Not classified'), TRIGGER_SEVERITY_NOT_CLASSIFIED)
 			->addCheckBox(_('Information'), TRIGGER_SEVERITY_INFORMATION)
 			->addCheckBox(_('Warning'), TRIGGER_SEVERITY_WARNING)
@@ -150,19 +147,19 @@ $filter_tags_table->addRow(
 $filter_column2 = (new CFormList())
 	->addRow(_('Tags'), $filter_tags_table)
 	->addRow(_('Inherited'),
-		(new CRadioButtonList('filter_inherited', -1))
+		(new CRadioButtonList('filter_inherited', (int) $data['filter_inherited']))
 			->addValue(_('all'), -1)
 			->addValue(_('Yes'), 1)
 			->addValue(_('No'), 0)
 			->setModern(true))
 	->addRow(_('Discovered'),
-		(new CRadioButtonList('filter_discovered', -1))
+		(new CRadioButtonList('filter_discovered', (int) $data['filter_discovered']))
 			->addValue(_('all'), -1)
 			->addValue(_('Yes'), 1)
 			->addValue(_('No'), 0)
 			->setModern(true))
 	->addRow(_('With dependencies'),
-		(new CRadioButtonList('filter_dependent', -1))
+		(new CRadioButtonList('filter_dependent', (int) $data['filter_dependent']))
 			->addValue(_('all'), -1)
 			->addValue(_('Yes'), 1)
 			->addValue(_('No'), 0)
