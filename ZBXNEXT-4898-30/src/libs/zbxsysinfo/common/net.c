@@ -233,7 +233,6 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 #else
 	struct sockaddr_in6		*saved_ns6;
 #endif
-
 	struct sockaddr_in6	sockaddrin6;
 	struct addrinfo		hint, *hres = NULL;
 #endif
@@ -583,8 +582,8 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 #if defined(HAVE_RES_SIN6_LEN)
 		sockaddrin6.sin6_len = sizeof(sockaddrin6);
 #endif
-		sockaddrin6.sin6_addr = in6addr;
 		sockaddrin6.sin6_family = AF_INET6;
+		sockaddrin6.sin6_addr = in6addr;
 		sockaddrin6.sin6_port = htons(ZBX_DEFAULT_DNS_PORT);
 #if defined(HAVE_RES_NINIT) && !defined(_AIX) && (defined(HAVE_RES_U_EXT) || defined(HAVE_RES_U_EXT_EXT))
 		memset(&res_state_local.nsaddr_list[0], '\0', sizeof(res_state_local.nsaddr_list[0]));
@@ -638,9 +637,7 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 
 #	ifdef HAVE_RES_U_EXT	/* Linux */
 	if (NULL != ip && '\0' != *ip && AF_INET6 == ip_type)
-	{
 		res_state_local._u._ext.nsaddrs[0] = saved_ns6;
-	}
 #	endif
 #	ifdef HAVE_RES_NDESTROY
 	res_ndestroy(&res_state_local);
