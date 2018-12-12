@@ -221,7 +221,7 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 	/* corrupt stack (see ZBX-14559). Use res_init() on AIX. */
 	struct __res_state	res_state_local;
 #else	/* thread-unsafe resolver API */
-	int			saved_retrans, saved_retry, save_nssocks, saved_nscount = 0;
+	int			saved_retrans, saved_retry, save_nssocks, saved_nscount = 0, saved_nscount6;
 	unsigned long		saved_options;
 	struct sockaddr_in	saved_ns;
 #endif
@@ -588,11 +588,12 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 		sockaddrin6.sin6_port = htons(ZBX_DEFAULT_DNS_PORT);
 #if defined(HAVE_RES_NINIT) && !defined(_AIX) && (defined(HAVE_RES_U_EXT) || defined(HAVE_RES_U_EXT_EXT))
 		memset(&res_state_local.nsaddr_list[0], '\0', sizeof(res_state_local.nsaddr_list[0]));
-#		ifdef HAVE_RES_U_EXT		/* Linux */
+#		ifdef HAVE_RES_U_EXT			/* Linux */
 		saved_ns6 = res_state_local._u._ext.nsaddrs[0];
 		res_state_local._u._ext.nsaddrs[0] = &sockaddrin6;
 		res_state_local._u._ext.nssocks[0] = -1;
-#		elif HAVE_RES_U_EXT_EXT		/* BSD */
+		res_state_local._u._ext.nscount6 = 1;	/* CentOS */
+#		elif HAVE_RES_U_EXT_EXT			/* BSD */
 		if (NULL != res_state_local._u._ext.ext)
 			memcpy(res_state_local._u._ext.ext, &sockaddrin6, sizeof(sockaddrin6));
 
@@ -600,17 +601,19 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 #		endif
 		res_state_local.nscount = 1;
 #else
-#		if defined(HAVE_RES_U_EXT) || defined(HAVE_RES_U_EXT_EXT) || defined(HAVE_RES_EXT_EXT)
 		memcpy(&saved_ns, &(_res.nsaddr_list[0]), sizeof(struct sockaddr_in));
 		saved_nscount = _res.nscount;
+#		if defined(HAVE_RES_U_EXT) || defined(HAVE_RES_U_EXT_EXT) || defined(HAVE_RES_EXT_EXT)
 		memset(&_res.nsaddr_list[0], '\0', sizeof(_res.nsaddr_list[0]));
 		_res.nscount = 1;
 #		endif
 #		if defined(HAVE_RES_U_EXT)		/* thread-unsafe resolver API /Linux/ */
+		saved_nscount6 = _res._u._ext.nscount6;
 		saved_ns6 = _res._u._ext.nsaddrs[0];
 		save_nssocks = _res._u._ext.nssocks[0];
 		_res._u._ext.nsaddrs[0] = &sockaddrin6;
 		_res._u._ext.nssocks[0] = -1;
+		_res._u._ext.nscount6 = 1;
 #		elif defined(HAVE_RES_U_EXT_EXT)	/* thread-unsafe resolver API /BSD/ */
 		memcpy(&saved_ns6, _res._u._ext.ext, sizeof(saved_ns6));
 		_res.nsaddr_list[0].sin_port = htons(ZBX_DEFAULT_DNS_PORT);
@@ -668,25 +671,18 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 #			if defined(HAVE_RES_U_EXT)		/* Linux */
 			_res._u._ext.nsaddrs[0] = saved_ns6;
 			_res._u._ext.nssocks[0] = save_nssocks;
+			_res._u._ext.nscount6 = saved_nscount6;
 #			elif defined(HAVE_RES_U_EXT_EXT)	/* BSD */
 			if (NULL != _res._u._ext.ext)
 				memcpy(_res._u._ext.ext, &saved_ns6, sizeof(saved_ns6));
 #			elif defined(HAVE_RES_EXT_EXT)		/* AIX */
 			memcpy(&_res._ext.ext.nsaddrs[0], &saved_ns6, sizeof(saved_ns6));
 #			endif
-#			if defined(HAVE_RES_U_EXT) || defined(HAVE_RES_U_EXT_EXT) || defined(HAVE_RES_EXT_EXT)
-			memcpy(&(_res.nsaddr_list[0]), &saved_ns, sizeof(struct sockaddr_in));
-			_res.nscount = saved_nscount;
-#			endif
-		}
-		else
-		{
-			memcpy(&(_res.nsaddr_list[0]), &saved_ns, sizeof(struct sockaddr_in));
-			_res.nscount = saved_nscount;
 		}
 
+		memcpy(&(_res.nsaddr_list[0]), &saved_ns, sizeof(struct sockaddr_in));
+		_res.nscount = saved_nscount;
 	}
-
 #endif
 	hp = (HEADER *)answer.buffer;
 
