@@ -51,6 +51,43 @@ static int	DBpatch_4010002(void)
 	return SUCCEED;
 }
 
+static int	DBpatch_4010003(void)
+{
+	if (0 == (program_type & ZBX_PROGRAM_TYPE_SERVER))
+		return SUCCEED;
+
+	if (ZBX_DB_OK > DBexecute("update profiles set idx='web.items.filter_groupids'"
+				" where idx='web.items.filter_groupid'"))
+		return FAIL;
+
+	return SUCCEED;
+}
+
+
+static int	DBpatch_4010004(void)
+{
+	if (0 == (program_type & ZBX_PROGRAM_TYPE_SERVER))
+		return SUCCEED;
+
+	if (ZBX_DB_OK > DBexecute("update profiles set idx='web.items.filter_hostids'"
+				" where idx='web.items.filter_hostid'"))
+		return FAIL;
+
+	return SUCCEED;
+}
+
+static int	DBpatch_4010005(void)
+{
+	if (0 == (program_type & ZBX_PROGRAM_TYPE_SERVER))
+		return SUCCEED;
+
+	if (ZBX_DB_OK > DBexecute("update profiles set idx='web.items.filter_inherited'"
+				" where idx='web.items.filter_templated_items'"))
+		return FAIL;
+
+	return SUCCEED;
+}
+
 #endif
 
 DBPATCH_START(4010)
@@ -59,5 +96,8 @@ DBPATCH_START(4010)
 
 DBPATCH_ADD(4010001, 0, 1)
 DBPATCH_ADD(4010002, 0, 1)
+DBPATCH_ADD(4010003, 0, 1)
+DBPATCH_ADD(4010004, 0, 1)
+DBPATCH_ADD(4010005, 0, 1)
 
 DBPATCH_END()
