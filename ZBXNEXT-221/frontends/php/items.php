@@ -302,7 +302,7 @@ else {
 	}
 }
 
-// Set sub-groups of selected group.
+// Set sub-groups of selected groups.
 $filter_groupids = getSubGroups(getRequest('filter_groupids', []));
 if ($filter_groupids) {
 	$count = API::HostGroup()->get([
@@ -360,6 +360,9 @@ if (hasRequest('filter_set')) {
 }
 elseif (hasRequest('filter_rst')) {
 	DBStart();
+	if (count(CProfile::getArray('web.items.filter_hostids', [])) != 1) {
+		CProfile::delete('web.items.filter_hostids');
+	}
 	CProfile::delete('web.items.filter_groupids');
 	CProfile::delete('web.items.filter_application');
 	CProfile::delete('web.items.filter_name');
