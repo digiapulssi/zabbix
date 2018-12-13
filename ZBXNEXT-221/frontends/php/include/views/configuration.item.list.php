@@ -37,10 +37,10 @@ $widget = (new CWidget())
 		))->setAttribute('aria-label', _('Content controls'))
 	);
 
-if (!empty($this->data['hostid'])) {
+if ($this->data['hostid'] !== null) {
 	$widget->addItem(get_header_host_table('items', $this->data['hostid']));
 }
-$widget->addItem($this->data['flicker']);
+$widget->addItem($this->data['main_filter']);
 
 // create form
 $itemForm = (new CForm())->setName('items');
@@ -59,7 +59,7 @@ $itemTable = (new CTableInfo())
 			(new CCheckBox('all_items'))->onClick("checkAll('".$itemForm->getName()."', 'all_items', 'group_itemid');")
 		))->addClass(ZBX_STYLE_CELL_WIDTH),
 		_('Wizard'),
-		empty($this->data['filter_hostid']) ? _('Host') : null,
+		$this->data['hostid'] == null ? _('Host') : null,
 		make_sorting_header(_('Name'), 'name', $data['sort'], $data['sortorder'], $url),
 		_('Triggers'),
 		make_sorting_header(_('Key'), 'key_', $data['sort'], $data['sortorder'], $url),
@@ -259,7 +259,7 @@ foreach ($data['items'] as $item) {
 	$itemTable->addRow([
 		new CCheckBox('group_itemid['.$item['itemid'].']', $item['itemid']),
 		$wizard,
-		empty($this->data['filter_hostid']) ? $item['host'] : null,
+		$this->data['hostid'] == null ? $item['host'] : null,
 		$description,
 		$triggerInfo,
 		CHtml::encode($item['key_']),
