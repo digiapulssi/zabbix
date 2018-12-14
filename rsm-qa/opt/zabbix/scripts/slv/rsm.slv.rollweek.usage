@@ -12,7 +12,7 @@ rsm.slv.*.rollweek.pl [--now <timestamp>] [--tld <tld>] [--dry-run] [--warnslow 
 
 =item B<--now> timestamp
 
-Specify time at which calculation should take place in Unix timestamp.
+Specify Unix timestamp within last complete cycle of the rolling week.
 
 =item B<--tld> tld
 
@@ -44,6 +44,6 @@ time periods when cron was not running.
 
 =head1 EXAMPLES
 
-./rsm.slv.*.rollweek.pl --now 1420063200 --period 10
+./rsm.slv.dns.rollweek.pl --now 1420063200
 
 =cut

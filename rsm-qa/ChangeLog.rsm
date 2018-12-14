@@ -1,3 +1,9 @@
+Changes for rsm1.1.0rc47
+
+Bug fixes:
+....I..... [sub-450] fixed incorrect DNSSEC Rolling Week calculation (dimir)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.1.0rc46
 
 Bug fixes:

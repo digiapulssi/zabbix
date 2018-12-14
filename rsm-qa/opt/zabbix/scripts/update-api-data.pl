@@ -136,8 +136,7 @@ db_disconnect();
 
 my $now = time();
 
-# in order to make sure all data is saved in Zabbix we move 1 minute back
-my $max_till = max_avail_time($now) - 60;
+my $max_till = max_avail_time();
 
 my ($check_from, $check_till, $continue_file);
 
@@ -2576,7 +2575,7 @@ sub __no_status_result($$$$$;$)
 
 	wrn(uc($service), " availability value is missing for ", uc($subservice), " test ", ($details ? "($details) " : ''),
 		"performed at ", ts_str($clock), " on probe $probe. Please run:".
-		"\n/opt/zabbix/scripts/slv/$avail_key.pl --from $clock");
+		"\n/opt/zabbix/scripts/slv/$avail_key.pl --now $clock");
 }
 
 # todo phase 1: this function was modified to allow earlier run on freshly installed database

@@ -24,15 +24,14 @@ set_slv_config(get_rsm_config());
 
 db_connect();
 
-my $now = getopt('now') // time();
+# we don't know the rollweek bounds yet so we assume it ends at least few minutes back
+my $delay = get_dns_udp_delay(getopt('now') // time() - ROLLWEEK_SHIFT_BACK);
 
-my $delay = get_dns_udp_delay($now - ROLLWEEK_SHIFT_BACK);
-
-my $cfg_sla = get_macro_dns_rollweek_sla();
-
-my ($from, $till, $value_ts) = get_rollweek_bounds($delay, $now);
+my ($from, $till, $value_ts) = get_rollweek_bounds($delay, getopt('now'));
 
 dbg("selecting period ", selected_period($from, $till), " (value_ts:", ts_str($value_ts), ")");
+
+my $cfg_sla = get_macro_dns_rollweek_sla();
 
 my $tlds_ref;
 if (opt('tld'))
@@ -55,16 +54,12 @@ foreach (@$tlds_ref)
 
 	my ($itemid_in, $itemid_out, $lastclock) = get_item_data($tld, $cfg_key_in, $cfg_key_out, ITEM_VALUE_TYPE_FLOAT);
 
-	if (rollweek_value_exists($value_ts, $itemid_out) == SUCCESS)
-	{
-		# value already exists
-		next unless (opt('dry-run'));
-	}
+	next if (!opt('dry-run') && float_value_exists($value_ts, $itemid_out));
 
-	my $downtime = get_downtime($itemid_in, $from, $till, undef, undef, $delay);
+	my $downtime = get_downtime($itemid_in, $from, $till, undef, undef, $delay);	# consider incidents for Rolling Week calculation
 	my $perc = sprintf("%.3f", $downtime * 100 / $cfg_sla);
 
-	push_value($tld, $cfg_key_out, $value_ts, $perc, "result: $perc% (down: $downtime minutes, sla: $cfg_sla, ", ts_str($value_ts), ")");
+	push_value($tld, $cfg_key_out, $value_ts, $perc, "result: $perc% (down: $downtime minutes, sla: $cfg_sla)");
 }
 
 # unset TLD (for the logs)

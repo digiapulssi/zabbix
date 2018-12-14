@@ -48,11 +48,7 @@ foreach (@$tlds_ref)
 {
 	$tld = $_; # set global variable here
 
-	if (uint_value_exists($value_ts, get_itemid_by_host($tld, $cfg_key_out)) == SUCCESS)
-	{
-		# value already exists
-		next unless (opt('dry-run'));
-	}
+	next if (!opt('dry-run') && uint_value_exists($value_ts, get_itemid_by_host($tld, $cfg_key_out)));
 
 	# for future calculation of downtime
 	$tld_items{$tld} = get_itemid_by_host($tld, $cfg_key_in);

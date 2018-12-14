@@ -25,30 +25,15 @@ set_slv_config(get_rsm_config());
 
 db_connect();
 
-my $delay = get_dns_udp_delay();
+# we don't know the rollweek bounds yet so we assume it ends at least few minutes back
+my $delay = get_dns_udp_delay(getopt('now') // time() - AVAIL_SHIFT_BACK);
+
+my ($from, $till, $value_ts) = get_cycle_bounds($delay, getopt('now'));
+
+dbg("selecting period ", selected_period($from, $till), " (value_ts:", ts_str($value_ts), ")");
+
 my $cfg_minonline = get_macro_dns_probe_online();
-
 my $cfg_minns = get_macro_minns();
-
-my $now = time();
-
-my $from = truncate_from((opt('from') ? getopt('from') : $now - $delay - AVAIL_SHIFT_BACK));
-my $period = (opt('period') ? getopt('period') : 1);
-
-my $till = $from + ($period * 60) - 1;
-
-# in normal operation mode
-if (!opt('period') && !opt('from'))
-{
-	# only calculate once a cycle
-	if ($from % $delay != 0)
-	{
-		dbg("not yet time to calculate");
-		slv_exit(SUCCESS);
-	}
-}
-
-my $max_avail_time = max_avail_time($now);
 
 my $tlds_ref;
 if (opt('tld'))
@@ -62,40 +47,24 @@ else
         $tlds_ref = get_tlds('DNS', $till);
 }
 
-while ($period > 0)
+my @online_probe_names = keys(%{get_probe_times($from, $till, get_probes('DNS'))});
+
+init_values();
+
+foreach (@$tlds_ref)
 {
-	my ($period_from, $period_till, $value_ts) = get_cycle_bounds($delay, $from);
+	$tld = $_;	# set global variable here
 
-	dbg("selecting period ", selected_period($period_from, $period_till), " (value_ts:", ts_str($value_ts), ")");
+	next if (!opt('dry-run') && uint_value_exists($value_ts, get_itemid_by_host($tld, $cfg_key_out)));
 
-	$period -= $delay / 60;
-	$from += $delay;
-
-	next if ($period_till > $max_avail_time);
-
-	my @online_probe_names = keys(%{get_probe_times($period_from, $period_till, get_probes('DNS'))});	# todo phase 1: change to ENABLED_DNS
-
-	init_values();
-
-	foreach (@$tlds_ref)
-	{
-		$tld = $_; # set global variable here
-
-		if (avail_value_exists($value_ts, get_itemid_by_host($tld, $cfg_key_out)) == SUCCESS)
-		{
-			# value already exists
-			next unless (opt('dry-run'));
-		}
-
-		process_slv_avail($tld, $cfg_keys_in, $cfg_key_out, $period_from, $period_till, $value_ts, $cfg_minonline,
-			\@online_probe_names, \&check_probe_values, $cfg_value_type);
-	}
-
-	# unset TLD (for the logs)
-	$tld = undef;
-
-	send_values();
+	process_slv_avail($tld, $cfg_keys_in, $cfg_key_out, $from, $till, $value_ts, $cfg_minonline,
+		\@online_probe_names, \&check_probe_values, $cfg_value_type);
 }
+
+# unset TLD (for the logs)
+$tld = undef;
+
+send_values();
 
 slv_exit(SUCCESS);
 
