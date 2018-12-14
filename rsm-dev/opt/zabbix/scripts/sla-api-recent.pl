@@ -10,13 +10,63 @@ use Data::Dumper;
 
 use RSM;
 use RSMSLV;
-use TLD_constants qw(:api :config);
+use TLD_constants qw(:api :config :groups :items);
 use ApiHelper;
 
 # TODO: REMOVE ME
 use constant SLV_UNAVAILABILITY_LIMIT => 49;
 
+use constant TARGET_PLACEHOLDER => 'TARGET_PLACEHOLDER';
+
 sub calculate_cycle($$$$);
+
+# TODO: REMOVE ME
+# gets the history of item for a given period
+sub get_history_by_itemid($$$)
+{
+	my $itemid = shift;
+	my $timestamp_from = shift;
+	my $timestamp_till = shift;
+
+	# we need previous value to have at the time of @timestamp_from
+	my $rows_ref = db_select("select delay from items where itemid=$itemid");
+
+	$timestamp_from -= $rows_ref->[0]->[0];
+
+	return db_select(
+			"select clock,value" .
+			" from history_uint" .
+			" where itemid=$itemid" .
+				" and " . sql_time_condition($timestamp_from, $timestamp_till) .
+			" order by clock");
+}
+
+# TODO: REMOVE ME
+# gets the value of item at a given timestamp
+sub get_historical_value_by_time($$)
+{
+	my $history = shift;
+	my $timestamp = shift;
+
+	fail("internal error") unless ($timestamp);
+
+	# TODO implement binary search
+
+	my $value;
+
+	foreach my $row (@{$history})
+	{
+		last if ($timestamp < $row->[0]);	# stop iterating if history clock overshot the timestamp
+	}
+	continue
+	{
+		$value = $row->[1];	# keep the value preceeding overshooting
+	}
+
+	fail("timestamp $timestamp is out of bounds of selected historical data range") unless (defined($value));
+
+	return $value;
+}
 
 parse_opts('tld=s', 'service=s', 'server-id=i');
 
@@ -41,9 +91,9 @@ else
 
 my $total_tlds = 0;
 
-my %last_values;
+my %lastvalues;
 
-my $from = truncate_from(time() - 600);
+my $from = time() - 600;
 
 db_connect();
 
@@ -58,22 +108,33 @@ fail("number of required working Name Servers is configured as $cfg_minns") if (
 #$valuemaps{+AH_INTERFACE_RDAP} = get_valuemaps('rdap');
 
 my %delays;
-$delays{'dns'} = $delays{'dnssec'} = get_dns_udp_delay($from);;
-$delays{'rdds'} = get_rdds_delay($from);;
+$delays{'dns'} = $delays{'dnssec'} = get_dns_udp_delay($from);
+$delays{'rdds'} = get_rdds_delay($from);
 
 db_disconnect();
+
+# TODO
+my %rtt_limits;
 
 foreach (@server_keys)
 {
 	$server_key = $_;
 
-	%last_values = ();
+	%lastvalues = ();
 
 	db_connect($server_key);
 
-	get_last_values_from_db();
+	get_lastvalues_from_db();
+
+	# TODO
+	$rtt_limits{'dns'} = get_history_by_itemid(
+		CONFIGVALUE_DNS_UDP_RTT_HIGH_ITEMID,
+		cycle_start($from, $delays{'dns'}),
+		cycle_end($from, $delays{'dns'})
+	);
 
 	calculate_cycle($tld, 'rdds', $from, $delays{'rdds'});
+	calculate_cycle($tld, 'dns', $from, $delays{'dns'});
 
 	db_disconnect();
 }
@@ -103,8 +164,9 @@ sub get_service_from_key
 	return $service;
 }
 
-sub get_last_values_from_db
+sub get_lastvalues_from_db
 {
+	# join lastvalue and lastvalue_str tables
 	my $rows_ref = db_select(
 		"select h.host,i.itemid,i.key_,i.value_type,l.clock".
 		" from lastvalue l,items i,hosts h,hosts_groups g".
@@ -114,7 +176,18 @@ sub get_last_values_from_db
 			" and i.type in (".ITEM_TYPE_SIMPLE.",".ITEM_TYPE_TRAPPER.")".
 			" and i.status=".ITEM_STATUS_ACTIVE.
 			" and h.status=".HOST_STATUS_MONITORED.
-			" and g.groupid=190");
+			" and g.groupid=".TLD_PROBE_RESULTS_GROUPID.
+		" union ".
+		"select h.host,i.itemid,i.key_,i.value_type,l.clock".
+		" from lastvalue_str l,items i,hosts h,hosts_groups g".
+		" where g.hostid=h.hostid".
+			" and h.hostid=i.hostid".
+			" and i.itemid=l.itemid".
+			" and i.type in (".ITEM_TYPE_SIMPLE.",".ITEM_TYPE_TRAPPER.")".
+			" and i.status=".ITEM_STATUS_ACTIVE.
+			" and h.status=".HOST_STATUS_MONITORED.
+			" and g.groupid=".TLD_PROBE_RESULTS_GROUPID
+	);
 
 	foreach my $row_ref (@{$rows_ref})
 	{
@@ -138,7 +211,7 @@ sub get_last_values_from_db
 #		dbg($tld, "-", $service);
 
 		#TODO: get service from key
-		$last_values{$tld}{$probe}{$itemid} = {'key' => $key, 'value_type' => $value_type, 'clock' => $clock, 'service' => $service};
+		$lastvalues{$tld}{$probe}{$itemid} = {'key' => $key, 'value_type' => $value_type, 'clock' => $clock, 'service' => $service};
 
 #		print(ts_str($clock), " $tld,$probe ($host) | $key\n");
 	}
@@ -156,11 +229,91 @@ sub __get_history_table_by_value_type
 	fail("THIS_SHOULD_NEVER_HAPPEN");
 }
 
+# TODO: MOVE ME TO ApiHelper.pm
+sub fill_test_data_dns($$$)
+{
+	my $src = shift;
+	my $dst = shift;
+	my $hist = shift;
+
+	foreach my $ns (keys(%{$src}))
+	{
+		my $test_data_ref = {
+			'target'	=> ($ns eq TARGET_PLACEHOLDER ? undef : $ns),
+			'status'	=> undef,
+			'metrics'	=> []
+		};
+
+#		foreach my $test (@{$src->{$ns}})
+		foreach my $clock (keys(%{$src->{$ns}{'metrics'}}))
+		{
+			my $test = $src->{$ns}{'metrics'}{$clock};
+
+			dbg("ns:$ns ip:", $test->{'targetIP'} // "UNDEF", " clock:", $test->{'testDateTime'} // "UNDEF", " rtt:", $test->{'rtt'} // "UNDEF");
+
+			my $metric = {
+				'testDateTime'	=> $clock,
+				'targetIP'	=> $test->{'ip'}
+			};
+
+			if (!defined($test->{'rtt'}))
+			{
+				$metric->{'rtt'} = undef;
+				$metric->{'result'} = 'no data';
+			}
+			elsif (is_internal_error_desc($test->{'rtt'}))
+			{
+				$metric->{'rtt'} = undef;
+				$metric->{'result'} = $test->{'rtt'};
+
+				# don't override NS status with "Up" if NS is already known to be down
+				if (!defined($test_data_ref->{'status'}) || $test_data_ref->{'status'} ne "Down")
+				{
+					$test_data_ref->{'status'} = "Up";
+				}
+			}
+			elsif (is_service_error_desc('dns', $test->{'rtt'}))
+			{
+				$metric->{'rtt'} = undef;
+				$metric->{'result'} = $test->{'rtt'};
+
+				$test_data_ref->{'status'} = "Down";
+			}
+			else
+			{
+				$metric->{'rtt'} = $test->{'rtt'};
+				$metric->{'result'} = "ok";
+
+				# skip threshold check if NS is already known to be down
+				if ($hist)
+				{
+					if  (!defined($test_data_ref->{'status'}) || $test_data_ref->{'status'} eq "Up")
+					{
+						$test_data_ref->{'status'} =
+							($test->{'rtt'} > get_historical_value_by_time($hist,
+								$metric->{'testDateTime'}) ? "Down" : "Up");
+					}
+				}
+				else
+				{
+					$test_data_ref->{'status'} = "Up";
+				}
+			}
+
+			push(@{$test_data_ref->{'metrics'}}, $metric);
+		}
+
+		$test_data_ref->{'status'} //= AH_CITY_NO_RESULT;
+
+		push(@{$dst}, $test_data_ref);
+	}
+}
+
 sub calculate_cycle($$$$)
 {
 	my $tld = shift;
 	my $service = shift;
-	my $clock = shift;
+	my $cycle_clock = shift;
 	my $delay = shift;
 
 	# TODO: if service = "dns" also calculate dnssec!
@@ -168,35 +321,11 @@ sub calculate_cycle($$$$)
 	# TODO: consider probes with results
 	# TODO: add target support
 
-	my $from = cycle_start($clock, $delay);
-	my $till = $from + $delay - 1;
+	my $from = cycle_start($cycle_clock, $delay);
+	my $till = cycle_end($cycle_clock, $delay);
 
-	my $json = {'tld' => $tld, 'service' => $service, 'cycleCalculationDateTime' => $from};
+	my $json = {'tld' => $tld, 'service' => $service, 'cycleCalculationDateTime' => $cycle_clock};
 
-	# (
-	#     'interface' => (
-	#         'probe' => (
-	#             'status' => 'Up',
-	#             'testData' => {
-	#                 'ns1.example.com' => (
-	#                     'status' => 'Up',
-	#                     'metrics' => [
-	#                         {
-	#                             'testDateTime' => 1423424234,
-	#                             'targetIP' => '1.2.3.4',
-	#                             'rtt' => 23,
-	#                         },
-	#                         {
-	#                             'testDateTime' => 1423424234,
-	#                             'targetIP' => '2001:DB8::1',
-	#                             'rtt' => 42,
-	#                         }
-	#                     ]
-	#                 )
-	#             )
-	#         )
-	#     )
-	# )
 	my %tested_interfaces;
 
 	print("$tld:\n");
@@ -204,21 +333,32 @@ sub calculate_cycle($$$$)
 	my $probes_with_results = 0;
 	my $probes_with_positive = 0;
 
-	foreach my $probe (keys(%{$last_values{$tld}}))
+	foreach my $probe (keys(%{$lastvalues{$tld}}))
 	{
-		my (@itemids_uint, @itemids_float);
+		my (@itemids_uint, @itemids_float, @itemids_str);
 
-		# separate uint values from float
+		# separate itemids by value_type
 		map {
-			my $i = $last_values{$tld}{$probe}{$_};
+			my $i = $lastvalues{$tld}{$probe}{$_};
 
 			if ($i->{'service'} eq $service)
 			{
-				$i->{'value_type'} == ITEM_VALUE_TYPE_UINT64 ?
-					push(@itemids_uint, $_) :
-					push(@itemids_float, $_)
+				if ($i->{'value_type'} == ITEM_VALUE_TYPE_UINT64)
+				{
+					push(@itemids_uint, $_);
+				}
+				elsif ($i->{'value_type'} == ITEM_VALUE_TYPE_FLOAT)
+				{
+					push(@itemids_float, $_);
+				}
+				elsif ($i->{'value_type'} == ITEM_VALUE_TYPE_STR)
+				{
+					push(@itemids_str, $_);
+				}
 			}
-		} (keys(%{$last_values{$tld}{$probe}}));
+		} (keys(%{$lastvalues{$tld}{$probe}}));
+
+		next if (@itemids_uint == 0);
 
 		# and fetch them separately
 		my $rows_ref = db_select(
@@ -233,8 +373,9 @@ sub calculate_cycle($$$$)
 		# }
 		my %values;
 
-		map {push(@{$values{$_->[0]}}, {'clock' => $_->[2], 'value' => int($_->[1])})} (@{$rows_ref});
+		map {push(@{$values{$_->[0]}}, int($_->[1]))} (@{$rows_ref});
 
+		# skip cycles that do not have test result
 		next if (scalar(keys(%values)) == 0);
 
 		print("  $probe:\n");
@@ -243,7 +384,7 @@ sub calculate_cycle($$$$)
 
 		foreach my $itemid (keys(%values))
 		{
-			my $key = $last_values{$tld}{$probe}{$itemid}{'key'};
+			my $key = $lastvalues{$tld}{$probe}{$itemid}{'key'};
 
 			# TODO: add support for results:
 			# - Offline
@@ -322,6 +463,12 @@ sub calculate_cycle($$$$)
 
 		$probes_with_results++;
 
+		next if (@itemids_float == 0);
+
+		#
+		# collect clock->rtt keypairs (and clock->ip for DNS because for DNS metrics IP (and target) is taken from item key)
+		#
+
 		$rows_ref = db_select(
 			"select itemid,value,clock".
 			" from " . __get_history_table_by_value_type(ITEM_VALUE_TYPE_FLOAT).
@@ -335,38 +482,55 @@ sub calculate_cycle($$$$)
 
 		foreach my $itemid (keys(%values))
 		{
-			my $i = $last_values{$tld}{$probe}{$itemid};
+			my $i = $lastvalues{$tld}{$probe}{$itemid};
 
 			foreach my $value_ref (@{$values{$itemid}})
 			{
 				my $interface = ah_get_interface($i->{'key'});
 
-				#$tr_ref->{'testedInterface'} = [
-				#	{
-				#		'interface'	=> $interface,
-				#		'probes'	=> []
-				#	}
-				#];
-
-				my $metric = {
-					'testDateTime' => $value_ref->{'clock'}
-				};
-
-				if ($value_ref->{'value'} < 0)
+				my ($target, $ip);
+				if (substr($i->{'key'}, 0, length("rsm.dns.udp.rtt")) eq "rsm.dns.udp.rtt")
 				{
-					$metric->{'rtt'} = undef;
-					$metric->{'result'} = $value_ref->{'value'};
+					($target, $ip) = split(',', get_nsip_from_key($i->{'key'}));
 				}
 				else
 				{
-					$metric->{'rtt'} = $value_ref->{'value'};
-					$metric->{'result'} = undef;
+					$target = TARGET_PLACEHOLDER;	# for non-DNS service "target" is NULL, but use placeholder
 				}
 
-				# TODO: target
-				my $target = 'TODO-target';
+				$tested_interfaces{$interface}{$probe}{'testData'}{$target}{'metrics'}{$value_ref->{'clock'}}{'rtt'} = $value_ref->{'value'};
+				$tested_interfaces{$interface}{$probe}{'testData'}{$target}{'metrics'}{$value_ref->{'clock'}}{'ip'} = $ip;
+			}
+		}
 
-				push(@{$tested_interfaces{$interface}{$probe}{'testData'}{$target}{'metrics'}}, $metric);
+		next if (@itemids_str == 0);
+
+		#
+		# collect clock->ip keypairs for non-DNS services
+		#
+
+		$rows_ref = db_select(
+			"select itemid,value,clock".
+			" from " . __get_history_table_by_value_type(ITEM_VALUE_TYPE_STR).
+			" where itemid in (" . join(',', @itemids_str) . ")".
+				" and " . sql_time_condition($from, $till)
+		);
+
+		%values = ();
+
+		map {push(@{$values{$_->[0]}}, {'clock' => $_->[2], 'value' => $_->[1]})} (@{$rows_ref});
+
+		foreach my $itemid (keys(%values))
+		{
+			my $i = $lastvalues{$tld}{$probe}{$itemid};
+
+			foreach my $value_ref (@{$values{$itemid}})
+			{
+				my $interface = ah_get_interface($i->{'key'});
+
+				my $target = TARGET_PLACEHOLDER;	# for non-DNS service "target" is NULL, but use placeholder
+
+				$tested_interfaces{$interface}{$probe}{'testData'}{$target}{'metrics'}{$value_ref->{'clock'}}{'ip'} = $value_ref->{'value'};
 			}
 		}
 	}
@@ -382,25 +546,53 @@ sub calculate_cycle($$$$)
 		{
 			my $probe_ref = {
 				'city'		=> $probe,
-				'status'	=> $tested_interfaces{$interface}{$probe}{'status'},
+				'status'	=> $tested_interfaces{$interface}{$probe}{'status'},	# Probe status
 				'testData'	=> []
 			};
 
-			foreach my $target (keys(%{$tested_interfaces{$interface}{$probe}{'testData'}}))
-			{
-				my $test_data_ref = {
-					'target'	=> $target,
-					'status'	=> undef,
-					'metrics'	=> []
-				};
+			fill_test_data_dns(
+				$tested_interfaces{$interface}{$probe}{'testData'},
+				$probe_ref->{'testData'},
+				$rtt_limits{$service}
+			);
 
-				foreach my $metric (@{$tested_interfaces{$interface}{$probe}{'testData'}{$target}{'metrics'}})
-				{
-					push(@{$test_data_ref->{'metrics'}}, $metric);
-				}
+			# foreach my $target (keys(%{$tested_interfaces{$interface}{$probe}{'testData'}}))
+			# {
+			# 	my $test_data_ref = {
+			# 		'target'	=> ($target eq TARGET_PLACEHOLDER ? undef : $target),	# for non-DNS service "target" is NULL
+			# 		'status'	=> undef,	# TODO: Target status
+			# 		'metrics'	=> []
+			# 	};
 
-				push(@{$probe_ref->{'testData'}}, $test_data_ref);
-			}
+			# 	foreach my $clock (keys(%{$tested_interfaces{$interface}{$probe}{'testData'}{$target}{'metrics'}}))
+			# 	{
+			# 		my $clock_metric = $tested_interfaces{$interface}{$probe}{'testData'}{$target}{'metrics'}{$clock};
+
+			# 		my ($rtt, $result);
+
+			# 		if ($clock_metric->{'rtt'} < 0)
+			# 		{
+			# 			# rtt must be left undefined
+			# 			$result = $clock_metric->{'rtt'};
+			# 		}
+			# 		else
+			# 		{
+			# 			# result must be left undefined
+			# 			$rtt = $clock_metric->{'rtt'};
+			# 		}
+
+			# 		my $metric_ref = {
+			# 			'rtt'		=> $rtt,
+			# 			'ip'		=> $clock_metric->{'ip'},
+			# 			'result'	=> $result,
+			# 			'testDateTime'	=> $clock
+			# 		};
+
+			# 		push(@{$test_data_ref->{'metrics'}}, $metric_ref);
+			# 	}
+
+			# 	push(@{$probe_ref->{'testData'}}, $test_data_ref);
+			# }
 
 			push(@{$interface_json->{'probes'}}, $probe_ref);
 		}
