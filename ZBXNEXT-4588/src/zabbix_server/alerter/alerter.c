@@ -116,17 +116,17 @@ static void	alerter_process_email(zbx_ipc_socket_t *socket, zbx_ipc_message_t *i
 	zbx_uint64_t	alertid;
 	char		*sendto, *subject, *message, *smtp_server, *smtp_helo, *smtp_email, *username, *password;
 	unsigned short	smtp_port;
-	unsigned char	smtp_security, smtp_verify_peer, smtp_verify_host, smtp_authentication;
+	unsigned char	smtp_security, smtp_verify_peer, smtp_verify_host, smtp_authentication, content_type;
 	int		ret;
 	char		error[MAX_STRING_LEN];
 
 
 	zbx_alerter_deserialize_email(ipc_message->data, &alertid, &sendto, &subject, &message, &smtp_server,
 			&smtp_port, &smtp_helo, &smtp_email, &smtp_security, &smtp_verify_peer, &smtp_verify_host,
-			&smtp_authentication, &username, &password);
+			&smtp_authentication, &username, &password, &content_type);
 
 	ret = send_email(smtp_server, smtp_port, smtp_helo, smtp_email, sendto, subject, message, smtp_security,
-			smtp_verify_peer, smtp_verify_host, smtp_authentication, username, password,
+			smtp_verify_peer, smtp_verify_host, smtp_authentication, username, password, content_type,
 			ALARM_ACTION_TIMEOUT, error, sizeof(error));
 
 	alerter_send_result(socket, ret, (SUCCEED == ret ? NULL : error));
@@ -283,7 +283,7 @@ ZBX_THREAD_ENTRY(alerter_thread, args)
 	int			success_num = 0, fail_num = 0;
 	zbx_ipc_socket_t	alerter_socket;
 	zbx_ipc_message_t	message;
-	double			time_stat, time_idle = 0, time_now, time_read, time_file = 0;
+	double			time_stat, time_idle = 0, time_now, time_read;
 
 	process_type = ((zbx_thread_args_t *)args)->process_type;
 	server_num = ((zbx_thread_args_t *)args)->server_num;
@@ -337,18 +337,9 @@ ZBX_THREAD_ENTRY(alerter_thread, args)
 
 		update_selfmon_counter(ZBX_PROCESS_STATE_BUSY);
 
-		/* handle /etc/resolv.conf update and log rotate less often than once a second */
-		if (1.0 < time_now - time_file)
-		{
-			time_file = time_now;
-			zbx_handle_log();
-#if !defined(_WINDOWS) && defined(HAVE_RESOLV_H)
-			zbx_update_resolver_conf();
-#endif
-		}
-
 		time_read = zbx_time();
 		time_idle += time_read - time_now;
+		zbx_update_env(time_read);
 
 		switch (message.code)
 		{
