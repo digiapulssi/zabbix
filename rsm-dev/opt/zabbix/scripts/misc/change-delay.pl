@@ -11,6 +11,7 @@ use lib $MYDIR2;
 use strict;
 use warnings;
 
+use TLD_constants qw(:api);
 use RSM;
 use RSMSLV;
 
@@ -43,7 +44,7 @@ elsif (getopt('type') == 4)
 
 if (opt('dry-run'))
 {
-	print("would set delay ", getopt('delay'), " for keys like ", join(" or like ", $key_parts), "\n");
+	print("would set delay ", getopt('delay'), " for items with type ".ITEM_TYPE_SIMPLE." and keys like ", join(" or like ", @{$key_parts}), "\n");
 	print("would set macro $macro to ", getopt('delay'), "\n");
 	exit;
 }
@@ -51,7 +52,7 @@ if (opt('dry-run'))
 my $sth;
 db_connect();
 
-$sql = "update items set delay=? where type=3 and key_ like ?";
+$sql = "update items set delay=? where type=".ITEM_TYPE_SIMPLE." and key_ like ?";
 
 foreach my $key_part (@{$key_parts})
 {

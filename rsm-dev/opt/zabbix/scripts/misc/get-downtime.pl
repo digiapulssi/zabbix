@@ -31,15 +31,6 @@ unless (opt('service'))
 my $from = getopt('from');
 my $till = getopt('till');
 
-unless (defined($from) && defined($till))
-{
-	dbg("getting current month bounds");
-	my ($downtime_from, $downtime_till) = get_downtime_bounds();
-
-	$from //= $downtime_from;
-	$till //= $downtime_till;
-}
-
 my ($key, $service_type, $delay);
 
 set_slv_config(get_rsm_config());
@@ -49,29 +40,38 @@ db_connect();
 if (getopt('service') eq 'dns')
 {
 	$key = 'rsm.slv.dns.avail';
-	$delay = get_dns_udp_delay($from);
+	$delay = get_dns_udp_delay(getopt('from'));
 }
 elsif (getopt('service') eq 'dns-ns')
 {
 	$key = 'rsm.slv.dns.ns.avail[';
-	$delay = get_dns_udp_delay($from);
+	$delay = get_dns_udp_delay(getopt('from'));
 }
 elsif (getopt('service') eq 'rdds')
 {
 	$service_type = 'rdds';
 	$key = 'rsm.slv.rdds.avail';
-	$delay = get_rdds_delay($from);
+	$delay = get_rdds_delay(getopt('from'));
 }
 elsif (getopt('service') eq 'epp')
 {
 	$service_type = 'epp';
 	$key = 'rsm.slv.epp.avail';
-	$delay = get_epp_delay($from);
+	$delay = get_epp_delay(getopt('from'));
 }
 else
 {
 	print("Invalid service specified \"", getopt('service'), "\"\n");
 	usage(2);
+}
+
+if (!defined($from) || !defined($till))
+{
+	dbg("getting current month bounds");
+	my ($downtime_from, $downtime_till) = get_downtime_bounds($delay);
+
+	$from //= $downtime_from;
+	$till //= $downtime_till;
 }
 
 my $tlds_ref = opt('tld') ? [ getopt('tld') ] : get_tlds($service_type, $till);

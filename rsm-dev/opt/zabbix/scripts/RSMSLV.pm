@@ -63,7 +63,7 @@ use constant RSM_CONFIG_EPP_DELAY_ITEMID => 100010;	# rsm.configvalue[RSM.EPP.DE
 # NB! These numbers must be in sync with Frontend (details page)!
 use constant PROBE_ONLINE_SHIFT		=> 120;	# seconds (must be divisible by 60) to go back for Probe online status calculation
 use constant AVAIL_SHIFT_BACK		=> 120;	# seconds (must be divisible by 60) to go back for Service Availability calculation
-use constant ROLLWEEK_SHIFT_BACK	=> 180;	# seconds (must be divisible by 60) to go back for Rolling Week calculation
+use constant ROLLWEEK_SHIFT_BACK	=> 180;	# seconds (must be divisible by 60) back when Service Availability is definitely calculated
 
 use constant PROBE_ONLINE_STR => 'Online';
 
@@ -77,7 +77,7 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		SUCCESS E_FAIL E_ID_NONEXIST E_ID_MULTIPLE UP DOWN SLV_UNAVAILABILITY_LIMIT MIN_LOGIN_ERROR
 		UP_INCONCLUSIVE_NO_DATA PROTO_UDP PROTO_TCP
 		MAX_LOGIN_ERROR MIN_INFO_ERROR MAX_INFO_ERROR PROBE_ONLINE_STR
-		AVAIL_SHIFT_BACK PROBE_ONLINE_SHIFT
+		AVAIL_SHIFT_BACK ROLLWEEK_SHIFT_BACK PROBE_ONLINE_SHIFT
 		ONLINE OFFLINE
 		get_macro_minns get_macro_dns_probe_online get_macro_rdds_probe_online get_macro_dns_rollweek_sla
 		get_macro_rdds_rollweek_sla get_macro_dns_udp_rtt_high get_macro_dns_udp_rtt_low
@@ -96,13 +96,13 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		is_service_error_desc
 		is_internal_error
 		is_internal_error_desc
-		process_slv_avail avail_value_exists
-		rollweek_value_exists
+		process_slv_avail
+		uint_value_exists
+		float_value_exists
 		sql_time_condition get_incidents get_downtime get_downtime_prepare get_downtime_execute
 		get_current_value get_itemids_by_hostids get_nsip_values get_valuemaps get_statusmaps get_detailed_result
 		get_avail_valuemaps slv_stats_reset
-		get_result_string get_tld_by_trigger truncate_from truncate_till alerts_enabled get_test_start_time
-		uint_value_exists
+		get_result_string get_tld_by_trigger truncate_from truncate_till alerts_enabled
 		get_real_services_period dbg info wrn fail set_on_fail
 		format_stats_time slv_finalize slv_exit exit_if_running trim parse_opts
 		parse_avail_opts parse_rollweek_opts opt getopt setopt unsetopt optkeys ts_str ts_full selected_period
@@ -764,7 +764,7 @@ sub tld_interface_enabled_create_cache
 	my $till = shift;
 	my @interfaces = @_;
 
-	dbg("In tld_interface_enabled_create_cache() ", join(',', @interfaces));
+	dbg(join(',', @interfaces));
 
 	return if (scalar(@interfaces) == 0);
 
@@ -1163,71 +1163,53 @@ sub set_slv_config
 	$config = shift;
 }
 
-# Get time bounds of the last test guaranteed to have all probe results.
+# Get time bounds of the last cycle guaranteed to have all probe results.
 sub get_cycle_bounds
 {
 	my $delay = shift;
-	my $clock = shift;
+	my $now = shift || (time() - $delay - AVAIL_SHIFT_BACK);	# last complete cycle, usually used for service availability calculation
 
-	$clock = time() unless ($clock);
-
-	my $from = truncate_from($clock, $delay);
-	my $till = $from + $delay - 1;
+	my $from = cycle_start($now, $delay);
+	my $till = cycle_end($now, $delay);
 
 	return ($from, $till, $from);
 }
 
-# Get time bounds of the rolling week, shift back to guarantee all probe results.
+# Get time bounds for rolling week calculation. Last cycle must be complete.
 sub get_rollweek_bounds
 {
-	my $from = shift;	# beginning of rolling week (till current time if not specified)
+	my $delay = shift;
+	my $now = shift || (time() - $delay - ROLLWEEK_SHIFT_BACK);	# last complete cycle, service availability must be calculated
 
-	my $rollweek_seconds = __get_macro('{$RSM.ROLLWEEK.SECONDS}');
+	my $till = cycle_end($now, $delay);
+	my $from = $till - __get_macro('{$RSM.ROLLWEEK.SECONDS}') + 1;
 
-	my $till;
-
-	if ($from)
-	{
-		$from = truncate_from($from);
-		$till = $from + $rollweek_seconds;
-	}
-	else
-	{
-		# select till current time
-		$till = time() - ROLLWEEK_SHIFT_BACK;
-
-		$till = truncate_from($till);
-		$from = $till - $rollweek_seconds;
-	}
-
-	$till--;
-
-	return ($from, $till, truncate_from($till));
+	return ($from, $till, cycle_start($till, $delay));
 }
 
 # todo phase 1: old name of this function was 'get_curmon_bounds'
-# Get bounds for monthly downtime calculation. $till is the last second of the last elapsed minute.
-# $from is the first second of the month (of the previous one if time() is within the fisrt minute of the month).
+# Get bounds for monthly downtime calculation. $till is the last second of latest calculated test cycle.
+# $from is the first second of the month.
 sub get_downtime_bounds
 {
+	my $delay = shift;
+	my $now = shift || (time() - $delay - ROLLWEEK_SHIFT_BACK);	# last complete cycle, service availability must be calculated
+
 	require DateTime;
 
-	my $till = truncate_from(time()) - 1;
+	my $till = cycle_end($now, $delay);
 
 	my $dt = DateTime->from_epoch('epoch' => $till);
 	$dt->truncate('to' => 'month');
 	my $from = $dt->epoch;
 
-	return ($from, $till, truncate_from($till));
+	return ($from, $till, cycle_start($till, $delay));
 }
 
-# maximum timestamp for calculation of service availability
+# time when all Service availability values are calculated
 sub max_avail_time
 {
-	my $now = shift;
-
-	# truncate to the end of previous minute
-	return $now - ($now % 60) - 1 - AVAIL_SHIFT_BACK;
+	return truncate_till(time() - ROLLWEEK_SHIFT_BACK);
 }
 
 # todo phase 1: taken from RSMSLV.pm of phase 2
@@ -1521,7 +1503,7 @@ sub send_values
 
 	if ($total_values == 0)
 	{
-		wrn(__script(), ": no data collected, nothing to send");
+		dbg(__script(), ": no data collected, nothing to send");
 		return;
 	}
 
@@ -1826,28 +1808,28 @@ sub __get_item_values($$$$)
 	return [values(%result)];
 }
 
-sub avail_value_exists
+sub uint_value_exists
 {
         my $clock = shift;
         my $itemid = shift;
 
         my $rows_ref = db_select("select 1 from history_uint where itemid=$itemid and clock=$clock");
 
-        return SUCCESS if ($rows_ref->[0]->[0]);
+        return 1 if (defined($rows_ref->[0]->[0]));
 
-        return E_FAIL;
+        return 0;
 }
 
-sub rollweek_value_exists
+sub float_value_exists
 {
         my $clock = shift;
         my $itemid = shift;
 
         my $rows_ref = db_select("select 1 from history where itemid=$itemid and clock=$clock");
 
-        return SUCCESS if ($rows_ref->[0]->[0]);
+        return 1 if (defined($rows_ref->[0]->[0]));
 
-        return E_FAIL;
+        return 0;
 }
 
 sub __make_incident
@@ -1921,6 +1903,8 @@ sub get_incidents
 	my $delay = shift;
 	my $from = shift;
 	my $till = shift;
+
+	dbg(selected_period($from, $till));
 
 	my (@incidents, $rows_ref, $row_ref);
 
@@ -2156,9 +2140,11 @@ sub get_downtime
 		$downtime += $period_till - $prevclock if ($is_down != 0);
 	}
 
-	$downtime = int($downtime / 60);	# minutes;
+	# complete minute
+	$downtime += 60 - ($downtime % 60 ? $downtime % 60 : 60);
 
-	return $downtime;
+	# return minutes
+	return int($downtime / 60);
 }
 
 sub get_downtime_prepare
@@ -2283,9 +2269,11 @@ sub get_downtime_execute
 		$sql_count++;
 	}
 
-	$downtime = int($downtime / 60);	# minutes;
+	# complete minute
+	$downtime += 60 - ($downtime % 60 ? $downtime % 60 : 60);
 
-	return $downtime;
+	# return minutes
+	return int($downtime / 60);
 }
 
 sub __get_history_table_by_value_type
@@ -2568,26 +2556,18 @@ sub get_tld_by_trigger
 	return ($rows_ref->[0]->[0], $service);
 }
 
-# truncate to the beginning of specified period
+# truncate specified unix timestamp to 0 seconds
 sub truncate_from
 {
 	my $ts = shift;
-	my $delay = shift;	# by default 1 minute
 
-	$delay = 60 unless ($delay);
-
-	return $ts - ($ts % $delay);
+	return $ts - ($ts % 60);
 }
 
-# truncate to the end of specified period
+# truncate specified unix timestamp to 59 seconds
 sub truncate_till
 {
-	my $ts = shift;
-	my $delay = shift;	# by default 1 minute
-
-	$delay = 60 unless ($delay);
-
-	return truncate_from($ts, $delay) + $delay - 1;
+	return truncate_from(shift) + 59;
 }
 
 # whether additional alerts through Redis are enabled, disable in config passed with set_slv_config()
@@ -2616,19 +2596,6 @@ sub get_test_start_time
 	return 0 if ($remainder != 0);
 
 	return $till - $delay;
-}
-
-# todo phase 1: taken from RSMSLV1.pm
-sub uint_value_exists
-{
-	my $clock = shift;
-	my $itemid = shift;
-
-	my $rows_ref = db_select("select 1 from history_uint where itemid=$itemid and clock=$clock");
-
-	return SUCCESS if ($rows_ref->[0]->[0]);
-
-	return E_FAIL;
 }
 
 # $services is a hash reference of services that need to be checked.
@@ -2839,14 +2806,14 @@ sub parse_avail_opts
 {
 	$POD2USAGE_FILE = '/opt/zabbix/scripts/slv/rsm.slv.avail.usage';
 
-	parse_opts('tld=s', 'from=n', 'period=n');
+	parse_opts('tld=s', 'now=n');
 }
 
 sub parse_rollweek_opts
 {
 	$POD2USAGE_FILE = '/opt/zabbix/scripts/slv/rsm.slv.rollweek.usage';
 
-	parse_opts('tld=s', 'from=n');
+	parse_opts('tld=s', 'now=n');
 }
 
 sub opt

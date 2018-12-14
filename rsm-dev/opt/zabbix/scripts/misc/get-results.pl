@@ -39,14 +39,8 @@ my ($key, $service, $delay, $proto, $command);	# $proto is needed for DNS, $comm
 
 my ($from, $till);
 
-if (opt('from'))
-{
-	$from = truncate_from(getopt('from'));
-}
-if (opt('till'))
-{
-	$till = truncate_till(getopt('till'));
-}
+$till = truncate_till(opt('till') ? getopt('till') : time() - AVAIL_SHIFT_BACK);
+$from = truncate_from(opt('from') ? getopt('from') : $till - 300);
 
 if (getopt('service') eq 'tcp-dns-rtt')
 {
@@ -124,8 +118,6 @@ else
 	print("Invalid service specified \"", getopt('service'), "\"\n");
 	usage(2);
 }
-
-($from, $till) = get_default_period(time() - $delay - AVAIL_SHIFT_BACK, $delay, getopt('from'), getopt('till'));
 
 info('selected period: ', selected_period($from, $till));
 

@@ -130,8 +130,7 @@ db_disconnect();
 
 my $now = time();
 
-# in order to make sure all data is saved in Zabbix we move 1 minute back
-my $max_till = max_avail_time($now) - 60;
+my $max_till = max_avail_time();
 
 my ($check_from, $check_till, $continue_file);
 
@@ -598,7 +597,7 @@ foreach (@server_keys)
 				}
 
 				# we need down time in minutes, not percent, that's why we can't use "rsm.slv.$service.rollweek" value
-				my ($rollweek_from, $rollweek_till) = get_rollweek_bounds();
+				my ($rollweek_from, $rollweek_till) = get_rollweek_bounds($delay);
 
 				my $rollweek_incidents = get_incidents($avail_itemid, $delay, $rollweek_from, $rollweek_till);
 
@@ -2499,7 +2498,7 @@ sub __no_status_result($$$$$;$)
 
 	wrn(uc($service), " availability value is missing for ", uc($subservice), " test ", ($details ? "($details) " : ''),
 		"performed at ", ts_str($clock), " on probe $probe. Please run:".
-		"\n/opt/zabbix/scripts/slv/$avail_key.pl --from $clock");
+		"\n/opt/zabbix/scripts/slv/$avail_key.pl --now $clock");
 }
 
 # todo phase 1: this function was modified to allow earlier run on freshly installed database
