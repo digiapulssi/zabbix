@@ -221,9 +221,12 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 	/* corrupt stack (see ZBX-14559). Use res_init() on AIX. */
 	struct __res_state	res_state_local;
 #else	/* thread-unsafe resolver API */
-	int			saved_retrans, saved_retry, save_nssocks, saved_nscount = 0, saved_nscount6;
+	int			saved_retrans, saved_retry, saved_nscount = 0;
 	unsigned long		saved_options;
 	struct sockaddr_in	saved_ns;
+#	if defined(HAVE_RES_U_EXT)		/* thread-unsafe resolver API /Linux/ */
+	int			save_nssocks, saved_nscount6;
+#	endif
 #endif
 
 #if defined(HAVE_RES_EXT_EXT)		/* AIX */
