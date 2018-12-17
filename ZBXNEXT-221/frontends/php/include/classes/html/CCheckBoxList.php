@@ -28,6 +28,7 @@ class CCheckBoxList extends CList {
 		parent::__construct();
 
 		$this->addClass(ZBX_STYLE_COLUMNS);
+		$this->addStyle('line-height: 18px;');
 		$this->name = $name;
 		$this->checked_values = array_flip($checked_values);
 	}
