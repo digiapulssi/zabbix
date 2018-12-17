@@ -27,15 +27,15 @@ class CCheckBoxList extends CList {
 	public function __construct($name, $checked_values = []) {
 		parent::__construct();
 
-		$this->addClass(ZBX_STYLE_GRID_CHECK_RADIO);
+		$this->addClass(ZBX_STYLE_COLUMNS);
 		$this->name = $name;
 		$this->checked_values = array_flip($checked_values);
 	}
 
 	public function addCheckBox($label, $value) {
 		parent::addItem((new CCheckBox($this->name.'['.$value.']', $value))
-			->setLabel($label)
-			->setChecked(array_key_exists($value, $this->checked_values)));
+			->setLabel($label)->setChecked(array_key_exists($value, $this->checked_values)),
+			ZBX_STYLE_COLUMN_33);
 
 		return $this;
 	}
