@@ -45,11 +45,12 @@ $filter_column1 = (new CFormList())
 			'data' => $data['filter_hostids_ms'],
 			'popup' => [
 				'parameters' => [
-					'srctbl' => 'hosts',
+					'srctbl' => 'host_templates',
 					'srcfld1' => 'hostid',
 					'dstfrm' => 'hostids',
 					'dstfld1' => 'filter_hostids_',
-					'editable' => true
+					'editable' => true,
+					'templated_hosts' => true
 				]
 			]
 		]))->setWidth(ZBX_TEXTAREA_FILTER_SMALL_WIDTH)
@@ -81,7 +82,7 @@ $filter_column1 = (new CFormList())
 	);
 
 
-if ($data['hostid'] === null) {
+if ($data['show_value_column']) {
 	$filter_column1->addRow(_('Value'),
 		(new CRadioButtonList('filter_value', (int) $data['filter_value']))
 			->addValue(_('all'), -1)
@@ -197,7 +198,7 @@ $triggers_table = (new CTableInfo())->setHeader([
 			->onClick("checkAll('".$triggers_form->getName()."', 'all_triggers', 'g_triggerid');")
 	))->addClass(ZBX_STYLE_CELL_WIDTH),
 	make_sorting_header(_('Severity'), 'priority', $data['sort'], $data['sortorder'], $url),
-	$data['hostid'] === null ? _('Value') : null,
+	$data['show_value_column'] ? _('Value') : null,
 	$data['hostid'] === null ? _('Host') : null,
 	make_sorting_header(_('Name'), 'description', $data['sort'], $data['sortorder'], $url),
 	_('Expression'),
@@ -314,7 +315,7 @@ foreach ($data['triggers'] as $tnum => $trigger) {
 	$triggers_table->addRow([
 		new CCheckBox('g_triggerid['.$triggerid.']', $triggerid),
 		getSeverityCell($trigger['priority'], $data['config']),
-		$data['hostid'] === null ? $trigger_value : null,
+		$data['show_value_column'] ? $trigger_value : null,
 		$hosts,
 		$description,
 		$expression,

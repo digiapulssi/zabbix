@@ -173,7 +173,10 @@ if ($triggerIds) {
 	}
 }
 
-if (getRequest('groupid') && !isWritableHostGroups([getRequest('groupid')])) {
+if (getRequest('filter_groupids') && !isWritableHostGroups(getRequest('filter_groupids'))) {
+	access_deny();
+}
+if (getRequest('filter_hostids') && !isWritableHostTemplates(getRequest('filter_hostids'))) {
 	access_deny();
 }
 if (getRequest('hostid') && !isWritableHostTemplates([getRequest('hostid')])) {
@@ -686,8 +689,10 @@ else {
 		'output' => ['hostid', 'status', 'name'],
 		'hostids' => $filter_hostids ? $filter_hostids : null,
 		'groupids' => $filter_groupids ? $filter_groupids : null,
+		'templated_hosts' => true,
 		'preservekeys' => true
 	]);
+
 	$show_info_column = false;
 	$show_value_column = false;
 	// -- end declaration
@@ -761,10 +766,7 @@ else {
 	}
 
 	if ($filter_hostids) {
-		$filter_hostids_ms = CArrayHelper::renameObjectsKeys(API::Host()->get([
-			'output' => ['hostid', 'name'],
-			'hostids' => $filter_hostids,
-		]), ['hostid' => 'id']);
+		$filter_hostids_ms = CArrayHelper::renameObjectsKeys($hosts, ['hostid' => 'id']);
 	}
 
 	$triggers = API::Trigger()->get($options);
@@ -890,6 +892,7 @@ else {
 		'filter_discovered' => $filter_discovered,
 		'filter_dependent' => $filter_dependent,
 		'show_info_column' => $show_info_column,
+		'show_value_column' => $show_value_column,
 		'show_header_host_table' => (count($filter_hostids) == 1),
 		'parent_templates' => getTriggerParentTemplates($triggers, ZBX_FLAG_DISCOVERY_NORMAL),
 		'paging' => getPagingLine($triggers, $sortorder, $url),
