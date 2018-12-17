@@ -21,13 +21,6 @@
 
 require_once dirname(__FILE__).'/js/configuration.triggers.list.js.php';
 
-if (!$data['hostid']) {
-	$create_button = (new CSubmit('form', _('Create trigger (select host first)')))->setEnabled(false);
-}
-else {
-	$create_button = new CSubmit('form', _('Create trigger'));
-}
-
 $filter_column1 = (new CFormList())
 	->addRow((new CLabel(_('Host group'), 'filter_groupids')),
 		(new CMultiSelect([
@@ -88,8 +81,7 @@ $filter_column1 = (new CFormList())
 	);
 
 
-
-if ($data['show_value_column']) {
+if ($data['hostid'] === null) {
 	$filter_column1->addRow(_('Value'),
 		(new CRadioButtonList('filter_value', (int) $data['filter_value']))
 			->addValue(_('all'), -1)
@@ -166,32 +158,16 @@ $filter_column2 = (new CFormList())
 			->setModern(true));
 
 $filter = (new CFilter(new CUrl('triggers.php')))
-	->setProfile($data['profileIdx'])
+	->setProfile($data['profile_idx'])
 	->setActiveTab($data['active_tab'])
 	->addFilterTab(_('Filter'), [$filter_column1, $filter_column2]);
 
 $widget = (new CWidget())
 	->setTitle(_('Triggers'))
 	->setControls(new CList([
-		(new CForm('get'))
-			->cleanItems()
-			->setAttribute('aria-label', _('Main filter'))
-			->addItem((new CList())
-				->addItem([
-					new CLabel(_('Group'), 'groupid'),
-					(new CDiv())->addClass(ZBX_STYLE_FORM_INPUT_MARGIN),
-					$data['pageFilter']->getGroupsCB()
-				])
-				->addItem([
-					new CLabel(_('Host'), 'hostid'),
-					(new CDiv())->addClass(ZBX_STYLE_FORM_INPUT_MARGIN),
-					$data['pageFilter']->getHostsCB()
-				])
-			),
-		(new CTag('nav', true, ($data['hostid'] != 0)
+		(new CTag('nav', true, ($data['show_header_host_table'])
 			? new CRedirectButton(_('Create trigger'), (new CUrl('triggers.php'))
-				->setArgument('groupid', $data['pageFilter']->groupid)
-				->setArgument('hostid', $data['pageFilter']->hostid)
+				->setArgument('hostid', $data['hostid'])
 				->setArgument('form', 'create')
 				->getUrl()
 			)
@@ -199,7 +175,7 @@ $widget = (new CWidget())
 		))->setAttribute('aria-label', _('Content controls'))
 	]));
 
-if ($data['hostid']) {
+if ($data['show_header_host_table']) {
 	$widget->addItem(get_header_host_table('triggers', $data['hostid']));
 }
 
@@ -221,12 +197,12 @@ $triggers_table = (new CTableInfo())->setHeader([
 			->onClick("checkAll('".$triggers_form->getName()."', 'all_triggers', 'g_triggerid');")
 	))->addClass(ZBX_STYLE_CELL_WIDTH),
 	make_sorting_header(_('Severity'), 'priority', $data['sort'], $data['sortorder'], $url),
-	$data['show_value_column'] ? _('Value') : null,
-	($data['hostid'] == 0) ? _('Host') : null,
+	$data['hostid'] === null ? _('Value') : null,
+	$data['hostid'] === null ? _('Host') : null,
 	make_sorting_header(_('Name'), 'description', $data['sort'], $data['sortorder'], $url),
 	_('Expression'),
 	make_sorting_header(_('Status'), 'status', $data['sort'], $data['sortorder'], $url),
-	$data['showInfoColumn'] ? _('Info') : null,
+	$data['show_info_column'] ? _('Info') : null,
 	_('Tags')
 ]);
 
@@ -237,6 +213,7 @@ $data['triggers'] = CMacrosResolverHelper::resolveTriggerExpressions($data['trig
 
 foreach ($data['triggers'] as $tnum => $trigger) {
 	$triggerid = $trigger['triggerid'];
+	$trigger_host = reset($trigger['hosts']);
 
 	// description
 	$description = [];
@@ -257,35 +234,35 @@ foreach ($data['triggers'] as $tnum => $trigger) {
 
 	$description[] = new CLink(
 		CHtml::encode($trigger['description']),
-		'triggers.php?form=update&hostid='.$data['hostid'].'&triggerid='.$triggerid
+		'triggers.php?form=update&hostid='.$trigger_host['hostid'].'&triggerid='.$triggerid
 	);
 
 	if ($trigger['dependencies']) {
 		$description[] = [BR(), bold(_('Depends on').':')];
-		$triggerDependencies = [];
+		$trigger_deps = [];
 
 		foreach ($trigger['dependencies'] as $dependency) {
-			$depTrigger = $data['dependencyTriggers'][$dependency['triggerid']];
+			$dep_trigger = $data['dep_triggers'][$dependency['triggerid']];
 
-			$depTriggerDescription = CHtml::encode(
-				implode(', ', zbx_objectValues($depTrigger['hosts'], 'name')).NAME_DELIMITER.$depTrigger['description']
+			$dep_trigger_desc = CHtml::encode(
+				implode(', ', zbx_objectValues($dep_trigger['hosts'], 'name')).NAME_DELIMITER.$dep_trigger['description']
 			);
 
-			$triggerDependencies[] = (new CLink($depTriggerDescription,
-				'triggers.php?form=update&triggerid='.$depTrigger['triggerid']
+			$trigger_deps[] = (new CLink($dep_trigger_desc,
+				'triggers.php?form=update&triggerid='.$dep_trigger['triggerid']
 			))
 				->addClass(ZBX_STYLE_LINK_ALT)
-				->addClass(triggerIndicatorStyle($depTrigger['status']));
+				->addClass(triggerIndicatorStyle($dep_trigger['status']));
 
-			$triggerDependencies[] = BR();
+			$trigger_deps[] = BR();
 		}
-		array_pop($triggerDependencies);
+		array_pop($trigger_deps);
 
-		$description = array_merge($description, [(new CDiv($triggerDependencies))->addClass('dependencies')]);
+		$description = array_merge($description, [(new CDiv($trigger_deps))->addClass('dependencies')]);
 	}
 
 	// info
-	if ($data['showInfoColumn']) {
+	if ($data['show_info_column']) {
 		$info_icons = [];
 		if ($trigger['status'] == TRIGGER_STATUS_ENABLED && $trigger['error']) {
 			$info_icons[] = makeErrorIcon($trigger['error']);
@@ -308,7 +285,7 @@ foreach ($data['triggers'] as $tnum => $trigger) {
 
 	// hosts
 	$hosts = null;
-	if ($data['hostid'] == 0) {
+	if ($data['hostid'] === null) {
 		foreach ($trigger['hosts'] as $hostid => $host) {
 			if (!empty($hosts)) {
 				$hosts[] = ', ';
@@ -337,12 +314,12 @@ foreach ($data['triggers'] as $tnum => $trigger) {
 	$triggers_table->addRow([
 		new CCheckBox('g_triggerid['.$triggerid.']', $triggerid),
 		getSeverityCell($trigger['priority'], $data['config']),
-		$data['show_value_column'] ? $trigger_value : null,
+		$data['hostid'] === null ? $trigger_value : null,
 		$hosts,
 		$description,
 		$expression,
 		$status,
-		$data['showInfoColumn'] ? makeInformationList($info_icons) : null,
+		$data['show_info_column'] ? makeInformationList($info_icons) : null,
 		$data['tags'][$triggerid]
 	]);
 }
