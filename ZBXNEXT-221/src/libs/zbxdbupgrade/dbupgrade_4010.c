@@ -88,6 +88,16 @@ static int	DBpatch_4010005(void)
 	return SUCCEED;
 }
 
+static int	DBpatch_4010006(void)
+{
+	if (0 == (program_type & ZBX_PROGRAM_TYPE_SERVER))
+		return SUCCEED;
+
+	if (ZBX_DB_OK > DBexecute("delete from profiles where idx='web.triggers.filter_priority' and value_int='-1'"))
+		return FAIL;
+
+	return SUCCEED;
+
 #endif
 
 DBPATCH_START(4010)
