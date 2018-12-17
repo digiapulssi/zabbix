@@ -183,6 +183,17 @@ function checkAll(form_name, chkMain, shkName) {
 	return true;
 }
 
+function checkAllRange(form_name, chkMain, shkName) {
+	var frmForm = document.forms[form_name],
+		value = frmForm.elements[chkMain].checked;
+
+	chkboxRange.checkObjectAll(shkName, value);
+	chkboxRange.update(shkName);
+	chkboxRange.saveSessionStorage(shkName);
+
+	return true;
+}
+
 function checkLocalAll(form_name, chkMain, chkName) {
 	var frmForm = document.forms[form_name];
 	var checkboxes = $$('input[name=' + chkName + ']');

@@ -56,7 +56,9 @@ $url = (new CUrl('items.php'))
 $itemTable = (new CTableInfo())
 	->setHeader([
 		(new CColHeader(
-			(new CCheckBox('all_items'))->onClick("checkAll('".$itemForm->getName()."', 'all_items', 'group_itemid');")
+			(new CCheckBox('all_items'))
+				->onClick("checkAllRange('".$itemForm->getName()."', 'all_items', 'group_itemid');")
+				->addClass('checkbox-range')
 		))->addClass(ZBX_STYLE_CELL_WIDTH),
 		_('Wizard'),
 		empty($this->data['filter_hostid']) ? _('Host') : null,
@@ -257,7 +259,7 @@ foreach ($data['items'] as $item) {
 	))->addClass(ZBX_STYLE_REL_CONTAINER);
 
 	$itemTable->addRow([
-		new CCheckBox('group_itemid['.$item['itemid'].']', $item['itemid']),
+		(new CCheckBox('group_itemid['.$item['itemid'].']', $item['itemid']))->addClass('checkbox-range'),
 		$wizard,
 		empty($this->data['filter_hostid']) ? $item['host'] : null,
 		$description,
@@ -279,7 +281,7 @@ zbx_add_post_js('cookie.prefix = "'.$this->data['hostid'].'";');
 $itemForm->addItem([
 	$itemTable,
 	$this->data['paging'],
-	new CActionButtonList('action', 'group_itemid',
+	(new CActionButtonList('action', 'group_itemid',
 		[
 			'item.massenable' => ['name' => _('Enable'), 'confirm' => _('Enable selected items?')],
 			'item.massdisable' => ['name' => _('Disable'), 'confirm' => _('Disable selected items?')],
@@ -292,7 +294,8 @@ $itemForm->addItem([
 			'item.massdelete' => ['name' => _('Delete'), 'confirm' => _('Delete selected items?')]
 		],
 		$this->data['hostid']
-	)
+	))
+		->setWidgetClass('chkboxRange')
 ]);
 
 // append form to widget

@@ -21,48 +21,47 @@
 /*
  * Automatic checkbox range selection
  */
-var chkbxRange = {
-	startbox:		null,	// start checkbox obj
-	chkboxes:		{},		// ckbx list
-	prefix:			null,	// prefix for cookie name
-	pageGoName:		null,	// which checkboxes should be counted by Go button and saved to cookies
-	selectedIds:	{},		// ids of selected objects
-	footerButtons:	{},		// action buttons at the bottom of page
-	cookieName:		null,
+var chkboxRange = {
+	startbox:			null,	// start checkbox obj
+	chkboxes:			{},		// ckbx list
+	prefix:				null,	// suffix for sessionStorage key
+	pageGoName:			null,	// which checkboxes should be counted by Go button and saved to sessionStorage
+	selectedIds:		{},		// ids of selected objects
+	footerButtons:		{},		// action buttons at the bottom of page
+	sessionStorageName:	null,
+	boxclass:			'checkbox-range[type=checkbox]:not(:disabled)',
 
 	init: function() {
-		// cookie name
-		var path = new Curl();
-		var filename = basename(path.getPath(), '.php');
-		this.cookieName = 'cb_' + filename + (this.prefix ? '_' + this.prefix : '');
+		// sessionStorage name
+		var path = new Curl(),
+			filename = basename(path.getPath(), '.php');
+		this.sessionStorageName = 'cb_' + filename + (this.prefix ? '_' + this.prefix : '');
 		// Erase old checkboxes.
 		this.chkboxes = {};
 		this.startbox = null;
 
-		this.resetOtherPageCookies();
-
-		if (jQuery('.list-table tbody input[type=checkbox]').hasClass('checkbox-range')) {
-			return;
-		}
 		// initialize checkboxes
-		var chkboxes = jQuery('.list-table tbody input[type=checkbox]:not(:disabled)');
+		var chkboxes = jQuery('.list-table tbody input.' + this.boxclass);
 		if (chkboxes.length > 0) {
 			for (var i = 0; i < chkboxes.length; i++) {
 				this.implement(chkboxes[i]);
 			}
 		}
+		else {
+			return;
+		}
 
-		// load selected checkboxes from cookies or cache
+		// load selected checkboxes from sessionStorage
 		if (this.pageGoName != null) {
-			this.selectedIds = cookie.readJSON(this.cookieName);
-
-			// check if checkboxes should be selected from cookies
+			var selectedIds = sessionStorage.getItem(this.sessionStorageName);
+			this.selectedIds = selectedIds == null ? {} : JSON.parse(selectedIds);
+			// check if checkboxes should be selected from sessionStorage
 			if (!jQuery.isEmptyObject(this.selectedIds)) {
 				var objectIds = jQuery.map(this.selectedIds, function(id) { return id });
 			}
-			// no checkboxes selected from cookies, check browser cache if checkboxes are still checked and update state
+			// no checkboxes selected from sessionStorage, check browser cache if checkboxes are still checked and update state
 			else {
-				var checkedFromCache = jQuery('main .list-table tbody input[type=checkbox]:checked:not(:disabled)');
+				var checkedFromCache = jQuery('main .list-table tbody input.' + this.boxclass + ':checked');
 				var objectIds = jQuery.map(checkedFromCache, jQuery.proxy(function(checkbox) {
 					return this.getObjectIdFromName(checkbox.name);
 				}, this));
@@ -126,7 +125,7 @@ var chkbxRange = {
 		}
 
 		this.update(object);
-		this.saveCookies(object);
+		this.saveSessionStorage(object);
 
 		this.startbox = checkbox;
 	},
@@ -267,15 +266,15 @@ var chkbxRange = {
 
 	// check if all checkboxes are selected and select main checkbox, else disable checkbox, select options and button
 	updateMainCheckbox: function() {
-		var mainCheckbox = jQuery('.list-table .header input[type=checkbox]:not(:disabled)');
+		var mainCheckbox = jQuery('.list-table .header input.' + this.boxclass);
 		if (!mainCheckbox.length) {
 			return;
 		}
 
-		var countAvailable = jQuery('.list-table tr:not(.header) input[type=checkbox]:not(:disabled)').length;
+		var countAvailable = jQuery('.list-table tr:not(.header) input.' + this.boxclass).length;
 
 		if (countAvailable > 0) {
-			var countChecked = jQuery('.list-table tr:not(.header) input[type=checkbox]:not(:disabled):checked').length;
+			var countChecked = jQuery('.list-table tr:not(.header) input.' + this.boxclass + ':checked').length;
 
 			mainCheckbox = mainCheckbox[0];
 			mainCheckbox.checked = (countChecked == countAvailable);
@@ -293,30 +292,23 @@ var chkbxRange = {
 	},
 
 	/**
-	 * Save the state of the checkboxes belonging to the given object group in cookies.
+	 * Save the state of the checkboxes belonging to the given object group in sessionStorage.
 	 *
 	 * @param {string} object
 	 */
-	saveCookies: function(object) {
+	saveSessionStorage: function(object) {
 		if (this.pageGoName == object) {
-			cookie.createJSON(this.cookieName, this.selectedIds);
+			if (jQuery.isEmptyObject(this.selectedIds)) {
+				sessionStorage.removeItem(this.sessionStorageName);
+			}
+			else {
+				sessionStorage.setItem(this.sessionStorageName, JSON.stringify(this.selectedIds));
+			}
 		}
 	},
 
 	clearSelectedOnFilterChange: function() {
-		cookie.eraseArray(this.cookieName);
-	},
-
-	/**
-	 * Reset all selections on other pages.
-	 */
-	resetOtherPageCookies: function() {
-		for (var key in cookie.cookies) {
-			var cookiePair = key.split('=');
-			if (cookiePair[0].indexOf('cb_') > -1 && cookiePair[0].indexOf(this.cookieName) == -1) {
-				cookie.erase(key);
-			}
-		}
+		sessionStorage.removeItem(this.sessionStorageName);
 	},
 
 	submitFooterButton: function(e) {

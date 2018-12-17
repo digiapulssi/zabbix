@@ -61,6 +61,7 @@ $availableJScripts = [
 	'multiselect.js' => '',
 	'colorpicker.js' => '',
 	'chkbxrange.js' => '',
+	'chkboxrange.js' => '',
 	'csvggraphwidget.js' => '',
 	'layout.mode.js' => '',
 	// vendors
@@ -306,6 +307,7 @@ if (empty($_GET['files'])) {
 		'class.csuggest.js',
 		'main.js',
 		'chkbxrange.js',
+		'chkboxrange.js',
 		'functions.js',
 		'menupopup.js',
 		'init.js'

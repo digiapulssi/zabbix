@@ -12,5 +12,6 @@
 		cookie.init();
 		chkbxRange.init();
 		MMenu.init();
+		chkboxRange.init();
 	});
 </script>

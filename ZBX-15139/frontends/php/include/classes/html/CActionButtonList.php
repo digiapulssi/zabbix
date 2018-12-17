@@ -55,6 +55,13 @@ class CActionButtonList extends CObject {
 	protected $selectedCountElement = null;
 
 	/**
+	 * Widget class name for button list.
+	 *
+	 * @var string
+	 */
+	protected $widget_class = 'chkbxRange';
+
+	/**
 	 * @param string		$actionName				name of submit buttons
 	 * @param string		$checkboxesName			Name of paramerer into which checked checkboxes will be put in.
 	 * @param array			$buttonsData			buttons data array
@@ -102,13 +109,24 @@ class CActionButtonList extends CObject {
 	 * @return string
 	 */
 	public function toString($destroy = true) {
-		zbx_add_post_js('chkbxRange.pageGoName = '.CJs::encodeJson($this->checkboxesName).';');
-		zbx_add_post_js('chkbxRange.prefix = '.CJs::encodeJson($this->cookieNamePrefix).';');
+		zbx_add_post_js($this->widget_class.'.pageGoName = '.CJs::encodeJson($this->checkboxesName).';');
+		zbx_add_post_js($this->widget_class.'.prefix = '.CJs::encodeJson($this->cookieNamePrefix).';');
 
 		$this->items[] = (new CDiv([$this->getSelectedCountElement(), $this->buttons]))
 			->setId('action_buttons')
 			->addClass(ZBX_STYLE_ACTION_BUTTONS);
 
 		return parent::toString($destroy);
+	}
+
+	/**
+	 * Set widget class.
+	 * @param string $widget_class
+	 *
+	 * @return $this
+	 */
+	public function setWidgetClass($widget_class) {
+		$this->widget_class = $widget_class;
+		return $this;
 	}
 }

@@ -2432,6 +2432,29 @@ function updateCookiesByIds($cookie_id = null, array $checked_ids = []) {
 }
 
 /**
+ * Clears table rows selection's in sessionStorage.
+ *
+ * @param string $parentId		parent ID, is used as sessionStorage suffix
+ */
+function uncheckAllTableRows($parentId = null) {
+	insert_js('sessionStorage.removeItem("cb_'.basename($_SERVER['SCRIPT_NAME'], '.php')
+		.($parentId === null ? '' : '_'.$parentId).'")'
+	);
+}
+
+/**
+ * Update table rows selection's in sessionStorage.
+ *
+ * @param string $parentId		parent ID, is used as sessionStorage suffix
+ * @param array $checked_ids	checked rows ids [id1 => id1, id2 => id2, ...]
+ */
+function updateSessionStorage($parentId = null, array $checked_ids = []) {
+	insert_js('sessionStorage.setItem("cb_'.basename($_SERVER['SCRIPT_NAME'], '.php').
+		($parentId === null ? '' : '_'.$parentId).'", JSON.stringify('.json_encode($checked_ids).'))'
+	);
+}
+
+/**
  * Trim each element of the script path. For example, " a / b / c d " => "a/b/c d"
  *
  * @param string $name
