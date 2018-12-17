@@ -671,6 +671,10 @@ else {
 	$filter_tags = array_filter($filter_tags, function ($v) {
 		return boolval($v['tag']);
 	});
+	$filter_groupids_enriched =  [];
+	if ($filter_groupids) {
+		$filter_groupids_enriched = getSubGroups($filter_groupids);
+	}
 	// preserve compatibility with old urls across zabbix
 	$hostid = getRequest('hostid', null);
 	if ($hostid === null) {
@@ -688,7 +692,7 @@ else {
 	$hosts = API::Host()->get([
 		'output' => ['hostid', 'status', 'name'],
 		'hostids' => $filter_hostids ? $filter_hostids : null,
-		'groupids' => $filter_groupids ? $filter_groupids : null,
+		'groupids' => $filter_groupids ? $filter_groupids_enriched : null,
 		'templated_hosts' => true,
 		'preservekeys' => true
 	]);
@@ -712,7 +716,7 @@ else {
 		'editable' => true,
 		'sortfield' => $sort,
 		'hostids' => $filter_hostids ? $filter_hostids : null,
-		'groupids' => $filter_groupids ? $filter_groupids : null,
+		'groupids' => $filter_groupids ? $filter_groupids_enriched : null,
 		'limit' => $config['search_limit'] + 1,
 		'dependent' => $filter_dependent != -1 ? $filter_dependent : null,
 		'inherited' => $filter_inherited != -1 ? $filter_inherited : null,
