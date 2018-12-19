@@ -102,6 +102,7 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		process_slv_avail_cycles
 		process_slv_avail
 		process_slv_rollweek_cycles
+		process_slv_downtime_cycles
 		uint_value_exists
 		float_value_exists
 		sql_time_condition get_incidents get_downtime get_downtime_prepare get_downtime_execute
@@ -1844,12 +1845,56 @@ sub process_slv_rollweek_cycles($$$$$)
 			next if (!opt('dry-run') && float_value_exists($value_ts, $itemids{$tld}{'itemid_out'}));
 
 			# skip calculation if Service Availability value is not yet there
-			next unless (uint_value_exists($value_ts, $itemids{$tld}{'itemid_in'}));
+			next if (!opt('dry-run') && !uint_value_exists($value_ts, $itemids{$tld}{'itemid_in'}));
 
 			my $downtime = get_downtime($itemids{$tld}{'itemid_in'}, $from, $till, undef, undef, $delay);	# consider incidents
 			my $perc = sprintf("%.3f", $downtime * 100 / $cfg_sla);
 
 			push_value($tld, $cfg_key_out, $value_ts, $perc, "result: $perc% (down: $downtime minutes, sla: $cfg_sla)");
+		}
+
+		# unset TLD (for the logs)
+		$tld = undef;
+	}
+
+	send_values();
+}
+
+sub process_slv_downtime_cycles($$$$)
+{
+	my $cycles_ref = shift;
+	my $delay = shift;
+	my $cfg_key_in = shift;
+	my $cfg_key_out = shift;
+
+	my $sth = get_downtime_prepare();
+
+	my %itemids;
+
+	init_values();
+
+	foreach my $value_ts (sort(keys(%{$cycles_ref})))
+	{
+		my ($from, $till, undef) = get_downtime_bounds($delay, $value_ts);
+
+		dbg("selecting period ", selected_period($from, $till), " (value_ts:", ts_str($value_ts), ")");
+
+		foreach (@{$cycles_ref->{$value_ts}})
+		{
+			# NB! This is needed in order to set the value globally.
+			$tld = $_;
+
+			$itemids{$tld}{'itemid_in'} = get_itemid_by_host($tld, $cfg_key_in) unless ($itemids{$tld}{'itemid_in'});
+			$itemids{$tld}{'itemid_out'} = get_itemid_by_host($tld, $cfg_key_out) unless ($itemids{$tld}{'itemid_out'});
+
+			next if (!opt('dry-run') && uint_value_exists($value_ts, $itemids{$tld}{'itemid_out'}));
+
+			# skip calculation if Service Availability value is not yet there
+			next if (!opt('dry-run') && !uint_value_exists($value_ts, $itemids{$tld}{'itemid_in'}));
+
+			my $downtime = get_downtime_execute($sth, $itemids{$tld}{'itemid_in'}, $from, $till, 1);	# ignore incidents
+
+			push_value($tld, $cfg_key_out, $value_ts, $downtime, ts_str($from), " - ", ts_str($till));
 		}
 
 		# unset TLD (for the logs)

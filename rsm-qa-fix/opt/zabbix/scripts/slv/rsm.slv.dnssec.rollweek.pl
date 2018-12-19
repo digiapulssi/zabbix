@@ -43,7 +43,7 @@ if (opt('tld'))
 }
 else
 {
-        $tlds_ref = get_tlds('DNSSEC', $till);
+        $tlds_ref = get_tlds('DNSSEC', $max_clock);
 }
 
 slv_exit(SUCCESS) if (scalar(@{$tlds_ref}) == 0);
