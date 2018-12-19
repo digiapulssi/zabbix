@@ -664,7 +664,10 @@ class testFormAdministrationAuthentication extends CLegacyWebTest {
 			}
 			elseif ($data['file'] === 'pwfile') {
 				$this->assertTrue(exec('htpasswd -c -b "'.PHPUNIT_BASEDIR.'/.pwd" "'.$data['user'].'" "'.
-						$data['password'].'" > /dev/null 2>&1') !== false);
+						$data['password'].'" > /dev/null 2>&1', $output, $return) !== false);
+
+				$this->assertEquals(0, $return);
+
 				$content = '<Files index_http.php>'."\n".
 						'	AuthType Basic'."\n".
 						'	AuthName "Password Required"'."\n".
