@@ -55,8 +55,6 @@ slv_exit(SUCCESS) if (scalar(keys(%{$cycles_ref})) == 0);
 
 my $probes_ref = get_probes('RDDS');
 
-init_values();
-
 process_slv_avail_cycles(
 	$cycles_ref,
 	$probes_ref,
@@ -68,8 +66,6 @@ process_slv_avail_cycles(
 	\&check_probe_values,
 	$cfg_value_type
 );
-
-send_values();
 
 slv_exit(SUCCESS);
 

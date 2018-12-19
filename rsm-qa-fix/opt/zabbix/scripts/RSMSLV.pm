@@ -86,7 +86,7 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		get_macro_dns_tcp_rtt_low get_macro_rdds_rtt_low get_dns_udp_delay get_dns_tcp_delay
 		get_rdds_delay get_epp_delay get_macro_epp_probe_online get_macro_epp_rollweek_sla
 		get_macro_dns_update_time get_macro_rdds_update_time get_tld_items get_hostid
-		get_macro_epp_rtt_low get_macro_probe_avail_limit get_item_data get_itemid_by_key get_itemid_by_host
+		get_macro_epp_rtt_low get_macro_probe_avail_limit get_itemid_by_key get_itemid_by_host
 		get_itemid_by_hostid get_itemid_like_by_hostid get_itemids_by_host_and_keypart get_lastclock get_tlds
 		get_probes get_nsips get_nsip_items tld_exists tld_service_enabled db_connect db_disconnect
 		get_templated_nsips db_exec tld_interface_enabled
@@ -101,6 +101,7 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		collect_slv_cycles
 		process_slv_avail_cycles
 		process_slv_avail
+		process_slv_rollweek_cycles
 		uint_value_exists
 		float_value_exists
 		sql_time_condition get_incidents get_downtime get_downtime_prepare get_downtime_execute
@@ -257,72 +258,6 @@ sub get_macro_probe_avail_limit
 	return __get_macro('{$RSM.PROBE.AVAIL.LIMIT}');
 }
 
-sub get_item_data
-{
-	my $host = shift;
-	my $cfg_key_in = shift;
-	my $cfg_key_out = shift;
-	my $value_type = shift;
-
-	my $sql;
-
-	if ("[" eq substr($cfg_key_out, -1))
-	{
-		$sql =
-			"select i.key_,i.itemid".
-			" from items i,hosts h".
-			" where i.hostid=h.hostid".
-				" and h.host='$host'".
-				" and i.status=0".
-				" and (i.key_='$cfg_key_in' or i.key_ like '$cfg_key_out%')";
-	}
-	else
-	{
-		$sql =
-			"select i.key_,i.itemid".
-			" from items i,hosts h".
-			" where i.hostid=h.hostid".
-				" and h.host='$host'".
-				" and i.status=0".
-				" and i.key_ in ('$cfg_key_in','$cfg_key_out')";
-	}
-
-	$sql .= " order by i.key_";
-
-	my $rows_ref = db_select($sql);
-
-	my $rows = scalar(@$rows_ref);
-
-	fail("cannot find items ($cfg_key_in and $cfg_key_out) at host ($host)") if ($rows < 2);
-
-	my $itemid_in = undef;
-	my $itemid_out = undef;
-	my $lastclock = undef;
-
-	foreach my $row_ref (@$rows_ref)
-	{
-		if ($row_ref->[0] eq $cfg_key_in)
-		{
-			$itemid_in = $row_ref->[1];
-		}
-		else
-		{
-			$itemid_out = $row_ref->[1];
-			if (get_current_value($itemid_out, undef, \$lastclock) != SUCCESS)
-			{
-				$lastclock = 0;
-			}
-		}
-
-		last if (defined($itemid_in) and defined($itemid_out));
-	}
-
-	fail("cannot find items (need $cfg_key_in and $cfg_key_out) at host ($host)")
-		unless (defined($itemid_in) and defined($itemid_out));
-
-	return ($itemid_in, $itemid_out, $lastclock);
-}
-
 sub get_itemid_by_key
 {
 	my $key = shift;
@@ -335,17 +270,18 @@ sub get_itemid_by_host
 	my $host = shift;
 	my $key = shift;
 
-	my $rows_ref = db_select(
+	my $itemid = __get_itemid_by_sql(
 		"select i.itemid".
 		" from items i,hosts h".
 		" where i.hostid=h.hostid".
 	    		" and h.host='$host'".
-			" and i.key_='$key'");
+			" and i.key_='$key'"
+	);
 
-	fail("cannot find item ($key) at host ($host)") if (scalar(@$rows_ref) == 0);
-	fail("more than one item ($key) at host ($host)") if (scalar(@$rows_ref) > 1);
+	fail("item \"$key\" does not exist") if ($itemid == E_ID_NONEXIST);
+	fail("more than one item \"$key\" found") if ($itemid == E_ID_MULTIPLE);
 
-	return $rows_ref->[0]->[0];
+	return $itemid;
 }
 
 sub get_itemid_by_hostid
@@ -376,6 +312,12 @@ sub __get_itemid_by_sql
         return $rows_ref->[0]->[0];
 }
 
+# Return itemids of Name Server items in form:
+# {
+#     ns1.example.com,10.20.30.40 => 32512,
+#     ns2.example.com,10.20.30.41 => 32513,
+#     ....
+# }
 sub get_itemids_by_host_and_keypart
 {
 	my $host = shift;
@@ -1667,6 +1609,20 @@ sub get_templated_items_like
 	return \@result;
 }
 
+# Collect cycles that needs to be calculated in form:
+# {
+#     value_ts1 : [
+#         tld1,
+#         tld2,
+#         tld3,
+#         ...
+#     ],
+#     value_ts2 : [
+#         ...
+#     ]
+# }
+#
+# where value_ts is value timestamp of the cycle
 sub collect_slv_cycles($$$$$)
 {
 	my $tlds_ref = shift;
@@ -1675,6 +1631,7 @@ sub collect_slv_cycles($$$$$)
 	my $max_clock = shift;	# latest cycle to process
 	my $max_cycles = shift;
 
+	# cache TLD data
 	my %cycles;
 
 	my ($lastvalue, $lastclock);
@@ -1688,7 +1645,7 @@ sub collect_slv_cycles($$$$$)
 		if (get_current_value($itemid, \$lastvalue, \$lastclock) != SUCCESS)
 		{
 			# new item
-			$cycles{$max_clock}{$tld} = undef;
+			push(@{$cycles{$max_clock}}, $tld);
 
 			next;
 		}
@@ -1701,7 +1658,7 @@ sub collect_slv_cycles($$$$$)
 		{
 			$lastclock += $delay;
 
-			$cycles{$lastclock}{$tld} = undef;
+			push(@{$cycles{$lastclock}}, $tld);
 		}
 
 		# unset TLD (for the logs)
@@ -1711,6 +1668,7 @@ sub collect_slv_cycles($$$$$)
 	return \%cycles;
 }
 
+# Process cycles that need to be calculcated.
 sub process_slv_avail_cycles($$$$$$$$$)
 {
 	my $cycles_ref = shift;
@@ -1723,6 +1681,11 @@ sub process_slv_avail_cycles($$$$$$$$$)
 	my $check_probe_values_cb = shift;
 	my $cfg_value_type = shift;
 
+	# cache TLD data
+	my %keys_in;
+
+	init_values();
+
 	foreach my $value_ts (sort(keys(%{$cycles_ref})))
 	{
 		my $from = cycle_start($value_ts, $delay);
@@ -1732,27 +1695,36 @@ sub process_slv_avail_cycles($$$$$$$$$)
 
 		my @online_probe_names = keys(%{get_probe_times($from, $till, $probes_ref)});
 
-		foreach (sort(keys(%{$cycles_ref->{$value_ts}})))
+		foreach (@{$cycles_ref->{$value_ts}})
 		{
 			$tld = $_;	# set global variable here
 
-			if (!defined($cfg_keys_in))
+			if (!defined($keys_in{$tld}))
 			{
-				$cfg_keys_in = $cfg_keys_in_cb->($tld);
+				if (defined($cfg_keys_in))
+				{
+					$keys_in{$tld} = $cfg_keys_in;
+				}
+				else
+				{
+					$keys_in{$tld} = $cfg_keys_in_cb->($tld);
+				}
+
+				if (!defined($keys_in{$tld}))
+				{
+					fail("cannot get input keys for Service availability calculation");
+				}
 			}
 
-			if (!defined($cfg_keys_in))
-			{
-				fail("cannot get input keys for \"$tld\" service availability");
-			}
-
-			process_slv_avail($tld, $cfg_keys_in, $cfg_key_out, $from, $till, $value_ts, $cfg_minonline,
+			process_slv_avail($tld, $keys_in{$tld}, $cfg_key_out, $from, $till, $value_ts, $cfg_minonline,
 				\@online_probe_names, $check_probe_values_cb, $cfg_value_type);
 		}
 
 		# unset TLD (for the logs)
 		$tld = undef;
 	}
+
+	send_values();
 }
 
 sub process_slv_avail($$$$$$$$$$)
@@ -1841,6 +1813,50 @@ sub process_slv_avail($$$$$$$$$$)
 	{
 		push_value($tld, $cfg_key_out, $value_ts, DOWN, "Down ($detailed_info)");
 	}
+}
+
+sub process_slv_rollweek_cycles($$$$$)
+{
+	my $cycles_ref = shift;
+	my $delay = shift;
+	my $cfg_key_in = shift;
+	my $cfg_key_out = shift;
+	my $cfg_sla = shift;
+
+	my %itemids;
+
+	init_values();
+
+	foreach my $value_ts (sort(keys(%{$cycles_ref})))
+	{
+		my ($from, $till, undef) = get_rollweek_bounds($delay, $value_ts);
+
+		dbg("selecting period ", selected_period($from, $till), " (value_ts:", ts_str($value_ts), ")");
+
+		foreach (@{$cycles_ref->{$value_ts}})
+		{
+			# NB! This is needed in order to set the value globally.
+			$tld = $_;
+
+			$itemids{$tld}{'itemid_in'} = get_itemid_by_host($tld, $cfg_key_in) unless ($itemids{$tld}{'itemid_in'});
+			$itemids{$tld}{'itemid_out'} = get_itemid_by_host($tld, $cfg_key_out) unless ($itemids{$tld}{'itemid_out'});
+
+			next if (!opt('dry-run') && float_value_exists($value_ts, $itemids{$tld}{'itemid_out'}));
+
+			# skip calculation if Service Availability value is not yet there
+			next unless (uint_value_exists($value_ts, $itemids{$tld}{'itemid_in'}));
+
+			my $downtime = get_downtime($itemids{$tld}{'itemid_in'}, $from, $till, undef, undef, $delay);	# consider incidents
+			my $perc = sprintf("%.3f", $downtime * 100 / $cfg_sla);
+
+			push_value($tld, $cfg_key_out, $value_ts, $perc, "result: $perc% (down: $downtime minutes, sla: $cfg_sla)");
+		}
+
+		# unset TLD (for the logs)
+		$tld = undef;
+	}
+
+	send_values();
 }
 
 # organize values grouped by hosts:
