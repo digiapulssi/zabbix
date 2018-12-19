@@ -1,6 +1,8 @@
 Changes for rsm1.1.0rc48
 
 Bug fixes:
+....I..... [sub-450] added functionality of calculating missing data points to SLV scripts (dimir)
+....I..... [451] fixed growing queue of RDAP items of TLDs created after 432 fix (dimir)
 
 --------------------------------------------------------------------------------
 Changes for rsm1.1.0rc47

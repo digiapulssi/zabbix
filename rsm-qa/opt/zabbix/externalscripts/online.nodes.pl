@@ -56,7 +56,7 @@ foreach my $probe (keys(%{$probes_ref}))
 	my $itemid = get_itemid_by_host("$probe - mon", PROBE_KEY_ONLINE);
 	my $value;
 
-	next if (get_current_value($itemid, ITEM_VALUE_TYPE_UINT64, \$value) != SUCCESS);
+	next if (get_current_value($itemid, \$value, undef) != SUCCESS);
 
 	$online++ if $value == ONLINE;
 	$total++;

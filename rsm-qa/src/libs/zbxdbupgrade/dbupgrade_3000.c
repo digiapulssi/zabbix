@@ -3176,6 +3176,10 @@ static int	DBpatch_3000235(void)
 	return SUCCEED;
 }
 
+static int	DBpatch_3000236(void)
+{
+	return DBpatch_3000226();
+}
 #endif
 
 DBPATCH_START(3000)
@@ -3258,5 +3262,6 @@ DBPATCH_ADD(3000232, 0, 0)	/* replace error codes -100 and -101 with -390 and -3
 DBPATCH_ADD(3000233, 0, 0)	/* change global macro value {$PROBE.INTERNAL.ERROR.INTERVAL}=5m (was 1m) */
 DBPATCH_ADD(3000234, 0, 0)	/* add constraint on lastvalue table to delete obsoleted itemids */
 DBPATCH_ADD(3000235, 0, 0)	/* add trigger for item rsm.probe.status[manual] to alert on Probe knock out */
+DBPATCH_ADD(3000236, 0, 0)	/* disable "RDAP availability" items on hosts where RDAP is disabled (again) */
 
 DBPATCH_END()
