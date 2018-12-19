@@ -428,7 +428,6 @@ class CConfigurationExport {
 			'selectApplications' => ['name', 'flags'],
 			'selectPreprocessing' => ['type', 'params'],
 			'hostids' => array_keys($hosts),
-			'inherited' => false,
 			'webitems' => true,
 			'filter' => ['flags' => ZBX_FLAG_DISCOVERY_NORMAL],
 			'preservekeys' => true
