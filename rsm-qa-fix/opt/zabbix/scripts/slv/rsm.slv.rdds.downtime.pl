@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# RDDS minutes of downtime at current month
+# Minutes of RDDS downtime during running month
 
 BEGIN
 {
