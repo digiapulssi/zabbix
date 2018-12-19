@@ -98,6 +98,8 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		is_service_error_desc
 		is_internal_error
 		is_internal_error_desc
+		collect_slv_cycles
+		process_slv_avail_cycles
 		process_slv_avail
 		uint_value_exists
 		float_value_exists
@@ -306,7 +308,7 @@ sub get_item_data
 		else
 		{
 			$itemid_out = $row_ref->[1];
-			if (get_current_value($itemid_out, $value_type, undef, \$lastclock) != SUCCESS)
+			if (get_current_value($itemid_out, undef, \$lastclock) != SUCCESS)
 			{
 				$lastclock = 0;
 			}
@@ -444,7 +446,7 @@ sub get_lastclock
 	my $itemid = $rows_ref->[0]->[0];
 	my $lastclock;
 
-	if (get_current_value($itemid, $value_type, undef, \$lastclock) != SUCCESS)
+	if (get_current_value($itemid, undef, \$lastclock) != SUCCESS)
 	{
 		$lastclock = 0;
 	}
@@ -1208,7 +1210,7 @@ sub get_downtime_bounds
 	return ($from, $till, cycle_start($till, $delay));
 }
 
-# time when all Service availability values are calculated
+# guaranteed time when Service availabilities are calculated
 sub max_avail_time
 {
 	return truncate_till(time() - ROLLWEEK_SHIFT_BACK);
@@ -1663,6 +1665,94 @@ sub get_templated_items_like
 	}
 
 	return \@result;
+}
+
+sub collect_slv_cycles($$$$$)
+{
+	my $tlds_ref = shift;
+	my $delay = shift;
+	my $cfg_key_out = shift;
+	my $max_clock = shift;	# latest cycle to process
+	my $max_cycles = shift;
+
+	my %cycles;
+
+	my ($lastvalue, $lastclock);
+
+	foreach (@{$tlds_ref})
+	{
+		$tld = $_;	# set global variable here
+
+		my $itemid = get_itemid_by_host($tld, $cfg_key_out);
+
+		if (get_current_value($itemid, \$lastvalue, \$lastclock) != SUCCESS)
+		{
+			# new item
+			$cycles{$max_clock}{$tld} = undef;
+
+			next;
+		}
+
+		next if (!opt('dry-run') && uint_value_exists($max_clock, $itemid));
+
+		my $cycles_added = 0;
+
+		while ($lastclock < $max_clock && $cycles_added++ < $max_cycles)
+		{
+			$lastclock += $delay;
+
+			$cycles{$lastclock}{$tld} = undef;
+		}
+
+		# unset TLD (for the logs)
+		$tld = undef;
+	}
+
+	return \%cycles;
+}
+
+sub process_slv_avail_cycles($$$$$$$$$)
+{
+	my $cycles_ref = shift;
+	my $probes_ref = shift;
+	my $delay = shift;
+	my $cfg_keys_in = shift;	# if input key(s) is/are known
+	my $cfg_keys_in_cb = shift;	# if input key(s) is/are unknown (DNSSEC, RDDS), call this function go get them
+	my $cfg_key_out = shift;
+	my $cfg_minonline = shift;
+	my $check_probe_values_cb = shift;
+	my $cfg_value_type = shift;
+
+	foreach my $value_ts (sort(keys(%{$cycles_ref})))
+	{
+		my $from = cycle_start($value_ts, $delay);
+		my $till = cycle_end($value_ts, $delay);
+
+		dbg("selecting period ", selected_period($from, $till), " (value_ts:", ts_str($value_ts), ")");
+
+		my @online_probe_names = keys(%{get_probe_times($from, $till, $probes_ref)});
+
+		foreach (sort(keys(%{$cycles_ref->{$value_ts}})))
+		{
+			$tld = $_;	# set global variable here
+
+			if (!defined($cfg_keys_in))
+			{
+				$cfg_keys_in = $cfg_keys_in_cb->($tld);
+			}
+
+			if (!defined($cfg_keys_in))
+			{
+				fail("cannot get input keys for \"$tld\" service availability");
+			}
+
+			process_slv_avail($tld, $cfg_keys_in, $cfg_key_out, $from, $till, $value_ts, $cfg_minonline,
+				\@online_probe_names, $check_probe_values_cb, $cfg_value_type);
+		}
+
+		# unset TLD (for the logs)
+		$tld = undef;
+	}
 }
 
 sub process_slv_avail($$$$$$$$$$)
@@ -2289,35 +2379,26 @@ sub __get_history_table_by_value_type
 	fail("THIS_SHOULD_NEVER_HAPPEN");
 }
 
-#
 # returns:
 # SUCCESS - last clock and value found
 # E_FAIL  - nothing found
-# todo phase 1: rename to get_last_value
-sub get_current_value
+# todo phase 1: rename to get_lastvalue
+sub get_current_value($$$)
 {
 	my $itemid = shift;
-	my $value_type = shift;
 	my $value_ref = shift;
 	my $clock_ref = shift;
 
 	fail("THIS_SHOULD_NEVER_HAPPEN") unless ($clock_ref || $value_ref);
 
-	my $t = __get_history_table_by_value_type($value_type);
+	my $rows_ref = db_select("select value,clock from lastvalue where itemid=$itemid");
 
-	my @intervals = ("1 hour", "1 day", "1 month", "3 month");
-
-	foreach my $interval (@intervals)
+	if (@{$rows_ref})
 	{
-		my $rows_ref = db_select("select clock,value from $t where itemid=$itemid and clock > unix_timestamp(current_timestamp() - interval $interval) order by clock desc limit 1");
+		$$value_ref = $rows_ref->[0]->[0] if ($value_ref);
+		$$clock_ref = $rows_ref->[0]->[1] if ($clock_ref);
 
-		if (@{$rows_ref})
-		{
-			$$clock_ref = $rows_ref->[0]->[0] if ($clock_ref);
-			$$value_ref = $rows_ref->[0]->[1] if ($value_ref);
-
-			return SUCCESS;
-		}
+		return SUCCESS;
 	}
 
 	return E_FAIL;

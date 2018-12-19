@@ -29,8 +29,6 @@ my $delay = get_dns_udp_delay($now - ROLLWEEK_SHIFT_BACK);
 
 my ($from, $till, $value_ts) = get_downtime_bounds($delay, getopt('now'));	# do not pass $now here
 
-my %tld_items;
-
 my $tlds_ref;
 if (opt('tld'))
 {
@@ -42,6 +40,8 @@ else
 {
 	$tlds_ref = get_tlds('DNS', $till);
 }
+
+my %tld_items;
 
 # just collect itemids
 foreach (@$tlds_ref)

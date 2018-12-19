@@ -668,7 +668,7 @@ foreach (@server_keys)
 				}
 
 				my $rollweek;
-				if (get_current_value($rollweek_itemid, ITEM_VALUE_TYPE_FLOAT, \$rollweek) != SUCCESS)
+				if (get_current_value($rollweek_itemid, \$rollweek, undef) != SUCCESS)
 				{
 					wrn(uc($service), ": no rolling week data in the database yet");
 
