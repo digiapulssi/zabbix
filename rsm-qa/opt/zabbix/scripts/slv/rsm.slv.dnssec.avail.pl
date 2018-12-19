@@ -59,8 +59,8 @@ process_slv_avail_cycles(
 	$cycles_ref,
 	$probes_ref,
 	$delay,
-	\&cfg_keys_in_cb,	# callback to get input keys
 	undef,			# input keys are unknown
+	\&cfg_keys_in_cb,	# callback to get input keys
 	$cfg_key_out,
 	$cfg_minonline,
 	\&check_probe_values,
