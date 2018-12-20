@@ -14,6 +14,8 @@ use RSM;
 use RSMSLV;
 use TLD_constants qw(:api);
 
+use constant MAX_CYCLES	=> 5;
+
 my $cfg_keys_in = ['rsm.dns.udp[{$RSM.TLD}]'];
 my $cfg_key_out = 'rsm.slv.dns.avail';
 my $cfg_value_type = ITEM_VALUE_TYPE_UINT64;
@@ -28,9 +30,7 @@ db_connect();
 # we don't know the rollweek bounds yet so we assume it ends at least few minutes back
 my $delay = get_dns_udp_delay(getopt('now') // time() - AVAIL_SHIFT_BACK);
 
-my ($from, $till, $value_ts) = get_cycle_bounds($delay, getopt('now'));
-
-dbg("selecting period ", selected_period($from, $till), " (value_ts:", ts_str($value_ts), ")");
+my (undef, undef, $max_clock) = get_cycle_bounds($delay, getopt('now'));
 
 my $cfg_minonline = get_macro_dns_probe_online();
 my $cfg_minns = get_macro_minns();
@@ -44,27 +44,28 @@ if (opt('tld'))
 }
 else
 {
-        $tlds_ref = get_tlds('DNS', $till);
+        $tlds_ref = get_tlds('DNS', $max_clock);
 }
 
-my @online_probe_names = keys(%{get_probe_times($from, $till, get_probes('DNS'))});
+slv_exit(SUCCESS) if (scalar(@{$tlds_ref}) == 0);
 
-init_values();
+my $cycles_ref = collect_slv_cycles($tlds_ref, $delay, $cfg_key_out, $max_clock, MAX_CYCLES);
 
-foreach (@$tlds_ref)
-{
-	$tld = $_;	# set global variable here
+slv_exit(SUCCESS) if (scalar(keys(%{$cycles_ref})) == 0);
 
-	next if (!opt('dry-run') && uint_value_exists($value_ts, get_itemid_by_host($tld, $cfg_key_out)));
+my $probes_ref = get_probes('DNS');
 
-	process_slv_avail($tld, $cfg_keys_in, $cfg_key_out, $from, $till, $value_ts, $cfg_minonline,
-		\@online_probe_names, \&check_probe_values, $cfg_value_type);
-}
-
-# unset TLD (for the logs)
-$tld = undef;
-
-send_values();
+process_slv_avail_cycles(
+	$cycles_ref,
+	$probes_ref,
+	$delay,
+	$cfg_keys_in,
+	undef,			# callback to get input keys, ignored
+	$cfg_key_out,
+	$cfg_minonline,
+	\&check_probe_values,
+	$cfg_value_type
+);
 
 slv_exit(SUCCESS);
 

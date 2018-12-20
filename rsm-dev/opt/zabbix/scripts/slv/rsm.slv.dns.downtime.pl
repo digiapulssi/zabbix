@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# DNS minutes of downtime at current month
+# Minutes of DNS downtime during running month
 
 BEGIN
 {
@@ -13,6 +13,8 @@ use warnings;
 use RSM;
 use RSMSLV;
 
+use constant MAX_CYCLES	=> 5;
+
 my $cfg_key_in = 'rsm.slv.dns.avail';
 my $cfg_key_out = 'rsm.slv.dns.downtime';
 
@@ -23,13 +25,10 @@ set_slv_config(get_rsm_config());
 
 db_connect();
 
-my $now = getopt('now') // time();
+# we don't know the rollweek bounds yet so we assume it ends at least few minutes back
+my $delay = get_dns_udp_delay(getopt('now') // time() - ROLLWEEK_SHIFT_BACK);
 
-my $delay = get_dns_udp_delay($now - ROLLWEEK_SHIFT_BACK);
-
-my ($from, $till, $value_ts) = get_downtime_bounds($delay, getopt('now'));	# do not pass $now here
-
-my %tld_items;
+my (undef, undef, $max_clock) = get_cycle_bounds($delay, getopt('now'));
 
 my $tlds_ref;
 if (opt('tld'))
@@ -40,39 +39,15 @@ if (opt('tld'))
 }
 else
 {
-	$tlds_ref = get_tlds('DNS', $till);
+	$tlds_ref = get_tlds('DNS', $max_clock);
 }
 
-# just collect itemids
-foreach (@$tlds_ref)
-{
-	$tld = $_; # set global variable here
+slv_exit(SUCCESS) if (scalar(@{$tlds_ref}) == 0);
 
-	next if (!opt('dry-run') && uint_value_exists($value_ts, get_itemid_by_host($tld, $cfg_key_out)));
+my $cycles_ref = collect_slv_cycles($tlds_ref, $delay, $cfg_key_out, $max_clock, MAX_CYCLES);
 
-	# for future calculation of downtime
-	$tld_items{$tld} = get_itemid_by_host($tld, $cfg_key_in);
-}
+slv_exit(SUCCESS) if (scalar(keys(%{$cycles_ref})) == 0);
 
-init_values();
-
-# use bind for faster execution of the same SQL query
-my $sth = get_downtime_prepare();
-
-foreach (keys(%tld_items))
-{
-	$tld = $_; # set global variable here
-
-	my $itemid = $tld_items{$tld};
-
-	my $downtime = get_downtime_execute($sth, $itemid, $from, $till, 1); # ignore incidents
-
-	push_value($tld, $cfg_key_out, $value_ts, $downtime, ts_str($from), " - ", ts_str($till));
-}
-
-# unset TLD (for the logs)
-$tld = undef;
-
-send_values();
+process_slv_downtime_cycles($cycles_ref, $delay, $cfg_key_in, $cfg_key_out);
 
 slv_exit(SUCCESS);

@@ -75,6 +75,7 @@ sub get_nsservers_list($);
 sub update_nsservers($$);
 sub get_tld_list();
 sub get_services($);
+sub set_linked_items_enabled($$$);
 
 my $trigger_rollweek_thresholds = rsm_trigger_rollweek_thresholds;
 
@@ -466,6 +467,15 @@ foreach my $proxyid (sort(keys(%{$proxies})))
 			DEFAULT_MAIN_INTERFACE
 		]
 	}));
+
+	if (defined($OPTS{'rdap-base-url'}) && defined($OPTS{'rdap-test-domain'}))
+	{
+		set_linked_items_enabled('rdap[', $OPTS{'tld'}, 1);
+	}
+	else
+	{
+		set_linked_items_enabled('rdap[', $OPTS{'tld'}, 0);
+	}
 }
 
 exit;
@@ -1030,14 +1040,10 @@ sub create_main_template {
 		really(create_macro('{$RDAP.BASE.URL}', $OPTS{'rdap-base-url'}, $templateid, 1));
 		really(create_macro('{$RDAP.TEST.DOMAIN}', $OPTS{'rdap-test-domain'}, $templateid, 1));
 		really(create_macro('{$RDAP.TLD.ENABLED}', 1, $templateid, 1));
-
-		update_rdap_items($tld, 1);
 	}
 	else
 	{
 		really(create_macro('{$RDAP.TLD.ENABLED}', 0, $templateid, 1));
-
-		update_rdap_items($tld, 0);
 	}
 
     if ($OPTS{'epp-servers'})
@@ -1950,10 +1956,11 @@ sub really($)
 	return $api_result;
 }
 
-sub update_rdap_items($$)
+sub set_linked_items_enabled($$$)
 {
+	my $like = shift;
 	my $tld = shift;
-	my $enable = shift;
+	my $enabled = shift;
 
 	my $template = 'Template ' . $tld;
 	my $result = get_template($template, false, true);	# do not select macros, select hosts
@@ -1964,11 +1971,11 @@ sub update_rdap_items($$)
 	{
 		my $hostid = $host_ref->{'hostid'};
 
-		my $result2 = really(get_items_like($hostid, 'rdap[', false));	# not a template
+		my $result2 = really(get_items_like($hostid, $like, false));	# not a template
 
 		my @items = keys(%{$result2});
 
-		if ($enable)
+		if ($enabled)
 		{
 			enable_items(\@items);
 		}
