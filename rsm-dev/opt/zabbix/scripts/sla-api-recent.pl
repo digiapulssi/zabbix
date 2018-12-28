@@ -23,7 +23,7 @@ use constant SLV_UNAVAILABILITY_LIMIT => 49;
 
 use constant TARGET_PLACEHOLDER => 'TARGET_PLACEHOLDER';
 
-sub get_lastvalues_from_db();
+sub get_lastvalues_from_db($$);
 sub calculate_cycle($$$$$$$$);
 sub get_interfaces($$$);
 sub probe_online_at_init();
@@ -46,7 +46,8 @@ sub get_history_by_itemid($$$)
 			" from history_uint" .
 			" where itemid=$itemid" .
 				" and " . sql_time_condition($timestamp_from, $timestamp_till) .
-			" order by clock");
+			" order by clock"
+	);
 }
 
 # TODO: REMOVE ME
@@ -82,6 +83,8 @@ setopt('nolog');
 
 usage() if (opt('help'));
 
+ah_set_debug(getopt('debug'));
+
 my $config = get_rsm_config();
 
 set_slv_config($config);
@@ -99,15 +102,7 @@ else
 
 my $total_tlds = 0;
 
-# last values actually contain entries from "lastvalue" table and represent:
-# tld->probe->itemid->{
-#     'clock' => ...,
-
-# }
-my %lastvalues;
-
-# TODO: remove me
-my $now = time() - 300;
+my $now = time() - 60;
 
 db_connect();
 
@@ -128,14 +123,43 @@ foreach (@server_keys)
 {
 	$server_key = $_;
 
-	%lastvalues = ();
+	# Last values actually contain lastclock of the items in "lastvalue" table.
+	# 'cycles' represents cycles to recalculate for tld-service pair.
+	#
+	# {
+	#     tld => {
+	#         service => {
+	#            'probes' => {
+	#                 probe => {
+	#                     itemid = {
+	#                         'key' => key,
+	#                         'value_type' => value_type,
+	#                         'clock' => clock
+	#                     }
+	#                 }
+	#             },
+	#             'cycles' => {
+	#                 clock => 1
+	#             },
+	#             'lastclock' => clock
+	#         }
+	#     }
+	# }
+	my %lastvalues;
+
+	my $lastvalues_cache = {};
+
+	if (ah_get_recent_cache($server_key, \$lastvalues_cache) != AH_SUCCESS)
+	{
+		dbg("there's no recent measurements cache file yet, but no worries");
+	}
 
 	db_connect($server_key);
 
 	# initialize probe online cache
 	probe_online_at_init();
 
-	get_lastvalues_from_db();
+	get_lastvalues_from_db(\%lastvalues, \%delays);
 
 	# rtt limits only considered for DNS currently
 	$rtt_limits{'dns'} = get_history_by_itemid(
@@ -159,18 +183,56 @@ foreach (@server_keys)
 
 			$probes{$service} = get_probes($service) unless (defined($probes{$service}));
 
-			calculate_cycle($tld, $service, $lastvalues{$tld}{$service}, $now, $delays{$service}, $rtt_limits{$service}, $probes{$service}, $interfaces_ref);
+			# get actual cycle times to calculate
+
+			# these are cycles we are going to recalculate for this tld-service
+			my @cycles_to_calculate;
+
+			if (!defined($lastvalues_cache->{$tld}{$service}{'lastclock'}))
+			{
+				push(@cycles_to_calculate, $lastvalues{$tld}{$service}{'lastclock'});
+			}
+			else
+			{
+				my $lastclock = $lastvalues_cache->{$tld}{$service}{'lastclock'};
+
+				$lastclock += $delays{$service};
+
+				while ($lastclock <= $lastvalues{$tld}{$service}{'lastclock'})
+				{
+					push(@cycles_to_calculate, $lastclock);
+
+					$lastclock += $delays{$service};
+				}
+			}
+
+			foreach my $clock (@cycles_to_calculate)
+			{
+				calculate_cycle(
+					$tld,
+					$service,
+					$lastvalues{$tld}{$service}{'probes'},
+					$clock,
+					$delays{$service},
+					$rtt_limits{$service},
+					$probes{$service},
+					$interfaces_ref
+				);
+
+				$lastvalues{$tld}{$service}{'lastclock'} = $clock;
+			}
+
+			# TODO: no need to save probes and cycles data to the
+			# cache but this could be done in a more elegant way
+			undef($lastvalues{$tld}{$service}{'probes'});
+			undef($lastvalues{$tld}{$service}{'cycles'});
 		}
 	}
 
-	my $json;
-
-	if (ah_get_recent_measurement("dummy2", "rdds", cycle_start($now - 120, $delays{'rdds'}), \$json) != AH_SUCCESS)
+	if (ah_save_recent_cache($server_key, \%lastvalues) != AH_SUCCESS)
 	{
-		fail("cannot get recent measurement: ", ah_get_error());
+		fail("cannot save recent measurements cache: ", ah_get_error());
 	}
-
-	print("SUCCESS:\n", Dumper($json));
 
 	db_disconnect();
 }
@@ -200,8 +262,11 @@ sub get_service_from_key($)
 	return $service;
 }
 
-sub get_lastvalues_from_db()
+sub get_lastvalues_from_db($$)
 {
+	my $lastvalues = shift;
+	my $delays = shift;
+
 	# join lastvalue and lastvalue_str tables
 	my $rows_ref = db_select(
 		"select h.host,i.itemid,i.key_,i.value_type,l.clock".
@@ -248,13 +313,20 @@ sub get_lastvalues_from_db()
 
 		foreach my $serv ($service eq 'dns' ? ('dns', 'dnssec') : ($service))
 		{
-#			$lastvalues{$tld}{$probe}{$itemid} = {
-
-			$lastvalues{$tld}{$serv}{$probe}{$itemid} = {
+			$lastvalues->{$tld}{$serv}{'probes'}{$probe}{$itemid} = {
 				'key' => $key,
 				'value_type' => $value_type,
 				'clock' => $clock
 			};
+
+			my $cycle_clock = cycle_start($clock, $delays->{$serv});
+
+			# 'lastclock' is the last cycle we want to calculate for this tld-service
+			if (!defined($lastvalues->{$tld}{$serv}{'lastclock'}) ||
+					$lastvalues->{$tld}{$serv}{'lastclock'} < $cycle_clock)
+			{
+				$lastvalues->{$tld}{$serv}{'lastclock'} = $cycle_clock;
+			}
 		}
 
 #		print(ts_str($clock), " $tld,$probe ($host) | $key\n");
