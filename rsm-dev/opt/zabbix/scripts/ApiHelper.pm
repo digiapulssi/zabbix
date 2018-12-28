@@ -50,6 +50,7 @@ our @EXPORT = qw(
 	AH_SUCCESS AH_FAIL AH_BASE_DIR AH_TMP_DIR ah_set_debug ah_get_error ah_state_file_json ah_save_state
 	ah_save_alarmed ah_save_downtime ah_create_incident_json ah_save_incident
 	ah_save_false_positive ah_save_measurement ah_get_continue_file ah_get_api_tld ah_get_last_audit
+	ah_get_recent_measurement ah_save_recent_measurement
 	ah_save_audit ah_save_continue_file ah_encode_pretty_json JSON_OBJECT_DISABLED_SERVICE
 	ah_get_dns_interface ah_get_rdds_interface ah_get_interface
 	AH_INTERFACE_DNS AH_INTERFACE_DNSSEC AH_INTERFACE_RDDS43 AH_INTERFACE_RDDS80 AH_INTERFACE_RDAP AH_INTERFACE_EPP
@@ -155,6 +156,21 @@ sub __make_inc_path($$$$$)
 	}
 
 	$$inc_path_ptr = $path;
+
+	return AH_SUCCESS;
+}
+
+sub __make_path($)
+{
+	my $path = shift;
+
+	make_path($path, {error => \my $err});
+
+	if (@$err)
+	{
+		__set_file_error($err);
+		return AH_FAIL;
+	}
 
 	return AH_SUCCESS;
 }
@@ -475,6 +491,65 @@ sub ah_save_measurement
 	my $json_path = "$inc_path/$clock.$eventid.json";
 
 	return __write_file($json_path, __encode_json($json), $clock);
+}
+
+# Generate path for recent measurement, e. g.
+#
+#   [base_dir]/v2/example/monitoring/dns/measurements/2018/02/28/<measurement>.json
+#
+sub __gen_recent_measurement_path($$$$)
+{
+	my $ah_tld = shift;
+	my $service = shift;
+	my $clock = shift;
+	my $path_buf = shift;	# pointer to result
+
+	my (undef, undef, undef, $mday, $mon, $year) = localtime($clock);
+
+	$year += 1900;
+	$mon++;
+
+	my $add_path = sprintf("measurements/%4d/%2d/%2d", $year, $mon, $mday);
+
+	my $path = AH_BASE_DIR . '/v2/' . __gen_base_path($ah_tld, $service, $add_path);
+
+	return AH_FAIL unless (__make_path($path) == AH_SUCCESS);
+
+	$$path_buf = $path . "/$clock.json";
+
+	return AH_SUCCESS;
+}
+
+sub ah_get_recent_measurement($$$$)
+{
+	my $ah_tld = shift;
+	my $service = shift;
+	my $clock = shift;
+	my $json_ref = shift;
+
+	my ($path, $buf);
+
+	return AH_FAIL unless (__gen_recent_measurement_path($ah_tld, $service, $clock, \$path) == AH_SUCCESS);
+
+	return AH_FAIL unless (__read_file($path, \$buf) == AH_SUCCESS);
+
+	$$json_ref = decode_json($buf);
+
+	return AH_SUCCESS;
+}
+
+sub ah_save_recent_measurement($$$$)
+{
+	my $ah_tld = shift;
+	my $service = shift;
+	my $json = shift;
+	my $clock = shift;
+
+	my $path;
+
+	return AH_FAIL unless (__gen_recent_measurement_path($ah_tld, $service, $clock, \$path) == AH_SUCCESS);
+
+	return __write_file($path, __encode_json($json), $clock);
 }
 
 sub dbg

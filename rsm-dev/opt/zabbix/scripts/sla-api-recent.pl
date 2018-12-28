@@ -23,6 +23,7 @@ use constant SLV_UNAVAILABILITY_LIMIT => 49;
 
 use constant TARGET_PLACEHOLDER => 'TARGET_PLACEHOLDER';
 
+sub get_lastvalues_from_db();
 sub calculate_cycle($$$$$$$$);
 sub get_interfaces($$$);
 sub probe_online_at_init();
@@ -105,6 +106,7 @@ my $total_tlds = 0;
 # }
 my %lastvalues;
 
+# TODO: remove me
 my $now = time() - 300;
 
 db_connect();
@@ -161,10 +163,19 @@ foreach (@server_keys)
 		}
 	}
 
+	my $json;
+
+	if (ah_get_recent_measurement("dummy2", "rdds", cycle_start($now - 120, $delays{'rdds'}), \$json) != AH_SUCCESS)
+	{
+		fail("cannot get recent measurement: ", ah_get_error());
+	}
+
+	print("SUCCESS:\n", Dumper($json));
+
 	db_disconnect();
 }
 
-sub get_service_from_key
+sub get_service_from_key($)
 {
 	my $key = shift;
 
@@ -189,7 +200,7 @@ sub get_service_from_key
 	return $service;
 }
 
-sub get_lastvalues_from_db
+sub get_lastvalues_from_db()
 {
 	# join lastvalue and lastvalue_str tables
 	my $rows_ref = db_select(
@@ -251,7 +262,7 @@ sub get_lastvalues_from_db
 }
 
 # TODO: REMOVE ME
-sub __get_history_table_by_value_type
+sub __get_history_table_by_value_type($)
 {
 	my $value_type = shift;
 
@@ -413,7 +424,7 @@ sub calculate_cycle($$$$$$$$)
 	my $from = cycle_start($cycle_clock, $delay);
 	my $till = cycle_end($cycle_clock, $delay);
 
-	my $json = {'tld' => $tld, 'service' => $service, 'cycleCalculationDateTime' => $cycle_clock};
+	my $json = {'tld' => $tld, 'service' => $service, 'cycleCalculationDateTime' => $from};
 
 	my %tested_interfaces;
 
@@ -727,9 +738,18 @@ sub calculate_cycle($$$$$$$$)
 		$json->{'status'} = 'Down';
 	}
 
-	dbg("cycle: $json->{'status'} ($detailed_info)\n");
+	dbg("cycle: $json->{'status'} ($detailed_info)");
 
-	print(Dumper($json));
+	if (opt('dry-run'))
+	{
+		print(Dumper($json));
+		return;
+	}
+
+	if (ah_save_recent_measurement(ah_get_api_tld($tld), $service, $json, $from) != AH_SUCCESS)
+	{
+		fail("cannot save recent measurement: ", ah_get_error());
+	}
 }
 
 sub get_interfaces($$$)
