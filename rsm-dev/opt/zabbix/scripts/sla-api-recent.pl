@@ -393,7 +393,7 @@ sub probe_online_at($$)
 		);
 
 		# Online if no value in the database
-		$probe_statuses{$probe}{'values'}{$clock} = 1 unless (defined($rows_ref->[0]->[0]));
+		$probe_statuses{$probe}{'values'}{$clock} = (defined($rows_ref->[0]) ? $rows_ref->[0]->[0] : 1);
 	}
 
 	return $probe_statuses{$probe}{'values'}{$clock};
@@ -421,6 +421,7 @@ sub calculate_cycle($$$$$$$$)
 
 	my $probes_with_results = 0;
 	my $probes_with_positive = 0;
+	my $probes_online = 0;
 
 	foreach my $probe (keys(%{$probe_items}))
 	{
@@ -553,29 +554,27 @@ sub calculate_cycle($$$$$$$$)
 			}
 		}
 
-		# add "Offline"
+		# add "Offline" and "No results"
 		foreach my $probe (keys(%{$probes_ref}))
 		{
-			foreach my $interface (@{$interfaces_ref})
-			{
-				if (!defined($tested_interfaces{$interface}{$probe}{'status'}) &&
-						!probe_online_at($probe, $from))
-				{
-					$tested_interfaces{$interface}{$probe}{'status'} = AH_CITY_OFFLINE;
-				}
-			}
-		}
+			my $probe_online = probe_online_at($probe, $from);
 
-		# add "No results"
-		foreach my $probe (keys(%{$probes_ref}))
-		{
 			foreach my $interface (@{$interfaces_ref})
 			{
 				if (!defined($tested_interfaces{$interface}{$probe}{'status'}))
 				{
-					$tested_interfaces{$interface}{$probe}{'status'} = AH_CITY_NO_RESULT;
+					if (!$probe_online)
+					{
+						$tested_interfaces{$interface}{$probe}{'status'} = AH_CITY_OFFLINE;
+					}
+					else
+					{
+						$tested_interfaces{$interface}{$probe}{'status'} = AH_CITY_NO_RESULT;
+					}
 				}
 			}
+
+			$probes_online++ if ($probe_online);
 		}
 
 		if ($service_up)
@@ -708,7 +707,7 @@ sub calculate_cycle($$$$$$$$)
 		$perc = $probes_with_positive * 100 / $probes_with_results;
 	}
 
-	my $detailed_info = sprintf("%d/%d positive, %.3f%%", $probes_with_positive, $probes_with_results, $perc);
+	my $detailed_info = sprintf("%d/%d positive, %.3f%%, %d online", $probes_with_positive, $probes_with_results, $perc, $probes_online);
 
 	if ($perc > SLV_UNAVAILABILITY_LIMIT)
 	{
