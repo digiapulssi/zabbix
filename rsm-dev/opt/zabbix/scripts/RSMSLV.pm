@@ -109,7 +109,8 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		get_result_string get_tld_by_trigger truncate_from truncate_till alerts_enabled
 		get_real_services_period dbg info wrn fail set_on_fail
 		format_stats_time slv_finalize slv_exit exit_if_running trim parse_opts
-		parse_avail_opts parse_rollweek_opts opt getopt setopt unsetopt optkeys ts_str ts_full selected_period
+		parse_slv_opts
+		opt getopt setopt unsetopt optkeys ts_str ts_full selected_period
 		write_file
 		cycle_start
 		cycle_end
@@ -1653,11 +1654,13 @@ sub collect_slv_cycles($$$$$)
 
 		my $cycles_added = 0;
 
-		while ($lastclock < $max_clock && $cycles_added++ < $max_cycles)
+		while ($lastclock < $max_clock && (!$max_cycles || $cycles_added < $max_cycles))
 		{
 			$lastclock += $delay;
 
 			push(@{$cycles{$lastclock}}, $tld);
+
+			$cycles_added++;
 		}
 
 		# unset TLD (for the logs)
@@ -2944,18 +2947,11 @@ sub parse_opts
 	$get_stats = 1 if (opt('stats') || opt('warnslow'));
 }
 
-sub parse_avail_opts
+sub parse_slv_opts
 {
-	$POD2USAGE_FILE = '/opt/zabbix/scripts/slv/rsm.slv.avail.usage';
+	$POD2USAGE_FILE = '/opt/zabbix/scripts/slv/rsm.slv.usage';
 
-	parse_opts('tld=s', 'now=n');
-}
-
-sub parse_rollweek_opts
-{
-	$POD2USAGE_FILE = '/opt/zabbix/scripts/slv/rsm.slv.rollweek.usage';
-
-	parse_opts('tld=s', 'now=n');
+	parse_opts('tld=s', 'now=n', 'cycles=n');
 }
 
 sub opt

@@ -493,6 +493,8 @@ sub get_ns_servers {
 
 		my @entries = split(/,/, $ns);
 
+		pfail("incorrect Name Server format: expected \"<NAME>,<IP>\" got \"$ns\"") unless ($entries[0] && $entries[1]);
+
 		my $exists = 0;
 		foreach my $ip (@{$ns_servers->{$entries[0]}{'v4'}}) {
 		    if ($ip eq $entries[1]) {
