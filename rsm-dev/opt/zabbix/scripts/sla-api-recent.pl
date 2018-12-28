@@ -105,7 +105,7 @@ my $total_tlds = 0;
 # }
 my %lastvalues;
 
-my $now = time() - 600;
+my $now = time() - 300;
 
 db_connect();
 
@@ -347,9 +347,9 @@ sub fill_test_data($$$$)
 #
 # {
 #     probe => {
-#         itemid => 1234,
-#         values => {
-#             clock => value,
+#         'itemid' => 1234,
+#         'values' => {
+#             'clock' => value,
 #             ...
 #         }
 #     }
@@ -378,7 +378,7 @@ sub probe_online_at($$)
 				" and i.key_='".PROBE_KEY_ONLINE."'"
 		);
 
-		fail("internal error: no \"$host\" item " . PROBE_KEY_ONLINE) unless (defined($rows_ref->[0]->[0]));
+		fail("internal error: no \"$host\" item " . PROBE_KEY_ONLINE) unless (defined($rows_ref->[0]));
 
 		$probe_statuses{$probe}{'itemid'} = $rows_ref->[0]->[0];
 	}
@@ -554,29 +554,6 @@ sub calculate_cycle($$$$$$$$)
 			}
 		}
 
-		# add "Offline" and "No results"
-		foreach my $probe (keys(%{$probes_ref}))
-		{
-			my $probe_online = probe_online_at($probe, $from);
-
-			foreach my $interface (@{$interfaces_ref})
-			{
-				if (!defined($tested_interfaces{$interface}{$probe}{'status'}))
-				{
-					if (!$probe_online)
-					{
-						$tested_interfaces{$interface}{$probe}{'status'} = AH_CITY_OFFLINE;
-					}
-					else
-					{
-						$tested_interfaces{$interface}{$probe}{'status'} = AH_CITY_NO_RESULT;
-					}
-				}
-			}
-
-			$probes_online++ if ($probe_online);
-		}
-
 		if ($service_up)
 		{
 			$probes_with_positive++;
@@ -665,6 +642,30 @@ sub calculate_cycle($$$$$$$$)
 		}
 	}
 
+	# add "Offline" and "No results"
+	foreach my $probe (keys(%{$probes_ref}))
+	{
+		my $probe_online = probe_online_at($probe, $from);
+
+		foreach my $interface (@{$interfaces_ref})
+		{
+			if (!$probe_online)
+			{
+				$tested_interfaces{$interface}{$probe}{'status'} = AH_CITY_OFFLINE;
+
+				undef($tested_interfaces{$interface}{$probe}{'testData'});
+			}
+			elsif (!defined($tested_interfaces{$interface}{$probe}{'status'}))
+			{
+				$tested_interfaces{$interface}{$probe}{'status'} = AH_CITY_NO_RESULT;
+
+				undef($tested_interfaces{$interface}{$probe}{'testData'});
+			}
+		}
+
+		$probes_online++ if ($probe_online);
+	}
+
 	#
 	# add data that was collected from history and calculated in previous cycle to JSON
 	#
@@ -709,21 +710,24 @@ sub calculate_cycle($$$$$$$$)
 
 	my $detailed_info = sprintf("%d/%d positive, %.3f%%, %d online", $probes_with_positive, $probes_with_results, $perc, $probes_online);
 
-	if ($perc > SLV_UNAVAILABILITY_LIMIT)
+	if ($probes_online < $cfg_minonline)
 	{
-		# TODO: Up-inconclusive-no-data
-		# TODO: Up-inconclusive-no-probes
-
-		dbg("cycle: Up ($detailed_info)\n");
-
+		$json->{'status'} = 'Up-inconclusive-no-probes';
+	}
+	elsif ($probes_with_results < $cfg_minonline)
+	{
+		$json->{'status'} = 'Up-inconclusive-no-data';
+	}
+	elsif ($perc > SLV_UNAVAILABILITY_LIMIT)
+	{
 		$json->{'status'} = 'Up';
 	}
 	else
 	{
-		dbg("cycle: Down ($detailed_info)\n");
-
 		$json->{'status'} = 'Down';
 	}
+
+	dbg("cycle: $json->{'status'} ($detailed_info)\n");
 
 	print(Dumper($json));
 }
