@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Zabbix 3.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-12-04 09:17+0200\n"
+"POT-Creation-Date: 2018-12-21 13:28+0200\n"
 "PO-Revision-Date: 2018-11-30 13:51+0300\n"
 "Last-Translator: Adail <the.spaww@gmail.com>\n"
 "Language-Team: Zabbix <info@zabbix.com>\n"
@@ -16189,8 +16189,8 @@ msgid "forecast() - Forecast for next t seconds based on period T"
 msgstr "forecast() - Previsão para os próximos t segundos a partir de um período T"
 
 #: popup_trexpr.php:286
-msgid "fuzzytime() - Difference between item timestamp value and Zabbix server timestamp is over T seconds (1 - true, 0 - false)"
-msgstr "fuzzytime() - Diferença entre o registro de hora do valor do item e do servidor Zabbix é maior que T segundos (1 - verdadeiro, 0 - falso)"
+msgid "fuzzytime() - Difference between item value (as timestamp) and Zabbix server timestamp is less than or equal to T seconds (1 - true, 0 - false)"
+msgstr ""
 
 #: include/views/configuration.item.edit.php:331
 #: include/views/configuration.item.edit.php:336
