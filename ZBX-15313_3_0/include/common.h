@@ -1098,6 +1098,8 @@ void	dos2unix(char *str);
 int	str2uint64(const char *str, const char *suffixes, zbx_uint64_t *value);
 double	str2double(const char *str);
 
+/* time and memory size suffixes */
+#define ZBX_UNIT_SYMBOLS	"KMGTsmhdw"
 zbx_uint64_t	suffix2factor(char c);
 
 #if defined(_WINDOWS)
