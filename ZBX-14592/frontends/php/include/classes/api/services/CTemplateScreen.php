@@ -333,6 +333,7 @@ class CTemplateScreen extends CScreen {
 				$tplItems = API::Item()->get([
 					'output' => ['itemid', 'key_', 'hostid'],
 					'itemids' => $itemids,
+					'webitems' => true,
 					'nopermissions' => true,
 					'preservekeys' => true
 				]);
@@ -341,6 +342,7 @@ class CTemplateScreen extends CScreen {
 					'output' => ['itemid', 'key_', 'hostid'],
 					'hostids' => $options['hostids'],
 					'filter' => ['key_' => zbx_objectValues($tplItems, 'key_')],
+					'webitems' => true,
 					'nopermissions' => true,
 					'preservekeys' => true
 				]);
