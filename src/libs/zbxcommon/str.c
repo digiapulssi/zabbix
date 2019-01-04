@@ -3802,6 +3802,10 @@ static size_t	zbx_no_function(const char *expr)
 		{
 			ptr += len;	/* skip to the position after and/or/not operator */
 		}
+		else if (ptr > expr && 0 != isdigit(*(ptr - 1)) && NULL != strchr("KMGTsmhdw", *ptr))
+		{
+			ptr++;	/* skip unit suffix symbol if it's preceded by a digit */
+		}
 		else
 			break;
 	}
