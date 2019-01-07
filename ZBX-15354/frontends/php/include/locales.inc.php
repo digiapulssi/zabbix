@@ -143,7 +143,6 @@ function zbx_locale_variants_unix($language) {
 }
 
 function zbx_locale_variants_win($language) {
-	$language = $language === null ? 'en_gb' : $language;
 	// windows locales are written like language[_country[.charset]]
 	// for a list of supported languages see:
 	// http://msdn.microsoft.com/en-us/library/39cwe7zf(vs.71).aspx
