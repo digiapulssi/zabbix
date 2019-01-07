@@ -85,7 +85,8 @@ class CJsonRpc {
 
 			list($api, $method) = array_merge(explode('.', $call['method']), [null, null]);
 			$result = $this->apiClient->callMethod($api, $method, $call['params'],
-				array_key_exists('auth', $call) ? $call['auth'] : null);
+				array_key_exists('auth', $call) ? $call['auth'] : null
+			);
 
 			$this->processResult($call, $result);
 		}
