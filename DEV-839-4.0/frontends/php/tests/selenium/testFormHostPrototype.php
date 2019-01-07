@@ -10,7 +10,7 @@
 **
 ** This program is distributed in the hope that it will be useful,
 ** but WITHOUT ANY WARRANTY; without even the implied warranty of
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 ** GNU General Public License for more details.
 **
 ** You should have received a copy of the GNU General Public License
@@ -21,8 +21,8 @@
 require_once dirname(__FILE__).'/../include/CLegacyWebTest.php';
 
 /**
-* @backup hosts
-*/
+ * @backup hosts
+ */
 class testFormHostPrototype extends CLegacyWebTest {
 
 	/**
@@ -40,10 +40,10 @@ class testFormHostPrototype extends CLegacyWebTest {
 		$this->zbxTestClickLinkTextWait($visible_name);
 		$this->zbxTestWaitForPageToLoad();
 		// Check layout at Host tab.
-		$this->zbxTestAssertElementPresentXpath('//input[@id="host" and @value="'.$name.'"]');
-		$this->zbxTestAssertElementPresentXpath('//input[@id="name" and @value="'.$visible_name.'"]');
-		$this->zbxTestAssertElementPresentXpath('//td[@class="interface-ip"]/input[@type="text"][@readonly]');
-		$this->zbxTestAssertElementPresentXpath('//td[@class="interface-dns"]/input[@type="text"][@readonly]');
+		$this->zbxTestAssertElementValue('host', $name);
+		$this->zbxTestAssertElementValue('name', $visible_name);
+		$this->zbxTestAssertElementPresentXpath('//td[@class="interface-ip"]/input[@readonly]');
+		$this->zbxTestAssertElementPresentXpath('//td[@class="interface-dns"]/input[@readonly]');
 		$this->zbxTestAssertElementPresentXpath('//label[@for="interfaces_50024_useip_1" and text()="IP"]/../input[@disabled]');
 		$this->zbxTestAssertElementPresentXpath('//label[@for="interfaces_50024_useip_0" and text()="DNS"]/../input[@disabled]');
 		$this->zbxTestAssertElementPresentXpath('//td[@class="interface-port"]/input[@type="text"][@readonly]');
@@ -69,24 +69,24 @@ class testFormHostPrototype extends CLegacyWebTest {
 		foreach ($macros as $macro) {
 			// Macro check and row selection.
 			$element = $this->webDriver->findElement(WebDriverBy::xpath('//input[@class="macro"][@readonly][@value="'.
-					$macro['macro'].'"]/../..')
+							$macro['macro'].'"]/../..')
 			);
 			// Effective value.
 			$this->assertEquals($macro['value'], $element->findElement(
-					WebDriverBy::xpath('./td[3]/input[@type="text"][@readonly]')
-			)->getAttribute('value'));
+							WebDriverBy::xpath('./td[3]/input[@type="text"][@readonly]')
+					)->getAttribute('value'));
 
 			// Template value.
 			$this->assertEquals('', $element->findElement(WebDriverBy::xpath('./td[5]/div'))->getText());
 			// Global value.
 			$this->assertEquals('"'.$macro['value'].'"', $element->findElement(
-					WebDriverBy::xpath('./td[7]/div')
-			)->getText());
+							WebDriverBy::xpath('./td[7]/div')
+					)->getText());
 		}
 
 		// Total macro count.
 		$this->assertEquals(count($macros), count($this->webDriver->findElements(
-				WebDriverBy::xpath('//input[@class="macro"]')
+								WebDriverBy::xpath('//input[@class="macro"]')
 		)));
 
 		// Check layout at Encryption tab.
@@ -96,11 +96,10 @@ class testFormHostPrototype extends CLegacyWebTest {
 		}
 	}
 
-
 	public static function getCreateValidationData() {
 		return [
-			[
 			// Create host prototype with empty name.
+			[
 				[
 					'error' => 'Page received incorrect data',
 					'error_message' => 'Incorrect value for field "Host name": cannot be empty.',
@@ -231,7 +230,7 @@ class testFormHostPrototype extends CLegacyWebTest {
 		$this->zbxTestTextPresentInMessageDetails($data['error_message']);
 		$this->zbxTestCheckFatalErrors();
 
-		if (!array_key_exists('check_db', $data) || $data['check_db'] === true ) {
+		if (!array_key_exists('check_db', $data) || $data['check_db'] === true) {
 			$this->assertEquals(0, CDBHelper::getCount('SELECT NULL FROM hosts WHERE flags=2 AND name='.zbx_dbstr($data['name'])));
 		}
 	}
@@ -339,7 +338,7 @@ class testFormHostPrototype extends CLegacyWebTest {
 
 		$this->zbxTestTabSwitch('Groups');
 
-		if (array_key_exists('clear_groups', $data) ) {
+		if (array_key_exists('clear_groups', $data)) {
 			$this->zbxTestMultiselectClear('group_links_');
 		}
 
@@ -398,17 +397,17 @@ class testFormHostPrototype extends CLegacyWebTest {
 			[
 				[
 					'name' => 'Host with minimum fields {#FSNAME}',
-					'hostgroup'=> 'Virtual machines'
+					'hostgroup' => 'Virtual machines'
 				]
 			],
 			[
 				[
 					'name' => 'Host with all fields {#FSNAME}',
 					'visible_name' => 'Host with all fields visible name',
-					'hostgroup'=> 'Virtual machines',
-					'group_prototype'=> '{#FSNAME}',
-					'template'=> 'Form test template',
-					'inventory'=> 'Automatic',
+					'hostgroup' => 'Virtual machines',
+					'group_prototype' => '{#FSNAME}',
+					'template' => 'Form test template',
+					'inventory' => 'Automatic',
 					'checkbox' => false
 				]
 			]
@@ -439,7 +438,7 @@ class testFormHostPrototype extends CLegacyWebTest {
 
 		if (array_key_exists('group_prototype', $data)) {
 			$this->zbxTestInputTypeByXpath('//*[@name="group_prototypes[0][name]"]', $data['group_prototype']);
-			}
+		}
 
 		if (array_key_exists('template', $data)) {
 			$this->zbxTestTabSwitch('Templates');
@@ -481,10 +480,10 @@ class testFormHostPrototype extends CLegacyWebTest {
 		$sql = 'SELECT name'.
 				' FROM hosts'.
 				' WHERE hostid IN ('.
-					'SELECT hostid'.
-					' FROM host_discovery'.
-					' WHERE parent_itemid='.self::DISCOVERY_RULE_ID.
-					')'.
+				'SELECT hostid'.
+				' FROM host_discovery'.
+				' WHERE parent_itemid='.self::DISCOVERY_RULE_ID.
+				')'.
 				'LIMIT 2';
 		$sql_hash = 'SELECT * FROM hosts ORDER BY hostid';
 		$old_hash = CDBHelper::getHash($sql_hash);
@@ -510,8 +509,8 @@ class testFormHostPrototype extends CLegacyWebTest {
 					'old_name' => 'Host prototype {#2}',
 					'name' => 'New Host prototype {#2}',
 					'checkbox' => true,
-					'hostgroup'=> 'Virtual machines',
-					'group_prototype'=> 'New test {#MACRO}',
+					'hostgroup' => 'Virtual machines',
+					'group_prototype' => 'New test {#MACRO}',
 					'template' => 'Template OS Windows',
 					'inventory' => 'Automatic'
 				]
@@ -608,37 +607,37 @@ class testFormHostPrototype extends CLegacyWebTest {
 
 		// Check IPMI settings on prototype before changes on host.
 		$this->zbxTestTabSwitch('IPMI');
-		foreach (['Authentication algorithm', 'Privilege level', 'Username', 'Password'] as $label) {
-			$this->zbxTestTextPresent($label);
-		}
+		$this->zbxTestTextPresent(['Authentication algorithm', 'Privilege level', 'Username', 'Password']);
 
 		$old_values = [
-					['field' => 'authtype', 'value' => 'Default'],
-					['field' => 'privilege', 'value' => 'User'],
-					['field' => 'username', 'value' => ''],
-					['field' => 'password', 'value' => '']
-				];
+			['field' => 'authtype', 'value' => 'Default'],
+			['field' => 'privilege', 'value' => 'User'],
+			['field' => 'username', 'value' => ''],
+			['field' => 'password', 'value' => '']
+		];
 
 		foreach ($old_values as $old_value) {
-			$this->zbxTestAssertElementPresentXpath('//input[@id="ipmi_'.$old_value['field'].'"][@readonly][@value="'.$old_value['value'].'"]');
+			$this->zbxTestAssertElementValue('ipmi_'.$old_value['field'], $old_value['value']);
 		}
 
 		// Go to host and change IPMI settings.
 		$this->zbxTestOpen('hosts.php?form=update&hostid='.self::HOST_ID);
 		$this->zbxTestTabSwitch('IPMI');
 
-		$new_inputs = [
-					['field' => 'authtype', 'value' => 'MD2'],
-					['field' => 'privilege', 'value' => 'Operator'],
-					['field' => 'username', 'value' => 'TestUsername'],
-					['field' => 'password', 'value' => 'TestPassword']
-				];
-
-		for ($i = 0; $i < 2; ++$i) {
-			$this->zbxTestDropdownSelect('ipmi_'.$new_inputs[$i]['field'], $new_inputs[$i]['value']);
-		}
-		for ($i = 2; $i < 4; ++$i) {
-			$this->zbxTestInputType('ipmi_'.$new_inputs[$i]['field'], $new_inputs[$i]['value']);
+		$new_values = [
+			['field' => 'authtype', 'value' => 'MD2'],
+			['field' => 'privilege', 'value' => 'Operator'],
+			['field' => 'username', 'value' => 'TestUsername'],
+			['field' => 'password', 'value' => 'TestPassword']
+		];
+		foreach ($new_values as $new_value) {
+			$tag = $this->webDriver->findElement(WebDriverBy::id('ipmi_'.$new_value['field']))->getTagName();
+			if ($tag === 'select') {
+				$this->zbxTestDropdownSelect('ipmi_'.$new_value['field'], $new_value['value']);
+			}
+			else {
+				$this->zbxTestInputType('ipmi_'.$new_value['field'], $new_value['value']);
+			}
 		}
 		$this->zbxTestClick('update');
 
@@ -646,8 +645,8 @@ class testFormHostPrototype extends CLegacyWebTest {
 		$this->zbxTestOpen('host_prototypes.php?form=update&parent_discoveryid='.self::DISCOVERY_RULE_ID.'&hostid='.self::HOST_PROTOTYPE_ID);
 		$this->zbxTestTabSwitch('IPMI');
 
-		foreach ($new_inputs as $input) {
-			$this->zbxTestAssertElementPresentXpath('//input[@id="ipmi_'.$input['field'].'"][@readonly][@value="'.$input['value'].'"]');
+		foreach ($new_values as $new_value) {
+			$this->zbxTestAssertElementValue('ipmi_'.$new_value['field'], $new_value['value']);
 		}
 	}
 
@@ -655,30 +654,26 @@ class testFormHostPrototype extends CLegacyWebTest {
 		return [
 			[
 				[
-					'connection_radio' => 'PSK',
-					'psk_checkbox' => true,
-					'psk_identity'=> 'Test_Identity',
-					'psk_number'=> '16777216000000000000000000000000'
+					'connection_to_host' => 'PSK',
+					'connection_from_host' => ['No encryption' => false, 'PSK' => true],
+					'psk' => ['identity' => 'Test_Identity', 'number' => '16777216000000000000000000000000']
 				]
 			],
 			[
 				[
-					'connection_radio' => 'Certificate',
-					'psk_checkbox' => false,
-					'certificate_checkbox' => true,
-					'issuer'=> 'Test_Issuer',
-					'subject'=> 'Test_Subject'
+					'connection_to_host' => 'Certificate',
+					'connection_from_host' => ['No encryption' => false, 'PSK' => false, 'Certificate' => true],
+					'issuer' => 'Test_Issuer',
+					'subject' => 'Test_Subject'
 				]
 			],
 			[
 				[
-					'connection_radio' => 'Certificate',
-					'psk_checkbox' => true,
-					'certificate_checkbox' => true,
-					'psk_identity'=> 'Test_Identity_2',
-					'psk_number'=> '16777210000000000000000000000000',
-					'issuer'=> 'Test_Issuer_2',
-					'subject'=> 'Test_Subject_2'
+					'connection_to_host' => 'Certificate',
+					'connection_from_host' => ['No encryption' => false, 'PSK' => true, 'Certificate' => true],
+					'psk' => ['identity' => 'Test_Identity2', 'number' => '16777216000000000000000000000000'],
+					'issuer' => 'Test_Issuer_2',
+					'subject' => 'Test_Subject_2'
 				]
 			]
 		];
@@ -686,6 +681,7 @@ class testFormHostPrototype extends CLegacyWebTest {
 
 	/**
 	 * Check Encryption tab before and after changes on parent host.
+	 *
 	 * @dataProvider getCheckEncryptionFromHostData
 	 */
 	public function testFormHostPrototype_CheckEncryptionFromHost($data) {
@@ -694,18 +690,16 @@ class testFormHostPrototype extends CLegacyWebTest {
 
 		// Check Encryption settings on prototype before changes on host.
 		$this->zbxTestTabSwitch('Encryption');
-		foreach (['Connections to host', 'Connections from host'] as $label) {
-			$this->zbxTestTextPresent($label);
-		}
+		$this->zbxTestTextPresent(['Connections to host', 'Connections from host']);
 
 		$labels = [
-				['type' => 'radio', 'value' => 'No encryption'],
-				['type' => 'radio', 'value' => 'PSK'],
-				['type' => 'radio', 'value' => 'Certificate'],
-				['type' => 'checkbox', 'value' => 'No encryption'],
-				['type' => 'checkbox', 'value' => 'PSK'],
-				['type' => 'checkbox', 'value' => 'Certificate'],
-			];
+			['type' => 'radio', 'value' => 'No encryption'],
+			['type' => 'radio', 'value' => 'PSK'],
+			['type' => 'radio', 'value' => 'Certificate'],
+			['type' => 'checkbox', 'value' => 'No encryption'],
+			['type' => 'checkbox', 'value' => 'PSK'],
+			['type' => 'checkbox', 'value' => 'Certificate'],
+		];
 
 		foreach ($labels as $label) {
 			$this->zbxTestAssertElementPresentXpath('//label[text()="'.$label['value'].'"]/../input[@type="'.$label['type'].'"][@disabled]');
@@ -716,25 +710,21 @@ class testFormHostPrototype extends CLegacyWebTest {
 		$this->zbxTestTabSwitch('Encryption');
 		$this->zbxTestWaitForPageToLoad();
 
-		$this->zbxTestClickXpathWait('//ul[@id="tls_connect"]//label[text()="'.$data['connection_radio'].'"]');
-		$this->zbxTestCheckboxSelect('tls_in_none', false);
-		$this->zbxTestCheckboxSelect('tls_in_psk', $data['psk_checkbox']);
-
-		if (array_key_exists('certificate_checkbox', $data)) {
-			$this->zbxTestCheckboxSelect('tls_in_cert', $data['certificate_checkbox']);
+		$this->zbxTestClickXpathWait('//ul[@id="tls_connect"]//label[text()="'.$data['connection_to_host'].'"]');
+		foreach ($data['connection_from_host'] as $label => $state) {
+			$id = $this->zbxTestGetAttributeValue('//ul[@class="list-check-radio"]//label[text()="'.$label.'"]/../input', 'id');
+			$this->zbxTestCheckboxSelect($id, $state);
 		}
 
-		if (array_key_exists('psk_identity', $data)) {
-			$this->zbxTestInputTypeOverwrite('tls_psk_identity',$data['psk_identity']);
-		}
-		if (array_key_exists('psk_number', $data)) {
-			$this->zbxTestInputTypeOverwrite('tls_psk',$data['psk_number']);
+		if (array_key_exists('psk', $data)) {
+			$this->zbxTestInputTypeOverwrite('tls_psk_identity', $data['psk']['identity']);
+			$this->zbxTestInputTypeOverwrite('tls_psk', $data['psk']['number']);
 		}
 		if (array_key_exists('issuer', $data)) {
-			$this->zbxTestInputTypeOverwrite('tls_issuer',$data['issuer']);
+			$this->zbxTestInputTypeOverwrite('tls_issuer', $data['issuer']);
 		}
 		if (array_key_exists('subject', $data)) {
-			$this->zbxTestInputTypeOverwrite('tls_subject',$data['subject']);
+			$this->zbxTestInputTypeOverwrite('tls_subject', $data['subject']);
 		}
 		$this->zbxTestClick('update');
 
@@ -744,22 +734,18 @@ class testFormHostPrototype extends CLegacyWebTest {
 		$this->zbxTestWaitForPageToLoad();
 
 		// Check correct radio is selected.
-		$this->zbxTestAssertElementPresentXpath('//label[text()="'.$data['connection_radio'].'"]/../input[@type="radio"][@checked][@disabled]');
+		$this->zbxTestAssertElementPresentXpath('//label[text()="'.$data['connection_to_host'].'"]/../input[@type="radio"][@checked][@disabled]');
 
 		// Check checkboxes.
-		if (array_key_exists('psk_checkbox', $data)){
-			$this->assertEquals($data['psk_checkbox'], $this->zbxTestCheckboxSelected('tls_in_psk'));
-		}
-		if (array_key_exists('certificate_checkbox', $data)) {
-			$this->assertEquals($data['certificate_checkbox'], $this->zbxTestCheckboxSelected('tls_in_cert'));
+		foreach ($data['connection_from_host'] as $label => $state) {
+			$id = $this->zbxTestGetAttributeValue('//ul[@class="list-check-radio"]//label[text()="'.$label.'"]/../input', 'id');
+			$this->assertEquals($state, $this->zbxTestCheckboxSelected($id));
 		}
 
 		// Check input fields.
-		if (array_key_exists('psk_identity', $data)) {
-			$this->zbxTestAssertElementValue('tls_psk_identity', $data['psk_identity']);
-		}
-		if (array_key_exists('psk_number', $data)) {
-			$this->zbxTestAssertElementValue('tls_psk', $data['psk_number']);
+		if (array_key_exists('psk', $data)) {
+			$this->zbxTestAssertElementValue('tls_psk_identity', $data['psk']['identity']);
+			$this->zbxTestAssertElementValue('tls_psk', $data['psk']['number']);
 		}
 		if (array_key_exists('issuer', $data)) {
 			$this->zbxTestAssertElementValue('tls_issuer', $data['issuer']);
@@ -773,18 +759,9 @@ class testFormHostPrototype extends CLegacyWebTest {
 		return [
 			[
 				[
-					'name' => 'Clone_1 of Host prototype {#1}',
-				]
-			],
-			[
-				[
-					'name' => 'Clone_2 of Host prototype {#1}',
-					'visible_name' => 'Clone_2 Host prototype visible name',
-				]
-			],
-			[
-				[
 					'name' => 'Clone_3 of Host prototype {#1}',
+					'visible_name' => 'Clone_3 Host prototype visible name',
+					'inventory' => 'Automatic',
 					'checkbox' => false
 				]
 			],
@@ -979,13 +956,13 @@ class testFormHostPrototype extends CLegacyWebTest {
 		$this->zbxTestLogin('host_prototypes.php?parent_discoveryid='.self::DISCOVERY_RULE_ID);
 
 		$sql = 'SELECT name'.
-						' FROM hosts'.
-						' WHERE hostid IN ('.
-							'SELECT hostid'.
-							' FROM host_discovery'.
-							' WHERE parent_itemid='.self::DISCOVERY_RULE_ID.
-							')'.
-						'LIMIT 1';
+				' FROM hosts'.
+				' WHERE hostid IN ('.
+				'SELECT hostid'.
+				' FROM host_discovery'.
+				' WHERE parent_itemid='.self::DISCOVERY_RULE_ID.
+				')'.
+				'LIMIT 1';
 
 		foreach (CDBHelper::getAll($sql) as $host) {
 			$name = $host['name'];
