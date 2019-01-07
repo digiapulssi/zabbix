@@ -1,3 +1,29 @@
+Changes for 3.0.25rc1
+
+New features:
+
+Bug fixes:
+........S. [ZBX-15313] fixed unit suffix support in calculated item expressions (kalimulin)
+A.F....... [ZBX-14592] fixed calculation of SLA and availability report when problem has negative duration (miks)
+A......... [ZBX-15156] fixed undefined offset error in host screen with web item (talbergs)
+...G...... [ZBX-14624] fixed agent collector not releasing connection to missing/removed disk devices (Andris, yurii)
+..F....... [ZBX-14604] fixed displayng of the graph name on screens (miks)
+..F....... [ZBX-15233] renamed fuzzytime() function description in dropdown list (Ivo)
+...G...... [ZBX-12801] excluded zabbix_sender.dll from MS Windows builds with TLS (viktors)
+...G...... [ZBX-15260] improved misleading warning message when agent fails to find log file during processing logrt[] item (asitals)
+.......PS. [ZBX-15206] fixed deprecated net-snmp attribute (MVekslers)
+.......PS. [ZBX-15238] fixed updating nextcheck time in discovery rules to avoid overlaps between discovery executions (asitals)
+....I....T [ZBX-8383] updated Tomcat template for compatibility with recent Tomcat versions, fixed constraint error when importing new data.tmpl (kalimulin)
+..F....... [ZBX-14606] removed strict-transport-security header from frontend (miks)
+A......... [ZBX-14977] fixed creation of unneeded database record if host prototype inventory mode is disabled; fixed validation for host and host prototype inventory mode (miks)
+A......... [ZBX-15146] fixed SQL error occurred when too long IP address is attempted to be written in database (miks)
+
+--------------------------------------------------------------------------------
+Changes for 3.0.24
+
+3.0.24rc1 was released as 3.0.24 without any changes
+
+--------------------------------------------------------------------------------
 Changes for 3.0.24rc1
 
 New features:
