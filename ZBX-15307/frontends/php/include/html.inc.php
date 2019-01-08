@@ -541,7 +541,8 @@ function get_header_sysmap_table($sysmapid, $name, $severity_min) {
 			->setAttribute('role', 'navigation')
 			->setAttribute('aria-label', _('Upper level maps'))
 			->addClass(ZBX_STYLE_FILTER_BREADCRUMB)
-			->addClass(ZBX_STYLE_OBJECT_GROUP);
+			->addClass(ZBX_STYLE_OBJECT_GROUP)
+			->addItem((new CSpan())->addItem(_('Upper level maps').':'));
 
 		foreach ($parent_sysmaps as $parent_sysmap) {
 			$parent_maps->addItem((new CSpan())->addItem(
@@ -552,8 +553,6 @@ function get_header_sysmap_table($sysmapid, $name, $severity_min) {
 				))
 			);
 		}
-
-		$list->addItem((new CSpan())->addItem(_('Upper level maps').':'));
 
 		return new CHorList([$list, $parent_maps]);
 	}
