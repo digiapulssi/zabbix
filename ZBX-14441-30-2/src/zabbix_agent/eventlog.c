@@ -393,11 +393,11 @@ out:
 	return ret;
 }
 
-int	process_eventlog(const char *source, zbx_uint64_t *lastlogsize, unsigned long *out_timestamp,
+int	process_eventlog_5(const char *source, zbx_uint64_t *lastlogsize, unsigned long *out_timestamp,
 		char **out_source, unsigned short *out_severity, char **out_message,
 		unsigned long *out_eventid, unsigned char skip_old_data)
 {
-	const char	*__function_name = "process_eventlog";
+	const char	*__function_name = "process_eventlog_5";
 	int		ret = FAIL;
 	HANDLE		eventlog_handle;
 	wchar_t 	*wsource;
@@ -642,10 +642,10 @@ out:
 }
 
 /* initialize event logs with Windows API version 6 */
-int	initialize_eventlog6(const char *source, zbx_uint64_t *lastlogsize, zbx_uint64_t *FirstID,
+int	initialize_eventlog_6(const char *source, zbx_uint64_t *lastlogsize, zbx_uint64_t *FirstID,
 		zbx_uint64_t *LastID, EVT_HANDLE *render_context, EVT_HANDLE *query)
 {
-	const char	*__function_name = "initialize_eventlog6";
+	const char	*__function_name = "initialize_eventlog_6";
 	wchar_t		*wsource = NULL;
 	int		ret = FAIL;
 
@@ -890,12 +890,12 @@ out:
 }
 
 /* process eventlog with Windows API version 6 */
-int	process_eventlog6(const char *source, zbx_uint64_t *lastlogsize, unsigned long *out_timestamp,
+int	process_eventlog_6(const char *source, zbx_uint64_t *lastlogsize, unsigned long *out_timestamp,
 		char **out_provider, char **out_source, unsigned short *out_severity, char **out_message,
 		unsigned long *out_eventid, zbx_uint64_t *FirstID, zbx_uint64_t *LastID, EVT_HANDLE *render_context,
 		EVT_HANDLE *query, zbx_uint64_t *keywords, unsigned char skip_old_data)
 {
-	const char	*__function_name = "process_eventlog6";
+	const char	*__function_name = "process_eventlog_6";
 	zbx_uint64_t	i = 0;
 	zbx_uint64_t	reading_startpoint = 0;
 	wchar_t		*wsource = NULL;
@@ -956,9 +956,9 @@ out:
 }
 
 /* finalize eventlog6 and free the handles */
-int	finalize_eventlog6(EVT_HANDLE *render_context, EVT_HANDLE *query)
+int	finalize_eventlog_6(EVT_HANDLE *render_context, EVT_HANDLE *query)
 {
-	const char	*__function_name = "finalize_eventlog6";
+	const char	*__function_name = "finalize_eventlog_6";
 	int		ret = FAIL;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
