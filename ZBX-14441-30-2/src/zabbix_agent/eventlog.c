@@ -398,6 +398,15 @@ out:
 	return ret;
 }
 
+/******************************************************************************
+ *                                                                            *
+ * Function: process_eventlog_5                                               *
+ *                                                                            *
+ * Parameters:                                                                *
+ *     eventlog_name - [IN] a valid event log name (not NULL and not empty    *
+ *                     string)                                                *
+ *                                                                            *
+ ******************************************************************************/
 static int	process_eventlog_5(const char *eventlog_name, zbx_uint64_t *lastlogsize, unsigned long *out_timestamp,
 		char **out_source, unsigned short *out_severity, char **out_message,
 		unsigned long *out_eventid, unsigned char skip_old_data)
@@ -425,12 +434,6 @@ static int	process_eventlog_5(const char *eventlog_name, zbx_uint64_t *lastlogsi
 	*out_severity = 0;
 	*out_message = NULL;
 	*out_eventid = 0;
-
-	if (NULL == eventlog_name || '\0' == *eventlog_name)
-	{
-		zabbix_log(LOG_LEVEL_WARNING, "cannot open eventlog with empty name");
-		return ret;
-	}
 
 	weventlog_name = zbx_utf8_to_unicode(eventlog_name);
 
@@ -648,7 +651,17 @@ out:
 	return ret;
 }
 
-/* initialize event log with Windows API version 6 */
+/******************************************************************************
+ *                                                                            *
+ * Function: initialize_eventlog_6                                            *
+ *                                                                            *
+ * Purpose: initialize event log with Windows API version 6                   *
+ *                                                                            *
+ * Parameters:                                                                *
+ *     eventlog_name - [IN] a valid event log name (not NULL and not empty    *
+ *                     string)                                                *
+ *                                                                            *
+ ******************************************************************************/
 static int	initialize_eventlog_6(const char *eventlog_name, zbx_uint64_t *lastlogsize, zbx_uint64_t *FirstID,
 		zbx_uint64_t *LastID, EVT_HANDLE *render_context, EVT_HANDLE *query, char **error)
 {
@@ -658,12 +671,6 @@ static int	initialize_eventlog_6(const char *eventlog_name, zbx_uint64_t *lastlo
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() eventlog_name:'%s' previous lastlogsize:" ZBX_FS_UI64,
 			__function_name, eventlog_name, *lastlogsize);
-
-	if (NULL == eventlog_name || '\0' == *eventlog_name)
-	{
-		*error = zbx_dsprintf(*error, "cannot open eventlog with empty name.");
-		return FAIL;
-	}
 
 	weventlog_name = zbx_utf8_to_unicode(eventlog_name);
 
