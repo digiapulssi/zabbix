@@ -487,7 +487,7 @@ out:
 
 /* open eventlog using API 6 and return the number of records */
 static int	zbx_open_eventlog6(const wchar_t *wsource, zbx_uint64_t *lastlogsize, EVT_HANDLE *render_context,
-		zbx_uint64_t *FirstID, zbx_uint64_t *LastID)
+		zbx_uint64_t *FirstID, zbx_uint64_t *LastID, char **error)
 {
 	const char	*__function_name = "zbx_open_eventlog6";
 	EVT_HANDLE	log = NULL;
@@ -512,7 +512,7 @@ static int	zbx_open_eventlog6(const wchar_t *wsource, zbx_uint64_t *lastlogsize,
 	if (NULL == (log = EvtOpenLog(NULL, wsource, EvtOpenChannelPath)))
 	{
 		tmp_str = zbx_unicode_to_utf8(wsource);
-		zabbix_log(LOG_LEVEL_WARNING, "cannot open eventlog '%s':%s", tmp_str,
+		*error = zbx_dsprintf(*error, "cannot open eventlog '%s':%s", tmp_str,
 				strerror_from_system(GetLastError()));
 		goto out;
 	}
@@ -520,8 +520,7 @@ static int	zbx_open_eventlog6(const wchar_t *wsource, zbx_uint64_t *lastlogsize,
 	/* obtain the number of records in the log */
 	if (TRUE != EvtGetLogInfo(log, EvtLogNumberOfLogRecords, sizeof(var), &var, &size_required))
 	{
-		zabbix_log(LOG_LEVEL_WARNING, "EvtGetLogInfo failed:%s",
-				strerror_from_system(GetLastError()));
+		*error = zbx_dsprintf(*error, "EvtGetLogInfo failed:%s", strerror_from_system(GetLastError()));
 		goto out;
 	}
 
@@ -532,20 +531,20 @@ static int	zbx_open_eventlog6(const wchar_t *wsource, zbx_uint64_t *lastlogsize,
 	/* we have to get it from the first EventRecordID				*/
 
 	/* create the system render */
-	if (NULL == (*render_context = EvtCreateRenderContext(RENDER_ITEMS_COUNT, RENDER_ITEMS, EvtRenderContextValues)))
+	if (NULL == (*render_context = EvtCreateRenderContext(RENDER_ITEMS_COUNT, RENDER_ITEMS,
+			EvtRenderContextValues)))
 	{
-		zabbix_log(LOG_LEVEL_WARNING, "EvtCreateRenderContext failed:%s", strerror_from_system(GetLastError()));
+		*error = zbx_dsprintf(*error, "EvtCreateRenderContext failed:%s", strerror_from_system(GetLastError()));
 		goto out;
 	}
 
 	/* get all eventlog */
-	tmp_all_event_query = EvtQuery(NULL, wsource, NULL, EvtQueryChannelPath);
-	if (NULL == tmp_all_event_query)
+	if (NULL == (tmp_all_event_query = EvtQuery(NULL, wsource, NULL, EvtQueryChannelPath)))
 	{
 		if (ERROR_EVT_CHANNEL_NOT_FOUND == (status = GetLastError()))
-			zabbix_log(LOG_LEVEL_WARNING, "EvtQuery channel missed:%s", strerror_from_system(status));
+			*error = zbx_dsprintf(*error, "EvtQuery channel missed:%s", strerror_from_system(status));
 		else
-			zabbix_log(LOG_LEVEL_WARNING, "EvtQuery failed:%s", strerror_from_system(status));
+			*error = zbx_dsprintf(*error, "EvtQuery failed:%s", strerror_from_system(status));
 
 		goto out;
 	}
@@ -569,9 +568,9 @@ static int	zbx_open_eventlog6(const wchar_t *wsource, zbx_uint64_t *lastlogsize,
 			&size_required, &bookmarkedCount))
 	{
 		/* information exceeds the allocated space */
-		if (ERROR_INSUFFICIENT_BUFFER != GetLastError())
+		if (ERROR_INSUFFICIENT_BUFFER != (status = GetLastError()))
 		{
-			zabbix_log(LOG_LEVEL_WARNING, "EvtRender failed:%s", strerror_from_system(GetLastError()));
+			*error = zbx_dsprintf(*error, "EvtRender failed:%s", strerror_from_system(status));
 			goto out;
 		}
 
@@ -581,7 +580,7 @@ static int	zbx_open_eventlog6(const wchar_t *wsource, zbx_uint64_t *lastlogsize,
 		if (TRUE != EvtRender(*render_context, event_bookmark, EvtRenderEventValues, size, renderedContent,
 				&size_required, &bookmarkedCount))
 		{
-			zabbix_log(LOG_LEVEL_WARNING, "EvtRender failed:%s", strerror_from_system(GetLastError()));
+			*error = zbx_dsprintf(*error, "EvtRender failed:%s", strerror_from_system(GetLastError()));
 			goto out;
 		}
 	}
@@ -612,11 +611,11 @@ out:
 }
 
 /* get handles of eventlog */
-static int	zbx_get_handle_eventlog6(const wchar_t *wsource, zbx_uint64_t *lastlogsize, EVT_HANDLE *query)
+static int	zbx_get_handle_eventlog6(const wchar_t *wsource, zbx_uint64_t *lastlogsize, EVT_HANDLE *query,
+		char **error)
 {
 	const char	*__function_name = "zbx_get_handle_eventlog6";
 	wchar_t		*event_query = NULL;
-	DWORD		status = 0;
 	char		*tmp_str = NULL;
 	int		ret = FAIL;
 
@@ -626,14 +625,16 @@ static int	zbx_get_handle_eventlog6(const wchar_t *wsource, zbx_uint64_t *lastlo
 	tmp_str = zbx_dsprintf(NULL, "Event/System[EventRecordID>" ZBX_FS_UI64 "]", *lastlogsize);
 	event_query = zbx_utf8_to_unicode(tmp_str);
 
-	/* create massive query for an event on a local computer*/
+	/* create massive query for an event on a local computer */
 	*query = EvtQuery(NULL, wsource, event_query, EvtQueryChannelPath);
 	if (NULL == *query)
 	{
+		DWORD	status;
+
 		if (ERROR_EVT_CHANNEL_NOT_FOUND == (status = GetLastError()))
-			zabbix_log(LOG_LEVEL_WARNING, "EvtQuery channel missed:%s", strerror_from_system(status));
+			*error = zbx_dsprintf(*error, "EvtQuery channel missed:%s", strerror_from_system(status));
 		else
-			zabbix_log(LOG_LEVEL_WARNING, "EvtQuery failed:%s", strerror_from_system(status));
+			*error = zbx_dsprintf(*error, "EvtQuery failed:%s", strerror_from_system(status));
 		goto out;
 	}
 
@@ -646,9 +647,9 @@ out:
 	return ret;
 }
 
-/* initialize event logs with Windows API version 6 */
+/* initialize event log with Windows API version 6 */
 static int	initialize_eventlog_6(const char *source, zbx_uint64_t *lastlogsize, zbx_uint64_t *FirstID,
-		zbx_uint64_t *LastID, EVT_HANDLE *render_context, EVT_HANDLE *query)
+		zbx_uint64_t *LastID, EVT_HANDLE *render_context, EVT_HANDLE *query, char **error)
 {
 	const char	*__function_name = "initialize_eventlog_6";
 	wchar_t		*wsource = NULL;
@@ -659,19 +660,19 @@ static int	initialize_eventlog_6(const char *source, zbx_uint64_t *lastlogsize, 
 
 	if (NULL == source || '\0' == *source)
 	{
-		zabbix_log(LOG_LEVEL_WARNING, "cannot open eventlog with empty name.");
-		goto out;
+		*error = zbx_dsprintf(*error, "cannot open eventlog with empty name.");
+		return FAIL;
 	}
 
 	wsource = zbx_utf8_to_unicode(source);
 
-	if (SUCCEED != zbx_open_eventlog6(wsource, lastlogsize, render_context, FirstID, LastID))
+	if (SUCCEED != zbx_open_eventlog6(wsource, lastlogsize, render_context, FirstID, LastID, error))
 	{
 		zabbix_log(LOG_LEVEL_ERR, "cannot open eventlog '%s'", source);
 		goto out;
 	}
 
-	if (SUCCEED != zbx_get_handle_eventlog6(wsource, lastlogsize, query))
+	if (SUCCEED != zbx_get_handle_eventlog6(wsource, lastlogsize, query, error))
 	{
 		zabbix_log(LOG_LEVEL_ERR, "cannot get eventlog handle '%s'", source);
 		goto out;
@@ -1068,7 +1069,7 @@ int	process_eventlog(const char *eventlog_name, zbx_uint64_t *lastlogsize, zbx_u
 			char		*provider = NULL;
 
 			if (SUCCEED != initialize_eventlog_6(eventlog_name, &lastlogsize_tmp, &eventlog6_firstid,
-					&eventlog6_lastid, &eventlog6_render_context, &eventlog6_query))
+					&eventlog6_lastid, &eventlog6_render_context, &eventlog6_query, error))
 			{
 				finalize_eventlog_6(&eventlog6_render_context, &eventlog6_query);
 				goto out;
