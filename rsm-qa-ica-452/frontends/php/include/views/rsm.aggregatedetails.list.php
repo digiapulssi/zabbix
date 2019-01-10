@@ -45,7 +45,15 @@ if (array_key_exists('dns_udp_nameservers', $data)) {
 		}
 		if (array_key_exists('ipv6', $ns_ips)) {
 			$cols_cnt += count($ns_ips['ipv6']);
-			$row_3 = array_merge($row_3, array_keys($ns_ips['ipv6']));
+
+			// Compress IPv6 address to save space in table header.
+			$ipv6_ips = array_keys($ns_ips['ipv6']);
+			foreach ($ipv6_ips as &$ipv6) {
+				$ipv6 = inet_ntop(inet_pton($ipv6));
+			}
+			unset($ipv6);
+
+			$row_3 = array_merge($row_3, $ipv6_ips);
 		}
 
 		$row_2->addItem((new CTag('th', true, $ns_name))
