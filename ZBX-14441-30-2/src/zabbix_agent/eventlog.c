@@ -490,7 +490,7 @@ static int	zbx_open_eventlog6(const wchar_t *wsource, zbx_uint64_t *lastlogsize,
 		zbx_uint64_t *FirstID, zbx_uint64_t *LastID, char **error)
 {
 	const char	*__function_name = "zbx_open_eventlog6";
-	EVT_HANDLE	log = NULL;
+	EVT_HANDLE	log;
 	EVT_VARIANT	var;
 	EVT_HANDLE	tmp_all_event_query = NULL;
 	EVT_HANDLE	event_bookmark = NULL;
@@ -500,20 +500,22 @@ static int	zbx_open_eventlog6(const wchar_t *wsource, zbx_uint64_t *lastlogsize,
 	DWORD		size = DEFAULT_EVENT_CONTENT_SIZE;
 	DWORD		bookmarkedCount = 0;
 	zbx_uint64_t	numIDs = 0;
-	char		*tmp_str = NULL;
 	int		ret = FAIL;
+
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
 	*FirstID = 0;
 	*LastID = 0;
 
-	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
-
 	/* try to open the desired log */
 	if (NULL == (log = EvtOpenLog(NULL, wsource, EvtOpenChannelPath)))
 	{
+		char	*tmp_str;
+
+		status = GetLastError();
 		tmp_str = zbx_unicode_to_utf8(wsource);
-		*error = zbx_dsprintf(*error, "cannot open eventlog '%s':%s", tmp_str,
-				strerror_from_system(GetLastError()));
+		*error = zbx_dsprintf(*error, "cannot open eventlog '%s':%s", tmp_str, strerror_from_system(status));
+		zbx_free(tmp_str);
 		goto out;
 	}
 
@@ -602,7 +604,6 @@ out:
 		EvtClose(tmp_all_event_query);
 	if (NULL != event_bookmark)
 		EvtClose(event_bookmark);
-	zbx_free(tmp_str);
 	zbx_free(renderedContent);
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s FirstID:" ZBX_FS_UI64 " LastID:" ZBX_FS_UI64 " numIDs:" ZBX_FS_UI64,
 			__function_name, zbx_result_string(ret), *FirstID, *LastID, numIDs);
