@@ -1180,7 +1180,7 @@ static int	process_eventlog_check(char *server, unsigned short port, ZBX_ACTIVE_
 
 #ifdef _WINDOWS
 	AGENT_REQUEST	request;
-	const char	*filename, *pattern, *key_severity, *key_source, *key_logeventid, *maxlines_persec, *skip,
+	const char	*eventlog_name, *pattern, *key_severity, *key_source, *key_logeventid, *maxlines_persec, *skip,
 			*str_severity;
 	int		rate, s_count, p_count, send_err = SUCCEED;
 	char		*value = NULL, *provider = NULL, *source = NULL, str_logeventid[8];
@@ -1214,7 +1214,7 @@ static int	process_eventlog_check(char *server, unsigned short port, ZBX_ACTIVE_
 		goto out;
 	}
 
-	if (NULL == (filename = get_rparam(&request, 0)) || '\0' == *filename)
+	if (NULL == (eventlog_name = get_rparam(&request, 0)) || '\0' == *eventlog_name)
 	{
 		*error = zbx_strdup(*error, "Invalid first parameter.");
 		goto out;
@@ -1291,14 +1291,14 @@ static int	process_eventlog_check(char *server, unsigned short port, ZBX_ACTIVE_
 	{
 		__try
 		{
-			if (SUCCEED != initialize_eventlog_6(filename, &lastlogsize, &eventlog6_firstid,
+			if (SUCCEED != initialize_eventlog_6(eventlog_name, &lastlogsize, &eventlog6_firstid,
 					&eventlog6_lastid, &eventlog6_render_context, &eventlog6_query))
 			{
 				finalize_eventlog_6(&eventlog6_render_context, &eventlog6_query);
 				goto out;
 			}
 
-			while (SUCCEED == (ret = process_eventlog_6(filename, &lastlogsize, &timestamp, &provider,
+			while (SUCCEED == (ret = process_eventlog_6(eventlog_name, &lastlogsize, &timestamp, &provider,
 					&source, &severity, &value, &logeventid, &eventlog6_firstid, &eventlog6_lastid,
 					&eventlog6_render_context, &eventlog6_query, &keywords, metric->skip_old_data)))
 			{
@@ -1408,7 +1408,7 @@ static int	process_eventlog_check(char *server, unsigned short port, ZBX_ACTIVE_
 	}
 	else if (versionInfo.dwMajorVersion < 6)    /* Windows versions before Vista */
 	{
-		while (SUCCEED == (ret = process_eventlog_5(filename, &lastlogsize, &timestamp, &source, &severity,
+		while (SUCCEED == (ret = process_eventlog_5(eventlog_name, &lastlogsize, &timestamp, &source, &severity,
 				&value, &logeventid, metric->skip_old_data)))
 		{
 			metric->skip_old_data = 0;
