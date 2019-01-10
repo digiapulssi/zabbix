@@ -649,39 +649,39 @@ out:
 }
 
 /* initialize event log with Windows API version 6 */
-static int	initialize_eventlog_6(const char *source, zbx_uint64_t *lastlogsize, zbx_uint64_t *FirstID,
+static int	initialize_eventlog_6(const char *eventlog_name, zbx_uint64_t *lastlogsize, zbx_uint64_t *FirstID,
 		zbx_uint64_t *LastID, EVT_HANDLE *render_context, EVT_HANDLE *query, char **error)
 {
 	const char	*__function_name = "initialize_eventlog_6";
-	wchar_t		*wsource = NULL;
+	wchar_t		*weventlog_name = NULL;
 	int		ret = FAIL;
 
-	zabbix_log(LOG_LEVEL_DEBUG, "In %s() source:'%s' previous lastlogsize:" ZBX_FS_UI64,
-			__function_name, source, *lastlogsize);
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s() eventlog_name:'%s' previous lastlogsize:" ZBX_FS_UI64,
+			__function_name, eventlog_name, *lastlogsize);
 
-	if (NULL == source || '\0' == *source)
+	if (NULL == eventlog_name || '\0' == *eventlog_name)
 	{
 		*error = zbx_dsprintf(*error, "cannot open eventlog with empty name.");
 		return FAIL;
 	}
 
-	wsource = zbx_utf8_to_unicode(source);
+	weventlog_name = zbx_utf8_to_unicode(eventlog_name);
 
-	if (SUCCEED != zbx_open_eventlog6(wsource, lastlogsize, render_context, FirstID, LastID, error))
+	if (SUCCEED != zbx_open_eventlog6(weventlog_name, lastlogsize, render_context, FirstID, LastID, error))
 	{
-		zabbix_log(LOG_LEVEL_ERR, "cannot open eventlog '%s'", source);
+		zabbix_log(LOG_LEVEL_ERR, "cannot open eventlog '%s'", eventlog_name);
 		goto out;
 	}
 
-	if (SUCCEED != zbx_get_handle_eventlog6(wsource, lastlogsize, query, error))
+	if (SUCCEED != zbx_get_handle_eventlog6(weventlog_name, lastlogsize, query, error))
 	{
-		zabbix_log(LOG_LEVEL_ERR, "cannot get eventlog handle '%s'", source);
+		zabbix_log(LOG_LEVEL_ERR, "cannot get eventlog handle '%s'", eventlog_name);
 		goto out;
 	}
 
 	ret = SUCCEED;
 out:
-	zbx_free(wsource);
+	zbx_free(weventlog_name);
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, zbx_result_string(ret));
 
 	return ret;
