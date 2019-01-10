@@ -398,18 +398,18 @@ out:
 	return ret;
 }
 
-static int	process_eventlog_5(const char *source, zbx_uint64_t *lastlogsize, unsigned long *out_timestamp,
+static int	process_eventlog_5(const char *eventlog_name, zbx_uint64_t *lastlogsize, unsigned long *out_timestamp,
 		char **out_source, unsigned short *out_severity, char **out_message,
 		unsigned long *out_eventid, unsigned char skip_old_data)
 {
 	const char	*__function_name = "process_eventlog_5";
 	int		ret = FAIL;
 	HANDLE		eventlog_handle;
-	wchar_t 	*wsource;
+	wchar_t 	*weventlog_name;
 	zbx_uint64_t	i, FirstID, LastID;
 
-	zabbix_log(LOG_LEVEL_DEBUG, "In %s() source:'%s' lastlogsize:" ZBX_FS_UI64, __function_name, source,
-			*lastlogsize);
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s() eventlog_name:'%s' lastlogsize:" ZBX_FS_UI64, __function_name,
+			eventlog_name, *lastlogsize);
 
 	/* From MSDN documentation:                                                                         */
 	/* The RecordNumber member of EVENTLOGRECORD contains the record number for the event log record.   */
@@ -426,17 +426,17 @@ static int	process_eventlog_5(const char *source, zbx_uint64_t *lastlogsize, uns
 	*out_message = NULL;
 	*out_eventid = 0;
 
-	if (NULL == source || '\0' == *source)
+	if (NULL == eventlog_name || '\0' == *eventlog_name)
 	{
 		zabbix_log(LOG_LEVEL_WARNING, "cannot open eventlog with empty name");
 		return ret;
 	}
 
-	wsource = zbx_utf8_to_unicode(source);
+	weventlog_name = zbx_utf8_to_unicode(eventlog_name);
 
-	if (SUCCEED != zbx_open_eventlog(wsource, &eventlog_handle, &FirstID, &LastID))
+	if (SUCCEED != zbx_open_eventlog(weventlog_name, &eventlog_handle, &FirstID, &LastID))
 	{
-		zabbix_log(LOG_LEVEL_ERR, "cannot open eventlog '%s': %s", source,
+		zabbix_log(LOG_LEVEL_ERR, "cannot open eventlog '%s': %s", eventlog_name,
 				strerror_from_system(GetLastError()));
 		goto out;
 	}
@@ -466,7 +466,7 @@ static int	process_eventlog_5(const char *source, zbx_uint64_t *lastlogsize, uns
 		/* convert to DWORD to handle possible event record number wraparound */
 		DWORD	dwRecordNumber = (DWORD)i;
 
-		if (SUCCEED == zbx_get_eventlog_message(wsource, eventlog_handle, dwRecordNumber, out_source,
+		if (SUCCEED == zbx_get_eventlog_message(weventlog_name, eventlog_handle, dwRecordNumber, out_source,
 				out_message, out_severity, out_timestamp, out_eventid))
 		{
 			/* storing full (not truncated to DWORD) lastlogsize value makes  */
@@ -479,7 +479,7 @@ finish:
 	zbx_close_eventlog(eventlog_handle);
 	ret = SUCCEED;
 out:
-	zbx_free(wsource);
+	zbx_free(weventlog_name);
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, zbx_result_string(ret));
 
 	return ret;
