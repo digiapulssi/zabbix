@@ -652,7 +652,7 @@ define('USER_TYPE_ZABBIX_GUEST',		0);
 define('USER_TYPE_ZABBIX_USER',			1);
 define('USER_TYPE_ZABBIX_ADMIN',		2);
 define('USER_TYPE_SUPER_ADMIN',			3);
-define('USER_TYPE_EBERO',				4);
+define('USER_TYPE_READ_ONLY',			4);
 define('USER_TYPE_TEHNICAL_SERVICE',	5);
 define('USER_TYPE_COMPLIANCE',			6);
 
