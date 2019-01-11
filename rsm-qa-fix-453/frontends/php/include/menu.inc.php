@@ -36,7 +36,7 @@ function zbx_construct_menu(&$main_menu, &$sub_menus, &$page, $action = null) {
 	$zbx_menu = [
 		'view' => [
 			'label' => _('Monitoring'),
-			'user_type'	=> [USER_TYPE_ZABBIX_USER, USER_TYPE_TEHNICAL_SERVICE, USER_TYPE_COMPLIANCE,
+			'user_type'	=> [USER_TYPE_ZABBIX_USER, USER_TYPE_POWER_USER, USER_TYPE_COMPLIANCE,
 				USER_TYPE_ZABBIX_ADMIN, USER_TYPE_SUPER_ADMIN
 			],
 			'default_page_id' => 0,
@@ -63,7 +63,7 @@ function zbx_construct_menu(&$main_menu, &$sub_menus, &$page, $action = null) {
 					'url' => 'latest.php',
 					'label' => _('Latest data'),
 					'sub_pages' => ['history.php', 'chart.php'],
-					'user_type'	=> [USER_TYPE_READ_ONLY, USER_TYPE_ZABBIX_USER, USER_TYPE_TEHNICAL_SERVICE,
+					'user_type'	=> [USER_TYPE_READ_ONLY, USER_TYPE_ZABBIX_USER, USER_TYPE_POWER_USER,
 						USER_TYPE_COMPLIANCE, USER_TYPE_ZABBIX_ADMIN, USER_TYPE_SUPER_ADMIN
 					],
 				],
@@ -130,7 +130,7 @@ function zbx_construct_menu(&$main_menu, &$sub_menus, &$page, $action = null) {
 		],
 		'rsm' => array(
 			'label'				=> _('Registry monitoring'),
-			'user_type'			=> [USER_TYPE_READ_ONLY, USER_TYPE_ZABBIX_USER, USER_TYPE_TEHNICAL_SERVICE,
+			'user_type'			=> [USER_TYPE_READ_ONLY, USER_TYPE_ZABBIX_USER, USER_TYPE_POWER_USER,
 				USER_TYPE_COMPLIANCE, USER_TYPE_ZABBIX_ADMIN, USER_TYPE_SUPER_ADMIN
 			],
 			'default_page_id'	=> 0,
@@ -153,7 +153,7 @@ function zbx_construct_menu(&$main_menu, &$sub_menus, &$page, $action = null) {
 				array(
 					'url' => 'rsm.monthlyreports.php',
 					'label' => _('Monthly reports'),
-					'user_type'	=> [USER_TYPE_ZABBIX_USER, USER_TYPE_TEHNICAL_SERVICE, USER_TYPE_COMPLIANCE,
+					'user_type'	=> [USER_TYPE_ZABBIX_USER, USER_TYPE_POWER_USER, USER_TYPE_COMPLIANCE,
 						USER_TYPE_ZABBIX_ADMIN, USER_TYPE_SUPER_ADMIN
 					],
 				),
@@ -161,7 +161,7 @@ function zbx_construct_menu(&$main_menu, &$sub_menus, &$page, $action = null) {
 					'url' => 'rsm.slareports.php',
 					'label' => _('SLA reports'),
 					'sub_pages' => array('rsm.screens.php'),
-					'user_type'	=> [USER_TYPE_ZABBIX_USER, USER_TYPE_TEHNICAL_SERVICE, USER_TYPE_COMPLIANCE,
+					'user_type'	=> [USER_TYPE_ZABBIX_USER, USER_TYPE_POWER_USER, USER_TYPE_COMPLIANCE,
 						USER_TYPE_ZABBIX_ADMIN, USER_TYPE_SUPER_ADMIN
 					]
 				)
@@ -169,7 +169,7 @@ function zbx_construct_menu(&$main_menu, &$sub_menus, &$page, $action = null) {
 		),
 		'cm' => [
 			'label' => _('Inventory'),
-			'user_type' => [USER_TYPE_ZABBIX_USER, USER_TYPE_TEHNICAL_SERVICE, USER_TYPE_COMPLIANCE,
+			'user_type' => [USER_TYPE_ZABBIX_USER, USER_TYPE_POWER_USER, USER_TYPE_COMPLIANCE,
 				USER_TYPE_ZABBIX_ADMIN, USER_TYPE_SUPER_ADMIN
 			],
 			'default_page_id' => 0,
@@ -186,7 +186,7 @@ function zbx_construct_menu(&$main_menu, &$sub_menus, &$page, $action = null) {
 		],
 		'reports' => [
 			'label' => _('Reports'),
-			'user_type'	=> [USER_TYPE_ZABBIX_USER, USER_TYPE_TEHNICAL_SERVICE, USER_TYPE_COMPLIANCE,
+			'user_type'	=> [USER_TYPE_ZABBIX_USER, USER_TYPE_POWER_USER, USER_TYPE_COMPLIANCE,
 				USER_TYPE_ZABBIX_ADMIN, USER_TYPE_SUPER_ADMIN
 			],
 			'default_page_id' => 0,
@@ -348,7 +348,7 @@ function zbx_construct_menu(&$main_menu, &$sub_menus, &$page, $action = null) {
 		],
 		'login' => [
 			'label' => _('Login'),
-			'user_type'	=> [USER_TYPE_ZABBIX_GUEST, USER_TYPE_READ_ONLY, USER_TYPE_ZABBIX_USER, USER_TYPE_TEHNICAL_SERVICE,
+			'user_type'	=> [USER_TYPE_ZABBIX_GUEST, USER_TYPE_READ_ONLY, USER_TYPE_ZABBIX_USER, USER_TYPE_POWER_USER,
 				USER_TYPE_COMPLIANCE, USER_TYPE_ZABBIX_ADMIN, USER_TYPE_SUPER_ADMIN
 			],
 			'default_page_id' => 0,

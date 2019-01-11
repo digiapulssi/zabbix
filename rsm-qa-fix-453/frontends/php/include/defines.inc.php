@@ -653,7 +653,7 @@ define('USER_TYPE_ZABBIX_USER',			1);
 define('USER_TYPE_ZABBIX_ADMIN',		2);
 define('USER_TYPE_SUPER_ADMIN',			3);
 define('USER_TYPE_READ_ONLY',			4);
-define('USER_TYPE_TEHNICAL_SERVICE',	5);
+define('USER_TYPE_POWER_USER',			5);
 define('USER_TYPE_COMPLIANCE',			6);
 
 define('ZBX_NOT_INTERNAL_GROUP',	0);

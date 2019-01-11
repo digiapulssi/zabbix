@@ -63,8 +63,8 @@ if ((PAGE_TYPE_JS == $page['type']) || (PAGE_TYPE_HTML_BLOCK == $page['type'])) 
 	exit();
 }
 
-if (isset($_REQUEST['mark_incident']) && (CWebUser::getType() == USER_TYPE_ZABBIX_ADMIN
-		|| CWebUser::getType() == USER_TYPE_SUPER_ADMIN || CWebUser::getType() == USER_TYPE_TEHNICAL_SERVICE)) {
+if (isset($_REQUEST['mark_incident'])
+		&& in_array(CWebUser::getType(), [USER_TYPE_ZABBIX_ADMIN, USER_TYPE_SUPER_ADMIN, USER_TYPE_POWER_USER])) {
 	$event = API::Event()->get(array(
 		'eventids' => getRequest('eventid'),
 		'output' => ['eventid', 'objectid', 'clock', 'false_positive'],

@@ -389,7 +389,7 @@ if (!$this->data['is_profile']) {
 
 	$userTypeComboBox = new CComboBox('user_type', $this->data['user_type'], 'submit();', [
 		USER_TYPE_READ_ONLY => user_type2str(USER_TYPE_READ_ONLY),
-		USER_TYPE_TEHNICAL_SERVICE => user_type2str(USER_TYPE_TEHNICAL_SERVICE),
+		USER_TYPE_POWER_USER => user_type2str(USER_TYPE_POWER_USER),
 		USER_TYPE_ZABBIX_USER => user_type2str(USER_TYPE_ZABBIX_USER),
 		USER_TYPE_ZABBIX_ADMIN => user_type2str(USER_TYPE_ZABBIX_ADMIN),
 		USER_TYPE_SUPER_ADMIN => user_type2str(USER_TYPE_SUPER_ADMIN)
