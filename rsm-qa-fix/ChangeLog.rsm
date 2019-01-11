@@ -1,6 +1,7 @@
 Changes for rsm1.1.0rc51
 
 Bug fixes:
+..F....... [454] fixed undefined index error in user create/edit page (miks)
 
 --------------------------------------------------------------------------------
 
