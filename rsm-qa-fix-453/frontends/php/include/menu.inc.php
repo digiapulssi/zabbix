@@ -129,7 +129,7 @@ function zbx_construct_menu(&$main_menu, &$sub_menus, &$page, $action = null) {
 			]
 		],
 		'rsm' => array(
-			'label'				=> _('SLA monitoring'),
+			'label'				=> _('Registry monitoring'),
 			'user_type'			=> [USER_TYPE_EBERO, USER_TYPE_ZABBIX_USER, USER_TYPE_TEHNICAL_SERVICE,
 				USER_TYPE_COMPLIANCE, USER_TYPE_ZABBIX_ADMIN, USER_TYPE_SUPER_ADMIN
 			],
