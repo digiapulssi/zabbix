@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Zabbix 2.2\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2018-12-19 08:55+0200\n"
-"PO-Revision-Date: 2016-12-04 10:26+0300\n"
+"PO-Revision-Date: 2019-01-10 20:39+0300\n"
 "Last-Translator: Oleksiy <zalex_ua@i.ua>\n"
 "Language-Team: \n"
 "Language: en_US\n"
@@ -12,7 +12,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: Pootle 2.5.1.3\n"
-"X-POOTLE-MTIME: 1480839979.000000\n"
+"X-POOTLE-MTIME: 1547145581.000000\n"
 
 #: api/classes/CMaintenance.php:387 api/classes/CMaintenance.php:392
 #: api/classes/CMaintenance.php:508 api/classes/CMaintenance.php:513
@@ -13147,7 +13147,7 @@ msgstr "System default"
 
 #: include/func.inc.php:2180
 msgid "System error occurred. Please contact Zabbix administrator."
-msgstr ""
+msgstr "System error occurred. Please contact Zabbix administrator."
 
 #: api/rpc/class.cjsonrpc.php:211
 msgid "System error."
@@ -15258,7 +15258,7 @@ msgstr "Wrong macro \"%1$s\"."
 #: api/classes/CTriggerPrototype.php:698 api/classes/CTriggerPrototype.php:749
 #: api/classes/CUser.php:307
 msgid "Wrong value for url field."
-msgstr ""
+msgstr "Wrong value for url field."
 
 #: include/views/js/configuration.sysmaps.js.php:163
 msgid "X"
