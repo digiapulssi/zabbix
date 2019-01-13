@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Zabbix 3.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-01-06 01:42+0200\n"
+"POT-Creation-Date: 2019-01-13 23:35+0200\n"
 "PO-Revision-Date: 2018-11-30 09:11+0300\n"
 "Last-Translator: Anonymous Pootle User\n"
 "Language-Team: NL\n"
@@ -740,7 +740,7 @@ msgid_plural "Applications deleted"
 msgstr[0] "Applicatie verwijderd"
 msgstr[1] "Applicaties verwijderd"
 
-#: include/classes/core/CJsonRpc.php:208
+#: include/classes/core/CJsonRpc.php:210
 msgid "Application error."
 msgstr "Applicatie fout."
 
@@ -2202,7 +2202,7 @@ msgstr "Inventory velden kunnen niet ingesteld worden voor uitgeschakelde invent
 msgid "Cannot set resource ID for screen element."
 msgstr ""
 
-#: include/classes/api/services/CHostInterface.php:245
+#: include/classes/api/services/CHostInterface.php:246
 msgid "Cannot switch host for interface."
 msgstr "Kan de host interface niet omschakelen."
 
@@ -2412,7 +2412,7 @@ msgstr "kan icoon map niet bijwerken"
 msgid "Cannot update image"
 msgstr "Kan afbeelding niet bijwerken"
 
-#: include/classes/api/services/CHostInterface.php:318
+#: include/classes/api/services/CHostInterface.php:327
 #, c-format
 msgid "Cannot update interface for discovered host \"%1$s\"."
 msgstr "Kan interface niet bijwerken voor ontdekte host \"%1$s\"."
@@ -4790,7 +4790,7 @@ msgstr "Lege host."
 #: include/classes/api/services/CGraphPrototype.php:542
 #: include/classes/api/services/CHostGroup.php:416
 #: include/classes/api/services/CHostGroup.php:493
-#: include/classes/api/services/CHostInterface.php:388
+#: include/classes/api/services/CHostInterface.php:397
 #: include/classes/api/services/CHost.php:1155
 #: include/classes/api/services/CHostPrototype.php:929
 #: include/classes/api/services/CIconMap.php:301
@@ -5192,7 +5192,7 @@ msgstr "Uit te breiden macro's"
 msgid "Expand single problem"
 msgstr "Expand enkel probleem"
 
-#: include/classes/core/CJsonRpc.php:108
+#: include/classes/core/CJsonRpc.php:110
 #, c-format
 msgid "Expecting JSON-rpc version 2.0, \"%s\" is given."
 msgstr "Verwacht dat JSON-rpc versie 2.0, \"%s\" gegeven is."
@@ -6196,7 +6196,7 @@ msgstr "Host toegang"
 msgid "Host added"
 msgstr "Host toegevoegd"
 
-#: include/classes/api/services/CHostInterface.php:823
+#: include/classes/api/services/CHostInterface.php:832
 msgid "Host cannot have more than one default interface of the same type."
 msgstr "Host kan niet meer dan een standaard interface van hetzelfde type bevatten.Host kan niet meer dan een standaard interface van hetzelfde type bevatten.Host kan niet meer dan een standaard interface van hetzelfde type bevatten.Host kan niet meer dan een standaard interface van hetzelfde type bevatten."
 
@@ -6566,7 +6566,7 @@ msgstr "IP-adres  mag niet leeg zijn."
 msgid "IP address range cannot be empty."
 msgstr "IP-adresbereik mag niet leeg zijn."
 
-#: include/classes/api/services/CHostInterface.php:268
+#: include/classes/api/services/CHostInterface.php:273
 msgid "IP and DNS cannot be empty for host interface."
 msgstr "IP en DNS kan niet leeg zijn voor host interface."
 
@@ -7141,8 +7141,8 @@ msgstr "Onjuiste argumenten doorgegeven aan de functie"
 
 #: include/classes/api/services/CApplication.php:274
 #: include/classes/api/services/CEvent.php:434
-#: include/classes/api/services/CHostInterface.php:235
-#: include/classes/api/services/CHostInterface.php:436
+#: include/classes/api/services/CHostInterface.php:236
+#: include/classes/api/services/CHostInterface.php:445
 #: include/classes/api/services/CItemGeneral.php:204
 #: include/classes/api/services/CMap.php:465
 #: include/classes/api/services/CMap.php:539
@@ -7169,7 +7169,7 @@ msgstr "Onjuiste argumenten doorgegeven aan de functie"
 msgid "Incorrect arguments passed to function."
 msgstr "Onjuiste argumenten doorgegeven aan de functie."
 
-#: include/classes/api/services/CHostInterface.php:263
+#: include/classes/api/services/CHostInterface.php:268
 msgid "Incorrect arguments passed to method."
 msgstr "Onjuiste argumenten doorgegeven aan de werkwijze."
 
@@ -7183,7 +7183,7 @@ msgstr "Onjuist authenticatie protocol voor discovery rule \"%1$s\"."
 msgid "Incorrect authentication protocol for item \"%1$s\"."
 msgstr "Onjuiste authenticatie protocol voor punt \"%1$s\"."
 
-#: include/classes/api/services/CHostInterface.php:666
+#: include/classes/api/services/CHostInterface.php:675
 msgid "Incorrect bulk value for interface."
 msgstr "Onjuiste bulkwaarde voor interface."
 
@@ -7373,12 +7373,12 @@ msgstr "Verkeerde index voor afbeelding."
 msgid "Incorrect input parameters."
 msgstr ""
 
-#: include/classes/api/services/CHostInterface.php:591
+#: include/classes/api/services/CHostInterface.php:600
 #, c-format
 msgid "Incorrect interface DNS parameter \"%s\" provided."
 msgstr "Verkeerde interface DNS parameter \"%s\" ingevoerd."
 
-#: include/classes/api/services/CHostInterface.php:634
+#: include/classes/api/services/CHostInterface.php:643
 #, c-format
 msgid "Incorrect interface port \"%s\" provided."
 msgstr "Verkeerde interface poort \"%s\" ingevoerd."
@@ -7921,7 +7921,7 @@ msgstr "Naam installateur"
 msgid "Interface"
 msgstr "Interface"
 
-#: include/classes/api/services/CHostInterface.php:843
+#: include/classes/api/services/CHostInterface.php:852
 #, c-format
 msgid "Interface is linked to item \"%1$s\" on \"%2$s\"."
 msgstr "Interface is gekoppeld aan item \"%1$s\" op \"%2$s\"."
@@ -7930,18 +7930,18 @@ msgstr "Interface is gekoppeld aan item \"%1$s\" op \"%2$s\"."
 msgid "Interface is used by items that require this type of the interface."
 msgstr "Interface wordt gebruikt door items die dit type van de interface vereisen."
 
-#: include/classes/api/services/CHostInterface.php:272
+#: include/classes/api/services/CHostInterface.php:277
 #, c-format
 msgid "Interface with DNS \"%1$s\" cannot have empty IP address."
 msgstr "Interface met DNS \"%1$s\" kan geen leeg IP-adres bevatten."
 
-#: include/classes/api/services/CHostInterface.php:278
-#: include/classes/api/services/CHostInterface.php:285
+#: include/classes/api/services/CHostInterface.php:283
+#: include/classes/api/services/CHostInterface.php:290
 #, c-format
 msgid "Interface with IP \"%1$s\" cannot have empty DNS name while having \"Use DNS\" property on \"%2$s\"."
 msgstr "Interface met IP \"%1$s\" kan geen lege DNS naam hebben zolang er gebruikt gemaakt wordt van  \"Use DNS\" op \"%2$s\"."
 
-#: include/classes/api/services/CHostInterface.php:291
+#: include/classes/api/services/CHostInterface.php:296
 #, c-format
 msgid "Interface with IP \"%1$s\" cannot have empty DNS name."
 msgstr "Interface met IP-adres \"%1$s\" kan geen lege DNS-naam hebben."
@@ -7961,7 +7961,7 @@ msgctxt "user type"
 msgid "Internal"
 msgstr "Interne"
 
-#: include/classes/core/CJsonRpc.php:204
+#: include/classes/core/CJsonRpc.php:206
 msgid "Internal JSON-RPC error."
 msgstr "Interne JSON-RPC fout."
 
@@ -7969,7 +7969,7 @@ msgstr "Interne JSON-RPC fout."
 msgid "Internal data storage period (in days)"
 msgstr ""
 
-#: include/classes/core/CJsonRpc.php:203
+#: include/classes/core/CJsonRpc.php:205
 #: include/classes/import/validators/CXmlValidatorGeneral.php:147
 msgid "Internal error."
 msgstr "Interne fout."
@@ -8019,11 +8019,11 @@ msgstr "Ongeldig IP-adresbereik \"%1$s\"."
 msgid "Invalid IP address range \"%1$s\": must be a string."
 msgstr "Ongeldig IP-adresbereik \"%1$s\": dient een tekenreeks te zijn."
 
-#: include/classes/core/CJsonRpc.php:184
+#: include/classes/core/CJsonRpc.php:186
 msgid "Invalid JSON. An error occurred on the server while parsing the JSON text."
 msgstr "Ongeldige JSON. Er is een fout opgetreden op de servertijdens het ontleden van de JSON tekst."
 
-#: include/classes/core/CJsonRpc.php:188
+#: include/classes/core/CJsonRpc.php:190
 msgid "Invalid Request."
 msgstr "Ongeldige Request."
 
@@ -8192,7 +8192,7 @@ msgstr "Ongeldige onderhoudsperiode"
 #: include/classes/api/services/CUser.php:719
 #: include/classes/api/services/CUser.php:877
 #: include/classes/api/services/CUser.php:922
-#: include/classes/core/CJsonRpc.php:199
+#: include/classes/core/CJsonRpc.php:201
 msgid "Invalid method parameters."
 msgstr "Ongeldige werkwijze parameters."
 
@@ -8200,7 +8200,7 @@ msgstr "Ongeldige werkwijze parameters."
 msgid "Invalid number of parameters."
 msgstr "Ongeldig aantal parameters."
 
-#: include/classes/core/CJsonRpc.php:198
+#: include/classes/core/CJsonRpc.php:200
 msgid "Invalid params."
 msgstr "Ongeldige parameters."
 
@@ -8535,20 +8535,20 @@ msgstr "JMX agent"
 msgid "JMX interfaces"
 msgstr "JMX interfaces"
 
-#: include/classes/core/CJsonRpc.php:156
+#: include/classes/core/CJsonRpc.php:158
 #, c-format
 msgid "JSON-rpc error generation failed. No such error \"%s\"."
 msgstr "JSON-rpc fout generatie mislukt. Geen dergelijke fout \"%s\"."
 
-#: include/classes/core/CJsonRpc.php:113
+#: include/classes/core/CJsonRpc.php:115
 msgid "JSON-rpc method is not defined."
 msgstr "JSON-rpc-methode is niet gedefinieerd."
 
-#: include/classes/core/CJsonRpc.php:118
+#: include/classes/core/CJsonRpc.php:120
 msgid "JSON-rpc params is not an Array."
 msgstr "JSON-rpc params is geen een Array."
 
-#: include/classes/core/CJsonRpc.php:103
+#: include/classes/core/CJsonRpc.php:105
 msgid "JSON-rpc version is not specified."
 msgstr "JSON-rpc-versie is niet gespecificeerd."
 
@@ -9424,7 +9424,7 @@ msgstr "Berichten"
 msgid "Messaging"
 msgstr ""
 
-#: include/classes/core/CJsonRpc.php:193
+#: include/classes/core/CJsonRpc.php:195
 msgid "Method not found."
 msgstr "Methode niet gevonden."
 
@@ -9951,13 +9951,13 @@ msgstr "Geen gegevensverzameling"
 msgid "No data found."
 msgstr ""
 
-#: include/classes/api/services/CHostInterface.php:819
+#: include/classes/api/services/CHostInterface.php:828
 #, c-format
 msgid "No default interface for \"%1$s\" type on \"%2$s\"."
 msgstr ""
 
-#: include/classes/core/CJsonRpc.php:209 include/classes/core/CJsonRpc.php:214
-#: include/classes/core/CJsonRpc.php:219
+#: include/classes/core/CJsonRpc.php:211 include/classes/core/CJsonRpc.php:216
+#: include/classes/core/CJsonRpc.php:221
 msgid "No details"
 msgstr "Geen details"
 
@@ -10151,10 +10151,10 @@ msgstr ""
 #: include/classes/api/services/CHostGroup.php:1027
 #: include/classes/api/services/CHostGroup.php:1141
 #: include/classes/api/services/CHostGroup.php:1160
-#: include/classes/api/services/CHostInterface.php:240
-#: include/classes/api/services/CHostInterface.php:256
-#: include/classes/api/services/CHostInterface.php:399
-#: include/classes/api/services/CHostInterface.php:647
+#: include/classes/api/services/CHostInterface.php:241
+#: include/classes/api/services/CHostInterface.php:261
+#: include/classes/api/services/CHostInterface.php:408
+#: include/classes/api/services/CHostInterface.php:656
 #: include/classes/api/services/CHost.php:1500
 #: include/classes/api/services/CHost.php:1684
 #: include/classes/api/services/CHost.php:1811
@@ -11183,7 +11183,7 @@ msgstr "Bovenliggende webdraaiboeken"
 msgid "Parse SQL error [%1$s] in [%2$s]."
 msgstr ""
 
-#: include/classes/core/CJsonRpc.php:183
+#: include/classes/core/CJsonRpc.php:185
 msgid "Parse error"
 msgstr ""
 
@@ -11363,7 +11363,7 @@ msgstr ""
 msgid "Port"
 msgstr "Poort"
 
-#: include/classes/api/services/CHostInterface.php:631
+#: include/classes/api/services/CHostInterface.php:640
 msgid "Port cannot be empty for host interface."
 msgstr ""
 
@@ -13332,7 +13332,7 @@ msgstr ""
 msgid "System error occurred. Please contact Zabbix administrator."
 msgstr ""
 
-#: include/classes/core/CJsonRpc.php:213
+#: include/classes/core/CJsonRpc.php:215
 msgid "System error."
 msgstr ""
 
@@ -13668,11 +13668,11 @@ msgstr ""
 msgid "The number of processes. Returns integer"
 msgstr ""
 
-#: include/classes/core/CJsonRpc.php:189
+#: include/classes/core/CJsonRpc.php:191
 msgid "The received JSON is not a valid JSON-RPC Request."
 msgstr ""
 
-#: include/classes/core/CJsonRpc.php:194
+#: include/classes/core/CJsonRpc.php:196
 msgid "The requested remote-procedure does not exist / is not available"
 msgstr ""
 
@@ -13849,7 +13849,7 @@ msgstr ""
 msgid "Transform SQL query result into a JSON object for low-level discovery."
 msgstr ""
 
-#: include/classes/core/CJsonRpc.php:218
+#: include/classes/core/CJsonRpc.php:220
 msgid "Transport error."
 msgstr ""
 

@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Zabbix 3.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-01-06 01:42+0200\n"
-"PO-Revision-Date: 2018-11-30 09:18+0300\n"
+"POT-Creation-Date: 2019-01-13 23:35+0200\n"
+"PO-Revision-Date: 2019-01-10 20:39+0300\n"
 "Last-Translator: Oleksiy <zalex_ua@i.ua>\n"
 "Language-Team: Zabbix translation team\n"
 "Language: uk\n"
@@ -13,7 +13,7 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 "X-Generator: Pootle 2.5.1.3\n"
 "X-Poedit-Basepath: ../../\n"
-"X-POOTLE-MTIME: 1543562282.000000\n"
+"X-POOTLE-MTIME: 1547145553.000000\n"
 
 #: include/classes/import/validators/C10XmlValidator.php:358
 #: include/classes/import/validators/C10XmlValidator.php:375
@@ -752,7 +752,7 @@ msgstr[0] "Групу елементів даних видалено"
 msgstr[1] "Групи елементів даних видалено"
 msgstr[2] "Груп елементів даних видалено"
 
-#: include/classes/core/CJsonRpc.php:208
+#: include/classes/core/CJsonRpc.php:210
 msgid "Application error."
 msgstr "Помилка програми."
 
@@ -2251,7 +2251,7 @@ msgstr "Не вдалося задати поля інтентарних дан�
 msgid "Cannot set resource ID for screen element."
 msgstr "Не вдалося встановити ID ресурсу для елемента комплексного екрану."
 
-#: include/classes/api/services/CHostInterface.php:245
+#: include/classes/api/services/CHostInterface.php:246
 msgid "Cannot switch host for interface."
 msgstr "Не вдалося переключити вузел мережі на інтерфейс."
 
@@ -2461,7 +2461,7 @@ msgstr "Не вдалося оновити призначення іконок"
 msgid "Cannot update image"
 msgstr "Не вдалося оновити картинку"
 
-#: include/classes/api/services/CHostInterface.php:318
+#: include/classes/api/services/CHostInterface.php:327
 #, c-format
 msgid "Cannot update interface for discovered host \"%1$s\"."
 msgstr "Не вдалося оновити інтерфейс для виявленого вузла мережі \"%1$s\"."
@@ -4843,7 +4843,7 @@ msgstr "Пусте ім'я вузла мережі."
 #: include/classes/api/services/CGraphPrototype.php:542
 #: include/classes/api/services/CHostGroup.php:416
 #: include/classes/api/services/CHostGroup.php:493
-#: include/classes/api/services/CHostInterface.php:388
+#: include/classes/api/services/CHostInterface.php:397
 #: include/classes/api/services/CHost.php:1155
 #: include/classes/api/services/CHostPrototype.php:929
 #: include/classes/api/services/CIconMap.php:301
@@ -5246,7 +5246,7 @@ msgstr "Розкривання макросів"
 msgid "Expand single problem"
 msgstr "Розгортати одиночну проблему"
 
-#: include/classes/core/CJsonRpc.php:108
+#: include/classes/core/CJsonRpc.php:110
 #, c-format
 msgid "Expecting JSON-rpc version 2.0, \"%s\" is given."
 msgstr "Очікувався JSON-rpc версії 2.0, а отримано \"%s\"."
@@ -6253,7 +6253,7 @@ msgstr "Доступ до вузла мережі"
 msgid "Host added"
 msgstr "Вузел мережі додано"
 
-#: include/classes/api/services/CHostInterface.php:823
+#: include/classes/api/services/CHostInterface.php:832
 msgid "Host cannot have more than one default interface of the same type."
 msgstr "У вузла мережі не може бути більше одного інтерфейсу по замовчуванню однакового типу."
 
@@ -6627,7 +6627,7 @@ msgstr "IP адреса не може бути пустою."
 msgid "IP address range cannot be empty."
 msgstr "Діапазон IP адрес не може бути пустим."
 
-#: include/classes/api/services/CHostInterface.php:268
+#: include/classes/api/services/CHostInterface.php:273
 msgid "IP and DNS cannot be empty for host interface."
 msgstr "IP та DNS не можуть бути пустими для інтерфейсу вузла мережі."
 
@@ -7201,8 +7201,8 @@ msgstr "Функції передано некоректні параметри"
 
 #: include/classes/api/services/CApplication.php:274
 #: include/classes/api/services/CEvent.php:434
-#: include/classes/api/services/CHostInterface.php:235
-#: include/classes/api/services/CHostInterface.php:436
+#: include/classes/api/services/CHostInterface.php:236
+#: include/classes/api/services/CHostInterface.php:445
 #: include/classes/api/services/CItemGeneral.php:204
 #: include/classes/api/services/CMap.php:465
 #: include/classes/api/services/CMap.php:539
@@ -7229,7 +7229,7 @@ msgstr "Функції передано некоректні параметри"
 msgid "Incorrect arguments passed to function."
 msgstr "Функції передано некоректні параметри."
 
-#: include/classes/api/services/CHostInterface.php:263
+#: include/classes/api/services/CHostInterface.php:268
 msgid "Incorrect arguments passed to method."
 msgstr "Некоректні параметри передано методу."
 
@@ -7243,7 +7243,7 @@ msgstr "Некоректний протокол аутентифікації д�
 msgid "Incorrect authentication protocol for item \"%1$s\"."
 msgstr "Некоректний протокол аутентифікації для елемента даних \"%1$s\"."
 
-#: include/classes/api/services/CHostInterface.php:666
+#: include/classes/api/services/CHostInterface.php:675
 msgid "Incorrect bulk value for interface."
 msgstr "Некоректне масове значення для інтерфейсу."
 
@@ -7433,12 +7433,12 @@ msgstr "Некоректний номер картинки."
 msgid "Incorrect input parameters."
 msgstr "Некоректні вхідні параметри."
 
-#: include/classes/api/services/CHostInterface.php:591
+#: include/classes/api/services/CHostInterface.php:600
 #, c-format
 msgid "Incorrect interface DNS parameter \"%s\" provided."
 msgstr "Для інтерфейсу вказано некоректний параметр DNS \"%s\"."
 
-#: include/classes/api/services/CHostInterface.php:634
+#: include/classes/api/services/CHostInterface.php:643
 #, c-format
 msgid "Incorrect interface port \"%s\" provided."
 msgstr "Для інтерфейсу вказано некоректний порт \"%s\"."
@@ -7981,7 +7981,7 @@ msgstr "Ім'я інсталятора"
 msgid "Interface"
 msgstr "Інтерфейс"
 
-#: include/classes/api/services/CHostInterface.php:843
+#: include/classes/api/services/CHostInterface.php:852
 #, c-format
 msgid "Interface is linked to item \"%1$s\" on \"%2$s\"."
 msgstr "Інтерфейс зв'язаний з елементом даних \"%1$s\" у \"%2$s\"."
@@ -7990,18 +7990,18 @@ msgstr "Інтерфейс зв'язаний з елементом даних \"
 msgid "Interface is used by items that require this type of the interface."
 msgstr "Інтерфейс використовується елементами даних, яким потрібен цей тип інтерфейсу."
 
-#: include/classes/api/services/CHostInterface.php:272
+#: include/classes/api/services/CHostInterface.php:277
 #, c-format
 msgid "Interface with DNS \"%1$s\" cannot have empty IP address."
 msgstr "У інтерфейсу з DNS іменем \"%1$s\" не може бути пуста IP адреса."
 
-#: include/classes/api/services/CHostInterface.php:278
-#: include/classes/api/services/CHostInterface.php:285
+#: include/classes/api/services/CHostInterface.php:283
+#: include/classes/api/services/CHostInterface.php:290
 #, c-format
 msgid "Interface with IP \"%1$s\" cannot have empty DNS name while having \"Use DNS\" property on \"%2$s\"."
 msgstr "У інтерфейсу з IP адресою \"%1$s\" не може бути пусте DNS ім'я, коли встановлено \"Використовувати DNS\" у \"%2$s\"."
 
-#: include/classes/api/services/CHostInterface.php:291
+#: include/classes/api/services/CHostInterface.php:296
 #, c-format
 msgid "Interface with IP \"%1$s\" cannot have empty DNS name."
 msgstr "У інтерфейсу з IP адресою \"%1$s\" не може бути пусте DNS ім'я."
@@ -8021,7 +8021,7 @@ msgctxt "user type"
 msgid "Internal"
 msgstr "Внутрішній"
 
-#: include/classes/core/CJsonRpc.php:204
+#: include/classes/core/CJsonRpc.php:206
 msgid "Internal JSON-RPC error."
 msgstr "Внутрішня помилка JSON-RPC."
 
@@ -8029,7 +8029,7 @@ msgstr "Внутрішня помилка JSON-RPC."
 msgid "Internal data storage period (in days)"
 msgstr "Період зберігання внутрішніх даних (в днях)"
 
-#: include/classes/core/CJsonRpc.php:203
+#: include/classes/core/CJsonRpc.php:205
 #: include/classes/import/validators/CXmlValidatorGeneral.php:147
 msgid "Internal error."
 msgstr "Внутрішня помилка."
@@ -8079,11 +8079,11 @@ msgstr "Неправильний діапазон IP адрес \"%1$s\"."
 msgid "Invalid IP address range \"%1$s\": must be a string."
 msgstr "Неправильний діапазон IP адрес \"%1$s\": має бути рядок."
 
-#: include/classes/core/CJsonRpc.php:184
+#: include/classes/core/CJsonRpc.php:186
 msgid "Invalid JSON. An error occurred on the server while parsing the JSON text."
 msgstr "Неправильний JSON. На сервері виникла помилка при аналізі тексту JSON."
 
-#: include/classes/core/CJsonRpc.php:188
+#: include/classes/core/CJsonRpc.php:190
 msgid "Invalid Request."
 msgstr "Неправильний запит."
 
@@ -8252,7 +8252,7 @@ msgstr "Неправильний період обслуговування"
 #: include/classes/api/services/CUser.php:719
 #: include/classes/api/services/CUser.php:877
 #: include/classes/api/services/CUser.php:922
-#: include/classes/core/CJsonRpc.php:199
+#: include/classes/core/CJsonRpc.php:201
 msgid "Invalid method parameters."
 msgstr "Неправильні параметри методу."
 
@@ -8260,7 +8260,7 @@ msgstr "Неправильні параметри методу."
 msgid "Invalid number of parameters."
 msgstr "Неправильна кількість параметрів."
 
-#: include/classes/core/CJsonRpc.php:198
+#: include/classes/core/CJsonRpc.php:200
 msgid "Invalid params."
 msgstr "Неправильні параметри."
 
@@ -8600,20 +8600,20 @@ msgstr "JMX агент"
 msgid "JMX interfaces"
 msgstr "Інтерфейси JMX"
 
-#: include/classes/core/CJsonRpc.php:156
+#: include/classes/core/CJsonRpc.php:158
 #, c-format
 msgid "JSON-rpc error generation failed. No such error \"%s\"."
 msgstr "Не вдалось згенерувати JSON-rpc помилку. Немає такої помилки \"%s\"."
 
-#: include/classes/core/CJsonRpc.php:113
+#: include/classes/core/CJsonRpc.php:115
 msgid "JSON-rpc method is not defined."
 msgstr "JSON-rpc метод не визначено."
 
-#: include/classes/core/CJsonRpc.php:118
+#: include/classes/core/CJsonRpc.php:120
 msgid "JSON-rpc params is not an Array."
 msgstr "JSON-rpc параметри не являються масивом."
 
-#: include/classes/core/CJsonRpc.php:103
+#: include/classes/core/CJsonRpc.php:105
 msgid "JSON-rpc version is not specified."
 msgstr "Версію JSON-rpc не вказано."
 
@@ -9494,7 +9494,7 @@ msgstr "Повідомлення"
 msgid "Messaging"
 msgstr "Повідомлення"
 
-#: include/classes/core/CJsonRpc.php:193
+#: include/classes/core/CJsonRpc.php:195
 msgid "Method not found."
 msgstr "Метод не знайдено."
 
@@ -10022,13 +10022,13 @@ msgstr "Без збору даних"
 msgid "No data found."
 msgstr "Дані не знайдено."
 
-#: include/classes/api/services/CHostInterface.php:819
+#: include/classes/api/services/CHostInterface.php:828
 #, c-format
 msgid "No default interface for \"%1$s\" type on \"%2$s\"."
 msgstr "Відсутній інтерфейс по замовчуванню \"%1$s\" типу у вузла мережі \"%2$s\"."
 
-#: include/classes/core/CJsonRpc.php:209 include/classes/core/CJsonRpc.php:214
-#: include/classes/core/CJsonRpc.php:219
+#: include/classes/core/CJsonRpc.php:211 include/classes/core/CJsonRpc.php:216
+#: include/classes/core/CJsonRpc.php:221
 msgid "No details"
 msgstr "Подробиці відсутні"
 
@@ -10222,10 +10222,10 @@ msgstr "Немає прав доступу до системи."
 #: include/classes/api/services/CHostGroup.php:1027
 #: include/classes/api/services/CHostGroup.php:1141
 #: include/classes/api/services/CHostGroup.php:1160
-#: include/classes/api/services/CHostInterface.php:240
-#: include/classes/api/services/CHostInterface.php:256
-#: include/classes/api/services/CHostInterface.php:399
-#: include/classes/api/services/CHostInterface.php:647
+#: include/classes/api/services/CHostInterface.php:241
+#: include/classes/api/services/CHostInterface.php:261
+#: include/classes/api/services/CHostInterface.php:408
+#: include/classes/api/services/CHostInterface.php:656
 #: include/classes/api/services/CHost.php:1500
 #: include/classes/api/services/CHost.php:1684
 #: include/classes/api/services/CHost.php:1811
@@ -11255,7 +11255,7 @@ msgstr "Батьківські веб сценарії"
 msgid "Parse SQL error [%1$s] in [%2$s]."
 msgstr "Помилка аналізу SQL [%1$s] у [%2$s]."
 
-#: include/classes/core/CJsonRpc.php:183
+#: include/classes/core/CJsonRpc.php:185
 msgid "Parse error"
 msgstr "Помилка розбору"
 
@@ -11435,7 +11435,7 @@ msgstr "Заповнює поле інвентарних даних вузла �
 msgid "Port"
 msgstr "Порт"
 
-#: include/classes/api/services/CHostInterface.php:631
+#: include/classes/api/services/CHostInterface.php:640
 msgid "Port cannot be empty for host interface."
 msgstr "Порт не може бути порожнім для інтерфейсу вузла мережі."
 
@@ -13409,7 +13409,7 @@ msgstr "Системна по замовчуванню"
 msgid "System error occurred. Please contact Zabbix administrator."
 msgstr "Трапилась системна помилка. Зв'яжіться з адміністратором Zabbix."
 
-#: include/classes/core/CJsonRpc.php:213
+#: include/classes/core/CJsonRpc.php:215
 msgid "System error."
 msgstr "Системна помилка."
 
@@ -13747,11 +13747,11 @@ msgstr "Елемент даних більше не виявляється та 
 msgid "The number of processes. Returns integer"
 msgstr "Кількість процесів. Повертає ціле число"
 
-#: include/classes/core/CJsonRpc.php:189
+#: include/classes/core/CJsonRpc.php:191
 msgid "The received JSON is not a valid JSON-RPC Request."
 msgstr "Отриманий JSON не являється правильним запитом JSON-RPC."
 
-#: include/classes/core/CJsonRpc.php:194
+#: include/classes/core/CJsonRpc.php:196
 msgid "The requested remote-procedure does not exist / is not available"
 msgstr "Запитувана віддалена процедура не існує / недоступна"
 
@@ -13929,7 +13929,7 @@ msgstr "Транзакція не була закрита. Скасування.
 msgid "Transform SQL query result into a JSON object for low-level discovery."
 msgstr "Перетворює результат SQL запиту в об'єкт JSON для низькорівневого виявлення."
 
-#: include/classes/core/CJsonRpc.php:218
+#: include/classes/core/CJsonRpc.php:220
 msgid "Transport error."
 msgstr "Помилка транспорту."
 
@@ -16258,7 +16258,7 @@ msgstr "forecast() - Прогноз значення через t секунд �
 
 #: popup_trexpr.php:286
 msgid "fuzzytime() - Difference between item value (as timestamp) and Zabbix server timestamp is less than or equal to T seconds (1 - true, 0 - false)"
-msgstr ""
+msgstr "fuzzytime() - Різниця між значенням елементу даних (як штамп часу) та штампом часу Zabbix сервера є меншою за або дорівнює T секунд (1 - істина, 0 - фальш)"
 
 #: include/views/configuration.item.edit.php:331
 #: include/views/configuration.item.edit.php:336
