@@ -648,7 +648,7 @@ else {
 		$filter_name = '';
 		$filter_priority = [];
 		$filter_groupids = [];
-		$filter_hostids = [];
+		$filter_hostids = getRequest('filter_hostids', CProfile::getArray('web.triggers.filter_hostids', []));
 		$filter_state = -1;
 		$filter_status = -1;
 		$filter_value = -1;
@@ -867,7 +867,9 @@ else {
 		CProfile::delete('web.triggers.filter_name');
 		CProfile::delete('web.triggers.filter_priority');
 		CProfile::delete('web.triggers.filter_groupids');
-		CProfile::delete('web.triggers.filter_hostids');
+		if (count($filter_hostids) != 1) {
+			CProfile::delete('web.triggers.filter_hostids');
+		}
 		CProfile::delete('web.triggers.filter_state');
 		CProfile::delete('web.triggers.filter_status');
 		CProfile::delete('web.triggers.filter.evaltype');
