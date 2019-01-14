@@ -97,6 +97,7 @@ static int	DBpatch_4010006(void)
 		return FAIL;
 
 	return SUCCEED;
+}
 
 #endif
 
