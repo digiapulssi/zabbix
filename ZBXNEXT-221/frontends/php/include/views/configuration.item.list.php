@@ -72,10 +72,6 @@ $itemTable = (new CTableInfo())
 		$data['showInfoColumn'] ? _('Info') : null
 	]);
 
-if (!$this->data['filterSet']) {
-	$itemTable->setNoDataMessage(_('Specify some filter condition to see the items.'));
-}
-
 $current_time = time();
 
 $this->data['itemTriggers'] = CMacrosResolverHelper::resolveTriggerExpressions($this->data['itemTriggers'], [

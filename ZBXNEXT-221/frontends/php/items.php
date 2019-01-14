@@ -1713,15 +1713,7 @@ else {
 		$options['filter']['ipmi_sensor'] = $_REQUEST['filter_ipmi_sensor'];
 	}
 
-	$data['filterSet'] = ($filter_hostids || $preFilter != count($options, COUNT_RECURSIVE));
-	if ($data['filterSet']) {
-		// unset($options['hostids']);
-		$data['items'] = API::Item()->get($options);
-	}
-	else {
-		$data['items'] = [];
-	}
-
+	$data['items'] = API::Item()->get($options);
 	$data['parent_templates'] = [];
 
 	// Set values for subfilters, if any of subfilters = false then item shouldn't be shown.

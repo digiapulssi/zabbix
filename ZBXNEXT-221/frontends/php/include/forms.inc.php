@@ -823,7 +823,7 @@ function getItemFilterForm(&$items) {
 	// output
 	if (zbx_empty($filter_hostids) && count($item_params['hosts']) > 1) {
 		$hosts_output = prepareSubfilterOutput(_('Hosts'), $item_params['hosts'], $subfilter_hosts, 'subfilter_hosts');
-		$table_subfilter->addRow($hosts_output);
+		$table_subfilter->addRow([$hosts_output]);
 	}
 
 	if (!empty($item_params['applications']) && count($item_params['applications']) > 1) {
