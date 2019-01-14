@@ -57,7 +57,7 @@ static const wchar_t	*RENDER_ITEMS[] = {
 
 /* open event logger and return number of records */
 static int	zbx_open_eventlog(LPCTSTR wsource, HANDLE *eventlog_handle, zbx_uint64_t *FirstID,
-		zbx_uint64_t *LastID)
+		zbx_uint64_t *LastID, DWORD *dwErr)
 {
 	const char	*__function_name = "zbx_open_eventlog";
 	wchar_t		reg_path[MAX_PATH];
@@ -73,16 +73,23 @@ static int	zbx_open_eventlog(LPCTSTR wsource, HANDLE *eventlog_handle, zbx_uint6
 	StringCchPrintf(reg_path, MAX_PATH, EVENTLOG_REG_PATH TEXT("%s"), wsource);
 
 	if (ERROR_SUCCESS != RegOpenKeyEx(HKEY_LOCAL_MACHINE, reg_path, 0, KEY_READ, &hk))
+	{
+		*dwErr = GetLastError();
 		goto out;
+	}
 
 	RegCloseKey(hk);
 
 	if (NULL == (*eventlog_handle = OpenEventLog(NULL, wsource)))	/* open log file */
+	{
+		*dwErr = GetLastError();
 		goto out;
+	}
 
 	if (0 == GetNumberOfEventLogRecords(*eventlog_handle, &dwNumRecords) ||
 			0 == GetOldestEventLogRecord(*eventlog_handle, &dwOldestRecord))
 	{
+		*dwErr = GetLastError();
 		CloseEventLog(*eventlog_handle);
 		*eventlog_handle = NULL;
 		goto out;
@@ -416,6 +423,7 @@ static int	process_eventlog_5(const char *eventlog_name, zbx_uint64_t *lastlogsi
 	HANDLE		eventlog_handle;
 	wchar_t 	*weventlog_name;
 	zbx_uint64_t	i, FirstID, LastID;
+	DWORD		dwErr;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() eventlog_name:'%s' lastlogsize:" ZBX_FS_UI64, __function_name,
 			eventlog_name, *lastlogsize);
@@ -437,10 +445,10 @@ static int	process_eventlog_5(const char *eventlog_name, zbx_uint64_t *lastlogsi
 
 	weventlog_name = zbx_utf8_to_unicode(eventlog_name);
 
-	if (SUCCEED != zbx_open_eventlog(weventlog_name, &eventlog_handle, &FirstID, &LastID))
+	if (SUCCEED != zbx_open_eventlog(weventlog_name, &eventlog_handle, &FirstID, &LastID, &dwErr))
 	{
 		zabbix_log(LOG_LEVEL_ERR, "cannot open eventlog '%s': %s", eventlog_name,
-				strerror_from_system(GetLastError()));
+				strerror_from_system(dwErr));
 		goto out;
 	}
 
