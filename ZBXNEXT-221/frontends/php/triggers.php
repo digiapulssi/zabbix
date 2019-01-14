@@ -627,7 +627,8 @@ else {
 
 	$filter_groupids_ms = [];
 	$filter_hostids_ms = [];
-	if (getRequest('filter_set')) {
+
+	if (getRequest('filter_set') || (hasRequest('hostid') && !hasRequest('form_refresh'))) {
 		$filter_inherited = getRequest('filter_inherited', -1);
 		$filter_discovered = getRequest('filter_discovered', -1);
 		$filter_dependent = getRequest('filter_dependent', -1);
@@ -699,7 +700,6 @@ else {
 
 	$show_info_column = false;
 	$show_value_column = false;
-	// -- end declaration
 
 	foreach ($hosts as $host) {
 		if ($host['status'] == HOST_STATUS_MONITORED || $host['status'] == HOST_STATUS_NOT_MONITORED) {
@@ -770,7 +770,12 @@ else {
 	}
 
 	if ($filter_hostids) {
-		$filter_hostids_ms = CArrayHelper::renameObjectsKeys($hosts, ['hostid' => 'id']);
+		$filter_hostids_ms = CArrayHelper::renameObjectsKeys(API::Host()->get([
+			'output' => ['hostid', 'name'],
+			'hostids' => $filter_hostids,
+			'templated_hosts' => true,
+			'preservekeys' => true
+		]), ['hostid' => 'id']);
 	}
 
 	$triggers = API::Trigger()->get($options);
