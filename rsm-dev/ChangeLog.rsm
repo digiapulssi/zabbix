@@ -3,6 +3,12 @@ Changes for rsm1.2.0alpha1
 New features:
 
 --------------------------------------------------------------------------------
+Changes for rsm1.1.0rc50
+
+Bug fixes:
+..F....... [452] made IPV6 addresses to be displayed in compressed form (miks)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.1.0rc49
 
 Bug fixes:
