@@ -58,6 +58,13 @@ EOF
 
 set_slv_config(get_rsm_config());
 db_connect();
+
+my %valuemaps;
+
+$valuemaps{'dns'} = get_valuemaps('dns');
+$valuemaps{'rdds43'} = $valuemaps{'rdds80'} = get_valuemaps('rdds');
+$valuemaps{'rdap'} = get_valuemaps('rdap');
+
 dw_csv_init();
 dw_load_ids_from_db();
 
@@ -159,6 +166,16 @@ sub __translate_tests_line
 	my $test_nsfqdn = dw_get_name(ID_NS_NAME, $columns[10]) || '';
 	my $tld_type = dw_get_name(ID_TLD_TYPE, $columns[11]);
 
+	# $test_type is service interface, e. g.: dns, rdds43, rdds80
+	if ($valuemaps{$test_type}->{$test_rtt})
+	{
+		$test_rtt .= " (" . $valuemaps{$test_type}->{$test_rtt} . ")";
+	}
+	elsif ($test_rtt >= 0)
+	{
+		$test_rtt .= " ms";
+	}
+
 	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'probeName', $probe_name);
 	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'cycleDateMinute', ts_full($cycle_date_minute));
 	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'testDateTime', ts_full($test_date_time));
@@ -191,7 +208,7 @@ sub __translate_ns_tests_line
 	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'nsFQDN', $ns_fqdn);
 	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'nsTestTLD', $ns_test_tld);
 	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'cycleDateMinute', ts_full($cycle_date_minute));
-	printf("%-" . PRINT_RIGHT_SHIFT . "s%s (%s)\n", 'nsTestStatus', $ns_test_status, $columns[2]);
+	printf("%-" . PRINT_RIGHT_SHIFT . "s%s (%s)\n", 'nsTestStatus', $ns_test_status, $columns[4]);
 	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'tldType', $tld_type);
 	printf("%-" . PRINT_RIGHT_SHIFT . "s%s\n", 'testProtocol', $ns_test_protocol);
 }

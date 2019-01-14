@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# DNSSEC proper resolution
+# DNSSEC availability
 
 BEGIN
 {
@@ -14,7 +14,9 @@ use RSM;
 use RSMSLV;
 use TLD_constants qw(:ec :api);
 
-my $cfg_key_in = 'rsm.dns.udp.rtt[';
+use constant MAX_CYCLES	=> 5;
+
+my $cfg_keys_in_pattern = 'rsm.dns.udp.rtt[';
 my $cfg_key_out = 'rsm.slv.dnssec.avail';
 my $cfg_value_type = ITEM_VALUE_TYPE_FLOAT;
 
@@ -25,28 +27,13 @@ set_slv_config(get_rsm_config());
 
 db_connect();
 
-my $interval = get_macro_dns_udp_delay();
+# we don't know the rollweek bounds yet so we assume it ends at least few minutes back
+my $delay = get_dns_udp_delay(getopt('now') // time() - AVAIL_SHIFT_BACK);
+
+my (undef, undef, $max_clock) = get_cycle_bounds($delay, getopt('now'));
+
 my $cfg_minonline = get_macro_dns_probe_online();
-
 my $cfg_minns = get_macro_minns();
-
-my $now = time();
-
-my $clock = (opt('from') ? getopt('from') : $now - $interval - AVAIL_SHIFT_BACK);
-my $period = (opt('period') ? getopt('period') : 1);
-
-# in normal operation mode
-if (!opt('period') && !opt('from'))
-{
-	# only calculate once a cycle
-	if (truncate_from($clock) % $interval != 0)
-	{
-		dbg("will NOT calculate");
-		slv_exit(SUCCESS);
-	}
-}
-
-my $max_avail_time = max_avail_time($now);
 
 my $tlds_ref;
 if (opt('tld'))
@@ -57,48 +44,37 @@ if (opt('tld'))
 }
 else
 {
-        $tlds_ref = get_tlds('DNSSEC');	# todo phase 1: add parameter ENABLED_DNSSEC
+        $tlds_ref = get_tlds('DNSSEC', $max_clock);
 }
 
-while ($period > 0)
-{
-	my ($from, $till, $value_ts) = get_interval_bounds($interval, $clock);
+slv_exit(SUCCESS) if (scalar(@{$tlds_ref}) == 0);
 
-	dbg("selecting period ", selected_period($from, $till), " (value_ts:", ts_str($value_ts), ")");
+my $cycles_ref = collect_slv_cycles($tlds_ref, $delay, $cfg_key_out, $max_clock, MAX_CYCLES);
 
-	$period -= $interval / 60;
-	$clock += $interval;
+slv_exit(SUCCESS) if (scalar(keys(%{$cycles_ref})) == 0);
 
-	next if ($till > $max_avail_time);
+my $probes_ref = get_probes('DNS');
 
-	my @online_probe_names = keys(%{get_probe_times($from, $till, get_probes('DNSSEC'))});	# todo phase 1: change to ENABLED_DNSSEC
-
-	init_values();
-
-	foreach (@$tlds_ref)
-	{
-		$tld = $_;
-
-		if (avail_value_exists($value_ts, get_itemid_by_host($tld, $cfg_key_out)) == SUCCESS)
-		{
-			# value already exists
-			next unless (opt('dry-run'));
-		}
-
-		# get all rtt items
-		my $rtt_keys_in = get_templated_items_like($tld, $cfg_key_in);
-
-		process_slv_avail($tld, $rtt_keys_in, $cfg_key_out, $from, $till, $value_ts, $cfg_minonline,
-			\@online_probe_names, \&check_probe_values, $cfg_value_type);
-	}
-
-	# unset TLD (for the logs)
-	$tld = undef;
-
-	send_values();
-}
+process_slv_avail_cycles(
+	$cycles_ref,
+	$probes_ref,
+	$delay,
+	undef,			# input keys are unknown
+	\&cfg_keys_in_cb,	# callback to get input keys
+	$cfg_key_out,
+	$cfg_minonline,
+	\&check_probe_values,
+	$cfg_value_type
+);
 
 slv_exit(SUCCESS);
+
+sub cfg_keys_in_cb($)
+{
+	my $tld = shift;
+
+	return get_templated_items_like($tld, $cfg_keys_in_pattern);
+}
 
 # SUCCESS - more than or equal to $cfg_minns Name Servers returned no DNSSEC errors
 # E_FAIL  - otherwise
@@ -139,8 +115,7 @@ sub check_probe_values
 
 		foreach my $rtt (@{$values_ref->{$key}})
 		{
-			$name_servers{$ns} = (ZBX_EC_DNS_NS_ERRSIG == $rtt || ZBX_EC_DNS_RES_NOADBIT == $rtt ?
-				DOWN : UP);
+			$name_servers{$ns} = (is_service_error('dnssec', $rtt) ? DOWN : UP);
 		}
 	}
 

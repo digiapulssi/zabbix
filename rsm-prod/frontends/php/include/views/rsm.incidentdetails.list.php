@@ -89,18 +89,31 @@ foreach ($data['tests'] as $test) {
 		$startEndIncident = SPACE;
 	}
 
-	$value = $test['value'] ? _('Up') : _('Down');
+	$value = array_key_exists($test['value'], $data['test_value_mapping'])
+		? (new CSpan($data['test_value_mapping'][$test['value']]))->setAttribute('class', $test['value'] == PROBE_DOWN ? 'red' : 'green')
+		: '';
+
+	if ($data['type'] == RSM_DNS || $data['type'] == RSM_DNSSEC) {
+		$details_link = new CLink(
+			_('aggregate details'),
+			'rsm.aggregatedetails.php?slvItemId='.$data['slvItemId'].'&tld_host='.$data['tld']['host'].
+				'&time='.$test['clock'].'&type='.$data['type']
+		);
+	}
+	else {
+		$details_link = new CLink(
+			_('details'),
+			'rsm.particulartests.php?slvItemId='.$data['slvItemId'].'&host='.$data['tld']['host'].
+				'&time='.$test['clock'].'&type='.$data['type']
+		);
+	}
 
 	$row = [
 		$startEndIncident,
 		date(DATE_TIME_FORMAT_SECONDS, $test['clock']),
 		$value,
 		isset($test['slv']) ? $test['slv'].'%' : '-',
-		new CLink(
-			_('details'),
-			'rsm.particulartests.php?slvItemId='.$data['slvItemId'].'&host='.$data['tld']['host'].
-				'&time='.$test['clock'].'&type='.$data['type']
-		)
+		$details_link
 	];
 
 	$table->addRow($row);
@@ -129,13 +142,21 @@ else {
 
 $testsInfoTable = (new CTable(null))->addClass('incidents-info');
 
+if ($data['type'] == RSM_RDDS) {
+	$incidentTestingInterface = [BR(), new CSpan([bold(_('Current testing interface')), ':', SPACE, $data['testing_interfaces']])];
+}
+else {
+	$incidentTestingInterface = null;
+}
+
 $testsInfoTable->addRow([
 	[
 		new CSpan([bold(_('TLD')), ':', SPACE, $this->data['tld']['name']]),
 		BR(),
 		new CSpan([bold(_('Service')), ':', SPACE, $data['slvItem']['name']]),
 		BR(),
-		new CSpan([bold(_('Incident type')), ':', SPACE, $incidentType])
+		new CSpan([bold(_('Incident type')), ':', SPACE, $incidentType]),
+		$incidentTestingInterface
 	],
 	[
 		(new CSpan(_s('%1$s Rolling week status', $this->data['slv'].'%')))->addClass('rolling-week-status'),

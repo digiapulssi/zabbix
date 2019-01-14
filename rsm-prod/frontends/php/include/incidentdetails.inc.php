@@ -38,3 +38,20 @@ function getFirstUintValue($itemId, $startTime) {
 
 	return $query ? $query['value'] : 0;
 }
+
+/**
+ * Returned boolean indicates either passed value is valid DNS error code.
+ *
+ * @param int $item_value	Error code.
+ * @param int $type		Type of service, e. g. RSM_DNS, RSM_DNSSEC etc.
+ *
+ * @return bool
+ */
+function isServiceErrorCode($item_value, $type) {
+	if ($type == RSM_DNSSEC) {
+		return (ZBX_EC_DNS_UDP_DNSKEY_NONE <= $item_value && $item_value <= ZBX_EC_DNS_UDP_RES_NOADBIT);
+	}
+	else {
+		return ($item_value < ZBX_EC_INTERNAL_LAST);
+	}
+}

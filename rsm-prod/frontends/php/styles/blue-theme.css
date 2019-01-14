@@ -408,6 +408,8 @@ footer, .footer {
   background-color: #fff;
   border-collapse: separate;
   border: 1px solid #dfe4e7; }
+  .list-table.table-bordered-head thead th {
+    border-left: 2px solid #dce2e5; }
   .list-table thead th {
     color: #768d99;
     height: 100%;
@@ -417,6 +419,8 @@ footer, .footer {
     vertical-align: bottom;
     border-bottom: 2px solid #dce2e5;
     text-align: left; }
+    .list-table thead th.center {
+      text-align: center; }
     .list-table thead th .arrow-up {
       margin: 0 0 0 3px;
       border-bottom-color: #768d99; }
@@ -2504,19 +2508,39 @@ tr.cursor-move td * {
 	vertical-align: middle;
 	height: 14px;
 	width: 14px;
-	background-repeat:no-repeat;
-	margin: 0 1px 3px 1px;
-}
+  background-repeat: no-repeat;
+  margin: 0 1px 3px 1px; }
 
-.iconrollingweekok		{ background-image: url('../images/general/rolling_week_ok.png');}
-.iconrollingweekfail	{ background-image: url('../images/general/rolling_week_fail.png');}
-.iconrollingweekdisabled{ background-image: url('../images/general/rolling_week_disabled.png');}
-.incidents-info { width: 100%; }
-.rolling-week-status { font-size: 16px; font-weight: bold; float: right; }
-.rsm-date-time { float: right; }
-.first-row-element { width: 300px; display: inline-block; }
-.first-cell-value { width: 65px; display: inline-block; }
-.disabled-service { margin-left: 66px; }
+.iconrollingweekok {
+  background-image: url("../images/general/rolling_week_ok.png"); }
+
+.iconrollingweekfail {
+  background-image: url("../images/general/rolling_week_fail.png"); }
+
+.iconrollingweekdisabled {
+  background-image: url("../images/general/rolling_week_disabled.png"); }
+
+.incidents-info {
+  width: 100%; }
+
+.rolling-week-status {
+  font-size: 16px;
+  font-weight: bold;
+  float: right; }
+
+.rsm-date-time {
+  float: right; }
+
+.first-row-element {
+  width: 300px;
+  display: inline-block; }
+
+.first-cell-value {
+  width: 65px;
+  display: inline-block; }
+
+.disabled-service {
+  margin-left: 66px; }
 
 /*doc
 ---

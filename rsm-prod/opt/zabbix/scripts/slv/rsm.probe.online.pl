@@ -52,7 +52,7 @@ foreach my $probe (keys(%$probes_ref))
 
 	fail(rsm_slv_error()) unless ($itemid);
 
-	next if (!opt('dry-run') && uint_value_exists($value_ts, $itemid) == SUCCESS);
+	next if (!opt('dry-run') && uint_value_exists($value_ts, $itemid));
 
 	my @result = grep(/^$probe$/, @online_probes);
 	my $status = (@result ? UP : DOWN);

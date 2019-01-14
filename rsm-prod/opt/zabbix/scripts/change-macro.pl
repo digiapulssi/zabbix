@@ -1,10 +1,13 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl
 
 BEGIN
 {
 	our $MYDIR = $0; $MYDIR =~ s,(.*)/.*,$1,; $MYDIR = '.' if ($MYDIR eq $0);
 }
 use lib $MYDIR;
+
+use strict;
+use warnings;
 
 use RSM;
 use RSMSLV;
@@ -24,9 +27,16 @@ my $config = get_rsm_config();
 set_slv_config($config);
 
 my @server_keys = get_rsm_server_keys($config);
+
 foreach (@server_keys)
 {
 	$server_key = $_;
+
+	if (opt('dry-run'))
+	{
+		print("would set global macro $macro=$value no central server $server_key\n");
+		next;
+	}
 
 	db_connect($server_key);
 

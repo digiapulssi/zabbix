@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# RDDS minutes of downtime at current month
+# Minutes of RDDS downtime during running month
 
 BEGIN
 {
@@ -13,56 +13,41 @@ use warnings;
 use RSM;
 use RSMSLV;
 
+use constant MAX_CYCLES	=> 2;
+
 my $cfg_key_in = 'rsm.slv.rdds.avail';
 my $cfg_key_out = 'rsm.slv.rdds.downtime';
 
-parse_opts();
+parse_opts('tld=s', 'now=n');
 exit_if_running();
 
 set_slv_config(get_rsm_config());
 
 db_connect();
 
-my ($from, $till, $value_ts) = get_downtime_bounds();
+# we don't know the rollweek bounds yet so we assume it ends at least few minutes back
+my $delay = get_rdds_delay(getopt('now') // time() - ROLLWEEK_SHIFT_BACK);
 
-my %tld_items;
+my (undef, undef, $max_clock) = get_cycle_bounds($delay, getopt('now'));
 
-my $tlds_ref = get_tlds('RDDS');
-
-# just collect itemids
-foreach (@$tlds_ref)
+my $tlds_ref;
+if (opt('tld'))
 {
-	$tld = $_; # set global variable here
+        fail("TLD ", getopt('tld'), " does not exist.") if (tld_exists(getopt('tld')) == 0);
 
-	if (uint_value_exists($value_ts, get_itemid_by_host($tld, $cfg_key_out)) == SUCCESS)
-	{
-		# value already exists
-		next unless (opt('dry-run'));
-	}
-
-	# for future calculation of downtime
-	$tld_items{$tld} = get_itemid_by_host($tld, $cfg_key_in);
+        $tlds_ref = [ getopt('tld') ];
+}
+else
+{
+	$tlds_ref = get_tlds('RDDS', $max_clock);
 }
 
-init_values();
+slv_exit(SUCCESS) if (scalar(@{$tlds_ref}) == 0);
 
-# use bind for faster execution of the same SQL query
-my $sth = get_downtime_prepare();
+my $cycles_ref = collect_slv_cycles($tlds_ref, $delay, $cfg_key_out, $max_clock, MAX_CYCLES);
 
-foreach (keys(%tld_items))
-{
-	$tld = $_; # set global variable here
+slv_exit(SUCCESS) if (scalar(keys(%{$cycles_ref})) == 0);
 
-	my $itemid = $tld_items{$tld};
-
-	my $downtime = get_downtime_execute($sth, $itemid, $from, $till, 1); # ignore incidents
-
-	push_value($tld, $cfg_key_out, $value_ts, $downtime, ts_str($from), " - ", ts_str($till));
-}
-
-# unset TLD (for the logs)
-$tld = undef;
-
-send_values();
+process_slv_downtime_cycles($cycles_ref, $delay, $cfg_key_in, $cfg_key_out);
 
 slv_exit(SUCCESS);

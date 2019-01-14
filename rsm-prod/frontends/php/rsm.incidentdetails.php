@@ -218,13 +218,25 @@ if ($mainEvent) {
 				'output' => API_OUTPUT_EXTEND,
 				'hostids' => $template['templateid'],
 				'filter' => array(
-					'macro' => array(RSM_TLD_RDDS43_ENABLED, RSM_TLD_RDDS80_ENABLED, RSM_TLD_RDAP_ENABLED)
+					'macro' => array(RSM_TLD_RDDS43_ENABLED, RSM_TLD_RDDS80_ENABLED, RSM_TLD_RDAP_ENABLED,
+						RSM_RDAP_TLD_ENABLED, RSM_TLD_RDDS_ENABLED
+					)
 				)));
 
 				$data['tld']['subservices'] = [];
+				$ok_rdds_services = [];
 				foreach ($template_macros as $template_macro) {
 					$data['tld']['subservices'][$template_macro['macro']] = $template_macro['value'];
+
+					if ($template_macro['macro'] === RSM_TLD_RDDS_ENABLED && $template_macro['value'] != 0) {
+						$ok_rdds_services[] = 'RDDS';
+					}
+					elseif ($template_macro['macro'] === RSM_RDAP_TLD_ENABLED && $template_macro['value'] != 0) {
+						$ok_rdds_services[] = 'RDAP';
+					}
 				}
+
+				$data['testing_interfaces'] = implode(' / ', $ok_rdds_services);
 			break;
 		case RSM_SLV_EPP_ROLLWEEK:
 			$keys = array(CALCULATED_ITEM_EPP_FAIL, CALCULATED_ITEM_EPP_DELAY);
@@ -257,6 +269,8 @@ if ($mainEvent) {
 	}
 
 	$mainEventFromTime = $mainEvent['clock'] - $mainEvent['clock'] % $delayTime - ($failCount - 1) * $delayTime;
+	$original_main_event_from_time = $mainEventFromTime;
+	$mainEventFromTime -= (DISPLAY_CYCLES_BEFORE_RECOVERY * $delayTime);
 
 	if (getRequest('filter_set')) {
 		$fromTime = ($mainEventFromTime >= zbxDateToTime($data['filter_from']))
@@ -284,7 +298,7 @@ if ($mainEvent) {
 	));
 
 	if ($endEvent) {
-		$endEventToTime = $endEvent['clock'] - $endEvent['clock'] % $delayTime + $delayTime;
+		$endEventToTime = $endEvent['clock'] - ($endEvent['clock'] % $delayTime) + (DISPLAY_CYCLES_AFTER_RECOVERY * $delayTime);
 		if (getRequest('filter_set')) {
 			$toTime = ($endEventToTime >= zbxDateToTime($data['filter_to']))
 				? zbxDateToTime($data['filter_to'])
@@ -326,14 +340,19 @@ if ($mainEvent) {
 	);
 
 	$data['tests'] = [];
+	$printed = []; // Prevent listing of repeated tests before incident start time. This can happen right after delay is changed.
 	while ($test = DBfetch($tests)) {
-		$data['tests'][] = array(
-			'clock' => $test['clock'] - $test['clock'] % $delayTime,
-			'value' => $test['value'],
-			'startEvent' => $mainEvent['clock'] == $test['clock'] ? true : false,
-			'endEvent' => $endEvent && $endEvent['clock'] == $test['clock'] ? $endEvent['value'] : TRIGGER_VALUE_TRUE
-		);
+		if ($test['clock'] > $original_main_event_from_time || !array_key_exists($test['clock'], $printed)) {
+			$printed[$test['clock']] = true;
+			$data['tests'][] = array(
+				'clock' => $test['clock'],
+				'value' => $test['value'],
+				'startEvent' => $mainEvent['clock'] == $test['clock'] ? true : false,
+				'endEvent' => $endEvent && $endEvent['clock'] == $test['clock'] ? $endEvent['value'] : TRIGGER_VALUE_TRUE
+			);
+		}
 	}
+	unset($printed);
 
 	$slvs = DBselect(
 		'SELECT h.value,h.clock'.
@@ -350,7 +369,7 @@ if ($mainEvent) {
 		while ($slv) {
 			$latest = $slv;
 
-			if (!($slv = DBfetch($slvs)) || $slv['clock'] > $test['clock'] + $delayTime) {
+			if (!($slv = DBfetch($slvs)) || $slv['clock'] > $test['clock']) {
 				$test['slv'] = sprintf('%.3f', $latest['value']);
 				break;
 			}
@@ -358,6 +377,22 @@ if ($mainEvent) {
 	}
 
 	$data['paging'] = getPagingLine($data['tests'], ZBX_SORT_UP, new CUrl());
+
+	if ($data['tests']) {
+		$data['test_value_mapping'] = [];
+
+		$test_value_mapping = API::ValueMap()->get([
+			'output' => [],
+			'selectMappings' => ['value', 'newvalue'],
+			'valuemapids' => [RSM_SERVICE_AVAIL_VALUE_MAP]
+		]);
+
+		if ($test_value_mapping) {
+			foreach ($test_value_mapping[0]['mappings'] as $val) {
+				$data['test_value_mapping'][$val['value']] = $val['newvalue'];
+			}
+		}
+	}
 }
 
 $rsmView = new CView('rsm.incidentdetails.list', $data);

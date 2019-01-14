@@ -64,7 +64,6 @@ static void	DCdump_config(ZBX_DC_CONFIG *config)
 
 	zabbix_log(LOG_LEVEL_TRACE, "  trends, mode:%u global:%u period:%d", config->config->hk.trends_mode,
 			config->config->hk.trends_global, config->config->hk.trends);
-
 out:
 	zabbix_log(LOG_LEVEL_TRACE, "End of %s()", __function_name);
 }
@@ -749,6 +748,7 @@ static void	DCdump_probe(const ZBX_DC_CONFIG *config)
 
 	zabbix_log(LOG_LEVEL_TRACE, "In %s()", __function_name);
 	zabbix_log(LOG_LEVEL_TRACE, "probe_online_since:%d probe_last_status:%d", (int)config->probe_online_since, (int)config->probe_last_status);
+	zabbix_log(LOG_LEVEL_TRACE, "rsm_errors:" ZBX_FS_UI64, config->rsm_errors);
 	zabbix_log(LOG_LEVEL_TRACE, "End of %s()", __function_name);
 }
 

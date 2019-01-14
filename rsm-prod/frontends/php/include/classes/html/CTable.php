@@ -80,6 +80,14 @@ class CTable extends CTag {
 		return $this;
 	}
 
+	public function setMultirowHeader($row_items = null, $column_count = 1) {
+		$row_items = new CTag('thead', true, $row_items);
+		$this->header = $row_items->toString();
+		$this->colnum = $column_count;
+
+		return $this;
+	}
+
 	public function setFooter($value = null, $class = null) {
 		$this->footer = $this->prepareRow($value, $class);
 		$this->footer = $this->footer->toString();

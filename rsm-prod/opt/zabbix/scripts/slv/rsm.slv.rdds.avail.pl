@@ -14,7 +14,10 @@ use RSM;
 use RSMSLV;
 use TLD_constants qw(:api);
 
-my $cfg_key_in = 'rsm.rdds[{$RSM.TLD}';
+use constant MAX_CYCLES	=> 2;
+
+my $cfg_keys_in_pattern = 'rsm.rdds[{$RSM.TLD}';
+my $cfg_rdap_key_in = 'rdap[';
 my $cfg_key_out = 'rsm.slv.rdds.avail';
 my $cfg_value_type = ITEM_VALUE_TYPE_UINT64;
 
@@ -25,26 +28,12 @@ set_slv_config(get_rsm_config());
 
 db_connect();
 
-my $interval = get_macro_rdds_delay();
+# we don't know the rollweek bounds yet so we assume it ends at least few minutes back
+my $delay = get_rdds_delay(getopt('now') // time() - AVAIL_SHIFT_BACK);
+
+my (undef, undef, $max_clock) = get_cycle_bounds($delay, getopt('now'));
+
 my $cfg_minonline = get_macro_rdds_probe_online();
-
-my $now = time();
-
-my $clock = (opt('from') ? getopt('from') : $now - $interval - AVAIL_SHIFT_BACK);
-my $period = (opt('period') ? getopt('period') : 1);
-
-# in normal operation mode
-if (!opt('period') && !opt('from'))
-{
-	# only calculate once a cycle
-	if (truncate_from($clock) % $interval != 0)
-	{
-		dbg("will NOT calculate");
-		slv_exit(SUCCESS);
-	}
-}
-
-my $max_avail_time = max_avail_time($now);
 
 my $tlds_ref;
 if (opt('tld'))
@@ -55,48 +44,47 @@ if (opt('tld'))
 }
 else
 {
-	$tlds_ref = get_tlds('RDDS');	# todo phase 1: change to ENABLED_RDDS
+	$tlds_ref = get_tlds('RDDS', $max_clock);
 }
 
-while ($period > 0)
-{
-	my ($from, $till, $value_ts) = get_interval_bounds($interval, $clock);
+slv_exit(SUCCESS) if (scalar(@{$tlds_ref}) == 0);
 
-	dbg("selecting period ", selected_period($from, $till), " (value_ts:", ts_str($value_ts), ")");
+my $cycles_ref = collect_slv_cycles($tlds_ref, $delay, $cfg_key_out, $max_clock, MAX_CYCLES);
 
-	$period -= $interval / 60;
-	$clock += $interval;
+slv_exit(SUCCESS) if (scalar(keys(%{$cycles_ref})) == 0);
 
-	next if ($till > $max_avail_time);
+my $probes_ref = get_probes('RDDS');
 
-	my @online_probe_names = keys(%{get_probe_times($from, $till, get_probes('RDDS'))});	# todo phase 1: change to ENABLED_RDDS
-
-	init_values();
-
-	foreach (@$tlds_ref)
-	{
-		$tld = $_;
-
-		if (avail_value_exists($value_ts, get_itemid_by_host($tld, $cfg_key_out)) == SUCCESS)
-		{
-			# value already exists
-			next unless (opt('dry-run'));
-		}
-
-		# get all rtt items
-		my $rdds_key_in = get_templated_items_like($tld, $cfg_key_in);
-
-		process_slv_avail($tld, $rdds_key_in, $cfg_key_out, $from, $till, $value_ts, $cfg_minonline,
-			\@online_probe_names, \&check_probe_values, $cfg_value_type);
-	}
-
-	# unset TLD (for the logs)
-	$tld = undef;
-
-	send_values();
-}
+process_slv_avail_cycles(
+	$cycles_ref,
+	$probes_ref,
+	$delay,
+	undef,			# input keys are unknown
+	\&cfg_keys_in_cb,	# callback to get input keys
+	$cfg_key_out,
+	$cfg_minonline,
+	\&check_probe_values,
+	$cfg_value_type
+);
 
 slv_exit(SUCCESS);
+
+my $rdap_items;
+
+sub cfg_keys_in_cb($)
+{
+	my $tld = shift;
+
+	$rdap_items = get_templated_items_like("RDAP", $cfg_rdap_key_in) unless (defined($rdap_items));
+
+	# get all RDDS rtt items
+	my $cfg_keys_in = get_templated_items_like($tld, $cfg_keys_in_pattern);
+
+	# add RDAP rtt items
+	push(@{$cfg_keys_in}, $_) foreach (@{$rdap_items});
+
+	return $cfg_keys_in;
+}
 
 # SUCCESS - no values or at least one successful value
 # E_FAIL  - all values unsuccessful
@@ -108,6 +96,7 @@ sub check_probe_values
 	#
 	# {
 	#       rsm.rdds[{$RSM.TLD},"rdds43.example.com","web.whois.example.com"] => [1],
+	#       rdap[...] => [0, 0],
 	# }
 
 	if (scalar(keys(%{$values_ref})) == 0)
@@ -115,13 +104,14 @@ sub check_probe_values
 		fail("THIS SHOULD NEVER HAPPEN rsm.slv.rdds.avail.pl:check_probe_values()");
 	}
 
+	# all of received items (rsm.rdds, rdap) must have status UP in order for RDDS to be considered UP
 	foreach my $statuses (values(%{$values_ref}))
 	{
 		foreach (@{$statuses})
 		{
-			return SUCCESS if ($_ == UP);
+			return E_FAIL if ($_ != UP);
 		}
 	}
 
-	return E_FAIL;
+	return SUCCESS;
 }

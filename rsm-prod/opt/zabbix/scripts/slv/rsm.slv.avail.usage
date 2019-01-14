@@ -4,23 +4,15 @@ rsm.slv.*.avail.pl - scripts to calculate different service status results and s
 
 =head1 SYNOPSIS
 
-rsm.slv.*.avail.pl [--from <timestamp>] [--period minutes] [--dry-run] [--warnslow <seconds>] [--debug] [--help]
+rsm.slv.*.avail.pl [--now <timestamp>] [--dry-run] [--warnslow <seconds>] [--debug] [--help]
 
 =head1 OPTIONS
 
 =over 8
 
-=item B<--from> timestamp
+=item B<--now> timestamp
 
-Specify Unix timestamp within the oldest test cycle to handle in this run. You don't need to specify the
-first second of the test cycle, any timestamp within it will work. Number of minutes to handle within
-this run can be specified using option --period otherwise all completed test cycles available in the
-database up till now will be handled.
-
-=item B<--period> minutes
-
-Specify number minutes of the period to handle during this run. The first cycle to handle can be specified
-using options --from or --continue (continue from the last time when --continue was used) (see below).
+Specify Unix timestamp within cycle that needs to be calculated.
 
 =item B<--dry-run>
 
@@ -48,6 +40,6 @@ time periods when cron was not running.
 
 =head1 EXAMPLES
 
-./rsm.slv.*.avail.pl --from 1420063200 --period 10
+./rsm.slv.dns.avail.pl --now 1420063200
 
 =cut

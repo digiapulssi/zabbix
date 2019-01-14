@@ -598,6 +598,9 @@ define('SCREEN_MAX_SIZE', 100);
 
 define('DEFAULT_LATEST_ISSUES_CNT', 20);
 
+// See comment in profile.php why it was introduced.
+define('DEFAULT_LATEST_DATA_SEARCH_LIMIT', 1000);
+
 // alignments
 define('HALIGN_DEFAULT',	0);
 define('HALIGN_CENTER',		0);
@@ -1283,11 +1286,13 @@ define('RSM_ROLLWEEK_SECONDS',		'{$RSM.ROLLWEEK.SECONDS}');
 define('RSM_MIN_DNS_COUNT',			'{$RSM.DNS.AVAIL.MINNS}');
 define('RSM_DNS_UDP_DELAY',			'{$RSM.DNS.UDP.DELAY}');
 define('RSM_RDDS_DELAY',			'{$RSM.RDDS.DELAY}');
+define('RSM_RDDS_ENABLED',			'{$RSM.RDDS.ENABLED}');
 define('RSM_TLD_DNSSEC_ENABLED',	'{$RSM.TLD.DNSSEC.ENABLED}');
 define('RSM_TLD_EPP_ENABLED',		'{$RSM.TLD.EPP.ENABLED}');
 define('RSM_TLD_RDDS_ENABLED',		'{$RSM.TLD.RDDS.ENABLED}');
 define('RSM_TLD_RDDS43_ENABLED',	'{$RSM.TLD.RDDS43.ENABLED}');
 define('RSM_TLD_RDDS80_ENABLED',	'{$RSM.TLD.RDDS80.ENABLED}');
+define('RSM_RDAP_TLD_ENABLED',		'{$RDAP.TLD.ENABLED}');
 define('RSM_TLD_RDAP_ENABLED',		'{$RSM.TLD.RDAP.ENABLED}');
 define('RSM_SLV_NS_AVAIL',			'{$RSM.SLV.NS.AVAIL}');
 define('RSM_SLV_DNS_TCP_RTT',		'{$RSM.SLV.DNS.TCP.RTT}');
@@ -1304,6 +1309,9 @@ define('RSM_SLV_EPP_INFO',			'{$RSM.SLV.EPP.INFO}');
 define('RSM_EPP_INFO_RTT_LOW',		'{$RSM.EPP.INFO.RTT.LOW}');
 define('RSM_SLV_EPP_UPDATE',		'{$RSM.SLV.EPP.UPDATE}');
 define('RSM_EPP_UPDATE_RTT_LOW',	'{$RSM.EPP.UPDATE.RTT.LOW}');
+define('RDAP_BASE_URL',				'{$RDAP.BASE.URL}');
+define('RDDS_ENABLED',				'rdds.enabled');
+define('RDAP_ENABLED',				'rdap.enabled');
 
 // SLA monitoring rolling week items keys
 define('RSM_SLV_DNS_ROLLWEEK',		'rsm.slv.dns.rollweek');
@@ -1389,12 +1397,9 @@ define('INCIDENT_FLAG_NORMAL',			0);
 define('INCIDENT_FLAG_FALSE_POSITIVE',	1);
 
 // SLA monitoring incident status
-define('ZBX_EC_DNS_NS_NOREPLY',		-200);
-define('ZBX_EC_DNS_NS_ERRSIG',		-204);
-define('ZBX_EC_DNS_RES_NOREPLY',	-205);
-define('ZBX_EC_DNS_RES_NOADBIT',	-206);
-
-define('MIN_PROBE_OK_RESULT_PERCENTAGE',	49);
+define('ZBX_EC_INTERNAL_LAST',		-199);
+define('ZBX_EC_DNS_UDP_RES_NOADBIT',	-401);
+define('ZBX_EC_DNS_UDP_DNSKEY_NONE',	-428);
 
 // SLA monitoring calculated items keys
 define('CALCULATED_ITEM_DNS_FAIL',				'rsm.configvalue[RSM.INCIDENT.DNS.FAIL]');
@@ -1420,6 +1425,10 @@ define('CALCULATED_DNS_ROLLWEEK_SLA',			'rsm.configvalue[RSM.DNS.ROLLWEEK.SLA]')
 define('CALCULATED_RDDS_ROLLWEEK_SLA',			'rsm.configvalue[RSM.RDDS.ROLLWEEK.SLA]');
 define('CALCULATED_EPP_ROLLWEEK_SLA',			'rsm.configvalue[RSM.EPP.ROLLWEEK.SLA]');
 
+// Number of test cycles to show before and after incident recovery event.
+define('DISPLAY_CYCLES_AFTER_RECOVERY',		6); // (including recovery event)
+define('DISPLAY_CYCLES_BEFORE_RECOVERY',	3);
+
 // SLA monitoring probe status items keys
 define('PROBE_KEY_ONLINE',			'rsm.probe.online');
 define('PROBE_DNS_UDP_ITEM',		'rsm.dns.udp[{$RSM.TLD}]');
@@ -1432,11 +1441,13 @@ define('PROBE_EPP_INFO',			'rsm.epp.rtt[{$RSM.TLD},info]');
 define('PROBE_EPP_LOGIN',			'rsm.epp.rtt[{$RSM.TLD},login]');
 define('PROBE_RDDS43_IP',			'rsm.rdds.43.ip[{$RSM.TLD}]');
 define('PROBE_RDDS43_RTT',			'rsm.rdds.43.rtt[{$RSM.TLD}]');
-define('PROBE_RDDS43_UPD',			'rsm.rdds.43.upd[{$RSM.TLD}]');
 define('PROBE_RDDS80_IP',			'rsm.rdds.80.ip[{$RSM.TLD}]');
 define('PROBE_RDDS80_RTT',			'rsm.rdds.80.rtt[{$RSM.TLD}]');
-define('PROBE_RDAP_IP',				'rsm.rdds.rdap.ip[{$RSM.TLD}]');
-define('PROBE_RDAP_RTT',			'rsm.rdds.rdap.rtt[{$RSM.TLD}]');
+//define('PROBE_RDAP_IP',			'rsm.rdds.rdap.ip[{$RSM.TLD}]');  // deprecated
+//define('PROBE_RDAP_RTT',			'rsm.rdds.rdap.rtt[{$RSM.TLD}]'); // deprecated
+define('PROBE_RDAP_ITEM',			'rdap[');
+define('PROBE_RDAP_IP',				'rdap.ip');
+define('PROBE_RDAP_RTT',			'rdap.rtt');
 
 // SLA monitoring NS names
 define('NS_NO_RESULT',	0);
@@ -1444,8 +1455,13 @@ define('NS_DOWN',		1);
 define('NS_UP',			2);
 
 // SLA monitoring probe status
+define('PROBE_OFFLINE',	-1);
 define('PROBE_DOWN',	0);
 define('PROBE_UP',		1);
+
+// NameServer status
+define('NAMESERVER_DOWN',	0);
+define('NAMESERVER_UP',		1);
 
 // SLA monitoring monthly reports item
 define('MONTHLY_REPORTS_APPLICATION',	'SLV monthly');
@@ -1474,7 +1490,13 @@ define('RSM_G_TLD_GROUP',		'gTLD');
 define('RSM_OTHER_TLD_GROUP',	'otherTLD');
 define('RSM_TEST_GROUP',		'testTLD');
 
+define('RSM_RDDS_SUBSERVICE_RDDS', 'RDDS43/80');
+define('RSM_RDDS_SUBSERVICE_RDAP', 'RDAP');
+
 define('PROBES_MON_GROUPID',	130);
+define('RSM_SERVICE_AVAIL_VALUE_MAP', 110);
+define('RSM_DNS_RTT_ERRORS_VALUE_MAP', 120);
+define('RSM_RDDS_RTT_ERRORS_VALUE_MAP', 130);
 
 // if magic quotes on, then get rid of them
 if (get_magic_quotes_gpc()) {

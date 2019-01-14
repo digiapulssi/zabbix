@@ -495,6 +495,9 @@ void	DCset_probe_last_status(char status);
 time_t	DCget_probe_online_since(void);
 char	DCget_probe_last_status(void);
 
+void		zbx_dc_rsm_errors_inc(void);
+zbx_uint64_t	zbx_dc_rsm_errors_get(void);
+
 void zbx_dc_update_proxy_lastaccess(zbx_uint64_t hostid, int lastaccess);
 
 #endif
