@@ -151,7 +151,7 @@ else {
 
 $testsInfoTable->addRow([
 	[
-		new CSpan([bold(_('TLD')), ':', SPACE, $this->data['tld']['name']]),
+		new CSpan([bold($data['registrar_mode'] ? _('REGISTRAR ID') : _('TLD')), ':', SPACE, $this->data['tld']['name']]),
 		BR(),
 		new CSpan([bold(_('Service')), ':', SPACE, $data['slvItem']['name']]),
 		BR(),

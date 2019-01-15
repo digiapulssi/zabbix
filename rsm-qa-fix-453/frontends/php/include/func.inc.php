@@ -2312,3 +2312,49 @@ function zbx_err_handler($errno, $errstr, $errfile, $errline) {
 	// Don't show the call to this handler function.
 	error($errstr.' ['.CProfiler::getInstance()->formatCallStack().']');
 }
+
+/**
+ * Return current state of registry monitoring. For performance reasons function utilizes static value to cache status.
+ *
+ * @return int
+ */
+function get_registry_monitoring_state() {
+	static $state;
+
+	if ($state === null) {
+		$db_macro = API::UserMacro()->get([
+			'output' => ['value'],
+			'filter' => ['macro' => REGISTRY_MONITORING_STATE],
+			'globalmacro' => true
+		]);
+
+		if ($db_macro) {
+			$state = $db_macro[0]['value'];
+		}
+	}
+
+	return (int) $state;
+}
+
+/**
+ * Return current state of registrar monitoring. For performance reasons function utilizes static value to cache status.
+ *
+ * @return int
+ */
+function get_registrar_monitoring_state() {
+	static $state;
+
+	if ($state === null) {
+		$db_macro = API::UserMacro()->get([
+			'output' => ['value'],
+			'filter' => ['macro' => REGISTRAR_MONITORING_STATE],
+			'globalmacro' => true
+		]);
+
+		if ($db_macro) {
+			$state = $db_macro[0]['value'];
+		}
+	}
+
+	return (int) $state;
+}

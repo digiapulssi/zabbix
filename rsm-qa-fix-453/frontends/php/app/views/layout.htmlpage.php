@@ -78,6 +78,17 @@ function local_generateHeader($data) {
 	// should be replaced with addPostJS() at some point
 	zbx_add_post_js('initMessages({});');
 
+	// Show error message if none or both registrar and registry monitoring are enabled.
+	$registry_monitoring_state = get_registry_monitoring_state();
+	$registrar_monitoring_state = get_registrar_monitoring_state();
+	if (!($registry_monitoring_state ^ $registrar_monitoring_state)) {
+		$error_msg = ($registry_monitoring_state && $registrar_monitoring_state)
+			? _('Both registrar and registry monitoring enabled.')
+			: _('Both registrar and registry monitoring disabled.');
+
+		error($error_msg);
+	}
+
 	// if a user logs in after several unsuccessful attempts, display a warning
 	if ($failedAttempts = CProfile::get('web.login.attempt.failed', 0)) {
 		$attempt_ip = CProfile::get('web.login.attempt.ip', '');

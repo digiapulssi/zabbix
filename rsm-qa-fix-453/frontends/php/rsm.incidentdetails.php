@@ -147,6 +147,7 @@ $tld = API::Host()->get(array(
 
 if ($tld) {
 	$data['tld'] = reset($tld);
+	$data['registrar_mode'] = (bool) get_registrar_monitoring_state();
 }
 else {
 	access_deny();

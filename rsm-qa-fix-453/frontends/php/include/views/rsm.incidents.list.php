@@ -31,8 +31,9 @@ $filterColumn2 = new CFormList();
 $filterColumn3 = new CFormList();
 $filterColumn4 = new CFormList();
 
+$searach_field_label = $data['registrar_mode'] ? _('REGISTRAR ID') : _('TLD');
 $filterColumn1
-	->addRow(_('TLD'), (new CTextBox('filter_search', $this->data['filter_search']))
+	->addRow($searach_field_label, (new CTextBox('filter_search', $this->data['filter_search']))
 		->setWidth(ZBX_TEXTAREA_FILTER_SMALL_WIDTH)
 		->setAttribute('autocomplete', 'off')
 	);
@@ -60,7 +61,7 @@ if (isset($this->data['tld'])) {
 	$dateFrom = date(DATE_TIME_FORMAT, zbxDateToTime($this->data['filter_from']));
 	$dateTill = date(DATE_TIME_FORMAT, zbxDateToTime($this->data['filter_to']));
 	$infoBlock->addRow([[
-		bold(_('TLD')),
+		bold($data['registrar_mode'] ? _('REGISTRAR ID') : _('TLD')),
 		':',
 		SPACE,
 		$this->data['tld']['name'],
@@ -99,7 +100,10 @@ if (isset($this->data['tld'])) {
 	}
 
 	// DNS
-	if (isset($this->data['dns']['events'])) {
+	if ($data['registrar_mode']) {
+		unset($dnsTab);
+	}
+	elseif (isset($this->data['dns']['events'])) {
 		$dnsInfoTable = (new CTable(null))->addClass('incidents-info');
 
 		$dnsTable = new CTableInfo($noData);
@@ -183,7 +187,10 @@ if (isset($this->data['tld'])) {
 	}
 
 	// DNSSEC
-	if (isset($this->data['dnssec']['events'])) {
+	if ($data['registrar_mode']) {
+		unset($dnssecTab);
+	}
+	elseif (isset($this->data['dnssec']['events'])) {
 		$dnssecInfoTable = (new CTable(null))->addClass('incidents-info');
 
 		$dnssecTable = new CTableInfo($noData);
@@ -351,7 +358,10 @@ if (isset($this->data['tld'])) {
 	}
 
 	// EPP
-	if (isset($this->data['epp']['events'])) {
+	if ($data['registrar_mode']) {
+		unset($eppTab);
+	}
+	elseif (isset($this->data['epp']['events'])) {
 		$eppInfoTable = (new CTable(null))->addClass('incidents-info');
 
 		$eppTable = new CTableInfo($noData);
@@ -434,11 +444,15 @@ if (isset($this->data['tld'])) {
 		$eppTab->additem(new CDiv(bold(_('EPP is disabled.')), 'red center'));
 	}
 
-	$incidentPage->addTab('dnsTab', _('DNS'), $dnsTab);
-	$incidentPage->addTab('dnssecTab', _('DNSSEC'), $dnssecTab);
-	$incidentPage->addTab('rddsTab', _('RDDS'), $rddsTab);
-	$incidentPage->addTab('eppTab', _('EPP'), $eppTab);
-
+	if ($data['registrar_mode']) {
+		$incidentPage->addTab('rddsTab', _('RDDS'), $rddsTab);
+	}
+	else {
+		$incidentPage->addTab('dnsTab', _('DNS'), $dnsTab);
+		$incidentPage->addTab('dnssecTab', _('DNSSEC'), $dnssecTab);
+		$incidentPage->addTab('rddsTab', _('RDDS'), $rddsTab);
+		$incidentPage->addTab('eppTab', _('EPP'), $eppTab);
+	}
 }
 else {
 	$incidentPage = new CTableInfo(_('No TLD defined.'));

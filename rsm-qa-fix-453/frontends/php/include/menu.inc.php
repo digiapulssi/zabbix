@@ -33,6 +33,10 @@
  *	'sub_pages' = collection of pages for displaying but not remembered as last visited.
  */
 function zbx_construct_menu(&$main_menu, &$sub_menus, &$page, $action = null) {
+	// Get current registrar and registry monitoring state.
+	$registry_monitoring_state = get_registry_monitoring_state();
+	$registrar_monitoring_state = get_registrar_monitoring_state();
+
 	$zbx_menu = [
 		'view' => [
 			'label' => _('Monitoring'),
@@ -129,7 +133,7 @@ function zbx_construct_menu(&$main_menu, &$sub_menus, &$page, $action = null) {
 			]
 		],
 		'rsm' => array(
-			'label'				=> _('Registry monitoring'),
+			'label'				=> $registrar_monitoring_state ? _('Registrar monitoring') : _('Registry monitoring'),
 			'user_type'			=> [USER_TYPE_READ_ONLY, USER_TYPE_ZABBIX_USER, USER_TYPE_POWER_USER,
 				USER_TYPE_COMPLIANCE, USER_TYPE_ZABBIX_ADMIN, USER_TYPE_SUPER_ADMIN
 			],
@@ -364,6 +368,11 @@ function zbx_construct_menu(&$main_menu, &$sub_menus, &$page, $action = null) {
 	$denied_page_requested = false;
 	$page_exists = false;
 	$deny = true;
+
+	// Don't show Registry/Registrar monitoring menu if both are disabled or enabled at the same time.
+	if (!($registry_monitoring_state ^ $registrar_monitoring_state)) {
+		unset($zbx_menu['rsm']);
+	}
 
 	foreach ($zbx_menu as $label => $menu) {
 		$show_menu = true;
