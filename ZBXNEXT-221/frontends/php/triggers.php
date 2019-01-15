@@ -919,7 +919,7 @@ else {
 		'filter_dependent' => $filter_dependent,
 		'show_info_column' => $show_info_column,
 		'show_value_column' => $show_value_column,
-		'show_header_host_table' => (count($filter_hostids) == 1),
+		'show_header_host_table' => (count($filter_hostids) != 1),
 		'parent_templates' => getTriggerParentTemplates($triggers, ZBX_FLAG_DISCOVERY_NORMAL),
 		'paging' => getPagingLine($triggers, $sortorder, $url),
 		'dep_triggers' => $dep_triggers,

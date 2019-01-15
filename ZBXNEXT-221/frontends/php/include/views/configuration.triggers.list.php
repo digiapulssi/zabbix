@@ -166,7 +166,7 @@ $filter = (new CFilter(new CUrl('triggers.php')))
 $widget = (new CWidget())
 	->setTitle(_('Triggers'))
 	->setControls(new CList([
-		(new CTag('nav', true, ($data['show_header_host_table'])
+		(new CTag('nav', true, (!$data['show_header_host_table'])
 			? new CRedirectButton(_('Create trigger'), (new CUrl('triggers.php'))
 				->setArgument('hostid', $data['hostid'])
 				->setArgument('form', 'create')
@@ -199,7 +199,7 @@ $triggers_table = (new CTableInfo())->setHeader([
 	))->addClass(ZBX_STYLE_CELL_WIDTH),
 	make_sorting_header(_('Severity'), 'priority', $data['sort'], $data['sortorder'], $url),
 	$data['show_value_column'] ? _('Value') : null,
-	$data['hostid'] === null ? _('Host') : null,
+	$data['show_header_host_table'] ? _('Host') : null,
 	make_sorting_header(_('Name'), 'description', $data['sort'], $data['sortorder'], $url),
 	_('Expression'),
 	make_sorting_header(_('Status'), 'status', $data['sort'], $data['sortorder'], $url),
@@ -286,7 +286,7 @@ foreach ($data['triggers'] as $tnum => $trigger) {
 
 	// hosts
 	$hosts = null;
-	if ($data['hostid'] === null) {
+	if ($data['show_header_host_table']) {
 		foreach ($trigger['hosts'] as $hostid => $host) {
 			if (!empty($hosts)) {
 				$hosts[] = ', ';
