@@ -56,10 +56,10 @@ static const wchar_t	*RENDER_ITEMS[] = {
 #define	EVENTLOG_REG_PATH TEXT("SYSTEM\\CurrentControlSet\\Services\\EventLog\\")
 
 /* open event logger and return number of records */
-static int	zbx_open_eventlog(LPCTSTR wsource, HANDLE *eventlog_handle, zbx_uint64_t *FirstID,
+static int	zbx_open_eventlog_5(LPCTSTR wsource, HANDLE *eventlog_handle, zbx_uint64_t *FirstID,
 		zbx_uint64_t *LastID, DWORD *dwErr)
 {
-	const char	*__function_name = "zbx_open_eventlog";
+	const char	*__function_name = "zbx_open_eventlog_5";
 	wchar_t		reg_path[MAX_PATH];
 	HKEY		hk = NULL;
 	DWORD		dwNumRecords, dwOldestRecord;
@@ -109,7 +109,7 @@ out:
 }
 
 /* close event logger */
-static void	zbx_close_eventlog(HANDLE eventlog_handle)
+static void	zbx_close_eventlog_5(HANDLE eventlog_handle)
 {
 	if (NULL != eventlog_handle)
 		CloseEventLog(eventlog_handle);
@@ -117,7 +117,7 @@ static void	zbx_close_eventlog(HANDLE eventlog_handle)
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_get_message_files                                            *
+ * Function: zbx_get_message_files_5                                          *
  *                                                                            *
  * Purpose: gets event message and parameter translation files from registry  *
  *                                                                            *
@@ -127,8 +127,8 @@ static void	zbx_close_eventlog(HANDLE eventlog_handle)
  *             pParamMessageFile - [OUT] the parameter message file           *
  *                                                                            *
  ******************************************************************************/
-static void	zbx_get_message_files(const wchar_t *szLogName, const wchar_t *szSourceName, wchar_t **pEventMessageFile,
-		wchar_t **pParamMessageFile)
+static void	zbx_get_message_files_5(const wchar_t *szLogName, const wchar_t *szSourceName,
+		wchar_t **pEventMessageFile, wchar_t **pParamMessageFile)
 {
 	wchar_t	buf[MAX_PATH];
 	HKEY	hKey = NULL;
@@ -165,7 +165,7 @@ static void	zbx_get_message_files(const wchar_t *szLogName, const wchar_t *szSou
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_load_message_file                                            *
+ * Function: zbx_load_message_file_5                                          *
  *                                                                            *
  * Purpose: load the specified message file, expanding environment variables  *
  *          in the file name if necessary                                     *
@@ -175,7 +175,7 @@ static void	zbx_get_message_files(const wchar_t *szLogName, const wchar_t *szSou
  * Return value: Handle to the loaded library or NULL otherwise               *
  *                                                                            *
  ******************************************************************************/
-static HINSTANCE	zbx_load_message_file(const wchar_t *szFileName)
+static HINSTANCE	zbx_load_message_file_5(const wchar_t *szFileName)
 {
 	wchar_t		*dll_name = NULL;
 	long int	sz, len = 0;
@@ -203,7 +203,7 @@ static HINSTANCE	zbx_load_message_file(const wchar_t *szFileName)
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_format_message                                               *
+ * Function: zbx_format_message_5                                             *
  *                                                                            *
  * Purpose: extracts the specified message from a message file                *
  *                                                                            *
@@ -217,7 +217,7 @@ static HINSTANCE	zbx_load_message_file(const wchar_t *szFileName)
  *           must be freed by the caller later.                               *
  *                                                                            *
  ******************************************************************************/
-static char	*zbx_format_message(HINSTANCE hLib, DWORD dwMessageId, wchar_t **pInsertStrings)
+static char	*zbx_format_message_5(HINSTANCE hLib, DWORD dwMessageId, wchar_t **pInsertStrings)
 {
 	wchar_t *pMsgBuf = NULL;
 	char	*message;
@@ -240,7 +240,7 @@ static char	*zbx_format_message(HINSTANCE hLib, DWORD dwMessageId, wchar_t **pIn
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_translate_message_params                                     *
+ * Function: zbx_translate_message_params_5                                   *
  *                                                                            *
  * Purpose: translates message by replacing parameters %%<id> with translated *
  *          values                                                            *
@@ -249,7 +249,7 @@ static char	*zbx_format_message(HINSTANCE hLib, DWORD dwMessageId, wchar_t **pIn
  *             hLib    - [IN] the parameter message file handle               *
  *                                                                            *
  ******************************************************************************/
-static void	zbx_translate_message_params(char **message, HINSTANCE hLib)
+static void	zbx_translate_message_params_5(char **message, HINSTANCE hLib)
 {
 	char	*param, *pstart, *pend;
 	int	dwMessageId;
@@ -269,7 +269,7 @@ static void	zbx_translate_message_params(char **message, HINSTANCE hLib)
 
 		offset = pend - *message - 1;
 
-		if (NULL != (param = zbx_format_message(hLib, dwMessageId, NULL)))
+		if (NULL != (param = zbx_format_message_5(hLib, dwMessageId, NULL)))
 		{
 			zbx_replace_string(message, pstart - *message, &offset, param);
 
@@ -281,11 +281,11 @@ static void	zbx_translate_message_params(char **message, HINSTANCE hLib)
 #define MAX_INSERT_STRS 100
 
 /* get Nth error from event log. 1 is the first. */
-static int	zbx_get_eventlog_message(const wchar_t *wsource, HANDLE eventlog_handle, DWORD which, char **out_source,
-		char **out_message, unsigned short *out_severity, unsigned long *out_timestamp,
+static int	zbx_get_eventlog_message_5(const wchar_t *wsource, HANDLE eventlog_handle, DWORD which,
+		char **out_source, char **out_message, unsigned short *out_severity, unsigned long *out_timestamp,
 		unsigned long *out_eventid)
 {
-	const char	*__function_name = "zbx_get_eventlog_message";
+	const char	*__function_name = "zbx_get_eventlog_message_5";
 	int		buffer_size = 512;
 	EVENTLOGRECORD	*pELR = NULL;
 	DWORD		dwRead, dwNeeded, dwErr;
@@ -325,7 +325,7 @@ static int	zbx_get_eventlog_message(const wchar_t *wsource, HANDLE eventlog_hand
 	*out_source = zbx_unicode_to_utf8((wchar_t *)(pELR + 1));	/* copy source name */
 
 	/* get message file names */
-	zbx_get_message_files(wsource, (wchar_t *)(pELR + 1), &pEventMessageFile, &pParamMessageFile);
+	zbx_get_message_files_5(wsource, (wchar_t *)(pELR + 1), &pEventMessageFile, &pParamMessageFile);
 
 	/* prepare insert string array */
 	if (0 < pELR->NumStrings)
@@ -349,15 +349,15 @@ static int	zbx_get_eventlog_message(const wchar_t *wsource, HANDLE eventlog_hand
 			pNextFile++;
 		}
 
-		if (NULL != (hLib = zbx_load_message_file(pFile)))
+		if (NULL != (hLib = zbx_load_message_file_5(pFile)))
 		{
-			if (NULL != (*out_message = zbx_format_message(hLib, pELR->EventID, aInsertStrings)))
+			if (NULL != (*out_message = zbx_format_message_5(hLib, pELR->EventID, aInsertStrings)))
 			{
 				err = SUCCEED;
 
-				if (NULL != (hParamLib = zbx_load_message_file(pParamMessageFile)))
+				if (NULL != (hParamLib = zbx_load_message_file_5(pParamMessageFile)))
 				{
-					zbx_translate_message_params(out_message, hParamLib);
+					zbx_translate_message_params_5(out_message, hParamLib);
 					FreeLibrary(hParamLib);
 				}
 			}
@@ -445,7 +445,7 @@ static int	process_eventlog_5(const char *eventlog_name, zbx_uint64_t *lastlogsi
 
 	weventlog_name = zbx_utf8_to_unicode(eventlog_name);
 
-	if (SUCCEED != zbx_open_eventlog(weventlog_name, &eventlog_handle, &FirstID, &LastID, &dwErr))
+	if (SUCCEED != zbx_open_eventlog_5(weventlog_name, &eventlog_handle, &FirstID, &LastID, &dwErr))
 	{
 		zabbix_log(LOG_LEVEL_ERR, "cannot open eventlog '%s': %s", eventlog_name,
 				strerror_from_system(dwErr));
@@ -477,7 +477,7 @@ static int	process_eventlog_5(const char *eventlog_name, zbx_uint64_t *lastlogsi
 		/* convert to DWORD to handle possible event record number wraparound */
 		DWORD	dwRecordNumber = (DWORD)i;
 
-		if (SUCCEED == zbx_get_eventlog_message(weventlog_name, eventlog_handle, dwRecordNumber, out_source,
+		if (SUCCEED == zbx_get_eventlog_message_5(weventlog_name, eventlog_handle, dwRecordNumber, out_source,
 				out_message, out_severity, out_timestamp, out_eventid))
 		{
 			/* storing full (not truncated to DWORD) lastlogsize value makes  */
@@ -487,7 +487,7 @@ static int	process_eventlog_5(const char *eventlog_name, zbx_uint64_t *lastlogsi
 		}
 	}
 finish:
-	zbx_close_eventlog(eventlog_handle);
+	zbx_close_eventlog_5(eventlog_handle);
 	ret = SUCCEED;
 out:
 	zbx_free(weventlog_name);
@@ -497,10 +497,10 @@ out:
 }
 
 /* open eventlog using API 6 and return the number of records */
-static int	zbx_open_eventlog6(const wchar_t *wsource, zbx_uint64_t *lastlogsize, EVT_HANDLE *render_context,
+static int	zbx_open_eventlog_6(const wchar_t *wsource, zbx_uint64_t *lastlogsize, EVT_HANDLE *render_context,
 		zbx_uint64_t *FirstID, zbx_uint64_t *LastID, char **error)
 {
-	const char	*__function_name = "zbx_open_eventlog6";
+	const char	*__function_name = "zbx_open_eventlog_6";
 	EVT_HANDLE	log;
 	EVT_VARIANT	var;
 	EVT_HANDLE	tmp_all_event_query = NULL;
@@ -623,10 +623,10 @@ out:
 }
 
 /* get handles of eventlog */
-static int	zbx_get_handle_eventlog6(const wchar_t *wsource, zbx_uint64_t *lastlogsize, EVT_HANDLE *query,
+static int	zbx_get_handle_eventlog_6(const wchar_t *wsource, zbx_uint64_t *lastlogsize, EVT_HANDLE *query,
 		char **error)
 {
-	const char	*__function_name = "zbx_get_handle_eventlog6";
+	const char	*__function_name = "zbx_get_handle_eventlog_6";
 	wchar_t		*event_query = NULL;
 	char		*tmp_str = NULL;
 	int		ret = FAIL;
@@ -682,13 +682,13 @@ static int	initialize_eventlog_6(const char *eventlog_name, zbx_uint64_t *lastlo
 
 	weventlog_name = zbx_utf8_to_unicode(eventlog_name);
 
-	if (SUCCEED != zbx_open_eventlog6(weventlog_name, lastlogsize, render_context, FirstID, LastID, error))
+	if (SUCCEED != zbx_open_eventlog_6(weventlog_name, lastlogsize, render_context, FirstID, LastID, error))
 	{
 		zabbix_log(LOG_LEVEL_ERR, "cannot open eventlog '%s'", eventlog_name);
 		goto out;
 	}
 
-	if (SUCCEED != zbx_get_handle_eventlog6(weventlog_name, lastlogsize, query, error))
+	if (SUCCEED != zbx_get_handle_eventlog_6(weventlog_name, lastlogsize, query, error))
 	{
 		zabbix_log(LOG_LEVEL_ERR, "cannot get eventlog handle '%s'", eventlog_name);
 		goto out;
@@ -703,9 +703,9 @@ out:
 }
 
 /* expand the string message from a specific event handler */
-static char	*expand_message6(const wchar_t *pname, EVT_HANDLE event)
+static char	*expand_message_6(const wchar_t *pname, EVT_HANDLE event)
 {
-	const char	*__function_name = "expand_message6";
+	const char	*__function_name = "expand_message_6";
 	wchar_t		*pmessage = NULL;
 	EVT_HANDLE	provider = NULL;
 	DWORD		require = 0;
@@ -763,11 +763,11 @@ out:
 }
 
 /* obtain a particular message from a desired eventlog */
-static int	zbx_get_eventlog_message6(const wchar_t *wsource, zbx_uint64_t *which, unsigned short *out_severity,
+static int	zbx_get_eventlog_message_6(const wchar_t *wsource, zbx_uint64_t *which, unsigned short *out_severity,
 		unsigned long *out_timestamp, char **out_provider, char **out_source, char **out_message,
 		unsigned long *out_eventid, EVT_HANDLE *render_context, EVT_HANDLE *query, zbx_uint64_t *keywords)
 {
-	const char		*__function_name = "zbx_get_eventlog_message6";
+	const char		*__function_name = "zbx_get_eventlog_message_6";
 	EVT_HANDLE		event_bookmark = NULL;
 	EVT_VARIANT*		renderedContent = NULL;
 	const wchar_t		*pprovider = NULL;
@@ -844,7 +844,7 @@ static int	zbx_get_eventlog_message6(const wchar_t *wsource, zbx_uint64_t *which
 	*out_severity = VAR_LEVEL(renderedContent);
 	*out_timestamp = (unsigned long)((VAR_TIME_CREATED(renderedContent) - sec_1970) / 10000000);
 	*out_eventid = VAR_EVENT_ID(renderedContent);
-	*out_message = expand_message6(pprovider, event_bookmark);
+	*out_message = expand_message_6(pprovider, event_bookmark);
 
 	tmp_str = zbx_unicode_to_utf8(wsource);
 
@@ -959,7 +959,7 @@ static int	process_eventlog_6(const char *source, zbx_uint64_t *lastlogsize, uns
 	/* cycle through the new records */
 	for (i = reading_startpoint; i < *LastID; i++)
 	{
-		if (SUCCEED == zbx_get_eventlog_message6(wsource, &i, out_severity, out_timestamp, out_provider,
+		if (SUCCEED == zbx_get_eventlog_message_6(wsource, &i, out_severity, out_timestamp, out_provider,
 				out_source, out_message, out_eventid, render_context, query, keywords))
 		{
 			/* update lastlogsize only if we really did read eventlog message */
@@ -1004,7 +1004,7 @@ static int	finalize_eventlog_6(EVT_HANDLE *render_context, EVT_HANDLE *query)
 	return ret;
 }
 
-LONG WINAPI	DelayLoadDllExceptionFilter(PEXCEPTION_POINTERS excpointers)
+LONG WINAPI	DelayLoadDllExceptionFilter_6(PEXCEPTION_POINTERS excpointers)
 {
 	LONG		disposition = EXCEPTION_EXECUTE_HANDLER;
 	PDelayLoadInfo	delayloadinfo = (PDelayLoadInfo)(excpointers->ExceptionRecord->ExceptionInformation[0]);
@@ -1190,7 +1190,7 @@ int	process_eventlog(const char *eventlog_name, zbx_uint64_t *lastlogsize, zbx_u
 
 			finalize_eventlog_6(&eventlog6_render_context, &eventlog6_query);
 		}
-		__except (DelayLoadDllExceptionFilter(GetExceptionInformation()))
+		__except (DelayLoadDllExceptionFilter_6(GetExceptionInformation()))
 		{
 			zabbix_log(LOG_LEVEL_WARNING, "failed to process eventlog");
 		}
