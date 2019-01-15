@@ -96,6 +96,7 @@ class testPageDashboardWidgets extends CWebTest {
 		];
 
 		$data = $table->index('Host group');
+		var_dump($data);
 
 		foreach ($expected as $group => $fields) {
 			$row = $data[$group];
