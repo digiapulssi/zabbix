@@ -3,6 +3,7 @@ Changes for 3.0.25rc1
 New features:
 
 Bug fixes:
+...G...PS. [ZBX-11761] Warnings added in case of TLS identity mismatch (akozlovs)
 A......... [ZBX-15355] fixed undefined index in configuration.import API call (Sasha)
 A......... [ZBX-15354] fixed undefined index in API calls without "auth" parameter (Sasha)
 A......... [ZBX-14331] fixed error allowed to change interface type which is already used by items (gcalenko)
