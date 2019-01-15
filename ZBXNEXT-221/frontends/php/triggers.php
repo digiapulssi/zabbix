@@ -71,6 +71,7 @@ $fields = [
 	// filter
 	'filter_set' =>								[T_ZBX_STR, O_OPT, P_SYS,	null,			null],
 	'filter_rst' =>								[T_ZBX_STR, O_OPT, P_SYS,	null,			null],
+	'filter_priority_flag' =>					[T_ZBX_INT, O_OPT, null,	null,			null],
 	'filter_priority' =>						[T_ZBX_INT, O_OPT, null,
 													IN([
 														TRIGGER_SEVERITY_NOT_CLASSIFIED,
@@ -613,6 +614,17 @@ elseif (hasRequest('action') && getRequest('action') == 'trigger.masscopyto' && 
 	$triggersView->show();
 }
 else {
+	function fmtFilterPriorityFlag($flag) {
+		$severity_ctn = TRIGGER_SEVERITY_COUNT;
+		$matched = [];
+		while($severity_ctn > 0) {
+			if ($flag & (1 << --$severity_ctn)) {
+				$matched[] = $severity_ctn;
+			}
+		}
+		return $matched;
+	}
+
 	function fmtTagsFromCProfile() {
 		$filter_tags = [];
 		foreach (CProfile::getArray('web.triggers.filter.tags.tag', []) as $i => $tag) {
@@ -633,7 +645,12 @@ else {
 		$filter_discovered = getRequest('filter_discovered', -1);
 		$filter_dependent = getRequest('filter_dependent', -1);
 		$filter_name = getRequest('filter_name', '');
-		$filter_priority = getRequest('filter_priority', []);
+		if (hasRequest('filter_priority_flag')) {
+			$filter_priority = fmtFilterPriorityFlag(getRequest('filter_priority_flag', 0));
+		}
+		else {
+			$filter_priority = getRequest('filter_priority', []);
+		}
 		$filter_groupids = getRequest('filter_groupids', []);
 		$filter_hostids = getRequest('filter_hostids', []);
 		$filter_state = getRequest('filter_state', -1);
