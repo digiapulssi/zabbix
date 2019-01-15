@@ -355,6 +355,7 @@ INSERT INTO items (itemid,hostid,type,name,key_,flags) VALUES (132006,130000,2,'
 INSERT INTO triggers (triggerid,expression,description,priority,flags) VALUES (134118,'{135118}=0','TriggersTesterLLDTmpl_T0[res1]',0,4);
 INSERT INTO functions (functionid,itemid,triggerid,name,parameter) VALUES (135118,132006,134118,'now','0');
 INSERT INTO trigger_discovery (triggerid,parent_triggerid) VALUES (134118,134106);
+insert into item_discovery (itemdiscoveryid,itemid,parent_itemid,key_) values (138002,132006,132004,'triggerstesteritemprototmpl[{#t}]');
 -- T4 depends on T5 depends on T0 (LLD discovered version)
 INSERT INTO trigger_depends (triggerdepid,triggerid_down,triggerid_up) VALUES (138888,134004,134005);
 INSERT INTO trigger_depends (triggerdepid,triggerid_down,triggerid_up) VALUES (138889,134005,134118);
