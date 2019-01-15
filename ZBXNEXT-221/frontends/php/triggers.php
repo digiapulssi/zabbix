@@ -840,9 +840,12 @@ else {
 		->setArgument('filter_hostids', $filter_hostids);
 
 	// Sort for displaying full results.
-	$sort === 'status'
-		? orderTriggersByStatus($triggers, $sortorder)
-		: order_result($triggers, $sort, $sortorder);
+	if ($sort === 'status') {
+		orderTriggersByStatus($triggers, $sortorder);
+	}
+	else {
+		order_result($triggers, $sort, $sortorder);
+	}
 
 	$dep_triggerids = [];
 

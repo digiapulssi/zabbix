@@ -21,9 +21,19 @@
 
 class CCheckBoxList extends CList {
 
+	/**
+	 * @var string $name
+	 */
 	protected $name;
+	/**
+	 * @var array $checked_values
+	 */
 	protected $checked_values;
 
+	/**
+	 * @param string $name
+	 * @param array $checked_values
+	 */
 	public function __construct($name, $checked_values = []) {
 		parent::__construct();
 
@@ -33,10 +43,19 @@ class CCheckBoxList extends CList {
 		$this->checked_values = array_flip($checked_values);
 	}
 
+	/**
+	 * @param string $label
+	 * @param string $value
+	 *
+	 * @return CCheckBoxList
+	 */
 	public function addCheckBox($label, $value) {
-		parent::addItem((new CCheckBox($this->name.'['.$value.']', $value))
-			->setLabel($label)->setChecked(array_key_exists($value, $this->checked_values)),
-			ZBX_STYLE_COLUMN_33);
+		parent::addItem(
+			(new CCheckBox($this->name.'['.$value.']', $value))
+				->setLabel($label)
+				->setChecked(array_key_exists($value, $this->checked_values)),
+			ZBX_STYLE_COLUMN_33
+		);
 
 		return $this;
 	}

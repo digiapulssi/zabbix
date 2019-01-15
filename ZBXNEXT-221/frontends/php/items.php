@@ -1568,9 +1568,12 @@ else {
 	CProfile::update('web.'.$page['file'].'.sort', $sortField, PROFILE_TYPE_STR);
 	CProfile::update('web.'.$page['file'].'.sortorder', $sortOrder, PROFILE_TYPE_STR);
 
-	$hostid = count($filter_hostids) == 1
-		? reset($filter_hostids)
-		: null;
+	if (count($filter_hostids) == 1) {
+		$hostid = reset($filter_hostids);
+	}
+	else {
+		$hostid = null;
+	}
 
 	$data = [
 		'form' => getRequest('form'),
@@ -1718,7 +1721,7 @@ else {
 		foreach ($data['items'] as &$item) {
 			$item['hostids'] = zbx_objectValues($item['hosts'], 'hostid');
 
-			if ($data['hostid'] === null) {
+			if ($data['hostid'] == 0) {
 				$host = reset($item['hosts']);
 				$item['host'] = $host['name'];
 			}

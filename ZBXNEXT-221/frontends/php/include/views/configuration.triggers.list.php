@@ -81,7 +81,6 @@ $filter_column1 = (new CFormList())
 			->setModern(true)
 	);
 
-
 if ($data['show_value_column']) {
 	$filter_column1->addRow(_('Value'),
 		(new CRadioButtonList('filter_value', (int) $data['filter_value']))
