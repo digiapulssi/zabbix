@@ -176,9 +176,11 @@ if ($triggerIds) {
 if (hasRequest('filter_groupids') && !isWritableHostGroups(getRequest('filter_groupids'))) {
 	access_deny();
 }
+
 if (hasRequest('filter_hostids') && !isWritableHostTemplates(getRequest('filter_hostids'))) {
 	access_deny();
 }
+
 if (getRequest('hostid') && !isWritableHostTemplates([getRequest('hostid')])) {
 	access_deny();
 }
@@ -266,6 +268,7 @@ elseif (hasRequest('add') || hasRequest('update')) {
 			'dependencies' => $dependencies,
 			'status' => $status
 		];
+
 		switch ($recovery_mode) {
 			case ZBX_RECOVERY_MODE_RECOVERY_EXPRESSION:
 				$trigger['recovery_expression'] = $recovery_expression;
@@ -273,6 +276,7 @@ elseif (hasRequest('add') || hasRequest('update')) {
 
 			case ZBX_RECOVERY_MODE_EXPRESSION:
 				$trigger['correlation_mode'] = $correlation_mode;
+
 				if ($correlation_mode == ZBX_TRIGGER_CORRELATION_TAG) {
 					$trigger['correlation_tag'] = $correlation_tag;
 				}
@@ -302,27 +306,35 @@ elseif (hasRequest('add') || hasRequest('update')) {
 		$trigger = [];
 
 		if ($db_trigger['flags'] == ZBX_FLAG_DISCOVERY_NORMAL) {
+
 			if ($db_trigger['templateid'] == 0) {
+
 				if ($db_trigger['description'] !== $description) {
 					$trigger['description'] = $description;
 				}
+
 				if ($db_trigger['expression'] !== $expression) {
 					$trigger['expression'] = $expression;
 				}
+
 				if ($db_trigger['recovery_mode'] != $recovery_mode) {
 					$trigger['recovery_mode'] = $recovery_mode;
 				}
+
 				switch ($recovery_mode) {
 					case ZBX_RECOVERY_MODE_RECOVERY_EXPRESSION:
+
 						if ($db_trigger['recovery_expression'] !== $recovery_expression) {
 							$trigger['recovery_expression'] = $recovery_expression;
 						}
 						// Break; is not missing here.
 
 					case ZBX_RECOVERY_MODE_EXPRESSION:
+
 						if ($db_trigger['correlation_mode'] != $correlation_mode) {
 							$trigger['correlation_mode'] = $correlation_mode;
 						}
+
 						if ($correlation_mode == ZBX_TRIGGER_CORRELATION_TAG
 								&& $db_trigger['correlation_tag'] !== $correlation_tag) {
 							$trigger['correlation_tag'] = $correlation_tag;
@@ -334,12 +346,15 @@ elseif (hasRequest('add') || hasRequest('update')) {
 			if ($db_trigger['type'] != $type) {
 				$trigger['type'] = $type;
 			}
+
 			if ($db_trigger['url'] !== $url) {
 				$trigger['url'] = $url;
 			}
+
 			if ($db_trigger['priority'] != $priority) {
 				$trigger['priority'] = $priority;
 			}
+
 			if ($db_trigger['comments'] !== $comments) {
 				$trigger['comments'] = $comments;
 			}
@@ -347,6 +362,7 @@ elseif (hasRequest('add') || hasRequest('update')) {
 			$db_tags = $db_trigger['tags'];
 			CArrayHelper::sort($db_tags, ['tag', 'value']);
 			CArrayHelper::sort($tags, ['tag', 'value']);
+
 			if (array_values($db_tags) !== array_values($tags)) {
 				$trigger['tags'] = $tags;
 			}
@@ -358,6 +374,7 @@ elseif (hasRequest('add') || hasRequest('update')) {
 			$db_dependencies = $db_trigger['dependencies'];
 			CArrayHelper::sort($db_dependencies, ['triggerid']);
 			CArrayHelper::sort($dependencies, ['triggerid']);
+
 			if (array_values($db_dependencies) !== array_values($dependencies)) {
 				$trigger['dependencies'] = $dependencies;
 			}
@@ -394,10 +411,13 @@ elseif (isset($_REQUEST['delete']) && isset($_REQUEST['triggerid'])) {
 	show_messages($result, _('Trigger deleted'), _('Cannot delete trigger'));
 }
 elseif (isset($_REQUEST['add_dependency']) && isset($_REQUEST['new_dependency'])) {
+
 	if (!isset($_REQUEST['dependencies'])) {
 		$_REQUEST['dependencies'] = [];
 	}
+
 	foreach ($_REQUEST['new_dependency'] as $triggerid) {
+
 		if (!uint_in_array($triggerid, $_REQUEST['dependencies'])) {
 			array_push($_REQUEST['dependencies'], $triggerid);
 		}
@@ -424,12 +444,14 @@ elseif (hasRequest('action') && getRequest('action') === 'trigger.massupdate'
 
 			// Remove empty new tag lines.
 			foreach ($tags as $key => $tag) {
+
 				if ($tag['tag'] === '' && $tag['value'] === '') {
 					unset($tags[$key]);
 				}
 			}
 
 			foreach ($triggerids as $triggerid) {
+
 				if (array_key_exists($triggerid, $triggers)) {
 					$trigger = ['triggerid' => $triggerid];
 
@@ -476,6 +498,7 @@ elseif (hasRequest('action') && str_in_array(getRequest('action'), ['trigger.mas
 	]);
 
 	if ($dbTriggers) {
+
 		foreach ($dbTriggers as $dbTrigger) {
 			$update[] = [
 				'triggerid' => $dbTrigger['triggerid'],
@@ -501,11 +524,14 @@ elseif (hasRequest('action') && str_in_array(getRequest('action'), ['trigger.mas
 		uncheckTableRows(getRequest('hostid'));
 		unset($_REQUEST['g_triggerid']);
 	}
+
 	show_messages($result, $messageSuccess, $messageFailed);
 }
 elseif (hasRequest('action') && getRequest('action') === 'trigger.masscopyto' && hasRequest('copy')
 		&& hasRequest('g_triggerid')) {
+
 	if (hasRequest('copy_targetid') && getRequest('copy_targetid') > 0 && hasRequest('copy_type')) {
+
 		// Hosts or templates.
 		if (getRequest('copy_type') == COPY_TYPE_TO_HOST || getRequest('copy_type') == COPY_TYPE_TO_TEMPLATE) {
 			$hosts_ids = getRequest('copy_targetid');
@@ -521,6 +547,7 @@ elseif (hasRequest('action') && getRequest('action') === 'trigger.masscopyto' &&
 				' WHERE h.hostid=hg.hostid'.
 					' AND '.dbConditionInt('hg.groupid', $group_ids)
 			);
+
 			while ($db_host = DBfetch($db_hosts)) {
 				$hosts_ids[] = $db_host['hostid'];
 			}
@@ -537,6 +564,7 @@ elseif (hasRequest('action') && getRequest('action') === 'trigger.masscopyto' &&
 			uncheckTableRows(getRequest('hostid'));
 			unset($_REQUEST['g_triggerid']);
 		}
+
 		show_messages($result,
 			_n('Trigger copied', 'Triggers copied', $triggers_count),
 			_n('Cannot copy trigger', 'Cannot copy triggers', $triggers_count)
@@ -552,6 +580,7 @@ elseif (hasRequest('action') && getRequest('action') == 'trigger.massdelete' && 
 	if ($result) {
 		uncheckTableRows(getRequest('hostid'));
 	}
+
 	show_messages($result, _('Triggers deleted'), _('Cannot delete triggers'));
 }
 
@@ -620,11 +649,14 @@ else {
 		$filter_discovered = getRequest('filter_discovered', -1);
 		$filter_dependent = getRequest('filter_dependent', -1);
 		$filter_name = getRequest('filter_name', '');
+
 		if (hasRequest('filter_priority_flag')) {
 			$filter_priority = [];
 			$filter_priority_flag = getRequest('filter_priority_flag', 0);
 			$severity_ctn = TRIGGER_SEVERITY_COUNT;
+
 			while($severity_ctn > 0) {
+
 				if ($filter_priority_flag & (1 << --$severity_ctn)) {
 					$filter_priority[] = $severity_ctn;
 				}
@@ -669,6 +701,7 @@ else {
 		$filter_evaltype = CProfile::get('web.triggers.filter.evaltype', TAG_EVAL_TYPE_AND_OR);
 
 		$filter_tags = [];
+
 		foreach (CProfile::getArray('web.triggers.filter.tags.tag', []) as $i => $tag) {
 			$filter_tags[] = [
 				'tag' => $tag,
@@ -682,11 +715,13 @@ else {
 		return boolval($v['tag']);
 	});
 	$filter_groupids_enriched =  [];
+
 	if ($filter_groupids) {
 		$filter_groupids_enriched = getSubGroups($filter_groupids);
 	}
 	// Preserve compatibility with old urls across zabbix.
 	$hostid = getRequest('hostid', null);
+
 	if ($hostid === null) {
 		$hostid = array_key_exists(0, $filter_hostids) ? reset($filter_hostids) : null;
 	}
@@ -710,6 +745,7 @@ else {
 	$show_value_column = false;
 
 	foreach ($hosts as $host) {
+
 		if ($host['status'] == HOST_STATUS_MONITORED || $host['status'] == HOST_STATUS_NOT_MONITORED) {
 			$show_value_column = true;
 			$show_info_column = true;
@@ -720,22 +756,23 @@ else {
 	// Get triggers (build options).
 	$options = [
 		'output' => ['triggerid', 'expression', 'description', 'status', 'priority', 'error', 'templateid', 'state',
-			'recovery_mode', 'recovery_expression', 'value', $sort],
-		'editable' => true,
-		'sortfield' => $sort,
+			'recovery_mode', 'recovery_expression', 'value', $sort
+		],
 		'hostids' => $filter_hostids ? $filter_hostids : null,
 		'groupids' => $filter_groupids ? $filter_groupids_enriched : null,
-		'limit' => $config['search_limit'] + 1,
-		'dependent' => $filter_dependent != -1 ? $filter_dependent : null,
-		'inherited' => $filter_inherited != -1 ? $filter_inherited : null,
 		'selectHosts' => ['hostid', 'host', 'name', 'status'],
 		'selectDependencies' => ['triggerid', 'description'],
 		'selectDiscoveryRule' => ['itemid', 'name'],
 		'selectTags' => ['tag', 'value'],
+		'editable' => true,
+		'sortfield' => $sort,
+		'limit' => $config['search_limit'] + 1,
+		'dependent' => ($filter_dependent != -1) ? $filter_dependent : null,
+		'inherited' => ($filter_inherited != -1) ? $filter_inherited : null
 	];
 
 	if ($filter_discovered != -1) {
-		$options['filter']['flags'] = $filter_discovered == 1
+		$options['filter']['flags'] = ($filter_discovered == 1)
 			? ZBX_FLAG_DISCOVERY_CREATED
 			: ZBX_FLAG_DISCOVERY_NORMAL;
 	}
@@ -760,6 +797,7 @@ else {
 			break;
 
 		default:
+
 			if ($filter_status != -1) {
 				$options['filter']['status'] = $filter_status;
 			}
@@ -807,13 +845,16 @@ else {
 		: order_result($triggers, $sort, $sortorder);
 
 	$dep_triggerids = [];
+
 	foreach ($triggers as $trigger) {
+
 		foreach ($trigger['dependencies'] as $depTrigger) {
 			$dep_triggerids[$depTrigger['triggerid']] = true;
 		}
 	}
 
 	$dep_triggers = [];
+
 	if ($dep_triggerids) {
 		$dep_triggers = API::Trigger()->get([
 			'output' => ['triggerid', 'description', 'status', 'flags'],
@@ -833,9 +874,9 @@ else {
 		unset($dependencyTrigger);
 	}
 
-
 	CProfile::update('web.'.$page['file'].'.sort', $sort, PROFILE_TYPE_STR);
 	CProfile::update('web.'.$page['file'].'.sortorder', $sortorder, PROFILE_TYPE_STR);
+
 	if (getRequest('filter_set')) {
 		CProfile::update('web.triggers.filter_inherited', $filter_inherited, PROFILE_TYPE_INT);
 		CProfile::update('web.triggers.filter_discovered', $filter_discovered, PROFILE_TYPE_INT);
@@ -848,8 +889,8 @@ else {
 		CProfile::update('web.triggers.filter_status', $filter_status, PROFILE_TYPE_INT);
 		CProfile::update('web.triggers.filter.evaltype', $filter_evaltype, PROFILE_TYPE_INT);
 
-
 		$filter_tags_fmt = ['tags' => [], 'values' => [], 'operators' => []];
+
 		foreach ($filter_tags as $filter_tag) {
 
 			if ($filter_tag['tag'] === '' && $filter_tag['value'] === '') {
@@ -860,6 +901,7 @@ else {
 			$filter_tags_fmt['values'][] = $filter_tag['value'];
 			$filter_tags_fmt['operators'][] = $filter_tag['operator'];
 		}
+
 		CProfile::updateArray('web.triggers.filter.tags.tag', $filter_tags_fmt['tags'], PROFILE_TYPE_STR);
 		CProfile::updateArray('web.triggers.filter.tags.value', $filter_tags_fmt['values'], PROFILE_TYPE_STR);
 		CProfile::updateArray('web.triggers.filter.tags.operator', $filter_tags_fmt['operators'], PROFILE_TYPE_INT);
@@ -875,9 +917,11 @@ else {
 		CProfile::delete('web.triggers.filter_name');
 		CProfile::delete('web.triggers.filter_priority');
 		CProfile::delete('web.triggers.filter_groupids');
+
 		if (count($filter_hostids) != 1) {
 			CProfile::delete('web.triggers.filter_hostids');
 		}
+
 		CProfile::delete('web.triggers.filter_state');
 		CProfile::delete('web.triggers.filter_status');
 		CProfile::delete('web.triggers.filter.evaltype');
