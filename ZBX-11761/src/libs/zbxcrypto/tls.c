@@ -1315,7 +1315,7 @@ static int	zbx_psk_cb(gnutls_session_t session, const char *psk_identity, gnutls
 		else
 			zabbix_log(LOG_LEVEL_WARNING, "cannot find requested PSK identity \"%s\"", psk_identity);
 	}
-	else if (NULL != my_psk_identity)
+	else if (0 < my_psk_identity_len)
 	{
 		zabbix_log(LOG_LEVEL_WARNING, "cannot find requested PSK identity \"%s\", available PSK identity"
 				" \"%s\"", identity, my_psk_identity);
@@ -1466,7 +1466,7 @@ static unsigned int	zbx_psk_server_cb(SSL *ssl, const char *identity, unsigned c
 			goto fail;
 		}
 	}
-	else if (NULL != my_psk_identity)
+	else if (0 < my_psk_identity_len)
 	{
 		zabbix_log(LOG_LEVEL_WARNING, "cannot find requested PSK identity \"%s\", available PSK identity"
 				" \"%s\"", identity, my_psk_identity);
