@@ -612,29 +612,6 @@ elseif (hasRequest('action') && getRequest('action') == 'trigger.masscopyto' && 
 	$triggersView->show();
 }
 else {
-	function fmtFilterPriorityFlag($flag) {
-		$severity_ctn = TRIGGER_SEVERITY_COUNT;
-		$matched = [];
-		while($severity_ctn > 0) {
-			if ($flag & (1 << --$severity_ctn)) {
-				$matched[] = $severity_ctn;
-			}
-		}
-		return $matched;
-	}
-
-	function fmtTagsFromCProfile() {
-		$filter_tags = [];
-		foreach (CProfile::getArray('web.triggers.filter.tags.tag', []) as $i => $tag) {
-			$filter_tags[] = [
-				'tag' => $tag,
-				'value' => CProfile::get('web.triggers.filter.tags.value', null, $i),
-				'operator' => CProfile::get('web.triggers.filter.tags.operator', null, $i)
-			];
-		}
-		return $filter_tags;
-	}
-
 	$filter_groupids_ms = [];
 	$filter_hostids_ms = [];
 
@@ -644,7 +621,14 @@ else {
 		$filter_dependent = getRequest('filter_dependent', -1);
 		$filter_name = getRequest('filter_name', '');
 		if (hasRequest('filter_priority_flag')) {
-			$filter_priority = fmtFilterPriorityFlag(getRequest('filter_priority_flag', 0));
+			$filter_priority = [];
+			$filter_priority_flag = getRequest('filter_priority_flag', 0);
+			$severity_ctn = TRIGGER_SEVERITY_COUNT;
+			while($severity_ctn > 0) {
+				if ($filter_priority_flag & (1 << --$severity_ctn)) {
+					$filter_priority[] = $severity_ctn;
+				}
+			}
 		}
 		else {
 			$filter_priority = getRequest('filter_priority', []);
@@ -681,7 +665,15 @@ else {
 		$filter_status = CProfile::get('web.triggers.filter_status', -1);
 		$filter_value = CProfile::get('web.triggers.filter_value', -1);
 		$filter_evaltype = CProfile::get('web.triggers.filter.evaltype', TAG_EVAL_TYPE_AND_OR);
-		$filter_tags = fmtTagsFromCProfile();
+
+		$filter_tags = [];
+		foreach (CProfile::getArray('web.triggers.filter.tags.tag', []) as $i => $tag) {
+			$filter_tags[] = [
+				'tag' => $tag,
+				'value' => CProfile::get('web.triggers.filter.tags.value', null, $i),
+				'operator' => CProfile::get('web.triggers.filter.tags.operator', null, $i)
+			];
+		}
 	}
 	// skip empty tags
 	$filter_tags = array_filter($filter_tags, function ($v) {
