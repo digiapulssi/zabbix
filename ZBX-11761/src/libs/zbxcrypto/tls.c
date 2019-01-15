@@ -1318,7 +1318,7 @@ static int	zbx_psk_cb(gnutls_session_t session, const char *psk_identity, gnutls
 	else if (0 < my_psk_identity_len)
 	{
 		zabbix_log(LOG_LEVEL_WARNING, "cannot find requested PSK identity \"%s\", available PSK identity"
-				" \"%s\"", identity, my_psk_identity);
+				" \"%s\"", psk_identity, my_psk_identity);
 	}
 
 	if (0 < psk_len)
