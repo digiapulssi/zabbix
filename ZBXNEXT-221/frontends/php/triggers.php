@@ -67,7 +67,7 @@ $fields = [
 													]),
 													null
 												],
-	// filter
+	// Filter.
 	'filter_set' =>								[T_ZBX_STR, O_OPT, P_SYS,	null,			null],
 	'filter_rst' =>								[T_ZBX_STR, O_OPT, P_SYS,	null,			null],
 	'filter_priority_flag' =>					[T_ZBX_INT, O_OPT, null,	null,			null],
@@ -98,7 +98,7 @@ $fields = [
 													IN([TAG_EVAL_TYPE_AND_OR, TAG_EVAL_TYPE_OR]), null
 												],
 	'filter_tags' =>							[T_ZBX_STR, O_OPT, null,	null,			null],
-	// actions
+	// Actions.
 	'action' =>									[T_ZBX_STR, O_OPT, P_SYS|P_ACT,
 													IN('"trigger.masscopyto","trigger.massdelete","trigger.massdisable",'.
 														'"trigger.massenable","trigger.massupdate","trigger.massupdateform"'
@@ -131,7 +131,7 @@ $fields = [
 	'cancel' =>									[T_ZBX_STR, O_OPT, P_SYS,	null,		null],
 	'form' =>									[T_ZBX_STR, O_OPT, P_SYS,	null,		null],
 	'form_refresh' =>							[T_ZBX_INT, O_OPT, null,	null,		null],
-	// sort and sortorder
+	// Sort and sortorder.
 	'sort' =>									[T_ZBX_STR, O_OPT, P_SYS, IN('"description","priority","status"'),		null],
 	'sortorder' =>								[T_ZBX_STR, O_OPT, P_SYS, IN('"'.ZBX_SORT_DOWN.'","'.ZBX_SORT_UP.'"'),	null]
 ];
@@ -269,7 +269,7 @@ elseif (hasRequest('add') || hasRequest('update')) {
 		switch ($recovery_mode) {
 			case ZBX_RECOVERY_MODE_RECOVERY_EXPRESSION:
 				$trigger['recovery_expression'] = $recovery_expression;
-				// break; is not missing here
+				// Break; is not missing here.
 
 			case ZBX_RECOVERY_MODE_EXPRESSION:
 				$trigger['correlation_mode'] = $correlation_mode;
@@ -317,7 +317,7 @@ elseif (hasRequest('add') || hasRequest('update')) {
 						if ($db_trigger['recovery_expression'] !== $recovery_expression) {
 							$trigger['recovery_expression'] = $recovery_expression;
 						}
-						// break; is not missing here
+						// Break; is not missing here.
 
 					case ZBX_RECOVERY_MODE_EXPRESSION:
 						if ($db_trigger['correlation_mode'] != $correlation_mode) {
@@ -468,7 +468,7 @@ elseif (hasRequest('action') && str_in_array(getRequest('action'), ['trigger.mas
 	$status = $enable ? TRIGGER_STATUS_ENABLED : TRIGGER_STATUS_DISABLED;
 	$update = [];
 
-	// get requested triggers with permission check
+	// Get requested triggers with permission check.
 	$dbTriggers = API::Trigger()->get([
 		'output' => ['triggerid', 'status'],
 		'triggerids' => getRequest('g_triggerid'),
@@ -506,11 +506,11 @@ elseif (hasRequest('action') && str_in_array(getRequest('action'), ['trigger.mas
 elseif (hasRequest('action') && getRequest('action') === 'trigger.masscopyto' && hasRequest('copy')
 		&& hasRequest('g_triggerid')) {
 	if (hasRequest('copy_targetid') && getRequest('copy_targetid') > 0 && hasRequest('copy_type')) {
-		// hosts or templates
+		// Hosts or templates.
 		if (getRequest('copy_type') == COPY_TYPE_TO_HOST || getRequest('copy_type') == COPY_TYPE_TO_TEMPLATE) {
 			$hosts_ids = getRequest('copy_targetid');
 		}
-		// host groups
+		// Host groups.
 		else {
 			$hosts_ids = [];
 			$group_ids = getRequest('copy_targetid');
@@ -640,7 +640,8 @@ else {
 		$filter_value = getRequest('filter_value', -1);
 		$filter_evaltype = getRequest('filter_evaltype', TAG_EVAL_TYPE_AND_OR);
 		$filter_tags = getRequest('filter_tags', []);
-	} elseif (getRequest('filter_rst')) {
+	}
+	elseif (getRequest('filter_rst')) {
 		$filter_inherited = -1;
 		$filter_discovered = -1;
 		$filter_dependent = -1;
@@ -653,7 +654,8 @@ else {
 		$filter_value = -1;
 		$filter_evaltype = TAG_EVAL_TYPE_AND_OR;
 		$filter_tags = [];
-	} else {
+	}
+	else {
 		$filter_inherited = CProfile::get('web.triggers.filter_inherited', -1);
 		$filter_discovered = CProfile::get('web.triggers.filter_discovered', -1);
 		$filter_dependent = CProfile::get('web.triggers.filter_dependent', -1);
@@ -675,7 +677,7 @@ else {
 			];
 		}
 	}
-	// skip empty tags
+	// Skip empty tags.
 	$filter_tags = array_filter($filter_tags, function ($v) {
 		return boolval($v['tag']);
 	});
@@ -683,7 +685,7 @@ else {
 	if ($filter_groupids) {
 		$filter_groupids_enriched = getSubGroups($filter_groupids);
 	}
-	// preserve compatibility with old urls across zabbix
+	// Preserve compatibility with old urls across zabbix.
 	$hostid = getRequest('hostid', null);
 	if ($hostid === null) {
 		$hostid = array_key_exists(0, $filter_hostids) ? reset($filter_hostids) : null;
@@ -695,7 +697,6 @@ else {
 	$sort = getRequest('sort', CProfile::get('web.'.$page['file'].'.sort', 'description'));
 	$sortorder = getRequest('sortorder', CProfile::get('web.'.$page['file'].'.sortorder', ZBX_SORT_UP));
 	$active_tab = CProfile::get('web.triggers.filter.active', 1);
-	// -- end default input
 
 	$hosts = API::Host()->get([
 		'output' => ['hostid', 'status', 'name'],
@@ -716,7 +717,7 @@ else {
 		}
 	}
 
-	// get triggers (build options)
+	// Get triggers (build options).
 	$options = [
 		'output' => ['triggerid', 'expression', 'description', 'status', 'priority', 'error', 'templateid', 'state',
 			'recovery_mode', 'recovery_expression', 'value', $sort],
@@ -787,7 +788,7 @@ else {
 
 	$triggers = API::Trigger()->get($options);
 
-	// sort for paging
+	// Sort for paging.
 	if ($sort === 'status') {
 		orderTriggersByStatus($triggers, $sortorder);
 	}
@@ -795,12 +796,12 @@ else {
 		order_result($triggers, $sort, $sortorder);
 	}
 
-	// paging
+	// Paging.
 	$url = (new CUrl('triggers.php'))
 		->setArgument('filter_groupids', $filter_groupids)
 		->setArgument('filter_hostids', $filter_hostids);
 
-	// sort for displaying full results
+	// Sort for displaying full results.
 	$sort === 'status'
 		? orderTriggersByStatus($triggers, $sortorder)
 		: order_result($triggers, $sort, $sortorder);
@@ -889,8 +890,7 @@ else {
 		}
 	}
 
-	// render view
-	$triggersView = new CView('configuration.triggers.list', [
+	$data = [
 		'config' => $config,
 		'hostid' => $hostid,
 		'triggers' => $triggers,
@@ -917,7 +917,9 @@ else {
 		'paging' => getPagingLine($triggers, $sortorder, $url),
 		'dep_triggers' => $dep_triggers,
 		'tags' => makeTags($triggers, true, 'triggerid', ZBX_TAG_COUNT_DEFAULT, $filter_tags)
-	]);
+	];
+	// Render view.
+	$triggersView = new CView('configuration.triggers.list', $data);
 
 	$triggersView->render();
 	$triggersView->show();
