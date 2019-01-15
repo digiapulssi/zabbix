@@ -1321,7 +1321,6 @@ static int	zbx_psk_cb(gnutls_session_t session, const char *psk_identity, gnutls
 				" \"%s\"", identity, my_psk_identity);
 	}
 
-
 	if (0 < psk_len)
 	{
 		if (NULL == (key->data = gnutls_malloc(psk_len)))
