@@ -60,6 +60,7 @@ $data['tld'] = [];
 $data['services'] = [];
 $data['url'] = '';
 $data['sid'] = CWebUser::getSessionCookie();
+$data['registrar_mode'] = (bool) get_registrar_monitoring_state();
 
 $year = date('Y', time());
 $month = date('m', time());

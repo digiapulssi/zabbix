@@ -25,7 +25,8 @@ $filterForm = new CFilter('web.rsm.slareports.filter.state');
 
 $filterColumn = new CFormList();
 $filterColumn->addVar('filter_set', 1);
-$filterColumn->addRow(_('TLD'), (new CTextBox('filter_search', $this->data['filter_search']))
+$searach_field_label = $data['registrar_mode'] ? _('REGISTRAR ID') : _('TLD');
+$filterColumn->addRow($searach_field_label, (new CTextBox('filter_search', $this->data['filter_search']))
 	->setWidth(ZBX_TEXTAREA_FILTER_STANDARD_WIDTH)
 	->setAttribute('autocomplete', 'off')
 );
