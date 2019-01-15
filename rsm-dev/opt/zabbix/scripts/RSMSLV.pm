@@ -63,11 +63,9 @@ use constant RSM_CONFIG_EPP_DELAY_ITEMID => 100010;	# rsm.configvalue[RSM.EPP.DE
 # NB! These numbers must be in sync with Frontend (details page)!
 use constant PROBE_ONLINE_SHIFT		=> 120;	# seconds (must be divisible by 60) to go back for Probe online status calculation
 use constant AVAIL_SHIFT_BACK		=> 120;	# seconds (must be divisible by 60) to go back for Service Availability calculation
-use constant ROLLWEEK_SHIFT_BACK	=> 180;	# seconds (must be divisible by 60) to go back to make sure Service Availability is calculated
+use constant ROLLWEEK_SHIFT_BACK	=> 180;	# seconds (must be divisible by 60) back when Service Availability is definitely calculated
 
 use constant PROBE_ONLINE_STR => 'Online';
-use constant PROBE_OFFLINE_STR => 'Offline';
-use constant PROBE_NORESULT_STR => 'No result';
 
 use constant DETAILED_RESULT_DELIM => ', ';
 
@@ -76,10 +74,10 @@ our ($result, $dbh, $tld, $server_key);
 our %OPTS; # specified command-line options
 
 our @EXPORT = qw($result $dbh $tld $server_key
-		SUCCESS E_FAIL E_ID_NONEXIST E_ID_MULTIPLE UP DOWN RDDS_UP SLV_UNAVAILABILITY_LIMIT MIN_LOGIN_ERROR
+		SUCCESS E_FAIL E_ID_NONEXIST E_ID_MULTIPLE UP DOWN SLV_UNAVAILABILITY_LIMIT MIN_LOGIN_ERROR
 		UP_INCONCLUSIVE_NO_DATA PROTO_UDP PROTO_TCP
-		MAX_LOGIN_ERROR MIN_INFO_ERROR MAX_INFO_ERROR PROBE_ONLINE_STR PROBE_OFFLINE_STR
-		PROBE_NORESULT_STR AVAIL_SHIFT_BACK ROLLWEEK_SHIFT_BACK PROBE_ONLINE_SHIFT
+		MAX_LOGIN_ERROR MIN_INFO_ERROR MAX_INFO_ERROR PROBE_ONLINE_STR
+		AVAIL_SHIFT_BACK ROLLWEEK_SHIFT_BACK PROBE_ONLINE_SHIFT
 		ONLINE OFFLINE
 		get_macro_minns get_macro_dns_probe_online get_macro_rdds_probe_online get_macro_dns_rollweek_sla
 		get_macro_rdds_rollweek_sla get_macro_dns_udp_rtt_high get_macro_dns_udp_rtt_low
@@ -111,7 +109,8 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		get_result_string get_tld_by_trigger truncate_from truncate_till alerts_enabled
 		get_real_services_period dbg info wrn fail set_on_fail
 		format_stats_time slv_finalize slv_exit exit_if_running trim parse_opts
-		parse_avail_opts parse_rollweek_opts opt getopt setopt unsetopt optkeys ts_str ts_full selected_period
+		parse_slv_opts
+		opt getopt setopt unsetopt optkeys ts_str ts_full selected_period
 		write_file
 		cycle_start
 		cycle_end
@@ -1655,11 +1654,13 @@ sub collect_slv_cycles($$$$$)
 
 		my $cycles_added = 0;
 
-		while ($lastclock < $max_clock && $cycles_added++ < $max_cycles)
+		while ($lastclock < $max_clock && (!$max_cycles || $cycles_added < $max_cycles))
 		{
 			$lastclock += $delay;
 
 			push(@{$cycles{$lastclock}}, $tld);
+
+			$cycles_added++;
 		}
 
 		# unset TLD (for the logs)
@@ -2946,18 +2947,11 @@ sub parse_opts
 	$get_stats = 1 if (opt('stats') || opt('warnslow'));
 }
 
-sub parse_avail_opts
+sub parse_slv_opts
 {
-	$POD2USAGE_FILE = '/opt/zabbix/scripts/slv/rsm.slv.avail.usage';
+	$POD2USAGE_FILE = '/opt/zabbix/scripts/slv/rsm.slv.usage';
 
-	parse_opts('tld=s', 'now=n');
-}
-
-sub parse_rollweek_opts
-{
-	$POD2USAGE_FILE = '/opt/zabbix/scripts/slv/rsm.slv.rollweek.usage';
-
-	parse_opts('tld=s', 'now=n');
+	parse_opts('tld=s', 'now=n', 'cycles=n');
 }
 
 sub opt

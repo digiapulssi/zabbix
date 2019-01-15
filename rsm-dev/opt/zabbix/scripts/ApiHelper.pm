@@ -11,6 +11,18 @@ use Types::Serialiser;
 use constant AH_SUCCESS => 0;
 use constant AH_FAIL => 1;
 
+use constant AH_INTERFACE_DNS => 'DNS';
+use constant AH_INTERFACE_DNSSEC => 'DNSSEC';
+use constant AH_INTERFACE_RDDS43 => 'RDDS43';
+use constant AH_INTERFACE_RDDS80 => 'RDDS80';
+use constant AH_INTERFACE_RDAP => 'RDAP';
+use constant AH_INTERFACE_EPP => 'EPP';
+
+use constant AH_CITY_UP => 'Up';
+use constant AH_CITY_DOWN => 'Down';
+use constant AH_CITY_OFFLINE => 'Offline';
+use constant AH_CITY_NO_RESULT => 'No result';
+
 use constant AH_INCIDENT_ACTIVE => 'ACTIVE';
 use constant AH_STATE_FILE => 'state';
 use constant AH_INCIDENT_STATE_FILE => 'state';
@@ -34,10 +46,16 @@ use constant JSON_OBJECT_DISABLED_SERVICE => {
 	'status'	=> 'Disabled'
 };
 
-our @EXPORT = qw(AH_SUCCESS AH_FAIL AH_BASE_DIR AH_TMP_DIR ah_set_debug ah_get_error ah_state_file_json ah_save_state
-		ah_save_alarmed ah_save_downtime ah_create_incident_json ah_save_incident
-		ah_save_false_positive ah_save_measurement ah_get_continue_file ah_get_api_tld ah_get_last_audit
-		ah_save_audit ah_save_continue_file ah_encode_pretty_json JSON_OBJECT_DISABLED_SERVICE);
+our @EXPORT = qw(
+	AH_SUCCESS AH_FAIL AH_BASE_DIR AH_TMP_DIR ah_set_debug ah_get_error ah_state_file_json ah_save_state
+	ah_save_alarmed ah_save_downtime ah_create_incident_json ah_save_incident
+	ah_save_false_positive ah_save_measurement ah_get_continue_file ah_get_api_tld ah_get_last_audit
+	ah_get_recent_measurement ah_save_recent_measurement ah_save_recent_cache ah_get_recent_cache
+	ah_save_audit ah_save_continue_file ah_encode_pretty_json JSON_OBJECT_DISABLED_SERVICE
+	ah_get_dns_interface ah_get_rdds_interface ah_get_interface
+	AH_INTERFACE_DNS AH_INTERFACE_DNSSEC AH_INTERFACE_RDDS43 AH_INTERFACE_RDDS80 AH_INTERFACE_RDAP AH_INTERFACE_EPP
+	AH_CITY_UP AH_CITY_DOWN AH_CITY_NO_RESULT AH_CITY_OFFLINE
+);
 
 use constant AH_JSON_FILE_VERSION => 1;
 
@@ -138,6 +156,21 @@ sub __make_inc_path($$$$$)
 	}
 
 	$$inc_path_ptr = $path;
+
+	return AH_SUCCESS;
+}
+
+sub __make_path($)
+{
+	my $path = shift;
+
+	make_path($path, {error => \my $err});
+
+	if (@$err)
+	{
+		__set_file_error($err);
+		return AH_FAIL;
+	}
 
 	return AH_SUCCESS;
 }
@@ -460,6 +493,111 @@ sub ah_save_measurement
 	return __write_file($json_path, __encode_json($json), $clock);
 }
 
+# Generate path for recent measurement, e. g.
+#
+#   [base_dir]/v2/example/monitoring/dns/measurements/2018/02/28/<measurement>.json
+#
+sub __gen_recent_measurement_path($$$$)
+{
+	my $ah_tld = shift;
+	my $service = shift;
+	my $clock = shift;
+	my $path_buf = shift;	# pointer to result
+
+	my (undef, undef, undef, $mday, $mon, $year) = localtime($clock);
+
+	$year += 1900;
+	$mon++;
+
+	my $add_path = sprintf("measurements/%4d/%2d/%2d", $year, $mon, $mday);
+
+	my $path = AH_BASE_DIR . '/v2/' . __gen_base_path($ah_tld, $service, $add_path);
+
+	return AH_FAIL unless (__make_path($path) == AH_SUCCESS);
+
+	$$path_buf = $path . "/$clock.json";
+
+	return AH_SUCCESS;
+}
+
+sub ah_get_recent_measurement($$$$)
+{
+	my $ah_tld = shift;
+	my $service = shift;
+	my $clock = shift;
+	my $json_ref = shift;
+
+	my ($path, $buf);
+
+	return AH_FAIL unless (__gen_recent_measurement_path($ah_tld, $service, $clock, \$path) == AH_SUCCESS);
+
+	return AH_FAIL unless (__read_file($path, \$buf) == AH_SUCCESS);
+
+	$$json_ref = decode_json($buf);
+
+	return AH_SUCCESS;
+}
+
+sub ah_save_recent_measurement($$$$)
+{
+	my $ah_tld = shift;
+	my $service = shift;
+	my $json = shift;
+	my $clock = shift;
+
+	my $path;
+
+	return AH_FAIL unless (__gen_recent_measurement_path($ah_tld, $service, $clock, \$path) == AH_SUCCESS);
+
+	return __write_file($path, __encode_json($json), $clock);
+}
+
+# Generate path for recent measurement cache, e. g.
+#
+#   /opt/zabbix/cache/server_1/example.json
+#
+sub __gen_recent_cache_path($$)
+{
+	my $server_key = shift;
+	my $path_buf = shift;
+
+	my $path = "/opt/zabbix/cache";
+
+	return AH_FAIL unless (__make_path($path) == AH_SUCCESS);
+
+	$$path_buf = $path . "/$server_key.json";
+
+	return AH_SUCCESS;
+}
+
+sub ah_save_recent_cache($$)
+{
+	my $server_key = shift;
+	my $json = shift;
+
+	my $path;
+
+	return AH_FAIL unless (__gen_recent_cache_path($server_key, \$path) == AH_SUCCESS);
+
+	return __write_file($path, __encode_json($json))
+}
+
+sub ah_get_recent_cache($$)
+{
+	my $server_key = shift;
+	my $json_ref = shift;
+
+	my ($path, $buf);
+
+	return AH_FAIL unless (__gen_recent_cache_path($server_key, \$path) == AH_SUCCESS);
+
+	return AH_FAIL unless (__read_file($path, \$buf) == AH_SUCCESS);
+
+	$$json_ref = decode_json($buf);
+
+	return AH_SUCCESS;
+}
+
 sub dbg
 {
 	return if ($_debug == 0);
@@ -550,6 +688,51 @@ sub ah_save_audit
 	die("Internal error: ah_save_audit() server_key not specified") unless ($server_key && $clock);
 
 	return __write_file(AH_TMP_DIR . '/' . AH_AUDIT_FILE_PREFIX . $server_key . '.txt', $clock);
+}
+
+sub ah_get_dns_interface($)
+{
+	my $key = shift;
+
+	if (substr($key, 0, length("rsm.dns.udp")) eq "rsm.dns.udp")
+	{
+		return AH_INTERFACE_DNS;
+	}
+
+	return;
+}
+
+sub ah_get_rdds_interface($)
+{
+	my $key = shift;
+
+	my $interface;
+
+	if (substr($key, 0, length("rsm.rdds.43")) eq "rsm.rdds.43")
+	{
+		$interface = AH_INTERFACE_RDDS43
+	}
+	elsif (substr($key, 0, length("rsm.rdds.80")) eq "rsm.rdds.80")
+	{
+		$interface = AH_INTERFACE_RDDS80;
+	}
+	elsif (substr($key, 0, length("rdap")) eq "rdap")
+	{
+		$interface = AH_INTERFACE_RDAP;
+	}
+
+	return $interface;
+}
+
+sub ah_get_interface($)
+{
+	my $key = shift;
+
+	my $interface = ah_get_dns_interface($key);
+
+	return $interface if (defined($interface));
+
+	return ah_get_rdds_interface($key);
 }
 
 1;

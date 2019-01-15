@@ -46,6 +46,9 @@ use constant JSON_INTERFACE_RDDS80	=> 'RDDS80';	# todo phase 1: taken from phase
 use constant JSON_INTERFACE_RDAP	=> 'RDAP';
 use constant ROOT_ZONE_READABLE		=> 'zz--root';	# todo phase 1: taken from phase 2
 
+use constant PROBE_OFFLINE_STR	=> 'Offline';
+use constant PROBE_ONLINE_STR	=> 'Online';
+
 use constant SERVICE_DNS_TCP	=> 'dns-tcp';	# todo phase 1: Export DNS-TCP tests, not a real service
 
 use constant AH_STATUS_UP	=> 'Up';	# todo phase 1: taken from ApiHelper.pm phase 2
