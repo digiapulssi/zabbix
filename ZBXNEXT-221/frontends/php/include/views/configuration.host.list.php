@@ -325,7 +325,7 @@ foreach ($data['hosts'] as $host) {
 			CViewHelper::showNum($host['items'])
 		],
 		[
-			new CLink(_('Triggers'), 'triggers.php?groupid='.$data['groupId'].'&hostid='.$host['hostid']),
+			new CLink(_('Triggers'), 'triggers.php?hostid='.$host['hostid']),
 			CViewHelper::showNum($host['triggers'])
 		],
 		[

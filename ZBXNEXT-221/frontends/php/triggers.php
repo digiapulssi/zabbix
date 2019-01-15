@@ -33,7 +33,6 @@ require_once dirname(__FILE__).'/include/page_header.php';
 
 // VAR											TYPE	OPTIONAL	FLAGS	VALIDATION		EXCEPTION
 $fields = [
-	'groupid' =>								[T_ZBX_INT, O_OPT, P_SYS,	DB_ID,			null],
 	'hostid' =>									[T_ZBX_INT, O_OPT, P_SYS,	DB_ID,			null],
 	'triggerid' =>								[T_ZBX_INT, O_OPT, P_SYS,	DB_ID,			'(isset({form}) && ({form} == "update"))'],
 	'copy_type' =>								[T_ZBX_INT, O_OPT, P_SYS,	IN([COPY_TYPE_TO_HOST, COPY_TYPE_TO_TEMPLATE, COPY_TYPE_TO_HOST_GROUP]), 'isset({copy})'],
@@ -599,7 +598,6 @@ elseif (isset($_REQUEST['form'])) {
 		'correlation_mode' => getRequest('correlation_mode', ZBX_TRIGGER_CORRELATION_NONE),
 		'correlation_tag' => getRequest('correlation_tag', ''),
 		'manual_close' => getRequest('manual_close', ZBX_TRIGGER_MANUAL_CLOSE_NOT_ALLOWED),
-		'groupid' => getRequest('groupid', 0)
 	];
 
 	$triggersView = new CView('configuration.triggers.edit', getTriggerFormData($data));
