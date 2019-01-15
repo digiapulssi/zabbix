@@ -54,13 +54,13 @@ $widget->addItem($filterForm);
 if ($data['tld']) {
 	$infoBlock = (new CTable(null, 'filter info-block'))
 		->addRow([[
-		bold(_('Month')), ':', SPACE, date('F', mktime(0, 0, 0, $data['filter_month'], 1, $data['filter_year'])), BR(),
-		bold(_('Generation time')), ':', SPACE, date('dS F Y, H:i:s e', time()), BR(),
-		bold(_('TLD')), ':', SPACE, $data['tld']['name'], BR(),
-		bold(_('Server')), ':', SPACE, new CLink($this->data['server'],
-			$this->data['url'].'rsm.rollingweekstatus.php?sid='.$this->data['sid'].'&set_sid=1'
-		)
-	]]);
+			bold(_('Month')), ':', SPACE, date('F', mktime(0, 0, 0, $data['filter_month'], 1, $data['filter_year'])), BR(),
+			bold(_('Generation time')), ':', SPACE, date('dS F Y, H:i:s e', time()), BR(),
+			bold($data['registrar_mode'] ? _('REGISTRAR ID') : _('TLD')), ':', SPACE, $data['tld']['name'], BR(),
+			bold(_('Server')), ':', SPACE, new CLink($this->data['server'],
+				$this->data['url'].'rsm.rollingweekstatus.php?sid='.$this->data['sid'].'&set_sid=1'
+			)
+		]]);
 	$widget->additem($infoBlock);
 }
 
