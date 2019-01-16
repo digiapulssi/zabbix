@@ -189,9 +189,7 @@ $triggers_form = (new CForm())
 	->setName('triggersForm')
 	->addVar('hostid', $data['hostid']);
 
-$url = (new CUrl('triggers.php'))
-	->setArgument('hostid', $data['hostid'])
-	->getUrl();
+$url = (new CUrl('triggers.php'))->getUrl();
 
 // create table
 $triggers_table = (new CTableInfo())->setHeader([

@@ -173,14 +173,6 @@ if ($triggerIds) {
 	}
 }
 
-if (hasRequest('filter_groupids') && !isWritableHostGroups(getRequest('filter_groupids'))) {
-	access_deny();
-}
-
-if (hasRequest('filter_hostids') && !isWritableHostTemplates(getRequest('filter_hostids'))) {
-	access_deny();
-}
-
 if (getRequest('hostid') && !isWritableHostTemplates([getRequest('hostid')])) {
 	access_deny();
 }
