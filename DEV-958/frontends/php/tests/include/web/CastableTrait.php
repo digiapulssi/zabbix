@@ -46,6 +46,17 @@ trait CastableTrait {
 	}
 
 	/**
+	 * Cast object to CheckboxList element.
+	 *
+	 * @param array $options    additional casting options
+	 *
+	 * @return CCheckboxElement
+	 */
+	public function asCheckboxList($options = []) {
+		return $this->cast('CCheckboxListElement', $options);
+	}
+
+	/**
 	 * Cast object to Dashboard element.
 	 *
 	 * @param array $options    additional casting options
@@ -153,6 +164,17 @@ trait CastableTrait {
 	 */
 	public function asSegmentedRadio($options = []) {
 		return $this->cast('CSegmentedRadioElement', $options);
+	}
+
+	/**
+	 * Cast object to Range Control element.
+	 *
+	 * @param array $options    additional casting options
+	 *
+	 * @return CRangeControlElement
+	 */
+	public function asRangeControl($options = []) {
+		return $this->cast('CRangeControlElement', $options);
 	}
 
 	/**
