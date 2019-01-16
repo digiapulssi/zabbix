@@ -216,7 +216,11 @@ $data['triggers'] = CMacrosResolverHelper::resolveTriggerExpressions($data['trig
 
 foreach ($data['triggers'] as $tnum => $trigger) {
 	$triggerid = $trigger['triggerid'];
-	$trigger_host = reset($trigger['hosts']);
+	$trigger_hostid = $data['hostid'];
+	if ($trigger_hostid == 0) {
+		$trigger_host = reset($trigger['hosts']);
+		$trigger_hostid = $trigger_host['hostid'];
+	}
 
 	// description
 	$description = [];
@@ -237,7 +241,10 @@ foreach ($data['triggers'] as $tnum => $trigger) {
 
 	$description[] = new CLink(
 		CHtml::encode($trigger['description']),
-		'triggers.php?form=update&hostid='.$trigger_host['hostid'].'&triggerid='.$triggerid
+		(new CUrl('triggers.php'))
+			->setArgument('form', 'update')
+			->setArgument('triggerid', $triggerid)
+			->setArgument('hostid', $trigger_hostid)
 	);
 
 	if ($trigger['dependencies']) {
