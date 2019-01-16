@@ -143,19 +143,22 @@ $filter_column2 = (new CFormList())
 			->addValue(_('all'), -1)
 			->addValue(_('Yes'), 1)
 			->addValue(_('No'), 0)
-			->setModern(true))
+			->setModern(true)
+	)
 	->addRow(_('Discovered'),
 		(new CRadioButtonList('filter_discovered', (int) $data['filter_discovered']))
 			->addValue(_('all'), -1)
 			->addValue(_('Yes'), 1)
 			->addValue(_('No'), 0)
-			->setModern(true))
+			->setModern(true)
+	)
 	->addRow(_('With dependencies'),
 		(new CRadioButtonList('filter_dependent', (int) $data['filter_dependent']))
 			->addValue(_('all'), -1)
 			->addValue(_('Yes'), 1)
 			->addValue(_('No'), 0)
-			->setModern(true));
+			->setModern(true)
+	);
 
 $filter = (new CFilter(new CUrl('triggers.php')))
 	->setProfile($data['profile_idx'])
