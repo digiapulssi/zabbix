@@ -97,8 +97,13 @@ else {
 
 $testsInfoTable = (new CTable(null))->addClass('incidents-info');
 
+$object_name_label = $data['registrar_mode'] ? _('Registrar ID') : _('TLD');
+$object_name = $data['registrar_mode']
+	? (new CSpan($data['tld']['name']))->setHint(getRegistrarDetailsHint($data['tld']))
+	: $data['tld']['name'];
+
 $testsInfoTable->addRow([[
-	new CSpan([bold(_('TLD')), ':', SPACE, $this->data['tld']['name']]),
+	new CSpan([bold($object_name_label), ':', SPACE, $object_name]),
 	BR(),
 	new CSpan([bold(_('Service')), ':', SPACE, $serviceName])
 ]]);

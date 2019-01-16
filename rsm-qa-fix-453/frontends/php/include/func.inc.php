@@ -2358,3 +2358,26 @@ function get_registrar_monitoring_state() {
 
 	return (int) $state;
 }
+
+/**
+ * Function returns HTML to display in registrar hint-box.
+ *
+ * @param type $registrar
+ *
+ * @return CList
+ */
+function getRegistrarDetailsHint(array $registrar) {
+	return (new CList())
+		->addItem([
+			(new CTag('b', true))->addItem(_('Registrar ID').': '),
+			$registrar['name']
+		])
+		->addItem([
+			(new CTag('b', true))->addItem(_('Registrar name').': '),
+			$registrar['registrar_name']
+		])
+		->addItem([
+			(new CTag('b', true))->addItem(_('Registrar family').': '),
+			$registrar['registrar_family']
+		]);
+}

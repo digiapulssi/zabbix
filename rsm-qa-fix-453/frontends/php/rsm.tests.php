@@ -138,6 +138,33 @@ $tld = API::Host()->get([
 
 if ($tld) {
 	$data['tld'] = reset($tld);
+	$data['registrar_mode'] = (bool) get_registrar_monitoring_state();
+
+	// Get registrar details.
+	if ($data['registrar_mode']) {
+		$data['tld'] += [
+			'registrar_name' => '',
+			'registrar_family' => ''
+		];
+
+		$host_macros = API::UserMacro()->get([
+			'output' => ['macro', 'value'],
+			'hostids' => $data['tld']['hostid'],
+			'filter' => [
+				'macro' => [REGISTRAR_FAMILY_MACROS, REGISTRAR_NAME_MACROS]
+			],
+			'usermacros' => true
+		]);
+
+		foreach ($host_macros as $macro) {
+			if ($macro['macro'] === REGISTRAR_FAMILY_MACROS) {
+				$data['tld']['registrar_family'] = $macro['value'];
+			}
+			elseif ($macro['macro'] === REGISTRAR_NAME_MACROS) {
+				$data['tld']['registrar_name'] = $macro['value'];
+			}
+		}
+	}
 }
 else {
 	show_error_message(_('No permissions to referred TLD or it does not exist!'));

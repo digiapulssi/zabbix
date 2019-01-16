@@ -59,6 +59,7 @@ $data = [];
 $data['services'] = [];
 $data['url'] = '';
 $data['sid'] = CWebUser::getSessionCookie();
+$data['registrar_mode'] = (bool) get_registrar_monitoring_state();
 
 $year = date('Y', time());
 $month = date('m', time());
@@ -108,6 +109,32 @@ if ($data['filter_search']) {
 
 		if ($tld) {
 			$data['tld'] = reset($tld);
+
+			// Get registrar details.
+			if ($data['registrar_mode']) {
+				$data['tld'] += [
+					'registrar_name' => '',
+					'registrar_family' => ''
+				];
+
+				$host_macros = API::UserMacro()->get([
+					'output' => ['macro', 'value'],
+					'hostids' => $data['tld']['hostid'],
+					'filter' => [
+						'macro' => [REGISTRAR_FAMILY_MACROS, REGISTRAR_NAME_MACROS]
+					],
+					'usermacros' => true
+				]);
+
+				foreach ($host_macros as $macro) {
+					if ($macro['macro'] === REGISTRAR_FAMILY_MACROS) {
+						$data['tld']['registrar_family'] = $macro['value'];
+					}
+					elseif ($macro['macro'] === REGISTRAR_NAME_MACROS) {
+						$data['tld']['registrar_name'] = $macro['value'];
+					}
+				}
+			}
 
 			// get application
 			$applications = API::Application()->get(array(

@@ -38,8 +38,10 @@ for ($i = SLA_MONITORING_START_YEAR; $i <= date('Y', time()); $i++) {
 	$years[$i] = $i;
 }
 
+$object_name_label = $data['registrar_mode'] ? _('Registrar ID') : _('TLD');
+
 $filterColumn1
-	->addRow(_('TLD'), (new CTextBox('filter_search', $this->data['filter_search']))
+	->addRow($object_name_label, (new CTextBox('filter_search', $this->data['filter_search']))
 		->setWidth(ZBX_TEXTAREA_FILTER_STANDARD_WIDTH)
 		->setAttribute('autocomplete', 'off')
 	);
@@ -63,11 +65,15 @@ $filter
 
 $widget->addItem($filter);
 
-if (isset($this->data['tld'])) {
+if (isset($data['tld'])) {
+	$object_name = $data['registrar_mode']
+		? (new CSpan($data['tld']['name']))->setHint(getRegistrarDetailsHint($data['tld']))
+		: $data['tld']['name'];
+
 	$infoBlock = (new CTable(null, 'filter info-block'))
-		->addRow([bold(_('TLD')), ':', SPACE, $this->data['tld']['name']])
-		->addRow([bold(_('Server')), ':', SPACE, new CLink($this->data['server'],
-			$this->data['url'].'rsm.rollingweekstatus.php?sid='.$this->data['sid'].'&set_sid=1'
+		->addRow([bold($object_name_label), ':', SPACE, $object_name])
+		->addRow([bold(_('Server')), ':', SPACE, new CLink($data['server'],
+			$data['url'].'rsm.rollingweekstatus.php?sid='.$data['sid'].'&set_sid=1'
 		)]);
 	$widget->additem($infoBlock);
 }

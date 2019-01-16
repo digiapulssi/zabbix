@@ -59,13 +59,30 @@ if (!$this->data['allowedGroups'][RSM_TEST_GROUP]) {
 	$filterTestGroup->setAttribute('disabled', true);
 }
 
-$searach_field_label = $data['registrar_mode'] ? _('REGISTRAR ID') : _('TLD');
-$filterColumn1
-	->addRow($searach_field_label, (new CTextBox('filter_search', $this->data['filter_search']))
-		->setWidth(ZBX_TEXTAREA_FILTER_SMALL_WIDTH)
-		->setAttribute('autocomplete', 'off')
-	)
-	->addRow(SPACE);
+if ($data['registrar_mode']) {
+	$filterColumn1
+		->addRow(_('Registrar ID'), (new CTextBox('filter_registrar_id', $data['filter_registrar_id']))
+			->setWidth(ZBX_TEXTAREA_FILTER_SMALL_WIDTH)
+			->setAttribute('autocomplete', 'off')
+		)
+		->addRow(_('Registrar name'), (new CTextBox('filter_registrar_name', $data['filter_registrar_name']))
+			->setWidth(ZBX_TEXTAREA_FILTER_SMALL_WIDTH)
+			->setAttribute('autocomplete', 'off')
+		)
+		->addRow(_('Registrar family'), (new CTextBox('filter_registrar_family', $data['filter_registrar_family']))
+			->setWidth(ZBX_TEXTAREA_FILTER_SMALL_WIDTH)
+			->setAttribute('autocomplete', 'off')
+		)
+		->addRow(SPACE);
+}
+else {
+	$filterColumn1
+		->addRow(_('TLD'), (new CTextBox('filter_search', $this->data['filter_search']))
+			->setWidth(ZBX_TEXTAREA_FILTER_SMALL_WIDTH)
+			->setAttribute('autocomplete', 'off')
+		)
+		->addRow(SPACE);
+}
 
 if ($data['registrar_mode'] === false) {
 	$filterColumn2
@@ -184,7 +201,9 @@ $form = (new CForm())
 
 if ($data['registrar_mode']) {
 	$header_columns = [
-		make_sorting_header(_('REGISTRAR ID'), 'name', $data['sort'], $data['sortorder']),
+		make_sorting_header(_('Registrar ID'), 'name', $data['sort'], $data['sortorder']),
+		make_sorting_header(_('Registrar name'), 'registrar_name', $data['sort'], $data['sortorder']),
+		make_sorting_header(_('Registrar family'), 'registrar_family', $data['sort'], $data['sortorder']),
 		make_sorting_header(_('RDDS (24Hrs)'), 'rdds_lastvalue', $data['sort'], $data['sortorder'])
 	];
 }
@@ -208,11 +227,20 @@ if ($data['tld']) {
 	$till = date('YmdHis', $serverTime);
 
 	foreach ($data['tld'] as $key => $tld) {
-		$row = [$tld['name']];
-
+		// REGISTRAR type.
+		if ($data['registrar_mode']) {
+			$row = [
+				$tld['name'],
+				$tld['registrar_name'],
+				$tld['registrar_family']
+			];
+		}
 		// TLD type.
-		if (!$data['registrar_mode']) {
-			$row[] = $tld['type'];
+		else {
+			$row = [
+				$tld['name'],
+				$tld['type']
+			];
 		}
 
 		// DNS

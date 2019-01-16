@@ -31,9 +31,9 @@ $filterColumn2 = new CFormList();
 $filterColumn3 = new CFormList();
 $filterColumn4 = new CFormList();
 
-$searach_field_label = $data['registrar_mode'] ? _('REGISTRAR ID') : _('TLD');
+$object_name_label = $data['registrar_mode'] ? _('Registrar ID') : _('TLD');
 $filterColumn1
-	->addRow($searach_field_label, (new CTextBox('filter_search', $this->data['filter_search']))
+	->addRow($object_name_label, (new CTextBox('filter_search', $data['filter_search']))
 		->setWidth(ZBX_TEXTAREA_FILTER_SMALL_WIDTH)
 		->setAttribute('autocomplete', 'off')
 	);
@@ -56,15 +56,20 @@ $filter
 
 $widget->addItem($filter);
 
-if (isset($this->data['tld'])) {
+if (isset($data['tld'])) {
 	$infoBlock = new CTable(null, 'filter info-block');
-	$dateFrom = date(DATE_TIME_FORMAT, zbxDateToTime($this->data['filter_from']));
-	$dateTill = date(DATE_TIME_FORMAT, zbxDateToTime($this->data['filter_to']));
+	$dateFrom = date(DATE_TIME_FORMAT, zbxDateToTime($data['filter_from']));
+	$dateTill = date(DATE_TIME_FORMAT, zbxDateToTime($data['filter_to']));
+
+	$object_name = $data['registrar_mode']
+		? (new CSpan($data['tld']['name']))->setHint(getRegistrarDetailsHint($data['tld']))
+		: $data['tld']['name'];
+
 	$infoBlock->addRow([[
-		bold($data['registrar_mode'] ? _('REGISTRAR ID') : _('TLD')),
+		bold($object_name_label),
 		':',
 		SPACE,
-		$this->data['tld']['name'],
+		$object_name,
 		BR(),
 		_s('From %1$s till %2$s', $dateFrom, $dateTill),
 		BR(),
@@ -101,7 +106,7 @@ if (isset($this->data['tld'])) {
 
 	// DNS
 	if ($data['registrar_mode']) {
-		unset($dnsTab);
+		$dnsTab = null;
 	}
 	elseif (isset($this->data['dns']['events'])) {
 		$dnsInfoTable = (new CTable(null))->addClass('incidents-info');
@@ -188,7 +193,7 @@ if (isset($this->data['tld'])) {
 
 	// DNSSEC
 	if ($data['registrar_mode']) {
-		unset($dnssecTab);
+		$dnssecTab = null;
 	}
 	elseif (isset($this->data['dnssec']['events'])) {
 		$dnssecInfoTable = (new CTable(null))->addClass('incidents-info');
@@ -359,7 +364,7 @@ if (isset($this->data['tld'])) {
 
 	// EPP
 	if ($data['registrar_mode']) {
-		unset($eppTab);
+		$eppTab = null;
 	}
 	elseif (isset($this->data['epp']['events'])) {
 		$eppInfoTable = (new CTable(null))->addClass('incidents-info');

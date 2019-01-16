@@ -38,6 +38,11 @@ $fields = array(
 );
 check_fields($fields);
 
+// Report is not available in registrar mode.
+if ((bool) get_registrar_monitoring_state() === true) {
+	redirect('rsm.particulartests.php?host='.getRequest('host', ''));
+}
+
 $data['proxys'] = [];
 $data['host'] = null;
 $data['time'] = null;

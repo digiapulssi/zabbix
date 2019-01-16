@@ -25,8 +25,8 @@ $filterForm = new CFilter('web.rsm.slareports.filter.state');
 
 $filterColumn = new CFormList();
 $filterColumn->addVar('filter_set', 1);
-$searach_field_label = $data['registrar_mode'] ? _('REGISTRAR ID') : _('TLD');
-$filterColumn->addRow($searach_field_label, (new CTextBox('filter_search', $this->data['filter_search']))
+$object_name_label = $data['registrar_mode'] ? _('Registrar ID') : _('TLD');
+$filterColumn->addRow($object_name_label, (new CTextBox('filter_search', $data['filter_search']))
 	->setWidth(ZBX_TEXTAREA_FILTER_STANDARD_WIDTH)
 	->setAttribute('autocomplete', 'off')
 );
@@ -52,11 +52,15 @@ $filterForm->addColumn($filterColumn);
 $widget->addItem($filterForm);
 
 if ($data['tld']) {
+	$object_name = $data['registrar_mode']
+		? (new CSpan($data['tld']['name']))->setHint(getRegistrarDetailsHint($data['tld']))
+		: $data['tld']['name'];
+
 	$infoBlock = (new CTable(null, 'filter info-block'))
 		->addRow([[
 			bold(_('Month')), ':', SPACE, date('F', mktime(0, 0, 0, $data['filter_month'], 1, $data['filter_year'])), BR(),
 			bold(_('Generation time')), ':', SPACE, date('dS F Y, H:i:s e', time()), BR(),
-			bold($data['registrar_mode'] ? _('REGISTRAR ID') : _('TLD')), ':', SPACE, $data['tld']['name'], BR(),
+			bold($object_name_label), ':', SPACE, $object_name, BR(),
 			bold(_('Server')), ':', SPACE, new CLink($this->data['server'],
 				$this->data['url'].'rsm.rollingweekstatus.php?sid='.$this->data['sid'].'&set_sid=1'
 			)
