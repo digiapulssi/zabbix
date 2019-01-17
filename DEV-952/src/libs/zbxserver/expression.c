@@ -3587,6 +3587,8 @@ int	substitute_simple_macros(zbx_uint64_t *actionid, const DB_EVENT *event, DB_E
 		}
 		else if (1 == require_address && NULL != replace_to && NULL != strstr(replace_to, "{$"))
 		{
+			/* Macros should be already expanded. An unexpanded user macro means either unknown */
+			/* macro or macro value validation failure.                                         */
 			zbx_snprintf(error, maxerrlen, "Invalid macro '%s' value", m);
 			res = FAIL;
 		}
