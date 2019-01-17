@@ -878,8 +878,8 @@ else {
 		CProfile::update('web.triggers.filter_dependent', $filter_dependent, PROFILE_TYPE_INT);
 		CProfile::update('web.triggers.filter_name', $filter_name, PROFILE_TYPE_STR);
 		CProfile::updateArray('web.triggers.filter_priority', $filter_priority, PROFILE_TYPE_INT);
-		CProfile::updateArray('web.triggers.filter_groupids', $filter_groupids, PROFILE_TYPE_INT);
-		CProfile::updateArray('web.triggers.filter_hostids', $filter_hostids, PROFILE_TYPE_INT);
+		CProfile::updateArray('web.triggers.filter_groupids', $filter_groupids, PROFILE_TYPE_ID);
+		CProfile::updateArray('web.triggers.filter_hostids', $filter_hostids, PROFILE_TYPE_ID);
 		CProfile::update('web.triggers.filter_state', $filter_state, PROFILE_TYPE_INT);
 		CProfile::update('web.triggers.filter_status', $filter_status, PROFILE_TYPE_INT);
 		CProfile::update('web.triggers.filter.evaltype', $filter_evaltype, PROFILE_TYPE_INT);
