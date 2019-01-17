@@ -18,66 +18,20 @@ $Data::Dumper::Pair = " : ";	# use separator instead of " => "
 $Data::Dumper::Useqq = 1;	# use double quotes instead of single quotes
 $Data::Dumper::Indent = 1;	# 1 provides less indentation instead of 2
 
-# TODO: REMOVE ME
 use constant SLV_UNAVAILABILITY_LIMIT => 49;
 
-use constant TARGET_PLACEHOLDER => 'TARGET_PLACEHOLDER';
+use constant TARGET_PLACEHOLDER => 'TARGET_PLACEHOLDER';	# for non-DNS services
 
+use constant MAX_CYCLES => 30;
+
+sub cycles_to_calculate($$$$$$);
 sub get_lastvalues_from_db($$);
 sub calculate_cycle($$$$$$$$);
 sub get_interfaces($$$);
 sub probe_online_at_init();
+sub get_history_by_itemid($$$);
 
-# TODO: REMOVE ME
-# gets the history of item for a given period
-sub get_history_by_itemid($$$)
-{
-	my $itemid = shift;
-	my $timestamp_from = shift;
-	my $timestamp_till = shift;
-
-	# we need previous value to have at the time of @timestamp_from
-	my $rows_ref = db_select("select delay from items where itemid=$itemid");
-
-	$timestamp_from -= $rows_ref->[0]->[0];
-
-	return db_select(
-			"select clock,value" .
-			" from history_uint" .
-			" where itemid=$itemid" .
-				" and " . sql_time_condition($timestamp_from, $timestamp_till) .
-			" order by clock"
-	);
-}
-
-# TODO: REMOVE ME
-# gets the value of item at a given timestamp
-sub get_historical_value_by_time($$)
-{
-	my $history = shift;
-	my $timestamp = shift;
-
-	fail("internal error") unless ($timestamp);
-
-	# TODO implement binary search
-
-	my $value;
-
-	foreach my $row (@{$history})
-	{
-		last if ($timestamp < $row->[0]);	# stop iterating if history clock overshot the timestamp
-	}
-	continue
-	{
-		$value = $row->[1];	# keep the value preceeding overshooting
-	}
-
-	fail("timestamp $timestamp is out of bounds of selected historical data range") unless (defined($value));
-
-	return $value;
-}
-
-parse_opts('tld=s', 'service=s', 'server-id=i');
+parse_opts('tld=s', 'service=s', 'server-id=i', 'now=i');
 
 setopt('nolog');
 
@@ -102,7 +56,8 @@ else
 
 my $total_tlds = 0;
 
-my $now = time() - 60;
+my $real_now = time();
+my $now = (getopt('now') // $real_now);
 
 db_connect();
 
@@ -114,6 +69,12 @@ fail("number of required working Name Servers is configured as $cfg_minns") if (
 my %delays;
 $delays{'dns'} = $delays{'dnssec'} = get_dns_udp_delay($now);
 $delays{'rdds'} = get_rdds_delay($now);
+
+my %service_keys = (
+	'dns' => 'rsm.slv.dns.avail',
+	'dnssec' => 'rsm.slv.dnssec.avail',
+	'rdds' => 'rsm.slv.rdds.avail'
+);
 
 db_disconnect();
 
@@ -186,27 +147,16 @@ foreach (@server_keys)
 			# get actual cycle times to calculate
 
 			# these are cycles we are going to recalculate for this tld-service
-			my @cycles_to_calculate;
-
-			if (!defined($lastvalues_cache->{$tld}{$service}{'lastclock'}))
-			{
-				push(@cycles_to_calculate, $lastvalues{$tld}{$service}{'lastclock'});
-			}
-			else
-			{
-				my $lastclock = $lastvalues_cache->{$tld}{$service}{'lastclock'};
-
-				$lastclock += $delays{$service};
-
-				while ($lastclock <= $lastvalues{$tld}{$service}{'lastclock'})
-				{
-					push(@cycles_to_calculate, $lastclock);
-
-					$lastclock += $delays{$service};
-				}
-			}
-
-			foreach my $clock (@cycles_to_calculate)
+			foreach my $clock (
+				cycles_to_calculate(
+					$tld,
+					$service,
+					$delays{$service},
+					$service_keys{$service},
+					\%lastvalues,
+					$lastvalues_cache
+				)
+			)
 			{
 				calculate_cycle(
 					$tld,
@@ -222,19 +172,150 @@ foreach (@server_keys)
 				$lastvalues{$tld}{$service}{'lastclock'} = $clock;
 			}
 
-			# TODO: no need to save probes and cycles data to the
-			# cache but this could be done in a more elegant way
+			# TODO: no need to have these in a cache but this could be done in a more elegant way
 			undef($lastvalues{$tld}{$service}{'probes'});
 			undef($lastvalues{$tld}{$service}{'cycles'});
 		}
 	}
 
-	if (ah_save_recent_cache($server_key, \%lastvalues) != AH_SUCCESS)
+	if (!opt('dry-run') && !opt('now'))
 	{
-		fail("cannot save recent measurements cache: ", ah_get_error());
+		if (ah_save_recent_cache($server_key, \%lastvalues) != AH_SUCCESS)
+		{
+			fail("cannot save recent measurements cache: ", ah_get_error());
+		}
 	}
 
 	db_disconnect();
+}
+
+sub cycles_to_calculate($$$$$$)
+{
+	my $tld = shift;
+	my $service = shift;
+	my $delay = shift;
+	my $service_key = shift;
+	my $lastvalues = shift;
+	my $lastvalues_cache = shift;
+
+	my @cycles;
+
+	if (opt('now'))
+	{
+		my $lastclock = cycle_start(getopt('now'), $delay);
+
+		while (scalar(@cycles) <= MAX_CYCLES && $lastclock < $real_now)
+		{
+			push(@cycles, $lastclock);
+
+			$lastclock += $delay;
+		}
+
+		dbg("using specified last clock: $lastclock");
+	}
+	elsif (!defined($lastvalues_cache->{$tld}{$service}{'lastclock'}))
+	{
+		# see if we have last_update.txt in SLA API directory
+		my $continue_file = ah_get_continue_file();
+
+		my ($lastclock, $error);
+
+		if (-e $continue_file)
+		{
+			if (read_file($continue_file, \$lastclock, \$error) != SUCCESS)
+			{
+				fail("cannot read file \"$continue_file\": $error");
+			}
+
+			while (chomp($lastclock)) {}
+
+			$lastclock++;
+
+			dbg("using last clock from SLA API directory, file $continue_file: $lastclock");
+		}
+		else
+		{
+			# if not, get the oldest from the database
+			$lastclock = get_oldest_clock($tld, $service_key, ITEM_VALUE_TYPE_UINT64);
+
+			fail("unexpected error: item \"$service_key\" not found on TLD $tld") if ($lastclock == E_FAIL);
+			fail("cannot yet calculate, no data in the database yet") if ($lastclock == 0);
+
+			dbg("using last clock from the database: $lastclock");
+		}
+
+		while (scalar(@cycles) <= MAX_CYCLES && $lastclock < $now)
+		{
+			push(@cycles, $lastclock);
+
+			$lastclock += $delay;
+		}
+	}
+	else
+	{
+		my $lastclock = $lastvalues_cache->{$tld}{$service}{'lastclock'};
+
+		dbg("using last clock from previous run: $lastclock");
+
+		$lastclock += $delay;
+
+		while (scalar(@cycles) <= MAX_CYCLES && $lastclock < $now
+				&& $lastclock <= $lastvalues->{$tld}{$service}{'lastclock'})
+		{
+			push(@cycles, $lastclock);
+
+			$lastclock += $delay;
+		}
+	}
+
+	return @cycles;
+}
+
+# gets the history of item for a given period
+sub get_history_by_itemid($$$)
+{
+	my $itemid = shift;
+	my $timestamp_from = shift;
+	my $timestamp_till = shift;
+
+	# we need previous value to have at the time of @timestamp_from
+	my $rows_ref = db_select("select delay from items where itemid=$itemid");
+
+	$timestamp_from -= $rows_ref->[0]->[0];
+
+	return db_select(
+			"select clock,value" .
+			" from history_uint" .
+			" where itemid=$itemid" .
+				" and " . sql_time_condition($timestamp_from, $timestamp_till) .
+			" order by clock"
+	);
+}
+
+# gets the value of item at a given timestamp
+sub get_historical_value_by_time($$)
+{
+	my $history = shift;
+	my $timestamp = shift;
+
+	fail("internal error") unless ($timestamp);
+
+	# TODO implement binary search
+
+	my $value;
+
+	foreach my $row (@{$history})
+	{
+		last if ($timestamp < $row->[0]);	# stop iterating if history clock overshot the timestamp
+	}
+	continue
+	{
+		$value = $row->[1];	# keep the value preceeding overshooting
+	}
+
+	fail("timestamp $timestamp is out of bounds of selected historical data range") unless (defined($value));
+
+	return $value;
 }
 
 sub get_service_from_key($)
@@ -333,19 +414,6 @@ sub get_lastvalues_from_db($$)
 	}
 }
 
-# TODO: REMOVE ME
-sub __get_history_table_by_value_type($)
-{
-	my $value_type = shift;
-
-	return "history_uint" if (!defined($value_type) || $value_type == ITEM_VALUE_TYPE_UINT64);	# default
-	return "history" if ($value_type == ITEM_VALUE_TYPE_FLOAT);
-	return "history_str" if ($value_type == ITEM_VALUE_TYPE_STR);
-
-	fail("THIS_SHOULD_NEVER_HAPPEN");
-}
-
-# TODO: MOVE ME TO ApiHelper.pm
 sub fill_test_data($$$$)
 {
 	my $service = shift;
@@ -470,7 +538,7 @@ sub probe_online_at($$)
 	{
 		my $rows_ref = db_select(
 			"select value".
-			" from " . __get_history_table_by_value_type(ITEM_VALUE_TYPE_UINT64).
+			" from " . history_table(ITEM_VALUE_TYPE_UINT64).
 			" where itemid=" . $probe_statuses{$probe}{'itemid'}.
 				" and clock=".$clock
 		);
@@ -539,13 +607,14 @@ sub calculate_cycle($$$$$$$$)
 
 		my $rows_ref = db_select(
 			"select itemid,value".
-			" from " . __get_history_table_by_value_type(ITEM_VALUE_TYPE_UINT64).
+			" from " . history_table(ITEM_VALUE_TYPE_UINT64).
 			" where itemid in (" . join(',', @itemids_uint) . ")".
 				" and " . sql_time_condition($from, $till)
 		);
 
 		# {
-		#     TODO: description of data structure
+		#     ITEMID => value,
+		#     ...
 		# }
 		my %values;
 
@@ -652,7 +721,7 @@ sub calculate_cycle($$$$$$$$)
 
 		$rows_ref = db_select(
 			"select itemid,value,clock".
-			" from " . __get_history_table_by_value_type(ITEM_VALUE_TYPE_FLOAT).
+			" from " . history_table(ITEM_VALUE_TYPE_FLOAT).
 			" where itemid in (" . join(',', @itemids_float) . ")".
 				" and " . sql_time_condition($from, $till)
 		);
@@ -685,7 +754,9 @@ sub calculate_cycle($$$$$$$$)
 				}
 				else
 				{
-					$target = TARGET_PLACEHOLDER;	# for non-DNS service "target" is NULL, but use placeholder
+					# for non-DNS service "target" is NULL, but we
+					# can't use it as hash key so we use placeholder
+					$target = TARGET_PLACEHOLDER;
 				}
 
 				$tested_interfaces{$interface}{$probe}{'testData'}{$target}{'metrics'}{$value_ref->{'clock'}}{'rtt'} = $value_ref->{'value'};
@@ -701,7 +772,7 @@ sub calculate_cycle($$$$$$$$)
 
 		$rows_ref = db_select(
 			"select itemid,value,clock".
-			" from " . __get_history_table_by_value_type(ITEM_VALUE_TYPE_STR).
+			" from " . history_table(ITEM_VALUE_TYPE_STR).
 			" where itemid in (" . join(',', @itemids_str) . ")".
 				" and " . sql_time_condition($from, $till)
 		);
@@ -718,7 +789,9 @@ sub calculate_cycle($$$$$$$$)
 			{
 				my $interface = ah_get_interface($i->{'key'});
 
-				my $target = TARGET_PLACEHOLDER;	# for non-DNS service "target" is NULL, but use placeholder
+				# for non-DNS service "target" is NULL, but we
+				# can't use it as hash key so we use placeholder
+				my $target = TARGET_PLACEHOLDER;
 
 				$tested_interfaces{$interface}{$probe}{'testData'}{$target}{'metrics'}{$value_ref->{'clock'}}{'ip'} = $value_ref->{'value'};
 			}
@@ -858,7 +931,7 @@ sla-api-current.pl - generate recent SLA API measurement files for newly collect
 
 =head1 SYNOPSIS
 
-sla-api-current.pl [--tld <tld>] [--service <name>] [--server-id <id>] [--debug] [--dry-run] [--help]
+sla-api-current.pl [--tld <tld>] [--service <name>] [--server-id <id>] [--now unixtimestamp] [--debug] [--dry-run] [--help]
 
 =head1 OPTIONS
 
@@ -872,9 +945,13 @@ Optionally specify TLD.
 
 Optionally specify service, one of: dns, dnssec, rdds
 
-=item B<--server-id>
+=item B<--server-id> ID
 
 Optionally specify the server ID to query the data from.
+
+=item B<--now> unixtimestamp
+
+Optionally specify the time of the cycle to start from. Maximum 30 cycles will be processed.
 
 =item B<--debug>
 

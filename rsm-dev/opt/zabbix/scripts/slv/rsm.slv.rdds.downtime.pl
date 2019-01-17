@@ -48,6 +48,7 @@ my $cycles_ref = collect_slv_cycles(
 	$tlds_ref,
 	$delay,
 	$cfg_key_out,
+	ITEM_VALUE_TYPE_UINT64,
 	$max_clock,
 	(opt('cycles') ? getopt('cycles') : MAX_CYCLES)
 );

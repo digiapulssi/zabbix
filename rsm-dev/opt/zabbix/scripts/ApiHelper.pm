@@ -509,7 +509,7 @@ sub __gen_recent_measurement_path($$$$)
 	$year += 1900;
 	$mon++;
 
-	my $add_path = sprintf("measurements/%4d/%2d/%2d", $year, $mon, $mday);
+	my $add_path = sprintf("measurements/%04d/%02d/%02d", $year, $mon, $mday);
 
 	my $path = AH_BASE_DIR . '/v2/' . __gen_base_path($ah_tld, $service, $add_path);
 
@@ -561,7 +561,7 @@ sub __gen_recent_cache_path($$)
 	my $server_key = shift;
 	my $path_buf = shift;
 
-	my $path = "/opt/zabbix/cache";
+	my $path = "/opt/zabbix/cache/sla-api";
 
 	return AH_FAIL unless (__make_path($path) == AH_SUCCESS);
 

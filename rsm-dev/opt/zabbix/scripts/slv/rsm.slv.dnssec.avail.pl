@@ -50,11 +50,12 @@ else
 slv_exit(SUCCESS) if (scalar(@{$tlds_ref}) == 0);
 
 my $cycles_ref = collect_slv_cycles(
-        $tlds_ref,
-        $delay,
-        $cfg_key_out,
-        $max_clock,
-        (opt('cycles') ? getopt('cycles') : MAX_CYCLES)
+	$tlds_ref,
+	$delay,
+	$cfg_key_out,
+	ITEM_VALUE_TYPE_UINT64,
+	$max_clock,
+	(opt('cycles') ? getopt('cycles') : MAX_CYCLES)
 );
 
 slv_exit(SUCCESS) if (scalar(keys(%{$cycles_ref})) == 0);
