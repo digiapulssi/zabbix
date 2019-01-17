@@ -401,13 +401,16 @@ int	zbx_execute_script(DC_HOST *host, zbx_script_t *script, char **result, char 
 				break;
 			}
 
-			if (SUCCEED == check_script_permissions(groupid, host->hostid, error, max_error_len))
+			if (SUCCEED != check_script_permissions(groupid, host->hostid, error, max_error_len))
+				break;
+
+			if (SUCCEED != substitute_simple_macros(NULL, NULL, NULL, NULL, NULL, host, NULL,
+					NULL, &script->command, MACRO_TYPE_SCRIPT, error, max_error_len))
 			{
-				if (SUCCEED ==(ret = substitute_simple_macros(NULL, NULL, NULL, NULL, NULL, host, NULL,
-						NULL, &script->command, MACRO_TYPE_SCRIPT, error, max_error_len)))
-					/* recursion */
-					ret = zbx_execute_script(host, script, result, error, max_error_len);
+				break;
 			}
+
+			ret = zbx_execute_script(host, script, result, error, max_error_len);	/* recursion */
 			break;
 		default:
 			zbx_snprintf(error, max_error_len, "Invalid command type [%d]", (int)script->type);
