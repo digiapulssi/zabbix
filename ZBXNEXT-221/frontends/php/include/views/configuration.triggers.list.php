@@ -58,15 +58,8 @@ $filter_column1 = (new CFormList())
 	->addRow(_('Name'),
 		(new CTextBox('filter_name', $data['filter_name']))->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
 	)
-	->addRow(_('Severity'),
-		(new CCheckBoxList('filter_priority', $data['filter_priority']))
-			->addCheckBox(_('Not classified'), TRIGGER_SEVERITY_NOT_CLASSIFIED)
-			->addCheckBox(_('Information'), TRIGGER_SEVERITY_INFORMATION)
-			->addCheckBox(_('Warning'), TRIGGER_SEVERITY_WARNING)
-			->addCheckBox(_('Average'), TRIGGER_SEVERITY_AVERAGE)
-			->addCheckBox(_('High'), TRIGGER_SEVERITY_HIGH)
-			->addCheckBox(_('Disaster'), TRIGGER_SEVERITY_DISASTER)
-	)->addRow(_('State'),
+	->addRow(_('Severity'), new CSeverityCheckBoxList('filter_priority', $data['filter_priority']))
+	->addRow(_('State'),
 		(new CRadioButtonList('filter_state', (int) $data['filter_state']))
 			->addValue(_('all'), -1)
 			->addValue(_('Normal'), TRIGGER_STATE_NORMAL)

@@ -26,13 +26,17 @@ class CCheckBoxList extends CList {
 	 */
 	protected $name;
 	/**
+	 * @var string $class_name
+	 */
+	protected $class_name;
+	/**
 	 * @var array $checked_values
 	 */
 	protected $checked_values;
 
 	/**
 	 * @param string $name
-	 * @param array $checked_values
+	 * @param array $checked_values  array of values (string|int) that will be prechecked upon addCheckBox function call
 	 */
 	public function __construct($name, $checked_values = []) {
 		parent::__construct();
@@ -41,6 +45,28 @@ class CCheckBoxList extends CList {
 		$this->addStyle('line-height: 20px;');
 		$this->name = $name;
 		$this->checked_values = array_flip($checked_values);
+
+		$this->setColumnWidth33();
+	}
+
+	/**
+	 * @return CCheckBoxList
+	 */
+	public function setColumnWidth50()
+	{
+		$this->class_name = ZBX_STYLE_COLUMN_50;
+
+		return $this;
+	}
+
+	/**
+	 * @return CCheckBoxList
+	 */
+	public function setColumnWidth33()
+	{
+		$this->class_name = ZBX_STYLE_COLUMN_33;
+
+		return $this;
 	}
 
 	/**
@@ -54,7 +80,7 @@ class CCheckBoxList extends CList {
 			(new CCheckBox($this->name.'['.$value.']', $value))
 				->setLabel($label)
 				->setChecked(array_key_exists($value, $this->checked_values)),
-			ZBX_STYLE_COLUMN_33
+			$this->class_name
 		);
 
 		return $this;
