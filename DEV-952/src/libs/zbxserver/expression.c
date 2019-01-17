@@ -2425,7 +2425,7 @@ int	substitute_simple_macros(zbx_uint64_t *actionid, const DB_EVENT *event, DB_E
 
 		indexed_macro = 0;
 		require_numeric = 0;
-		require_address = 1;
+		require_address = 0;
 
 		/* User macros can have macro closing symbol } in quoted context. */
 		/* We must use user macro parsing function to find macro end.     */
