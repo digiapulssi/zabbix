@@ -270,6 +270,12 @@ class CUser extends CApiService {
 				self::exception(ZBX_API_ERROR_PARAMETERS, _('Wrong value for url field.'));
 			}
 
+			// Check if passed language is supported.
+			$supported_locales = getLocales();
+			if (array_key_exists('lang', $user) && !array_key_exists($user['lang'], $supported_locales)) {
+				self::exception(ZBX_API_ERROR_PARAMETERS, _s('Language "%s" is not supported.', $user['lang']));
+			}
+
 			// check if user alias
 			if (isset($user['alias'])) {
 				// check if we change guest user

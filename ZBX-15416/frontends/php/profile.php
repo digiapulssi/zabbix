@@ -160,9 +160,6 @@ elseif (hasRequest('update')) {
 		}
 
 		$result = DBend($result);
-		if (!$result) {
-			error(API::User()->resetErrors());
-		}
 
 		if ($result) {
 			DBstart();
