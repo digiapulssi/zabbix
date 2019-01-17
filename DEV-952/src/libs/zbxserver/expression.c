@@ -3524,6 +3524,7 @@ int	substitute_simple_macros(zbx_uint64_t *actionid, const DB_EVENT *event, DB_E
 			else if (0 == strcmp(m, MVAR_HOST_IP) || 0 == strcmp(m, MVAR_IPADDRESS))
 			{
 				if (SUCCEED == (ret = DCconfig_get_interface(&interface, dc_host->hostid, 0)))
+				{
 					if (SUCCEED == is_ip(interface.ip_orig) ||
 							SUCCEED == zbx_validate_hostname(interface.ip_orig))
 					{
@@ -3534,10 +3535,12 @@ int	substitute_simple_macros(zbx_uint64_t *actionid, const DB_EVENT *event, DB_E
 						zbx_snprintf(error, maxerrlen, "Invalid macro '%s' value.", m);
 						res = FAIL;
 					}
+				}
 			}
 			else if	(0 == strcmp(m, MVAR_HOST_DNS))
 			{
 				if (SUCCEED == (ret = DCconfig_get_interface(&interface, dc_host->hostid, 0)))
+				{
 					if (SUCCEED == is_ip(interface.dns_orig) ||
 							SUCCEED == zbx_validate_hostname(interface.dns_orig))
 					{
@@ -3548,10 +3551,12 @@ int	substitute_simple_macros(zbx_uint64_t *actionid, const DB_EVENT *event, DB_E
 						zbx_snprintf(error, maxerrlen, "Invalid macro '%s' value.", m);
 						res = FAIL;
 					}
+				}
 			}
 			else if (0 == strcmp(m, MVAR_HOST_CONN))
 			{
 				if (SUCCEED == (ret = DCconfig_get_interface(&interface, dc_host->hostid, 0)))
+				{
 					if (SUCCEED == is_ip(interface.addr) ||
 							SUCCEED == zbx_validate_hostname(interface.addr))
 					{
@@ -3562,6 +3567,7 @@ int	substitute_simple_macros(zbx_uint64_t *actionid, const DB_EVENT *event, DB_E
 						zbx_snprintf(error, maxerrlen, "Invalid macro '%s' value.", m);
 						res = FAIL;
 					}
+				}
 			}
 		}
 		else if (0 == indexed_macro && 0 != (macro_type & MACRO_TYPE_HTTPTEST_FIELD))
