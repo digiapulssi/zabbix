@@ -3588,7 +3588,7 @@ int	substitute_simple_macros(zbx_uint64_t *actionid, const DB_EVENT *event, DB_E
 		else if (1 == require_address && NULL != replace_to && SUCCEED != is_ip(replace_to) &&
 				SUCCEED != zbx_validate_hostname(replace_to))
 		{
-			zbx_snprintf(error, maxerrlen, "Invalid macro '%.*s' value", m);
+			zbx_snprintf(error, maxerrlen, "Invalid macro '%s' value", m);
 			res = FAIL;
 		}
 		else if (FAIL == ret)
