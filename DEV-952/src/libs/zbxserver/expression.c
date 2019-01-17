@@ -3585,8 +3585,7 @@ int	substitute_simple_macros(zbx_uint64_t *actionid, const DB_EVENT *event, DB_E
 			else if (NULL != error)
 				zbx_snprintf(error, maxerrlen, "Macro '%s' value is not numeric", m);
 		}
-		else if (1 == require_address && NULL != replace_to && SUCCEED != is_ip(replace_to) &&
-				SUCCEED != zbx_validate_hostname(replace_to))
+		else if (1 == require_address && NULL != replace_to && NULL != (strstr(replace_to, "{$")))
 		{
 			zbx_snprintf(error, maxerrlen, "Invalid macro '%s' value", m);
 			res = FAIL;
