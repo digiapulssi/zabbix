@@ -429,18 +429,19 @@ class CConfigurationExport {
 			'selectPreprocessing' => ['type', 'params'],
 			'hostids' => array_keys($hosts),
 			'webitems' => true,
+			'inherited' => false,
 			'filter' => ['flags' => ZBX_FLAG_DISCOVERY_NORMAL],
 			'preservekeys' => true
 		]);
 
+		$inherited_master_items = [];
 		foreach ($items as $itemid => &$item) {
 			if ($item['type'] == ITEM_TYPE_DEPENDENT) {
 				if (array_key_exists($item['master_itemid'], $items)) {
 					$item['master_item'] = ['key_' => $items[$item['master_itemid']]['key_']];
 				}
 				else {
-					// Do not export dependent items with master item from template.
-					unset($items[$itemid]);
+					$inherited_master_items[$item['master_itemid']] = $itemid;
 				}
 			}
 		}
@@ -449,6 +450,25 @@ class CConfigurationExport {
 		foreach ($items as $itemid => $item) {
 			if ($item['type'] == ITEM_TYPE_HTTPTEST) {
 				unset($items[$itemid]);
+			}
+		}
+
+		if ($inherited_master_items) {
+			$master_items = API::Item()->get([
+				'output' => $this->dataFields['item'],
+				'selectApplications' => ['name', 'flags'],
+				'selectPreprocessing' => ['type', 'params'],
+				'itemids' => array_keys($inherited_master_items),
+				'hostids' => array_keys($hosts),
+				'webitems' => true,
+				'filter' => ['flags' => ZBX_FLAG_DISCOVERY_NORMAL],
+				'preservekeys' => true
+			]);
+
+			foreach ($master_items as $master_itemid => $master_item) {
+				$itemid = $inherited_master_items[$master_itemid];
+				$items[$master_itemid] = $master_item;
+				$items[$itemid]['master_item'] = ['key_' => $master_item['key_']];
 			}
 		}
 
