@@ -42,13 +42,13 @@ var chkboxRange = {
 
 		// initialize checkboxes
 		var chkboxes = jQuery('.list-table tbody input.' + this.boxclass);
-		if (chkboxes.length > 0) {
-			for (var i = 0; i < chkboxes.length; i++) {
-				this.implement(chkboxes[i]);
-			}
-		}
-		else {
+
+		if (chkboxes.length == 0) {
 			return;
+		}
+
+		for (var i = 0; i < chkboxes.length; i++) {
+			this.implement(chkboxes[i]);
 		}
 
 		// load selected checkboxes from sessionStorage
