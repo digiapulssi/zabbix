@@ -291,6 +291,59 @@ static int	mode_parameter_is_skip(const char *itemkey)
 
 /******************************************************************************
  *                                                                            *
+ * Function: remove_active_checks                                             *
+ *                                                                            *
+ * Purpose: to remove active checks that was not received from server         *
+ *                                                                            *
+ * Parameters:: received_metrics - pointer to received metrics,               *
+ *                                 if NULL than all metrics will be deleted   *
+ *                                                                            *
+ ******************************************************************************/
+static void	remove_active_checks(zbx_vector_str_t *received_metrics)
+{
+	ZBX_ACTIVE_METRIC	*metric;
+	int 			i, j;
+
+	/* remove what wasn't received */
+	for (i = 0; i < active_metrics.values_num; i++)
+	{
+		int	found = 0;
+
+		metric = (ZBX_ACTIVE_METRIC *)active_metrics.values[i];
+
+		/* 'Do-not-delete' exception for log[] item with <mode> parameter set to 'skip'. We need to keep its */
+		/* state, namely 'skip_old_data', in case the item becomes NOTSUPPORTED as server might not send it */
+		/* in a new active check list. */
+
+		if (0 != (ZBX_METRIC_FLAG_LOG_LOG & metric->flags) && ITEM_STATE_NOTSUPPORTED == metric->state &&
+				0 == metric->skip_old_data && SUCCEED == mode_parameter_is_skip(metric->key))
+		{
+			continue;
+		}
+
+		if (NULL != received_metrics)
+		{
+			for (j = 0; j < received_metrics->values_num; j++)
+			{
+				if (0 == strcmp(metric->key_orig, received_metrics->values[j]))
+				{
+					found = 1;
+					break;
+				}
+			}
+		}
+
+		if (0 == found)
+		{
+			zbx_vector_ptr_remove_noorder(&active_metrics, i);
+			free_active_metric(metric);
+			i--;	/* consider the same index on the next run */
+		}
+	}
+}
+
+/******************************************************************************
+ *                                                                            *
  * Function: parse_list_of_checks                                             *
  *                                                                            *
  * Purpose: Parse list of active checks received from server                  *
@@ -322,7 +375,7 @@ static int	parse_list_of_checks(char *str, const char *host, unsigned short port
 	struct zbx_json_parse	jp_data, jp_row;
 	ZBX_ACTIVE_METRIC	*metric;
 	zbx_vector_str_t	received_metrics;
-	int			delay, mtime, expression_type, case_sensitive, i, j, ret = FAIL;
+	int			delay, mtime, expression_type, case_sensitive, ret = FAIL;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
@@ -346,6 +399,10 @@ static int	parse_list_of_checks(char *str, const char *host, unsigned short port
 			zabbix_log(LOG_LEVEL_WARNING, "no active checks on server [%s:%hu]: %s", host, port, tmp);
 		else
 			zabbix_log(LOG_LEVEL_WARNING, "no active checks on server");
+
+		remove_active_checks(NULL);
+
+		zbx_regexp_clean_expressions(&regexps);
 
 		goto out;
 	}
@@ -407,39 +464,7 @@ static int	parse_list_of_checks(char *str, const char *host, unsigned short port
 		zbx_vector_str_append(&received_metrics, zbx_strdup(NULL, key_orig));
 	}
 
-	/* remove what wasn't received */
-	for (i = 0; i < active_metrics.values_num; i++)
-	{
-		int	found = 0;
-
-		metric = (ZBX_ACTIVE_METRIC *)active_metrics.values[i];
-
-		/* 'Do-not-delete' exception for log[] item with <mode> parameter set to 'skip'. We need to keep its */
-		/* state, namely 'skip_old_data', in case the item becomes NOTSUPPORTED as server might not send it */
-		/* in a new active check list. */
-
-		if (0 != (ZBX_METRIC_FLAG_LOG_LOG & metric->flags) && ITEM_STATE_NOTSUPPORTED == metric->state &&
-				0 == metric->skip_old_data && SUCCEED == mode_parameter_is_skip(metric->key))
-		{
-			continue;
-		}
-
-		for (j = 0; j < received_metrics.values_num; j++)
-		{
-			if (0 == strcmp(metric->key_orig, received_metrics.values[j]))
-			{
-				found = 1;
-				break;
-			}
-		}
-
-		if (0 == found)
-		{
-			zbx_vector_ptr_remove_noorder(&active_metrics, i);
-			free_active_metric(metric);
-			i--;	/* consider the same index on the next run */
-		}
-	}
+	remove_active_checks(&received_metrics);
 
 	zbx_regexp_clean_expressions(&regexps);
 
