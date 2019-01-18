@@ -500,12 +500,13 @@ sub ah_save_measurement
 #
 #   [basev2_dir]/example/monitoring/dns/measurements/2018/02/28/<measurement>.json
 #
-sub __gen_recent_measurement_path($$$$)
+sub __gen_recent_measurement_path($$$$$)
 {
 	my $ah_tld = shift;
 	my $service = shift;
 	my $clock = shift;
 	my $path_buf = shift;	# pointer to result
+	my $create = shift;	# create missing directories
 
 	my (undef, undef, undef, $mday, $mon, $year) = localtime($clock);
 
@@ -516,7 +517,10 @@ sub __gen_recent_measurement_path($$$$)
 
 	my $path = AH_BASEV2_DIR . '/' . __gen_base_path($ah_tld, $service, $add_path);
 
-	return AH_FAIL unless (__make_path($path) == AH_SUCCESS);
+	if ($create)
+	{
+		return AH_FAIL unless (__make_path($path) == AH_SUCCESS);
+	}
 
 	$$path_buf = $path . "/$clock.json";
 
@@ -532,7 +536,8 @@ sub ah_get_recent_measurement($$$$)
 
 	my ($path, $buf);
 
-	return AH_FAIL unless (__gen_recent_measurement_path($ah_tld, $service, $clock, \$path) == AH_SUCCESS);
+	# do not create missing directories
+	return AH_FAIL unless (__gen_recent_measurement_path($ah_tld, $service, $clock, \$path, 0) == AH_SUCCESS);
 
 	return AH_FAIL unless (__read_file($path, \$buf) == AH_SUCCESS);
 
@@ -550,7 +555,8 @@ sub ah_save_recent_measurement($$$$)
 
 	my $path;
 
-	return AH_FAIL unless (__gen_recent_measurement_path($ah_tld, $service, $clock, \$path) == AH_SUCCESS);
+	# force creation of missing directories
+	return AH_FAIL unless (__gen_recent_measurement_path($ah_tld, $service, $clock, \$path, 1) == AH_SUCCESS);
 
 	return __write_file($path, __encode_json($json), $clock);
 }

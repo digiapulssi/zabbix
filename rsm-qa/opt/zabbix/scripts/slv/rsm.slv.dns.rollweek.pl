@@ -12,6 +12,7 @@ use strict;
 use warnings;
 use RSM;
 use RSMSLV;
+use TLD_constants qw(:api);
 
 use constant MAX_CYCLES	=> 5;
 

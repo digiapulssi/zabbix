@@ -821,7 +821,7 @@ sub tld_interface_enabled
 		tld_interface_enabled_create_cache($till, $interface);
 	}
 
-	if (scalar(@{$enabled_items_cache{$item_key}{$tld}}) != 0)
+	if (defined($enabled_items_cache{$item_key}{$tld}))
 	{
 		# find the latest value but make sure to specify time bounds, relatively to $till
 

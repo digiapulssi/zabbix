@@ -130,13 +130,6 @@ foreach (@server_keys)
 
 	get_lastvalues_from_db(\%lastvalues, \%delays);
 
-	# rtt limits only considered for DNS currently
-	$rtt_limits{'dns'} = get_history_by_itemid(
-		CONFIGVALUE_DNS_UDP_RTT_HIGH_ITEMID,
-		cycle_start($now, $delays{'dns'}),
-		cycle_end($now, $delays{'dns'})
-	);
-
 	# probes available for every service
 	my %probes;
 
@@ -157,18 +150,27 @@ foreach (@server_keys)
 			$probes{$service} = get_probes($service) unless (defined($probes{$service}));
 
 			# get actual cycle times to calculate
+			my @cycles_to_calculate = cycles_to_calculate(
+				$tld,
+				$service,
+				$delays{$service},
+				$service_keys{$service},
+				\%lastvalues,
+				$lastvalues_cache
+			);
+
+			if ($service eq 'dns' && scalar(@cycles_to_calculate) != 0)
+			{
+				# rtt limits only considered for DNS currently
+				$rtt_limits{'dns'} = get_history_by_itemid(
+					CONFIGVALUE_DNS_UDP_RTT_HIGH_ITEMID,
+					$cycles_to_calculate[0],
+					$cycles_to_calculate[-1]
+				);
+			}
 
 			# these are cycles we are going to recalculate for this tld-service
-			foreach my $clock (
-				cycles_to_calculate(
-					$tld,
-					$service,
-					$delays{$service},
-					$service_keys{$service},
-					\%lastvalues,
-					$lastvalues_cache
-				)
-			)
+			foreach my $clock (@cycles_to_calculate)
 			{
 				calculate_cycle(
 					$tld,
