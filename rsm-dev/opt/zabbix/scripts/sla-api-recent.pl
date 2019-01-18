@@ -22,7 +22,7 @@ use constant SLV_UNAVAILABILITY_LIMIT => 49;
 
 use constant TARGET_PLACEHOLDER => 'TARGET_PLACEHOLDER';	# for non-DNS services
 
-use constant MAX_CYCLES => 30;
+use constant MAX_PERIOD => 30 * 60;	# 30 minutes
 
 sub cycles_to_calculate($$$$$$);
 sub get_lastvalues_from_db($$);
@@ -31,11 +31,19 @@ sub get_interfaces($$$);
 sub probe_online_at_init();
 sub get_history_by_itemid($$$);
 
-parse_opts('tld=s', 'service=s', 'server-id=i', 'now=i');
+parse_opts('tld=s', 'service=s', 'server-id=i', 'now=i', 'period=i');
 
 setopt('nolog');
 
 usage() if (opt('help'));
+
+exit_if_running();
+
+if (opt('debug'))
+{
+	dbg("command-line parameters:");
+	dbg("$_ => ", getopt($_)) foreach (optkeys());
+}
 
 ah_set_debug(getopt('debug'));
 
@@ -54,10 +62,10 @@ else
 	@server_keys = get_rsm_server_keys($config);
 }
 
-my $total_tlds = 0;
-
 my $real_now = time();
 my $now = (getopt('now') // $real_now);
+
+my $max_period = (opt('period') ? getopt('period') * 60 : MAX_PERIOD);
 
 db_connect();
 
@@ -136,8 +144,12 @@ foreach (@server_keys)
 	{
 		$tld = $_;	# global variable
 
+		next if (opt('tld') && $tld ne getopt('tld'));
+
 		foreach my $service (sort(keys(%{$lastvalues{$tld}})))
 		{
+			next if (opt('service') && $service ne getopt('service'));
+
 			next unless (tld_service_enabled($tld, $service, $now));
 
 			my $interfaces_ref = get_interfaces($tld, $service, $now);
@@ -204,7 +216,9 @@ sub cycles_to_calculate($$$$$$)
 	{
 		my $lastclock = cycle_start(getopt('now'), $delay);
 
-		while (scalar(@cycles) <= MAX_CYCLES && $lastclock < $real_now)
+		my $max_clock = $lastclock + $max_period;
+
+		while ($lastclock < $max_clock && $lastclock < $real_now)
 		{
 			push(@cycles, $lastclock);
 
@@ -244,7 +258,9 @@ sub cycles_to_calculate($$$$$$)
 			dbg("using last clock from the database: $lastclock");
 		}
 
-		while (scalar(@cycles) <= MAX_CYCLES && $lastclock < $now)
+		my $max_clock = $lastclock + $max_period;
+
+		while ($lastclock < $max_clock && $lastclock < $real_now)
 		{
 			push(@cycles, $lastclock);
 
@@ -259,8 +275,9 @@ sub cycles_to_calculate($$$$$$)
 
 		$lastclock += $delay;
 
-		while (scalar(@cycles) <= MAX_CYCLES && $lastclock < $now
-				&& $lastclock <= $lastvalues->{$tld}{$service}{'lastclock'})
+		my $max_clock = $lastclock + $max_period;
+
+		while ($lastclock < $max_clock && $lastclock <= $lastvalues->{$tld}{$service}{'lastclock'})
 		{
 			push(@cycles, $lastclock);
 
@@ -931,7 +948,7 @@ sla-api-current.pl - generate recent SLA API measurement files for newly collect
 
 =head1 SYNOPSIS
 
-sla-api-current.pl [--tld <tld>] [--service <name>] [--server-id <id>] [--now unixtimestamp] [--debug] [--dry-run] [--help]
+sla-api-current.pl [--tld <tld>] [--service <name>] [--server-id <id>] [--now unixtimestamp] [--period minutes] [--debug] [--dry-run] [--help]
 
 =head1 OPTIONS
 
@@ -953,9 +970,17 @@ Optionally specify the server ID to query the data from.
 
 Optionally specify the time of the cycle to start from. Maximum 30 cycles will be processed.
 
+=item B<--period> minutes
+
+Optionally specify maximum period to handle (default: 30 minutes).
+
 =item B<--debug>
 
 Run the script in debug mode. This means printing more information.
+
+=item B<--dry-run>
+
+Print data to the screen, do not write anything to the filesystem.
 
 =item B<--help>
 
@@ -965,12 +990,14 @@ Print a brief help message and exit.
 
 =head1 DESCRIPTION
 
-B<This program> will generate the most recent SLA API measurement files for newly collected monitoring data.
+B<This program> will generate the most recent measurement files for newly collected monitoring data. The files will be
+available under directory /opt/zabbix/sla-v2 . Each run the script would generate new measurement files for the period
+from the last run till up to 30 minutes.
 
 =head1 EXAMPLES
 
-./$0 --tld example --dry-run
+/opt/zabbix/scripts/sla-api-recent.pl
 
-Print what would have been done to generate recent measurement files of tld "example".
+Generate recent measurement files for the period from last generated till up to 30 minutes.
 
 =cut

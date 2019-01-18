@@ -42,7 +42,7 @@ __validate_input();	# needs to be connected to db
 
 ah_set_debug(getopt('debug'));
 
-if (!opt('dry-run') && (my $error = rsm_targets_prepare(AH_TMP_DIR, AH_BASE_DIR)))
+if (!opt('dry-run') && (my $error = rsm_targets_prepare(AH_BASEV1_TMP_DIR, AH_BASEV1_DIR)))
 {
 	fail($error);
 }
