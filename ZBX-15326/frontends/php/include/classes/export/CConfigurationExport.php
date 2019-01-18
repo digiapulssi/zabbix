@@ -441,7 +441,10 @@ class CConfigurationExport {
 					$item['master_item'] = ['key_' => $items[$item['master_itemid']]['key_']];
 				}
 				else {
-					$inherited_master_items[$item['master_itemid']] = $itemid;
+					if (!array_key_exists($item['master_itemid'], $inherited_master_items)) {
+						$inherited_master_items[$item['master_itemid']] = [];
+					}
+					$inherited_master_items[$item['master_itemid']][] = $itemid;
 				}
 			}
 		}
@@ -466,9 +469,11 @@ class CConfigurationExport {
 			]);
 
 			foreach ($master_items as $master_itemid => $master_item) {
-				$itemid = $inherited_master_items[$master_itemid];
+				$itemids = $inherited_master_items[$master_itemid];
 				$items[$master_itemid] = $master_item;
-				$items[$itemid]['master_item'] = ['key_' => $master_item['key_']];
+				foreach ($itemids as $itemid) {
+					$items[$itemid]['master_item'] = ['key_' => $master_item['key_']];
+				}
 			}
 		}
 
