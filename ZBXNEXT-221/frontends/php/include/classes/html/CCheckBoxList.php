@@ -22,48 +22,76 @@
 class CCheckBoxList extends CList {
 
 	/**
+	 * @var array $values
+	 */
+	public $values;
+
+	/**
 	 * @var string $name
 	 */
 	protected $name;
-	/**
-	 * @var string $class_name
-	 */
-	protected $class_name;
-	/**
-	 * @var array $checked_values
-	 */
-	protected $checked_values;
 
 	/**
 	 * @param string $name
-	 * @param array $values  array of values
-	 * @param array $checked_values  array of values (string|int) that will be prechecked upon addCheckBox function call
 	 */
-	public function __construct($name, $values = [], $checked_values = []) {
+	public function __construct($name) {
 		parent::__construct();
 
 		$this->addClass(ZBX_STYLE_CHECKBOX_LIST);
 		$this->name = $name;
-		$this->checked_values = array_flip($checked_values);
-
-		foreach ($values as $label => $value) {
-			$this->addCheckBox($label, $value);
-		}
+		$this->values = [];
 	}
 
 	/**
-	 * @param string $label
-	 * @param string $value
+	 * @param array $values
 	 *
 	 * @return CCheckBoxList
 	 */
-	public function addCheckBox($label, $value) {
-		parent::addItem(
-			(new CCheckBox($this->name.'['.$value.']', $value))
-				->setLabel($label)
-				->setChecked(array_key_exists($value, $this->checked_values))
-		);
+	public function setChecked(array $values)
+	{
+		$values = array_flip($values);
+
+		foreach ($this->values as &$value) {
+			$value['checked'] = array_key_exists($value['value'], $values);
+		}
+		unset($value);
 
 		return $this;
+	}
+
+	/**
+	 * @param array $values
+	 *
+	 * @return CCheckBoxList
+	 */
+	public function setOptions(array $values)
+	{
+		$this->values = [];
+
+		foreach ($values as $value) {
+			$this->values[] = $value + [
+				'name' => '',
+				'value' => null,
+				'checked' => false
+			];
+		}
+
+		return $this;
+	}
+
+	/*
+	 * @return string
+	 */
+	public function toString()
+	{
+		foreach ($this->values as $value) {
+			parent::addItem(
+				(new CCheckBox($this->name.'['.$value['value'].']', $value['value']))
+					->setLabel($value['name'])
+					->setChecked($value['checked'])
+			);
+		}
+
+		return parent::toString();
 	}
 }

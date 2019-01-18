@@ -59,8 +59,10 @@ $filter_column1 = (new CFormList())
 		(new CTextBox('filter_name', $data['filter_name']))->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
 	)
 	->addRow(_('Severity'),
-		(new CCheckBoxList('filter_priority', $data['config_priorities'], $data['filter_priority']))
-			->addClass(ZBX_STYLE_COL_2)
+		(new CCheckBoxList('filter_priority'))
+			->setOptions($data['config_priorities'])
+			->setChecked($data['filter_priority'])
+			->addClass(ZBX_STYLE_COL_3)
 	)
 	->addRow(_('State'),
 		(new CRadioButtonList('filter_state', (int) $data['filter_state']))
