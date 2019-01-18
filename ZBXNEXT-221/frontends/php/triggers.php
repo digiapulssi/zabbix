@@ -929,8 +929,14 @@ else {
 		}
 	}
 
+	$config_priorities = [];
+	foreach (range(TRIGGER_SEVERITY_NOT_CLASSIFIED, TRIGGER_SEVERITY_COUNT - 1) as $severity) {
+		$config_priorities[getSeverityName($severity, $config)] = $severity;
+	}
+
 	$data = [
 		'config' => $config,
+		'config_priorities' => $config_priorities,
 		'hostid' => $hostid,
 		'triggers' => $triggers,
 		'profile_idx' => 'web.triggers.filter',
