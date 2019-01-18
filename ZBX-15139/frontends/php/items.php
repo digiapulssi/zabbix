@@ -478,9 +478,6 @@ if (isset($_REQUEST['delete']) && isset($_REQUEST['itemid'])) {
 		$result = API::Item()->delete([getRequest('itemid')]);
 	}
 
-	if ($result) {
-		uncheckAllTableRows(getRequest('hostid'));
-	}
 	unset($_REQUEST['itemid'], $_REQUEST['form']);
 	show_messages($result, _('Item deleted'), _('Cannot delete item'));
 }
@@ -863,7 +860,6 @@ elseif (hasRequest('add') || hasRequest('update')) {
 
 	if ($result) {
 		unset($_REQUEST['itemid'], $_REQUEST['form']);
-		uncheckAllTableRows(getRequest('hostid'));
 	}
 }
 elseif (hasRequest('check_now') && hasRequest('itemid')) {
@@ -1173,7 +1169,6 @@ elseif ($valid_input && hasRequest('massupdate') && hasRequest('group_itemid')) 
 
 	if ($result) {
 		unset($_REQUEST['group_itemid'], $_REQUEST['massupdate'], $_REQUEST['form']);
-		uncheckAllTableRows(getRequest('hostid'));
 	}
 	show_messages($result, _('Items updated'), _('Cannot update items'));
 }
@@ -1187,11 +1182,6 @@ elseif (hasRequest('action') && str_in_array(getRequest('action'), ['item.massen
 	}
 
 	$result = (bool) API::Item()->update($items);
-
-	if ($result) {
-		uncheckAllTableRows(getRequest('hostid'));
-	}
-
 	$updated = count($itemids);
 
 	$messageSuccess = ($status == ITEM_STATUS_ACTIVE)
@@ -1234,7 +1224,6 @@ elseif (hasRequest('action') && getRequest('action') === 'item.masscopyto' && ha
 		$items_count = count(getRequest('group_itemid'));
 
 		if ($result) {
-			uncheckAllTableRows(getRequest('hostid'));
 			unset($_REQUEST['group_itemid']);
 		}
 		show_messages($result,
@@ -1277,10 +1266,6 @@ elseif (hasRequest('action') && getRequest('action') === 'item.massclearhistory'
 		}
 
 		$result = DBend($result);
-
-		if ($result) {
-			uncheckAllTableRows(getRequest('hostid'));
-		}
 	}
 
 	show_messages($result, _('History cleared'), _('Cannot clear history'));
@@ -1290,19 +1275,16 @@ elseif (hasRequest('action') && getRequest('action') === 'item.massdelete' && ha
 
 	$result = API::Item()->delete($group_itemid);
 
-	if ($result) {
-		uncheckAllTableRows(getRequest('hostid'));
-	}
-	elseif (hasErrorMesssages()) {
-		$restToDelete = API::Item()->get([
-			'output' => ['key_', 'itemid'],
-			'selectHosts' => ['name'],
+	if (!$result) {
+		$itemids = API::Item()->get([
+			'output' => [],
 			'itemids' => $group_itemid,
 			'preservekeys' => true
 		]);
 
-		updateSessionStorage(getRequest('hostid'), array_column($restToDelete, 'itemid', 'itemid'));
+		updateSessionStorage(getRequest('hostid'), array_column($itemids, 'itemid', 'itemid'));
 	}
+
 	show_messages($result, _('Items deleted'), _('Cannot delete items'));
 }
 elseif (hasRequest('action') && getRequest('action') === 'item.masscheck_now' && hasRequest('group_itemid')) {
@@ -1311,11 +1293,12 @@ elseif (hasRequest('action') && getRequest('action') === 'item.masscheck_now' &&
 		'itemids' => getRequest('group_itemid')
 	]);
 
-	if ($result) {
-		uncheckAllTableRows(getRequest('hostid'));
-	}
-
 	show_messages($result, _('Request sent successfully'), _('Cannot send request'));
+}
+
+// If any of item action succeeded, remove processed ids from browser session storage.
+if ($result) {
+	clearSessionStorage(getRequest('hostid'));
 }
 
 /*

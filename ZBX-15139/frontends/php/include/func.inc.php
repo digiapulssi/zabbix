@@ -2420,37 +2420,25 @@ function uncheckTableRows($cookieId = null) {
 }
 
 /**
- * Update table rows selection's cookies.
- *
- * @param string $cookie_id		parent ID, is used as cookie suffix
- * @param array $checked_ids	checked rows ids [id1 => id1, id2 => id2, ...]
- */
-function updateCookiesByIds($cookie_id = null, array $checked_ids = []) {
-	insert_js('cookie.createJSON("cb_'.basename($_SERVER['SCRIPT_NAME'], '.php').
-		($cookie_id === null ? '' : '_'.$cookie_id).'", '.json_encode($checked_ids).')'
-	);
-}
-
-/**
  * Clears table rows selection's in sessionStorage.
  *
- * @param string $parentId		parent ID, is used as sessionStorage suffix
+ * @param string $parentid    parent ID, is used as sessionStorage suffix.
  */
-function uncheckAllTableRows($parentId = null) {
+function clearSessionStorage($parentid = null) {
 	insert_js('sessionStorage.removeItem("cb_'.basename($_SERVER['SCRIPT_NAME'], '.php')
-		.($parentId === null ? '' : '_'.$parentId).'")'
+		.($parentid === null ? '' : '_'.$parentid).'")'
 	);
 }
 
 /**
  * Update table rows selection's in sessionStorage.
  *
- * @param string $parentId		parent ID, is used as sessionStorage suffix
- * @param array $checked_ids	checked rows ids [id1 => id1, id2 => id2, ...]
+ * @param string $parentid     parent ID, is used as sessionStorage suffix
+ * @param array  $itemids      checked rows ids [id1 => id1, id2 => id2, ...]
  */
-function updateSessionStorage($parentId = null, array $checked_ids = []) {
+function updateSessionStorage($parentid = null, array $itemids = []) {
 	insert_js('sessionStorage.setItem("cb_'.basename($_SERVER['SCRIPT_NAME'], '.php').
-		($parentId === null ? '' : '_'.$parentId).'", JSON.stringify('.json_encode($checked_ids).'))'
+		($parentid === null ? '' : '_'.$parentid).'", JSON.stringify('.json_encode($itemids).'))'
 	);
 }
 
