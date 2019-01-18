@@ -493,6 +493,8 @@ sub get_ns_servers {
 
 		my @entries = split(/,/, $ns);
 
+		pfail("incorrect Name Server format: expected \"<NAME>,<IP>\" got \"$ns\"") unless ($entries[0] && $entries[1]);
+
 		my $exists = 0;
 		foreach my $ip (@{$ns_servers->{$entries[0]}{'v4'}}) {
 		    if ($ip eq $entries[1]) {
@@ -940,18 +942,6 @@ sub get_encrypted_privkey
     return $ret;
 }
 
-sub read_file {
-    my $file = shift;
-
-    my $contents = do {
-	local $/ = undef;
-	open my $fh, "<", $file or pfail("could not open $file: $!");
-	<$fh>;
-    };
-
-    return $contents;
-}
-
 sub get_md5 {
     my $file = shift;
 
@@ -1048,6 +1038,13 @@ sub create_main_template {
 
     if ($OPTS{'epp-servers'})
     {
+	my ($buf, $error);
+
+	if (read_file($OPTS{'epp-cert'}, \$buf, \$error) != SUCCESS)
+	{
+		pfail("cannot read file \"", $OPTS{'epp-cert'}, "\": $error");
+	}
+
 	my $m = '{$RSM.EPP.KEYSALT}';
 	my $keysalt = get_global_macro_value($m);
 	pfail('cannot get macro ', $m) unless defined($keysalt);
@@ -1060,7 +1057,7 @@ sub create_main_template {
 	    really(create_macro('{$RSM.EPP.COMMANDS}', '/opt/test-sla/epp-commands/'.$tld, $templateid));
 	}
 	really(create_macro('{$RSM.EPP.USER}', $OPTS{'epp-user'}, $templateid, 1));
-	really(create_macro('{$RSM.EPP.CERT}', encode_base64(read_file($OPTS{'epp-cert'}), ''),  $templateid, 1));
+	really(create_macro('{$RSM.EPP.CERT}', encode_base64($buf, ''),  $templateid, 1));
 	really(create_macro('{$RSM.EPP.SERVERID}', $OPTS{'epp-serverid'}, $templateid, 1));
 	really(create_macro('{$RSM.EPP.TESTPREFIX}', $OPTS{'epp-test-prefix'}, $templateid, 1));
 	really(create_macro('{$RSM.EPP.SERVERCERTMD5}', get_md5($OPTS{'epp-servercert'}), $templateid, 1));

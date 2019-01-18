@@ -46,6 +46,9 @@ use constant JSON_INTERFACE_RDDS80	=> 'RDDS80';	# todo phase 1: taken from phase
 use constant JSON_INTERFACE_RDAP	=> 'RDAP';
 use constant ROOT_ZONE_READABLE		=> 'zz--root';	# todo phase 1: taken from phase 2
 
+use constant PROBE_OFFLINE_STR	=> 'Offline';
+use constant PROBE_ONLINE_STR	=> 'Online';
+
 use constant SERVICE_DNS_TCP	=> 'dns-tcp';	# todo phase 1: Export DNS-TCP tests, not a real service
 
 use constant AH_STATUS_UP	=> 'Up';	# todo phase 1: taken from ApiHelper.pm phase 2
@@ -184,12 +187,12 @@ my $probes_data;
 
 my ($time_start, $time_get_test_data, $time_load_ids, $time_process_records, $time_write_csv);
 
-my $child_failed = 0;
-my $signal_sent = 0;
-
 my $fm = new Parallel::ForkManager(opt('max-children') ? getopt('max-children') : EXPORT_MAX_CHILDREN_DEFAULT);
 
 set_on_fail(\&__wait_all_children_cb);
+
+my $child_failed = 0;
+my $signal_sent = 0;
 
 my %tldmap;	# <PID> => <TLD> hashmap
 
@@ -265,6 +268,7 @@ if (opt('tld'))
 		{
 			if ($server_keys[-1] eq $server_key)
 			{
+				# last server in list
 				info("TLD $t does not exist.");
 				goto WAIT_CHILDREN;
 			}

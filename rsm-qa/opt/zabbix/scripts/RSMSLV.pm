@@ -20,7 +20,7 @@ use RSM;
 use Pusher qw(push_to_trapper);
 
 use constant SUCCESS => 0;
-use constant E_FAIL => -1;
+use constant E_FAIL => -1;	# be careful when changing this, some functions depend on current value
 use constant E_ID_NONEXIST => -2;
 use constant E_ID_MULTIPLE => -3;
 
@@ -63,11 +63,9 @@ use constant RSM_CONFIG_EPP_DELAY_ITEMID => 100010;	# rsm.configvalue[RSM.EPP.DE
 # NB! These numbers must be in sync with Frontend (details page)!
 use constant PROBE_ONLINE_SHIFT		=> 120;	# seconds (must be divisible by 60) to go back for Probe online status calculation
 use constant AVAIL_SHIFT_BACK		=> 120;	# seconds (must be divisible by 60) to go back for Service Availability calculation
-use constant ROLLWEEK_SHIFT_BACK	=> 180;	# seconds (must be divisible by 60) to go back to make sure Service Availability is calculated
+use constant ROLLWEEK_SHIFT_BACK	=> 180;	# seconds (must be divisible by 60) back when Service Availability is definitely calculated
 
 use constant PROBE_ONLINE_STR => 'Online';
-use constant PROBE_OFFLINE_STR => 'Offline';
-use constant PROBE_NORESULT_STR => 'No result';
 
 use constant DETAILED_RESULT_DELIM => ', ';
 
@@ -76,10 +74,10 @@ our ($result, $dbh, $tld, $server_key);
 our %OPTS; # specified command-line options
 
 our @EXPORT = qw($result $dbh $tld $server_key
-		SUCCESS E_FAIL E_ID_NONEXIST E_ID_MULTIPLE UP DOWN RDDS_UP SLV_UNAVAILABILITY_LIMIT MIN_LOGIN_ERROR
+		SUCCESS E_FAIL E_ID_NONEXIST E_ID_MULTIPLE UP DOWN SLV_UNAVAILABILITY_LIMIT MIN_LOGIN_ERROR
 		UP_INCONCLUSIVE_NO_DATA PROTO_UDP PROTO_TCP
-		MAX_LOGIN_ERROR MIN_INFO_ERROR MAX_INFO_ERROR PROBE_ONLINE_STR PROBE_OFFLINE_STR
-		PROBE_NORESULT_STR AVAIL_SHIFT_BACK ROLLWEEK_SHIFT_BACK PROBE_ONLINE_SHIFT
+		MAX_LOGIN_ERROR MIN_INFO_ERROR MAX_INFO_ERROR PROBE_ONLINE_STR
+		AVAIL_SHIFT_BACK ROLLWEEK_SHIFT_BACK PROBE_ONLINE_SHIFT
 		ONLINE OFFLINE
 		get_macro_minns get_macro_dns_probe_online get_macro_rdds_probe_online get_macro_dns_rollweek_sla
 		get_macro_rdds_rollweek_sla get_macro_dns_udp_rtt_high get_macro_dns_udp_rtt_low
@@ -88,6 +86,7 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		get_macro_dns_update_time get_macro_rdds_update_time get_tld_items get_hostid
 		get_macro_epp_rtt_low get_macro_probe_avail_limit get_itemid_by_key get_itemid_by_host
 		get_itemid_by_hostid get_itemid_like_by_hostid get_itemids_by_host_and_keypart get_lastclock get_tlds
+		get_oldest_clock
 		get_probes get_nsips get_nsip_items tld_exists tld_service_enabled db_connect db_disconnect
 		get_templated_nsips db_exec tld_interface_enabled
 		tld_interface_enabled_create_cache tld_interface_enabled_delete_cache
@@ -106,12 +105,14 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		uint_value_exists
 		float_value_exists
 		sql_time_condition get_incidents get_downtime get_downtime_prepare get_downtime_execute
+		history_table
 		get_current_value get_itemids_by_hostids get_nsip_values get_valuemaps get_statusmaps get_detailed_result
 		get_avail_valuemaps slv_stats_reset
 		get_result_string get_tld_by_trigger truncate_from truncate_till alerts_enabled
 		get_real_services_period dbg info wrn fail set_on_fail
 		format_stats_time slv_finalize slv_exit exit_if_running trim parse_opts
-		parse_avail_opts parse_rollweek_opts opt getopt setopt unsetopt optkeys ts_str ts_full selected_period
+		parse_slv_opts
+		opt getopt setopt unsetopt optkeys ts_str ts_full selected_period
 		write_file
 		cycle_start
 		cycle_end
@@ -198,8 +199,8 @@ sub get_dns_tcp_delay
 {
 	my $value_time = (shift or time() - AVAIL_SHIFT_BACK);
 
-	# todo phase 1: Export DNS-TCP tests
-	# todo phase 1: if we really need DNS-TCP history the item must be added (to db schema and upgrade patch)
+	# todo phase 3: Export DNS-TCP tests
+	# todo phase 3: if we really need DNS-TCP history the item must be added (to db schema and upgrade patch)
 #	my $value = __get_configvalue(RSM_CONFIG_DNS_TCP_DELAY_ITEMID, $value_time);
 #
 #	return $value if (defined($value));
@@ -352,7 +353,7 @@ sub get_itemids_by_host_and_keypart
 # E_FAIL - if item was not found
 #      0 - if lastclock is NULL
 #      * - lastclock
-sub get_lastclock
+sub get_lastclock($$$)
 {
 	my $host = shift;
 	my $key = shift;
@@ -389,12 +390,44 @@ sub get_lastclock
 	my $itemid = $rows_ref->[0]->[0];
 	my $lastclock;
 
-	if (get_current_value($itemid, undef, \$lastclock) != SUCCESS)
+	if (get_current_value($itemid, $value_type, undef, \$lastclock) != SUCCESS)
 	{
 		$lastclock = 0;
 	}
 
 	return $lastclock;
+}
+
+# returns:
+# E_FAIL - if item was not found
+# 0      - if history table is empty
+# *      - lastclock
+sub get_oldest_clock($$$)
+{
+	my $host = shift;
+	my $key = shift;
+	my $value_type = shift;
+
+	my $rows_ref = db_select(
+		"select i.itemid".
+		" from items i,hosts h".
+		" where i.hostid=h.hostid".
+			" and i.status=0".
+			" and h.host='$host'".
+			" and i.key_='$key'"
+	);
+
+	return E_FAIL if (scalar(@$rows_ref) == 0);
+
+	my $itemid = $rows_ref->[0]->[0];
+
+	$rows_ref = db_select(
+		"select min(clock)".
+		" from " . history_table($value_type).
+		" where itemid=$itemid"
+	);
+
+	return $rows_ref->[0]->[0];
 }
 
 sub get_tlds
@@ -1624,11 +1657,12 @@ sub get_templated_items_like
 # }
 #
 # where value_ts is value timestamp of the cycle
-sub collect_slv_cycles($$$$$)
+sub collect_slv_cycles($$$$$$)
 {
 	my $tlds_ref = shift;
 	my $delay = shift;
 	my $cfg_key_out = shift;
+	my $value_type = shift;	# value type of $cfg_key_out
 	my $max_clock = shift;	# latest cycle to process
 	my $max_cycles = shift;
 
@@ -1643,7 +1677,7 @@ sub collect_slv_cycles($$$$$)
 
 		my $itemid = get_itemid_by_host($tld, $cfg_key_out);
 
-		if (get_current_value($itemid, \$lastvalue, \$lastclock) != SUCCESS)
+		if (get_current_value($itemid, $value_type, \$lastvalue, \$lastclock) != SUCCESS)
 		{
 			# new item
 			push(@{$cycles{$max_clock}}, $tld);
@@ -1651,15 +1685,17 @@ sub collect_slv_cycles($$$$$)
 			next;
 		}
 
-		next if (!opt('dry-run') && uint_value_exists($max_clock, $itemid));
+		next if (!opt('dry-run') && history_value_exists($value_type, $max_clock, $itemid));
 
 		my $cycles_added = 0;
 
-		while ($lastclock < $max_clock && $cycles_added++ < $max_cycles)
+		while ($lastclock < $max_clock && (!$max_cycles || $cycles_added < $max_cycles))
 		{
 			$lastclock += $delay;
 
 			push(@{$cycles{$lastclock}}, $tld);
+
+			$cycles_added++;
 		}
 
 		# unset TLD (for the logs)
@@ -1938,7 +1974,7 @@ sub __get_item_values($$$$)
 
 	my $rows_ref = db_select(
 		"select itemid,value".
-		" from " . __get_history_table_by_value_type($value_type).
+		" from " . history_table($value_type).
 		" where itemid in (" . join(',', @itemids) . ")".
 			" and clock between $from and $till".
 		" order by clock");
@@ -1961,7 +1997,7 @@ sub __get_item_values($$$$)
 	return [values(%result)];
 }
 
-sub uint_value_exists
+sub uint_value_exists($$)
 {
         my $clock = shift;
         my $itemid = shift;
@@ -1973,7 +2009,7 @@ sub uint_value_exists
         return 0;
 }
 
-sub float_value_exists
+sub float_value_exists($$)
 {
         my $clock = shift;
         my $itemid = shift;
@@ -1983,6 +2019,20 @@ sub float_value_exists
         return 1 if (defined($rows_ref->[0]->[0]));
 
         return 0;
+}
+
+sub history_value_exists($$$)
+{
+	my $value_type = shift;
+        my $clock = shift;
+        my $itemid = shift;
+
+	my $rows_ref;
+
+	return uint_value_exists($clock, $itemid) if ($value_type == ITEM_VALUE_TYPE_UINT64);
+	return float_value_exists($clock, $itemid) if ($value_type == ITEM_VALUE_TYPE_FLOAT);
+
+	fail("internal error: value type $value_type is not supported by function history_value_exists()");
 }
 
 sub __make_incident
@@ -2429,7 +2479,7 @@ sub get_downtime_execute
 	return int($downtime / 60);
 }
 
-sub __get_history_table_by_value_type
+sub history_table($)
 {
 	my $value_type = shift;
 
@@ -2444,15 +2494,25 @@ sub __get_history_table_by_value_type
 # SUCCESS - last clock and value found
 # E_FAIL  - nothing found
 # todo phase 1: rename to get_lastvalue
-sub get_current_value($$$)
+sub get_current_value($$$$)
 {
 	my $itemid = shift;
+	my $value_type = shift;
 	my $value_ref = shift;
 	my $clock_ref = shift;
 
 	fail("THIS_SHOULD_NEVER_HAPPEN") unless ($clock_ref || $value_ref);
 
-	my $rows_ref = db_select("select value,clock from lastvalue where itemid=$itemid");
+	my $rows_ref;
+
+	if ($value_type == ITEM_VALUE_TYPE_FLOAT || $value_type == ITEM_VALUE_TYPE_UINT64)
+	{
+		$rows_ref = db_select("select value,clock from lastvalue where itemid=$itemid");
+	}
+	else
+	{
+		$rows_ref = db_select("select value,clock from lastvalue_str where itemid=$itemid");
+	}
 
 	if (@{$rows_ref})
 	{
@@ -2913,9 +2973,9 @@ sub fail
 
 	if ($on_fail_cb)
 	{
-		__log('debug', "script failed, calling \"on fail\" callback...");
+		dbg("script failed, calling \"on fail\" callback...");
 		$on_fail_cb->();
-		__log('debug', "\"on fail\" callback finished");
+		dbg("\"on fail\" callback finished");
 	}
 
 	slv_exit(E_FAIL);
@@ -2946,18 +3006,11 @@ sub parse_opts
 	$get_stats = 1 if (opt('stats') || opt('warnslow'));
 }
 
-sub parse_avail_opts
+sub parse_slv_opts
 {
-	$POD2USAGE_FILE = '/opt/zabbix/scripts/slv/rsm.slv.avail.usage';
+	$POD2USAGE_FILE = '/opt/zabbix/scripts/slv/rsm.slv.usage';
 
-	parse_opts('tld=s', 'now=n');
-}
-
-sub parse_rollweek_opts
-{
-	$POD2USAGE_FILE = '/opt/zabbix/scripts/slv/rsm.slv.rollweek.usage';
-
-	parse_opts('tld=s', 'now=n');
+	parse_opts('tld=s', 'now=n', 'cycles=n');
 }
 
 sub opt
@@ -3027,18 +3080,42 @@ sub selected_period
 
 sub write_file
 {
-	my $full_path = shift;
+	my $file = shift;
 	my $text = shift;
 
 	my $OUTFILE;
 
-	return E_FAIL unless (open($OUTFILE, '>', $full_path));
+	return E_FAIL unless (open($OUTFILE, '>', $file));
 
 	my $rv = print { $OUTFILE } $text;
 
 	close($OUTFILE);
 
 	return E_FAIL unless ($rv);
+
+	return SUCCESS;
+}
+
+sub read_file($$$)
+{
+	my $file = shift;
+	my $buf = shift;
+	my $error = shift;
+
+	my $contents = do
+	{
+		local $/ = undef;
+
+		if (!open my $fh, "<", $file)
+		{
+			$$error = "$!";
+			return E_FAIL;
+		}
+
+		<$fh>;
+	};
+
+	$$buf = $contents;
 
 	return SUCCESS;
 }
@@ -3347,23 +3424,30 @@ sub __get_configvalue
 	my $month = $day * 30;
 
 	my $diff = $hour;
-	my $value;
 
-	while (!defined($value) && $diff < $month)
+	while (1)
 	{
-		my $rows_ref = db_select("select value from history_uint where itemid=$itemid and clock between " . ($value_time - $diff) . " and $value_time order by clock desc limit 1");
+		my $rows_ref = db_select(
+			"select value".
+			" from history_uint".
+			" where itemid=$itemid".
+				" and " . sql_time_condition($value_time - $diff, $value_time).
+			" order by clock desc".
+			" limit 1"
+		);
 
 		foreach my $row_ref (@$rows_ref)
 		{
-			$value = $row_ref->[0];
-			last;
+			return $row_ref->[0];
 		}
 
-		$diff = $day if ($diff == $hour);
-		$diff = $month if ($diff == $day);
-	}
+		# no more attempts
+		return if ($diff == $month);
 
-	return $value;
+		# try bigger period
+		$diff = $month if ($diff == $day);
+		$diff = $day if ($diff == $hour);
+	}
 }
 
 1;

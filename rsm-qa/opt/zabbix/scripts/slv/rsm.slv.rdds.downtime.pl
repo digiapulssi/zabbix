@@ -18,7 +18,7 @@ use constant MAX_CYCLES	=> 2;
 my $cfg_key_in = 'rsm.slv.rdds.avail';
 my $cfg_key_out = 'rsm.slv.rdds.downtime';
 
-parse_opts('tld=s', 'now=n');
+parse_slv_opts();
 exit_if_running();
 
 set_slv_config(get_rsm_config());
@@ -44,7 +44,14 @@ else
 
 slv_exit(SUCCESS) if (scalar(@{$tlds_ref}) == 0);
 
-my $cycles_ref = collect_slv_cycles($tlds_ref, $delay, $cfg_key_out, $max_clock, MAX_CYCLES);
+my $cycles_ref = collect_slv_cycles(
+	$tlds_ref,
+	$delay,
+	$cfg_key_out,
+	ITEM_VALUE_TYPE_UINT64,
+	$max_clock,
+	(opt('cycles') ? getopt('cycles') : MAX_CYCLES)
+);
 
 slv_exit(SUCCESS) if (scalar(keys(%{$cycles_ref})) == 0);
 
