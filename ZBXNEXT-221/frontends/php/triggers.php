@@ -931,7 +931,10 @@ else {
 
 	$config_priorities = [];
 	foreach (range(TRIGGER_SEVERITY_NOT_CLASSIFIED, TRIGGER_SEVERITY_COUNT - 1) as $severity) {
-		$config_priorities[getSeverityName($severity, $config)] = $severity;
+		$config_priorities[] = [
+			'name' => getSeverityName($severity, $config),
+			'value' => $severity
+		];
 	}
 
 	$data = [
