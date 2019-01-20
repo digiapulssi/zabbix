@@ -1,6 +1,6 @@
 /*
  ** Zabbix
- ** Copyright (C) 2001-2018 Zabbix SIA
+ ** Copyright (C) 2001-2019 Zabbix SIA
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -324,8 +324,7 @@ jQuery(function ($) {
 		if (methods[method]) {
 			return methods[method].apply(this, Array.prototype.slice.call(arguments, 1));
 		}
-		else {
-			return methods.init.apply(this, arguments);
-		}
+
+		return methods.init.apply(this, arguments);
 	};
 });

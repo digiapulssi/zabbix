@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2018 Zabbix SIA
+** Copyright (C) 2001-2019 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@
 
 require_once dirname(__FILE__).'/testGeneric.php';
 require_once dirname(__FILE__).'/testPageDashboard.php';
+require_once dirname(__FILE__).'/testPageDashboardWidgets.php';
 require_once dirname(__FILE__).'/testPageOverview.php';
 require_once dirname(__FILE__).'/testPageLatestData.php';
 require_once dirname(__FILE__).'/testPageWeb.php';
@@ -89,6 +90,7 @@ require_once dirname(__FILE__).'/testFormGraph.php';
 require_once dirname(__FILE__).'/testFormGraphPrototype.php';
 require_once dirname(__FILE__).'/testFormHost.php';
 require_once dirname(__FILE__).'/testFormHostGroup.php';
+require_once dirname(__FILE__).'/testFormHostPrototype.php';
 require_once dirname(__FILE__).'/testFormItem.php';
 require_once dirname(__FILE__).'/testFormItemHttpAgent.php';
 require_once dirname(__FILE__).'/testFormItemPrototype.php';
@@ -143,6 +145,7 @@ class SeleniumTests {
 		$suite->addTestSuite('testPageAdministrationScripts');
 		$suite->addTestSuite('testPageAvailabilityReport');
 		$suite->addTestSuite('testPageDashboard');
+		$suite->addTestSuite('testPageDashboardWidgets');
 		$suite->addTestSuite('testPageEventCorrelation');
 		$suite->addTestSuite('testPageGraphPrototypes');
 		$suite->addTestSuite('testPageProblems');
@@ -202,6 +205,7 @@ class SeleniumTests {
 		$suite->addTestSuite('testFormGraphPrototype');
 		$suite->addTestSuite('testFormHost');
 		$suite->addTestSuite('testFormHostGroup');
+		$suite->addTestSuite('testFormHostPrototype');
 		$suite->addTestSuite('testFormItem');
 		$suite->addTestSuite('testFormItemHttpAgent');
 		$suite->addTestSuite('testFormItemPrototype');

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2018 Zabbix SIA
+** Copyright (C) 2001-2019 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -396,7 +396,7 @@ class testPageOverview extends CLegacyWebTest {
 					],
 					'result_triggers' => [
 						'1_trigger_Average', '1_trigger_Disaster', '1_trigger_High', '1_trigger_Not_classified',
-						'1_trigger_Warning', '2_trigger_Information', '3_trigger_Average'
+						'1_trigger_Warning', '2_trigger_Information', '3_trigger_Average', '3_trigger_Disaster'
 					]
 				]
 			],
@@ -697,10 +697,10 @@ class testPageOverview extends CLegacyWebTest {
 				[
 					'type' => 'Data',
 					'links' => [
-						'action=showgraph&period=3600',
-						'action=showgraph&period=604800',
-						'action=showgraph&period=2678400',
-						'action=showvalues&period=3600'
+						'action=showgraph&to=now&from=now-1h',
+						'action=showgraph&to=now&from=now-7d',
+						'action=showgraph&to=now&from=now-1M',
+						'action=showvalues&to=now&from=now-1h'
 					],
 					'links_text' => ['Last hour graph', 'Last week graph', 'Last month graph', 'Latest values']
 				]
@@ -770,7 +770,6 @@ class testPageOverview extends CLegacyWebTest {
 			$this->zbxTestAssertAttribute("//button[contains(@class, 'btn-max')]", 'title', 'Fullscreen');
 			$this->zbxTestAssertElementPresentXpath("//header");
 			$this->zbxTestAssertElementPresentXpath("//div[@class='header-title table']");
-			$this->zbxTestCheckFatalErrors();
 		}
 		catch (Exception $e) {
 			// Reset fullscreen/kiosk mode.

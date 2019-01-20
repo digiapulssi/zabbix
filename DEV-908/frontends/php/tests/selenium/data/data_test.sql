@@ -1550,9 +1550,11 @@ INSERT INTO hosts (hostid, host, name, status, description, flags) VALUES (90008
 INSERT INTO hosts (hostid, host, name, status, description, flags) VALUES (90009, 'Host prototype {#8}', 'Host prototype {#8}', 0, '', 2);
 INSERT INTO hosts (hostid, host, name, status, description, flags) VALUES (90010, 'Host prototype {#9}', 'Host prototype {#9}', 0, '', 2);
 INSERT INTO hosts (hostid, host, name, status, description, flags) VALUES (90011, 'Host prototype {#10}', 'Host prototype {#10}', 0, '', 2);
+INSERT INTO hosts (hostid, host, name, status, description, flags) VALUES (90012, 'Host prototype {#33}', 'Host prototype visible name', 0, '', 2);
 INSERT INTO host_discovery (hostid, parent_itemid) VALUES (90002, 90001);
 INSERT INTO host_discovery (hostid, parent_itemid) VALUES (90003, 90001);
 INSERT INTO host_discovery (hostid, parent_itemid) VALUES (90004, 90001);
+INSERT INTO host_discovery (hostid, parent_itemid) VALUES (90012, 90001);
 INSERT INTO host_discovery (hostid, parent_itemid) VALUES (90005, 90002);
 INSERT INTO host_discovery (hostid, parent_itemid) VALUES (90006, 90002);
 INSERT INTO host_discovery (hostid, parent_itemid) VALUES (90007, 90002);
@@ -1562,6 +1564,8 @@ INSERT INTO host_discovery (hostid, parent_itemid) VALUES (90010, 90003);
 INSERT INTO host_discovery (hostid, parent_itemid) VALUES (90011, 90003);
 INSERT INTO group_prototype (group_prototypeid, hostid, name, groupid, templateid) VALUES (1000, 90002, '', 5, NULL);
 INSERT INTO group_prototype (group_prototypeid, hostid, name, groupid, templateid) VALUES (1001, 90003, '', 5, NULL);
+INSERT INTO group_prototype (group_prototypeid, hostid, name, groupid, templateid) VALUES (1019, 90003, '{#FSNAME}', NULL, NULL);
+INSERT INTO group_prototype (group_prototypeid, hostid, name, groupid, templateid) VALUES (1020, 90012, '', 5, NULL);
 INSERT INTO group_prototype (group_prototypeid, hostid, name, groupid, templateid) VALUES (1002, 90004, '', 5, NULL);
 INSERT INTO group_prototype (group_prototypeid, hostid, name, groupid, templateid) VALUES (1003, 90005, '', 5, NULL);
 INSERT INTO group_prototype (group_prototypeid, hostid, name, groupid, templateid) VALUES (1004, 90006, '', 5, NULL);
@@ -1570,6 +1574,8 @@ INSERT INTO group_prototype (group_prototypeid, hostid, name, groupid, templatei
 INSERT INTO group_prototype (group_prototypeid, hostid, name, groupid, templateid) VALUES (1007, 90009, '', 5, NULL);
 INSERT INTO group_prototype (group_prototypeid, hostid, name, groupid, templateid) VALUES (1008, 90010, '', 5, NULL);
 INSERT INTO group_prototype (group_prototypeid, hostid, name, groupid, templateid) VALUES (1009, 90011, '', 5, NULL);
+
+INSERT INTO hosts_templates (hosttemplateid, hostid, templateid) VALUES (50003, 90003, 10001);
 
 -- adding test data to the 'alerts' table for testing Reports-> Notifications
 INSERT INTO alerts (alertid, actionid, eventid, userid, clock, mediatypeid, sendto, subject, message, status, retries, error, esc_step, alerttype) VALUES (8, 12, 1, 1, 1483275171, 1, 'notificatio.report@zabbix.com', 'PROBLEM: problem', 'Event at 2017.01.01 12:52:51', 1, 0, '', 1, 0);
@@ -2056,3 +2062,22 @@ INSERT INTO interface (interfaceid, hostid, type, ip, useip, port, main) VALUES 
 INSERT INTO interface (interfaceid, hostid, type, ip, useip, port, main) VALUES (55032, 99054, 1, '127.0.0.1', 1, '10050', 1);
 INSERT INTO hosts_groups (hostgroupid, hostid, groupid) VALUES (99911, 99053, 4);
 INSERT INTO hosts_groups (hostgroupid, hostid, groupid) VALUES (99912, 99054, 4);
+
+-- Dashboard for problem hosts widget
+INSERT INTO dashboard (dashboardid, name, userid, private) VALUES (100, 'Dashboard for Problem hosts widget', 1, 1);
+INSERT INTO widget (widgetid, dashboardid, type, name, x, y, width, height) VALUES (100, 100, 'problemhosts', '', 0, 0, 8, 8);
+INSERT INTO profiles (profileid,userid,idx,value_id,source,type) VALUES (4, 1, 'web.dashbrd.dashboardid', 1, '', 1);
+
+-- testPageAvailabilityReport SLA reports
+INSERT INTO hosts (hostid, host, name, status, description) VALUES (50014, 'SLA reports host', 'SLA reports host', 0, '');
+INSERT INTO interface (interfaceid, hostid, main, type, useip, ip, port) VALUES (50042, 50014, 1, 1, 1, '127.0.0.1', '10051');
+INSERT INTO hosts_groups (hostgroupid, hostid, groupid) VALUES (50013, 50014, 4);
+INSERT INTO items (itemid, type, hostid, name, key_, params, description, posts, headers) VALUES (40067, 2, 50014, 'Item A', 'A', '', '', '', '');
+INSERT INTO items (itemid, type, hostid, name, key_, params, description, posts, headers) VALUES (40068, 2, 50014, 'Item B', 'B', '', '', '', '');
+INSERT INTO items (itemid, type, hostid, name, key_, params, description, posts, headers) VALUES (40069, 2, 50014, 'Item C', 'C', '', '', '', '');
+INSERT INTO triggers (triggerid, expression, description, comments) VALUES (16027, '{16027}=0', 'A trigger', '');
+INSERT INTO triggers (triggerid, expression, description, comments) VALUES (16028, '{16028}=0', 'B trigger', '');
+INSERT INTO triggers (triggerid, expression, description, comments) VALUES (16029, '{16029}=0', 'C trigger', '');
+INSERT INTO functions (functionid, itemid, triggerid, name, parameter) VALUES (16028, 40067, 16027,'last','0');
+INSERT INTO functions (functionid, itemid, triggerid, name, parameter) VALUES (16029, 40068, 16028,'last','0');
+INSERT INTO functions (functionid, itemid, triggerid, name, parameter) VALUES (16030, 40069, 16029,'last','0');
