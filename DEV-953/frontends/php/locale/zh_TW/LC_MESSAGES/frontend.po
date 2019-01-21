@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Zabbix 3.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-01-06 01:42+0200\n"
+"POT-Creation-Date: 2019-01-13 23:35+0200\n"
 "PO-Revision-Date: 2018-11-30 09:13+0300\n"
 "Last-Translator: Anonymous Pootle User\n"
 "Language-Team: Zabbix <info@zabbix.com>\n"
@@ -728,7 +728,7 @@ msgid "Application deleted"
 msgid_plural "Applications deleted"
 msgstr[0] "應用集已删除"
 
-#: include/classes/core/CJsonRpc.php:208
+#: include/classes/core/CJsonRpc.php:210
 msgid "Application error."
 msgstr "應用集 錯誤."
 
@@ -2157,7 +2157,7 @@ msgstr ""
 msgid "Cannot set resource ID for screen element."
 msgstr ""
 
-#: include/classes/api/services/CHostInterface.php:245
+#: include/classes/api/services/CHostInterface.php:246
 msgid "Cannot switch host for interface."
 msgstr "無法為介面切換主機."
 
@@ -2367,7 +2367,7 @@ msgstr "無法更新圖示對應"
 msgid "Cannot update image"
 msgstr "無法更新圖片"
 
-#: include/classes/api/services/CHostInterface.php:318
+#: include/classes/api/services/CHostInterface.php:327
 #, c-format
 msgid "Cannot update interface for discovered host \"%1$s\"."
 msgstr ""
@@ -4741,7 +4741,7 @@ msgstr ""
 #: include/classes/api/services/CGraphPrototype.php:542
 #: include/classes/api/services/CHostGroup.php:416
 #: include/classes/api/services/CHostGroup.php:493
-#: include/classes/api/services/CHostInterface.php:388
+#: include/classes/api/services/CHostInterface.php:397
 #: include/classes/api/services/CHost.php:1155
 #: include/classes/api/services/CHostPrototype.php:929
 #: include/classes/api/services/CIconMap.php:301
@@ -5142,7 +5142,7 @@ msgstr "拓展巨集"
 msgid "Expand single problem"
 msgstr "展開單一問題"
 
-#: include/classes/core/CJsonRpc.php:108
+#: include/classes/core/CJsonRpc.php:110
 #, c-format
 msgid "Expecting JSON-rpc version 2.0, \"%s\" is given."
 msgstr "要求 JSON-rpc版本2.0, 得到\"%s\" ."
@@ -6145,7 +6145,7 @@ msgstr "主機存取"
 msgid "Host added"
 msgstr "已新增主機"
 
-#: include/classes/api/services/CHostInterface.php:823
+#: include/classes/api/services/CHostInterface.php:832
 msgid "Host cannot have more than one default interface of the same type."
 msgstr "主機不能有超過一個同類型的預設介面."
 
@@ -6511,7 +6511,7 @@ msgstr ""
 msgid "IP address range cannot be empty."
 msgstr ""
 
-#: include/classes/api/services/CHostInterface.php:268
+#: include/classes/api/services/CHostInterface.php:273
 msgid "IP and DNS cannot be empty for host interface."
 msgstr "主機介面的IP和DNS不能是空白."
 
@@ -7085,8 +7085,8 @@ msgstr "不正確的自變數傳入方程式"
 
 #: include/classes/api/services/CApplication.php:274
 #: include/classes/api/services/CEvent.php:434
-#: include/classes/api/services/CHostInterface.php:235
-#: include/classes/api/services/CHostInterface.php:436
+#: include/classes/api/services/CHostInterface.php:236
+#: include/classes/api/services/CHostInterface.php:445
 #: include/classes/api/services/CItemGeneral.php:204
 #: include/classes/api/services/CMap.php:465
 #: include/classes/api/services/CMap.php:539
@@ -7113,7 +7113,7 @@ msgstr "不正確的自變數傳入方程式"
 msgid "Incorrect arguments passed to function."
 msgstr "不正確的自變數傳給方程式"
 
-#: include/classes/api/services/CHostInterface.php:263
+#: include/classes/api/services/CHostInterface.php:268
 msgid "Incorrect arguments passed to method."
 msgstr "不正確的自變數傳給方法."
 
@@ -7127,7 +7127,7 @@ msgstr ""
 msgid "Incorrect authentication protocol for item \"%1$s\"."
 msgstr ""
 
-#: include/classes/api/services/CHostInterface.php:666
+#: include/classes/api/services/CHostInterface.php:675
 msgid "Incorrect bulk value for interface."
 msgstr ""
 
@@ -7317,12 +7317,12 @@ msgstr "不正確的圖片索引"
 msgid "Incorrect input parameters."
 msgstr ""
 
-#: include/classes/api/services/CHostInterface.php:591
+#: include/classes/api/services/CHostInterface.php:600
 #, c-format
 msgid "Incorrect interface DNS parameter \"%s\" provided."
 msgstr "給予了不正確的介面DNS參數\"%s\"."
 
-#: include/classes/api/services/CHostInterface.php:634
+#: include/classes/api/services/CHostInterface.php:643
 #, c-format
 msgid "Incorrect interface port \"%s\" provided."
 msgstr "給予了不正確的介面埠參數\"%s\"."
@@ -7865,7 +7865,7 @@ msgstr "安裝名稱"
 msgid "Interface"
 msgstr "介面"
 
-#: include/classes/api/services/CHostInterface.php:843
+#: include/classes/api/services/CHostInterface.php:852
 #, c-format
 msgid "Interface is linked to item \"%1$s\" on \"%2$s\"."
 msgstr "介面是連結到\"%2$s\"上的項目\"%1$s\"."
@@ -7874,18 +7874,18 @@ msgstr "介面是連結到\"%2$s\"上的項目\"%1$s\"."
 msgid "Interface is used by items that require this type of the interface."
 msgstr "介面是用於要求這類型介面的項目."
 
-#: include/classes/api/services/CHostInterface.php:272
+#: include/classes/api/services/CHostInterface.php:277
 #, c-format
 msgid "Interface with DNS \"%1$s\" cannot have empty IP address."
 msgstr "DNS為\"%1$s\"的介面不能有空白的IP位址."
 
-#: include/classes/api/services/CHostInterface.php:278
-#: include/classes/api/services/CHostInterface.php:285
+#: include/classes/api/services/CHostInterface.php:283
+#: include/classes/api/services/CHostInterface.php:290
 #, c-format
 msgid "Interface with IP \"%1$s\" cannot have empty DNS name while having \"Use DNS\" property on \"%2$s\"."
 msgstr " 當\"%2$s\"上有 \"Use DNS\"屬性, IP為\"%1$s\"的介面不能有空白的DNS名稱."
 
-#: include/classes/api/services/CHostInterface.php:291
+#: include/classes/api/services/CHostInterface.php:296
 #, c-format
 msgid "Interface with IP \"%1$s\" cannot have empty DNS name."
 msgstr "IP為\"%1$s\"的介面不能有空白的DNS名稱."
@@ -7905,7 +7905,7 @@ msgctxt "user type"
 msgid "Internal"
 msgstr ""
 
-#: include/classes/core/CJsonRpc.php:204
+#: include/classes/core/CJsonRpc.php:206
 msgid "Internal JSON-RPC error."
 msgstr "內部的JSON-RPC錯誤."
 
@@ -7913,7 +7913,7 @@ msgstr "內部的JSON-RPC錯誤."
 msgid "Internal data storage period (in days)"
 msgstr ""
 
-#: include/classes/core/CJsonRpc.php:203
+#: include/classes/core/CJsonRpc.php:205
 #: include/classes/import/validators/CXmlValidatorGeneral.php:147
 msgid "Internal error."
 msgstr "內部的錯誤."
@@ -7963,11 +7963,11 @@ msgstr ""
 msgid "Invalid IP address range \"%1$s\": must be a string."
 msgstr ""
 
-#: include/classes/core/CJsonRpc.php:184
+#: include/classes/core/CJsonRpc.php:186
 msgid "Invalid JSON. An error occurred on the server while parsing the JSON text."
 msgstr "無效的JSON. 當解析JSON文字時, 在伺服器端發生了一個錯誤."
 
-#: include/classes/core/CJsonRpc.php:188
+#: include/classes/core/CJsonRpc.php:190
 msgid "Invalid Request."
 msgstr "無效的請求."
 
@@ -8136,7 +8136,7 @@ msgstr ""
 #: include/classes/api/services/CUser.php:719
 #: include/classes/api/services/CUser.php:877
 #: include/classes/api/services/CUser.php:922
-#: include/classes/core/CJsonRpc.php:199
+#: include/classes/core/CJsonRpc.php:201
 msgid "Invalid method parameters."
 msgstr "無效的方法參數."
 
@@ -8144,7 +8144,7 @@ msgstr "無效的方法參數."
 msgid "Invalid number of parameters."
 msgstr ""
 
-#: include/classes/core/CJsonRpc.php:198
+#: include/classes/core/CJsonRpc.php:200
 msgid "Invalid params."
 msgstr "無效的參數."
 
@@ -8474,20 +8474,20 @@ msgstr "JMX 端點代理程式"
 msgid "JMX interfaces"
 msgstr "JMX介面"
 
-#: include/classes/core/CJsonRpc.php:156
+#: include/classes/core/CJsonRpc.php:158
 #, c-format
 msgid "JSON-rpc error generation failed. No such error \"%s\"."
 msgstr "JSON-rpc 錯誤產生失敗. 無此錯誤 \"%s\"."
 
-#: include/classes/core/CJsonRpc.php:113
+#: include/classes/core/CJsonRpc.php:115
 msgid "JSON-rpc method is not defined."
 msgstr "JSON-rpc 方法尚未定義."
 
-#: include/classes/core/CJsonRpc.php:118
+#: include/classes/core/CJsonRpc.php:120
 msgid "JSON-rpc params is not an Array."
 msgstr "JSON-rpc 參數不是一個陣列."
 
-#: include/classes/core/CJsonRpc.php:103
+#: include/classes/core/CJsonRpc.php:105
 msgid "JSON-rpc version is not specified."
 msgstr "JSON-rpc 版本並未指定."
 
@@ -9360,7 +9360,7 @@ msgstr "訊息"
 msgid "Messaging"
 msgstr "訊息中"
 
-#: include/classes/core/CJsonRpc.php:193
+#: include/classes/core/CJsonRpc.php:195
 msgid "Method not found."
 msgstr "未發現方法."
 
@@ -9886,13 +9886,13 @@ msgstr "沒有數據收集"
 msgid "No data found."
 msgstr ""
 
-#: include/classes/api/services/CHostInterface.php:819
+#: include/classes/api/services/CHostInterface.php:828
 #, c-format
 msgid "No default interface for \"%1$s\" type on \"%2$s\"."
 msgstr "\"%2$s\"上之\"%1$s\"類型無預設介面."
 
-#: include/classes/core/CJsonRpc.php:209 include/classes/core/CJsonRpc.php:214
-#: include/classes/core/CJsonRpc.php:219
+#: include/classes/core/CJsonRpc.php:211 include/classes/core/CJsonRpc.php:216
+#: include/classes/core/CJsonRpc.php:221
 msgid "No details"
 msgstr "沒有細節"
 
@@ -10086,10 +10086,10 @@ msgstr "沒有系統存取的許可權"
 #: include/classes/api/services/CHostGroup.php:1027
 #: include/classes/api/services/CHostGroup.php:1141
 #: include/classes/api/services/CHostGroup.php:1160
-#: include/classes/api/services/CHostInterface.php:240
-#: include/classes/api/services/CHostInterface.php:256
-#: include/classes/api/services/CHostInterface.php:399
-#: include/classes/api/services/CHostInterface.php:647
+#: include/classes/api/services/CHostInterface.php:241
+#: include/classes/api/services/CHostInterface.php:261
+#: include/classes/api/services/CHostInterface.php:408
+#: include/classes/api/services/CHostInterface.php:656
 #: include/classes/api/services/CHost.php:1500
 #: include/classes/api/services/CHost.php:1684
 #: include/classes/api/services/CHost.php:1811
@@ -11117,7 +11117,7 @@ msgstr ""
 msgid "Parse SQL error [%1$s] in [%2$s]."
 msgstr "解析SQL錯誤[%1$s]於[%2$s]之中."
 
-#: include/classes/core/CJsonRpc.php:183
+#: include/classes/core/CJsonRpc.php:185
 msgid "Parse error"
 msgstr "解析錯誤"
 
@@ -11297,7 +11297,7 @@ msgstr "填入主機資產紀錄欄位"
 msgid "Port"
 msgstr "埠"
 
-#: include/classes/api/services/CHostInterface.php:631
+#: include/classes/api/services/CHostInterface.php:640
 msgid "Port cannot be empty for host interface."
 msgstr "主機介面的埠不能是空白."
 
@@ -13261,7 +13261,7 @@ msgstr "系統預設"
 msgid "System error occurred. Please contact Zabbix administrator."
 msgstr ""
 
-#: include/classes/core/CJsonRpc.php:213
+#: include/classes/core/CJsonRpc.php:215
 msgid "System error."
 msgstr "系統錯誤."
 
@@ -13595,11 +13595,11 @@ msgstr ""
 msgid "The number of processes. Returns integer"
 msgstr ""
 
-#: include/classes/core/CJsonRpc.php:189
+#: include/classes/core/CJsonRpc.php:191
 msgid "The received JSON is not a valid JSON-RPC Request."
 msgstr "接收到的JSON不是一個有效的JSON-RPC請求."
 
-#: include/classes/core/CJsonRpc.php:194
+#: include/classes/core/CJsonRpc.php:196
 msgid "The requested remote-procedure does not exist / is not available"
 msgstr "請求的遠程程序不存在/不可用"
 
@@ -13775,7 +13775,7 @@ msgstr "交易尚未被關閉. 放棄中..."
 msgid "Transform SQL query result into a JSON object for low-level discovery."
 msgstr ""
 
-#: include/classes/core/CJsonRpc.php:218
+#: include/classes/core/CJsonRpc.php:220
 msgid "Transport error."
 msgstr "傳輸錯誤."
 

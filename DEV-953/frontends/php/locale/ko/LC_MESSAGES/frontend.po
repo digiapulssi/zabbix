@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Zabbix 3.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-01-06 01:42+0200\n"
+"POT-Creation-Date: 2019-01-13 23:35+0200\n"
 "PO-Revision-Date: 2018-12-04 06:21+0300\n"
 "Last-Translator: JONGKWON <jkkim.photo@gmail.com>\n"
 "Language-Team: Zabbix <info@zabbix.com>\n"
@@ -724,7 +724,7 @@ msgid "Application deleted"
 msgid_plural "Applications deleted"
 msgstr[0] "어플리케이션이 삭제 되었습니다"
 
-#: include/classes/core/CJsonRpc.php:208
+#: include/classes/core/CJsonRpc.php:210
 msgid "Application error."
 msgstr "어플리케이션 에러."
 
@@ -2149,7 +2149,7 @@ msgstr "비활성의 상태의 인벤토리 항목은 설정할 수 없습니다
 msgid "Cannot set resource ID for screen element."
 msgstr "스크린의 요소의 리소스ID를 설정할 수 없습니다."
 
-#: include/classes/api/services/CHostInterface.php:245
+#: include/classes/api/services/CHostInterface.php:246
 msgid "Cannot switch host for interface."
 msgstr "인터페이스를 위한 호스트를 변경할 수 없습니다."
 
@@ -2359,7 +2359,7 @@ msgstr "아이콘 매핑을 갱신할 수 없습니다"
 msgid "Cannot update image"
 msgstr "이미지를 갱신할 수 없습니다"
 
-#: include/classes/api/services/CHostInterface.php:318
+#: include/classes/api/services/CHostInterface.php:327
 #, c-format
 msgid "Cannot update interface for discovered host \"%1$s\"."
 msgstr "발견된 호스트 \"%1$s\"의 인터페이스를 갱신할 수 없습니다"
@@ -4734,7 +4734,7 @@ msgstr "호스트가 공백입니다."
 #: include/classes/api/services/CGraphPrototype.php:542
 #: include/classes/api/services/CHostGroup.php:416
 #: include/classes/api/services/CHostGroup.php:493
-#: include/classes/api/services/CHostInterface.php:388
+#: include/classes/api/services/CHostInterface.php:397
 #: include/classes/api/services/CHost.php:1155
 #: include/classes/api/services/CHostPrototype.php:929
 #: include/classes/api/services/CIconMap.php:301
@@ -5135,7 +5135,7 @@ msgstr "매크로의 전개"
 msgid "Expand single problem"
 msgstr "장애가 1개일때 상세 정보를 열기"
 
-#: include/classes/core/CJsonRpc.php:108
+#: include/classes/core/CJsonRpc.php:110
 #, c-format
 msgid "Expecting JSON-rpc version 2.0, \"%s\" is given."
 msgstr "JSON-rpc version 2.0가 필요합니다, \"%s\" 에서 리퀘스트 되었습니다."
@@ -6136,7 +6136,7 @@ msgstr "호스트 접속"
 msgid "Host added"
 msgstr "호스트를 추가하였습니다"
 
-#: include/classes/api/services/CHostInterface.php:823
+#: include/classes/api/services/CHostInterface.php:832
 msgid "Host cannot have more than one default interface of the same type."
 msgstr "호스트에 같은 타입의 기본 인터페이스는 2개 이상 설정할 수 없습니다."
 
@@ -6502,7 +6502,7 @@ msgstr "IP주소는 필수항목입니다."
 msgid "IP address range cannot be empty."
 msgstr "IP주소의 범위는 필수항목입니다."
 
-#: include/classes/api/services/CHostInterface.php:268
+#: include/classes/api/services/CHostInterface.php:273
 msgid "IP and DNS cannot be empty for host interface."
 msgstr "호스트 인터페이스의 IP와 DNS는 필수항목입니다"
 
@@ -7076,8 +7076,8 @@ msgstr "설정항목이 잘못되어 있습니다."
 
 #: include/classes/api/services/CApplication.php:274
 #: include/classes/api/services/CEvent.php:434
-#: include/classes/api/services/CHostInterface.php:235
-#: include/classes/api/services/CHostInterface.php:436
+#: include/classes/api/services/CHostInterface.php:236
+#: include/classes/api/services/CHostInterface.php:445
 #: include/classes/api/services/CItemGeneral.php:204
 #: include/classes/api/services/CMap.php:465
 #: include/classes/api/services/CMap.php:539
@@ -7104,7 +7104,7 @@ msgstr "설정항목이 잘못되어 있습니다."
 msgid "Incorrect arguments passed to function."
 msgstr "잘못된 인수의 값이 함수에 전달되었습니다."
 
-#: include/classes/api/services/CHostInterface.php:263
+#: include/classes/api/services/CHostInterface.php:268
 msgid "Incorrect arguments passed to method."
 msgstr "입력항목이 올바르지 않습니다."
 
@@ -7118,7 +7118,7 @@ msgstr "디스커버리 규칙 \"%1$s\"의 인증 프로토콜이 올바르지 �
 msgid "Incorrect authentication protocol for item \"%1$s\"."
 msgstr "아이템 \"%1$s\"의 인증 프로토콜이 올바르지 않습니다."
 
-#: include/classes/api/services/CHostInterface.php:666
+#: include/classes/api/services/CHostInterface.php:675
 msgid "Incorrect bulk value for interface."
 msgstr "인터페이스의 bulk의 값이 올바르지 않습니다."
 
@@ -7308,12 +7308,12 @@ msgstr "이미지의 인덱스가 올바르지 않습니다."
 msgid "Incorrect input parameters."
 msgstr "입력된 파라미터가 올바르지 않습니다."
 
-#: include/classes/api/services/CHostInterface.php:591
+#: include/classes/api/services/CHostInterface.php:600
 #, c-format
 msgid "Incorrect interface DNS parameter \"%s\" provided."
 msgstr "인터페이스의 DNS 파라미터 \"%s\"가 올바르지 않습니다."
 
-#: include/classes/api/services/CHostInterface.php:634
+#: include/classes/api/services/CHostInterface.php:643
 #, c-format
 msgid "Incorrect interface port \"%s\" provided."
 msgstr "인터페이스의 포트 \"%s\"가 올바르지 않습니다."
@@ -7856,7 +7856,7 @@ msgstr "인스톨러 이름"
 msgid "Interface"
 msgstr "인터페이스"
 
-#: include/classes/api/services/CHostInterface.php:843
+#: include/classes/api/services/CHostInterface.php:852
 #, c-format
 msgid "Interface is linked to item \"%1$s\" on \"%2$s\"."
 msgstr "인터페이스는 \"%2$s\"의 아이템\"%1$s\"에 링크되어 있습니다."
@@ -7865,18 +7865,18 @@ msgstr "인터페이스는 \"%2$s\"의 아이템\"%1$s\"에 링크되어 있습�
 msgid "Interface is used by items that require this type of the interface."
 msgstr "인터페이스는 타입의 인터페이스를 이용하는 아이템에서 이용되어 있습니다"
 
-#: include/classes/api/services/CHostInterface.php:272
+#: include/classes/api/services/CHostInterface.php:277
 #, c-format
 msgid "Interface with DNS \"%1$s\" cannot have empty IP address."
 msgstr "DNS \"%1$s\"가 설정된 인터페이스에 IP주소를 설정해 주십시오."
 
-#: include/classes/api/services/CHostInterface.php:278
-#: include/classes/api/services/CHostInterface.php:285
+#: include/classes/api/services/CHostInterface.php:283
+#: include/classes/api/services/CHostInterface.php:290
 #, c-format
 msgid "Interface with IP \"%1$s\" cannot have empty DNS name while having \"Use DNS\" property on \"%2$s\"."
 msgstr "\"%2$s\"의 \"DNS를 사용\"에 체크가 되어있는 경우, IP주소 \"%1$s\"의 인터페이스의 DNS 이름은 필수항목입니다."
 
-#: include/classes/api/services/CHostInterface.php:291
+#: include/classes/api/services/CHostInterface.php:296
 #, c-format
 msgid "Interface with IP \"%1$s\" cannot have empty DNS name."
 msgstr "IP주소 \"%1$s\"가 설정된 인터페이스에 DNS 이름을 설정해 주세요."
@@ -7896,7 +7896,7 @@ msgctxt "user type"
 msgid "Internal"
 msgstr "내부 이벤트"
 
-#: include/classes/core/CJsonRpc.php:204
+#: include/classes/core/CJsonRpc.php:206
 msgid "Internal JSON-RPC error."
 msgstr "JSON-RPC 내부 에러."
 
@@ -7904,7 +7904,7 @@ msgstr "JSON-RPC 내부 에러."
 msgid "Internal data storage period (in days)"
 msgstr "내부 데이터 보존기간 (일)"
 
-#: include/classes/core/CJsonRpc.php:203
+#: include/classes/core/CJsonRpc.php:205
 #: include/classes/import/validators/CXmlValidatorGeneral.php:147
 msgid "Internal error."
 msgstr "내부 에러."
@@ -7954,11 +7954,11 @@ msgstr "IP주소의 범위 \"%1$s\"가 올바르지 않습니다."
 msgid "Invalid IP address range \"%1$s\": must be a string."
 msgstr "IP주소의 범위 \"%1$s\"가 올바르지 않습니다 : 문자열이어야 합니다."
 
-#: include/classes/core/CJsonRpc.php:184
+#: include/classes/core/CJsonRpc.php:186
 msgid "Invalid JSON. An error occurred on the server while parsing the JSON text."
 msgstr "JSON데이터가 올바르지 않습니다. JSON 텍스트의 Parse중 서버에서 에러가 발생하였습니다."
 
-#: include/classes/core/CJsonRpc.php:188
+#: include/classes/core/CJsonRpc.php:190
 msgid "Invalid Request."
 msgstr "리퀘스트가 올바르지 않습니다."
 
@@ -8127,7 +8127,7 @@ msgstr "메인터넌스 기간이 올바르지 않습니다."
 #: include/classes/api/services/CUser.php:719
 #: include/classes/api/services/CUser.php:877
 #: include/classes/api/services/CUser.php:922
-#: include/classes/core/CJsonRpc.php:199
+#: include/classes/core/CJsonRpc.php:201
 msgid "Invalid method parameters."
 msgstr "메소드의 파라미터가 올바르지 않습니다."
 
@@ -8135,7 +8135,7 @@ msgstr "메소드의 파라미터가 올바르지 않습니다."
 msgid "Invalid number of parameters."
 msgstr "파라미터의 수가 올바르지 않습니다."
 
-#: include/classes/core/CJsonRpc.php:198
+#: include/classes/core/CJsonRpc.php:200
 msgid "Invalid params."
 msgstr "파라미터가 올바르지 않습니다."
 
@@ -8465,20 +8465,20 @@ msgstr "JMX 에이전트"
 msgid "JMX interfaces"
 msgstr "JMX 인터페이스"
 
-#: include/classes/core/CJsonRpc.php:156
+#: include/classes/core/CJsonRpc.php:158
 #, c-format
 msgid "JSON-rpc error generation failed. No such error \"%s\"."
 msgstr "JSON-rpc에러의 생성실패. 그러한 에러는 없습니다 \"%s\"."
 
-#: include/classes/core/CJsonRpc.php:113
+#: include/classes/core/CJsonRpc.php:115
 msgid "JSON-rpc method is not defined."
 msgstr "JSON-rpc메소드가 없습니다."
 
-#: include/classes/core/CJsonRpc.php:118
+#: include/classes/core/CJsonRpc.php:120
 msgid "JSON-rpc params is not an Array."
 msgstr "JSON-rpc파라미터가 없습니다."
 
-#: include/classes/core/CJsonRpc.php:103
+#: include/classes/core/CJsonRpc.php:105
 msgid "JSON-rpc version is not specified."
 msgstr "JSON-rpc버전가 없습니다."
 
@@ -9349,7 +9349,7 @@ msgstr "메시지"
 msgid "Messaging"
 msgstr "알림 표시"
 
-#: include/classes/core/CJsonRpc.php:193
+#: include/classes/core/CJsonRpc.php:195
 msgid "Method not found."
 msgstr "메소드를 찾을 수 없습니다."
 
@@ -9875,13 +9875,13 @@ msgstr "데이터수집 없음"
 msgid "No data found."
 msgstr "데이터를 찾을 수 없음."
 
-#: include/classes/api/services/CHostInterface.php:819
+#: include/classes/api/services/CHostInterface.php:828
 #, c-format
 msgid "No default interface for \"%1$s\" type on \"%2$s\"."
 msgstr "\"%2$s\"상의 \"%1$s\"타입의 디폴트인터페이스가 설정되어 있지 않습니다"
 
-#: include/classes/core/CJsonRpc.php:209 include/classes/core/CJsonRpc.php:214
-#: include/classes/core/CJsonRpc.php:219
+#: include/classes/core/CJsonRpc.php:211 include/classes/core/CJsonRpc.php:216
+#: include/classes/core/CJsonRpc.php:221
 msgid "No details"
 msgstr "자세한 내용이 없습니다"
 
@@ -10075,10 +10075,10 @@ msgstr "시스템 액세스 권한이 없습니다."
 #: include/classes/api/services/CHostGroup.php:1027
 #: include/classes/api/services/CHostGroup.php:1141
 #: include/classes/api/services/CHostGroup.php:1160
-#: include/classes/api/services/CHostInterface.php:240
-#: include/classes/api/services/CHostInterface.php:256
-#: include/classes/api/services/CHostInterface.php:399
-#: include/classes/api/services/CHostInterface.php:647
+#: include/classes/api/services/CHostInterface.php:241
+#: include/classes/api/services/CHostInterface.php:261
+#: include/classes/api/services/CHostInterface.php:408
+#: include/classes/api/services/CHostInterface.php:656
 #: include/classes/api/services/CHost.php:1500
 #: include/classes/api/services/CHost.php:1684
 #: include/classes/api/services/CHost.php:1811
@@ -11106,7 +11106,7 @@ msgstr "상위 Web시나리오"
 msgid "Parse SQL error [%1$s] in [%2$s]."
 msgstr "Parse SQL 에러 [%1$s] 중 [%2$s]."
 
-#: include/classes/core/CJsonRpc.php:183
+#: include/classes/core/CJsonRpc.php:185
 msgid "Parse error"
 msgstr "Parse 에러"
 
@@ -11286,7 +11286,7 @@ msgstr "호스트 인벤토리 필드의 자동설정"
 msgid "Port"
 msgstr "포트"
 
-#: include/classes/api/services/CHostInterface.php:631
+#: include/classes/api/services/CHostInterface.php:640
 msgid "Port cannot be empty for host interface."
 msgstr "호스트 인터페이스의 포트는 필수항목입니다."
 
@@ -13250,7 +13250,7 @@ msgstr "시스템 기본"
 msgid "System error occurred. Please contact Zabbix administrator."
 msgstr "시스템 에러가 발생했습니다. Zabbix관리자에게 연락해주세요."
 
-#: include/classes/core/CJsonRpc.php:213
+#: include/classes/core/CJsonRpc.php:215
 msgid "System error."
 msgstr "시스템 에러."
 
@@ -13584,11 +13584,11 @@ msgstr "디스커버리된 아이템을 찾을 수 없었습니다. 다음 디�
 msgid "The number of processes. Returns integer"
 msgstr "프로세스 수. integer를 리턴."
 
-#: include/classes/core/CJsonRpc.php:189
+#: include/classes/core/CJsonRpc.php:191
 msgid "The received JSON is not a valid JSON-RPC Request."
 msgstr "수신된 JSON은 올바르지 않은 JSON-RPC리퀘스트 입니다."
 
-#: include/classes/core/CJsonRpc.php:194
+#: include/classes/core/CJsonRpc.php:196
 msgid "The requested remote-procedure does not exist / is not available"
 msgstr "수신된 리모트 프로시져는 존재하지 않거나 이용할 수 없습니다."
 
@@ -13764,7 +13764,7 @@ msgstr "트랜잭션이 닫혀있지 않습니다. 종료합니다..."
 msgid "Transform SQL query result into a JSON object for low-level discovery."
 msgstr "변환한 SQL쿼리의 실행결과를 로우레벨 디스커버리의 JSON오브젝트에 삽입."
 
-#: include/classes/core/CJsonRpc.php:218
+#: include/classes/core/CJsonRpc.php:220
 msgid "Transport error."
 msgstr "전송에러."
 
