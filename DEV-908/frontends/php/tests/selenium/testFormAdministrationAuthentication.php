@@ -679,7 +679,6 @@ class testFormAdministrationAuthentication extends CLegacyWebTest {
 		}
 
 		$this->zbxTestClick('update');
-		$this->zbxTestCheckFatalErrors();
 		// Check DB configuration.
 		$sql = 'SELECT authentication_type, ldap_host, ldap_port, ldap_base_dn, ldap_bind_dn, ldap_bind_password, '.
 				'ldap_search_attribute, http_auth_enabled, http_login_form, http_strip_domains, '.
@@ -783,8 +782,6 @@ class testFormAdministrationAuthentication extends CLegacyWebTest {
 			$this->zbxTestWaitUntilMessageTextPresent('msg-bad', $data['error']);
 		}
 		else {
-			$this->zbxTestCheckFatalErrors();
-
 			// Check DB configuration.
 			$sql = 'SELECT authentication_type, ldap_host, ldap_port, ldap_base_dn, ldap_bind_dn, ldap_bind_password, '.
 					'ldap_search_attribute, http_auth_enabled, http_login_form, http_strip_domains, '.
