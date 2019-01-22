@@ -280,7 +280,7 @@ class CConfigurationExport {
 		if ($templates) {
 			$templates = $this->gatherTemplateScreens($templates);
 			$templates = $this->gatherApplications($templates);
-			$templates = $this->gatherItems($templates);
+			$templates = $this->gatherItems($templates, true);
 			$templates = $this->gatherDiscoveryRules($templates);
 			$templates = $this->gatherHttpTests($templates);
 		}
@@ -419,10 +419,11 @@ class CConfigurationExport {
 	 * Get hosts items from database.
 	 *
 	 * @param array $hosts
+	 * @param bool $templates_export  Export given hosts as if they were template.
 	 *
 	 * @return array
 	 */
-	protected function gatherItems(array $hosts) {
+	protected function gatherItems(array $hosts, $templates_export = false) {
 		$items = API::Item()->get([
 			'output' => $this->dataFields['item'],
 			'selectApplications' => ['name', 'flags'],
@@ -471,7 +472,9 @@ class CConfigurationExport {
 					if (array_key_exists($master_itemid, $master_items)) {
 						$master_item = $master_items[$master_itemid];
 						$items[$itemid]['master_item'] = ['key_' => $master_item['key_']];
-						$items[$master_itemid] = $master_item;
+						if ($templates_export) {
+							$items[$master_itemid] = $master_item;
+						}
 					}
 					else {
 						unset($items[$itemid]);
