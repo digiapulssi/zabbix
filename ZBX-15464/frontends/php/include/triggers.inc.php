@@ -2128,7 +2128,7 @@ function convert($value) {
 			$value *= ZBX_KIBIBYTE * ZBX_KIBIBYTE * ZBX_KIBIBYTE;
 			break;
 		case 'M':
-			$value *= ZBX_KIBIBYTE * ZBX_KIBIBYTE;
+			$value *= ZBX_MEBIBYTE;
 			break;
 		case 'K':
 			$value *= ZBX_KIBIBYTE;
