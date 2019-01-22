@@ -468,12 +468,12 @@ function str2mem($val) {
 
 function mem2str($size) {
 	$prefix = 'B';
-	if ($size > 1048576) {
-		$size = $size / 1048576;
+	if ($size > ZBX_MEBIBYTE) {
+		$size = $size / ZBX_MEBIBYTE;
 		$prefix = 'M';
 	}
-	elseif ($size > 1024) {
-		$size = $size / 1024;
+	elseif ($size > ZBX_KIBIBYTE) {
+		$size = $size / ZBX_KIBIBYTE;
 		$prefix = 'K';
 	}
 
