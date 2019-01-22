@@ -454,13 +454,13 @@ function str2mem($val) {
 
 	switch ($last) {
 		case 'g':
-			$val *= 1024;
+			$val *= ZBX_KIBIBYTE;
 			// break; is not missing here
 		case 'm':
-			$val *= 1024;
+			$val *= ZBX_KIBIBYTE;
 			// break; is not missing here
 		case 'k':
-			$val *= 1024;
+			$val *= ZBX_KIBIBYTE;
 	}
 
 	return $val;
@@ -695,13 +695,13 @@ function convert_units($options = []) {
 
 	// if one or more items is B or Bps, then Y-scale use base 8 and calculated in bytes
 	if ($options['byteStep']) {
-		$step = 1024;
+		$step = ZBX_KIBIBYTE;
 	}
 	else {
 		switch ($options['units']) {
 			case 'Bps':
 			case 'B':
-				$step = 1024;
+				$step = ZBX_KIBIBYTE;
 				$options['convert'] = $options['convert'] ? $options['convert'] : ITEM_CONVERT_NO_UNITS;
 				break;
 			case 'b':
@@ -882,7 +882,7 @@ function convertFunctionValue($value, $scale = 0) {
 			return bcmul($value, '604800', $scale);
 
 		case 'K':
-			return bcmul($value, '1024', $scale);
+			return bcmul($value, ZBX_KIBIBYTE, $scale);
 
 		case 'M':
 			return bcmul($value, '1048576', $scale);

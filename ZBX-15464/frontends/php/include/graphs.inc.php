@@ -887,7 +887,7 @@ function convertToBase1024($value, $step = false) {
 			$valData['value'] = bcdiv(sprintf('%.10f',$value), sprintf('%.10f', $valData['value']),
 				ZBX_PRECISION_10);
 
-			$valData['value'] = sprintf('%.10f', round(bcmul($valData['value'], bcpow(1024, $valData['pow'])),
+			$valData['value'] = sprintf('%.10f', round(bcmul($valData['value'], bcpow(ZBX_KIBIBYTE, $valData['pow'])),
 				ZBX_PRECISION_10));
 		}
 	}

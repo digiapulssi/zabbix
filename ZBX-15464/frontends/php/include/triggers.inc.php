@@ -2122,16 +2122,16 @@ function convert($value) {
 	$value = $arr['value'];
 	switch ($arr['mult']) {
 		case 'T':
-			$value *= 1024 * 1024 * 1024 * 1024;
+			$value *= ZBX_KIBIBYTE * ZBX_KIBIBYTE * ZBX_KIBIBYTE * ZBX_KIBIBYTE;
 			break;
 		case 'G':
-			$value *= 1024 * 1024 * 1024;
+			$value *= ZBX_KIBIBYTE * ZBX_KIBIBYTE * ZBX_KIBIBYTE;
 			break;
 		case 'M':
-			$value *= 1024 * 1024;
+			$value *= ZBX_KIBIBYTE * ZBX_KIBIBYTE;
 			break;
 		case 'K':
-			$value *= 1024;
+			$value *= ZBX_KIBIBYTE;
 			break;
 		case 'm':
 			$value *= 60;
