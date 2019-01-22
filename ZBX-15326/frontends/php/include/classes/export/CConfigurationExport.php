@@ -441,10 +441,7 @@ class CConfigurationExport {
 					$item['master_item'] = ['key_' => $items[$item['master_itemid']]['key_']];
 				}
 				else {
-					if (!array_key_exists($item['master_itemid'], $inherited_master_items)) {
-						$inherited_master_items[$item['master_itemid']] = [];
-					}
-					$inherited_master_items[$item['master_itemid']][] = $itemid;
+					$inherited_master_items[$itemid] = $item['master_itemid'];
 				}
 			}
 		}
@@ -461,18 +458,24 @@ class CConfigurationExport {
 				'output' => $this->dataFields['item'],
 				'selectApplications' => ['name', 'flags'],
 				'selectPreprocessing' => ['type', 'params'],
-				'itemids' => array_keys($inherited_master_items),
-				'hostids' => array_keys($hosts),
+				'itemids' => array_values($inherited_master_items),
 				'webitems' => true,
 				'filter' => ['flags' => ZBX_FLAG_DISCOVERY_NORMAL],
 				'preservekeys' => true
 			]);
 
 			foreach ($master_items as $master_itemid => $master_item) {
-				$itemids = $inherited_master_items[$master_itemid];
-				$items[$master_itemid] = $master_item;
-				foreach ($itemids as $itemid) {
-					$items[$itemid]['master_item'] = ['key_' => $master_item['key_']];
+
+				foreach ($inherited_master_items as $itemid => $master_itemid) {
+
+					if (array_key_exists($master_itemid, $master_items)) {
+						$master_item = $master_items[$master_itemid];
+						$items[$itemid]['master_item'] = ['key_' => $master_item['key_']];
+						$items[$master_itemid] = $master_item;
+					}
+					else {
+						unset($items[$itemid]);
+					}
 				}
 			}
 		}
