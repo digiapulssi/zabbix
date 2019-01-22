@@ -113,7 +113,7 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		format_stats_time slv_finalize slv_exit exit_if_running trim parse_opts
 		parse_slv_opts
 		opt getopt setopt unsetopt optkeys ts_str ts_full selected_period
-		write_file
+		write_file read_file
 		cycle_start
 		cycle_end
 		usage);
@@ -667,7 +667,7 @@ sub tld_service_enabled
 {
 	my $tld = shift;
 	my $service = shift;
-	my $till = shift;
+	my $now = shift;
 
 	$service = lc($service);
 
@@ -675,12 +675,12 @@ sub tld_service_enabled
 
 	if ($service eq 'rdds')
 	{
-		return 1 if tld_interface_enabled($tld, 'rdds43', $till);
+		return 1 if tld_interface_enabled($tld, 'rdds43', $now);
 
-		return tld_interface_enabled($tld, 'rdap', $till);
+		return tld_interface_enabled($tld, 'rdap', $now);
 	}
 
-	return tld_interface_enabled($tld, $service, $till);
+	return tld_interface_enabled($tld, $service, $now);
 }
 
 sub enabled_item_key_from_interface
@@ -741,7 +741,6 @@ sub uniq
 
 sub tld_interface_enabled_create_cache
 {
-	my $till = shift;
 	my @interfaces = @_;
 
 	dbg(join(',', @interfaces));
@@ -808,7 +807,7 @@ sub tld_interface_enabled
 {
 	my $tld = shift;
 	my $interface = shift;
-	my $till = shift;
+	my $now = shift;
 
 	$interface = lc($interface);
 
@@ -818,35 +817,38 @@ sub tld_interface_enabled
 
 	if (!defined($enabled_items_cache{$item_key}))
 	{
-		tld_interface_enabled_create_cache($till, $interface);
+		tld_interface_enabled_create_cache($interface);
 	}
 
 	if (defined($enabled_items_cache{$item_key}{$tld}))
 	{
-		# find the latest value but make sure to specify time bounds, relatively to $till
+		# find the latest value but make sure to specify time bounds, relatively to $now
 
-		$till = cycle_end(time() - 120, 60);	# go back 2 minutes if time unspecified
+		$now = time() - 120 unless ($now);	# go back 2 minutes if time unspecified
+
+		my $till = cycle_end($now, 60);
 
 		my @conditions = (
-			[sql_time_condition($till - 0 * 3600 -  1 * 60 + 1, $till), "desc"],	# go back 1 minute
-			[sql_time_condition($till - 0 * 3600 - 30 * 60 + 1, $till), "desc"],	# go back 30 minutes
-			[sql_time_condition($till - 6 * 3600 -  0 * 60 + 1, $till), "desc"],	# go back 6 hours
-			[sql_time_condition($till + 1, $till + 24 * 3600), "asc"]		# go forward 1 day
+			[$till - 0 * 3600 -  1 * 60 + 1, $till            , "clock desc"],	# go back 1 minute
+			[$till - 0 * 3600 - 30 * 60 + 1, $till            , "clock desc"],	# go back 30 minutes
+			[$till - 6 * 3600 -  0 * 60 + 1, $till            , "clock desc"],	# go back 6 hours
+			[$till + 1                     , $till + 24 * 3600, "clock asc"]	# go forward 1 day
 		);
 
 		my $condition_index = 0;
 
 		while ($condition_index < scalar(@conditions))
 		{
-			my $condition = $conditions[$condition_index]->[0];
-			my $order = $conditions[$condition_index]->[1];
+			my $from = $conditions[$condition_index]->[0];
+			my $till = $conditions[$condition_index]->[1];
+			my $order = $conditions[$condition_index]->[2];
 
 			my $rows_ref = db_select_binds(
 				"select value".
 				" from history_uint".
 				" where itemid=?".
-					" and $condition".
-				" order by clock $order".
+					" and " . sql_time_condition($from, $till).
+				" order by $order".
 				" limit 1",
 				$enabled_items_cache{$item_key}{$tld});
 
@@ -2054,7 +2056,7 @@ sub sql_time_condition
 	my $till = shift;
 	my $clock_field = shift;
 
-	$clock_field = "clock" unless(defined($clock_field));
+	$clock_field = "clock" unless (defined($clock_field));
 
 	if (defined($from) and not defined($till))
 	{

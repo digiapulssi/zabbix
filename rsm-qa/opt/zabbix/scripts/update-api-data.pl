@@ -396,7 +396,7 @@ foreach (@server_keys)
 
 	# Prepare the cache for function tld_service_enabled(). Make sure this is called before creating child processes!
 	tld_interface_enabled_delete_cache();	# delete cache of previous server
-	tld_interface_enabled_create_cache($till, @interfaces);
+	tld_interface_enabled_create_cache(@interfaces);
 
 	db_disconnect();
 

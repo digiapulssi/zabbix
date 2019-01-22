@@ -31,7 +31,7 @@ sub get_interfaces($$$);
 sub probe_online_at_init();
 sub get_history_by_itemid($$$);
 
-parse_opts('tld=s', 'service=s', 'server-id=i', 'now=i', 'period=i');
+parse_opts('tld=s', 'service=s', 'server-id=i', 'now=i', 'period=i', 'print-period!');
 
 setopt('nolog');
 
@@ -143,12 +143,6 @@ foreach (@server_keys)
 		{
 			next if (opt('service') && $service ne getopt('service'));
 
-			next unless (tld_service_enabled($tld, $service, $now));
-
-			my $interfaces_ref = get_interfaces($tld, $service, $now);
-
-			$probes{$service} = get_probes($service) unless (defined($probes{$service}));
-
 			# get actual cycle times to calculate
 			my @cycles_to_calculate = cycles_to_calculate(
 				$tld,
@@ -158,6 +152,21 @@ foreach (@server_keys)
 				\%lastvalues,
 				$lastvalues_cache
 			);
+
+			next if (scalar(@cycles_to_calculate) == 0);
+			next unless (tld_service_enabled($tld, $service, $cycles_to_calculate[0]));
+
+			if (opt('print-period'))
+			{
+				info("selected $service period: ", selected_period(
+					$cycles_to_calculate[0],
+					cycle_end($cycles_to_calculate[-1], $delays{$service})
+				));
+			}
+
+			my $interfaces_ref = get_interfaces($tld, $service, $now);
+
+			$probes{$service} = get_probes($service) unless (defined($probes{$service}));
 
 			if ($service eq 'dns' && scalar(@cycles_to_calculate) != 0)
 			{
@@ -203,6 +212,9 @@ foreach (@server_keys)
 	db_disconnect();
 }
 
+# keep to avoid reading multiple times
+my $global_lastclock;
+
 sub cycles_to_calculate($$$$$$)
 {
 	my $tld = shift;
@@ -214,62 +226,7 @@ sub cycles_to_calculate($$$$$$)
 
 	my @cycles;
 
-	if (opt('now'))
-	{
-		my $lastclock = cycle_start(getopt('now'), $delay);
-
-		my $max_clock = $lastclock + $max_period;
-
-		while ($lastclock < $max_clock && $lastclock < $real_now)
-		{
-			push(@cycles, $lastclock);
-
-			$lastclock += $delay;
-		}
-
-		dbg("using specified last clock: $lastclock");
-	}
-	elsif (!defined($lastvalues_cache->{$tld}{$service}{'lastclock'}))
-	{
-		# see if we have last_update.txt in SLA API directory
-		my $continue_file = ah_get_continue_file();
-
-		my ($lastclock, $error);
-
-		if (-e $continue_file)
-		{
-			if (read_file($continue_file, \$lastclock, \$error) != SUCCESS)
-			{
-				fail("cannot read file \"$continue_file\": $error");
-			}
-
-			while (chomp($lastclock)) {}
-
-			$lastclock++;
-
-			dbg("using last clock from SLA API directory, file $continue_file: $lastclock");
-		}
-		else
-		{
-			# if not, get the oldest from the database
-			$lastclock = get_oldest_clock($tld, $service_key, ITEM_VALUE_TYPE_UINT64);
-
-			fail("unexpected error: item \"$service_key\" not found on TLD $tld") if ($lastclock == E_FAIL);
-			fail("cannot yet calculate, no data in the database yet") if ($lastclock == 0);
-
-			dbg("using last clock from the database: $lastclock");
-		}
-
-		my $max_clock = $lastclock + $max_period;
-
-		while ($lastclock < $max_clock && $lastclock < $real_now)
-		{
-			push(@cycles, $lastclock);
-
-			$lastclock += $delay;
-		}
-	}
-	else
+	if (defined($lastvalues_cache->{$tld}{$service}{'lastclock'}))
 	{
 		my $lastclock = $lastvalues_cache->{$tld}{$service}{'lastclock'};
 
@@ -285,6 +242,60 @@ sub cycles_to_calculate($$$$$$)
 
 			$lastclock += $delay;
 		}
+
+		return @cycles;
+	}
+
+	if (!defined($global_lastclock))
+	{
+		if (opt('now'))
+		{
+			$global_lastclock //= cycle_start(getopt('now'), $delay);
+
+			dbg("using specified last clock: $global_lastclock");
+		}
+		else
+		{
+			# see if we have last_update.txt in SLA API directory
+
+			my $continue_file //= ah_get_continue_file();
+
+			my $error;
+
+			if (-e $continue_file)
+			{
+				if (read_file($continue_file, \$global_lastclock, \$error) != SUCCESS)
+				{
+					fail("cannot read file \"$continue_file\": $error");
+				}
+
+				while (chomp($global_lastclock)) {}
+
+				$global_lastclock++;
+
+				dbg("using last clock from SLA API directory, file $continue_file: $global_lastclock");
+			}
+			else
+			{
+				# if not, get the oldest from the database
+				$global_lastclock //= get_oldest_clock($tld, $service_key, ITEM_VALUE_TYPE_UINT64);
+
+				fail("unexpected error: item \"$service_key\" not found on TLD $tld") if ($global_lastclock == E_FAIL);
+				fail("cannot yet calculate, no data in the database yet") if ($global_lastclock == 0);
+
+				dbg("using last clock from the database: $global_lastclock");
+			}
+		}
+	}
+
+	my $lastclock = $global_lastclock;
+	my $max_clock = $lastclock + $max_period;
+
+	while ($lastclock < $max_clock && $lastclock < $real_now)
+	{
+		push(@cycles, $lastclock);
+
+		$lastclock += $delay;
 	}
 
 	return @cycles;
@@ -950,7 +961,7 @@ sla-api-current.pl - generate recent SLA API measurement files for newly collect
 
 =head1 SYNOPSIS
 
-sla-api-current.pl [--tld <tld>] [--service <name>] [--server-id <id>] [--now unixtimestamp] [--period minutes] [--debug] [--dry-run] [--help]
+sla-api-current.pl [--tld <tld>] [--service <name>] [--server-id <id>] [--now unixtimestamp] [--period minutes] [--print-period] [--debug] [--dry-run] [--help]
 
 =head1 OPTIONS
 
@@ -975,6 +986,10 @@ Optionally specify the time of the cycle to start from. Maximum 30 cycles will b
 =item B<--period> minutes
 
 Optionally specify maximum period to handle (default: 30 minutes).
+
+=item B<--print-period>
+
+Print selected period on the screen.
 
 =item B<--debug>
 
