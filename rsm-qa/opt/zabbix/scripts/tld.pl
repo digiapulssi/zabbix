@@ -165,7 +165,7 @@ pfail("Zabbix API URL is not specified. Please check configuration file") unless
 pfail("Username for Zabbix API is not specified. Please check configuration file") unless defined $section->{'za_user'};
 pfail("Password for Zabbix API is not specified. Please check configuration file") unless defined $section->{'za_password'};
 
-# todo phase 1: add support for re-login in case session is expired
+# todo: add support for re-login in case session is expired
 my $attempts = 3;
 my $result;
 my $error;
@@ -526,15 +526,14 @@ sub get_ns_servers {
 	    }
 	}
     } else {
-	# todo phase 1: implemented --resolver for automatically fetching NSs (NB, search for --resolver in this file)
+	# implemented --resolver for automatically fetching NSs (NB, search for --resolver in this file)
 	my $add_opts = "";
 	$add_opts = "\@" . $OPTS{'resolver'} if ($OPTS{'resolver'});
-	# todo phase 1: NB! Fix duplicate items! Remove DOT from the end of NS.
+	# NB! Fix duplicate items! Remove DOT from the end of NS.
 	my $nsservers = `dig $add_opts $tld NS +short | sed 's/\.\$//'`;
 
 	my @nsservers = split(/\n/,$nsservers);
 
-	# todo phase 1: added
 	print("Warning: resolver returned no Name Servers, did you forget to specify \"--resolver\"?\n") if (scalar(@nsservers) == 0);
 
 	foreach (my $i = 0;$i<=$#nsservers; $i++) {
@@ -1102,14 +1101,14 @@ sub create_slv_ns_items {
         foreach (my $i_ipv4 = 0; $i_ipv4 <= $#ipv4; $i_ipv4++) {
 	    next unless defined $ipv4[$i_ipv4];
 
-# todo phase 1: DNS NS are not currently used
+# DNS NS are not currently used
 #	    create_all_slv_ns_items($ns_name, $ipv4[$i_ipv4], $hostid);
         }
 
 	foreach (my $i_ipv6 = 0; $i_ipv6 <= $#ipv6; $i_ipv6++) {
 	    next unless defined $ipv6[$i_ipv6];
 
-# todo phase 1: DNS NS are not currently used
+# DNS NS are not currently used
 #	    create_all_slv_ns_items($ns_name, $ipv6[$i_ipv6], $hostid);
         }
     }
@@ -1217,7 +1216,7 @@ sub create_slv_items {
 	undef($depend_down);
 
 
-# todo phase 1: DNS NS are not currently used
+# DNS NS are not currently used
 #	create_slv_item('% of successful monthly RDDS43 resolution RTT', 'rsm.slv.rdds.43.rtt.month', $hostid, VALUE_TYPE_PERC, [get_application_id(APP_SLV_MONTHLY, $hostid)]);
 #	create_slv_item('% of successful monthly RDDS80 resolution RTT', 'rsm.slv.rdds.80.rtt.month', $hostid, VALUE_TYPE_PERC, [get_application_id(APP_SLV_MONTHLY, $hostid)]);
 #	create_slv_item('% of successful monthly RDDS update time', 'rsm.slv.rdds.upd.month', $hostid, VALUE_TYPE_PERC, [get_application_id(APP_SLV_MONTHLY, $hostid)]) if (defined($OPTS{'epp-servers'}));
@@ -1228,7 +1227,7 @@ sub create_slv_items {
 	create_slv_item('EPP minutes of downtime', 'rsm.slv.epp.downtime', $hostid, VALUE_TYPE_NUM, [get_application_id(APP_SLV_CURMON, $hostid)]);
 	create_slv_item('EPP weekly unavailability', 'rsm.slv.epp.rollweek', $hostid, VALUE_TYPE_PERC, [get_application_id(APP_SLV_ROLLWEEK, $hostid)]);
 
-# todo phase 1: DNS NS are not currently used
+# DNS NS are not currently used
 #	create_slv_item('% of successful monthly EPP LOGIN resolution RTT', 'rsm.slv.epp.rtt.login.month', $hostid, VALUE_TYPE_PERC, [get_application_id(APP_SLV_MONTHLY, $hostid)]);
 #	create_slv_item('% of successful monthly EPP UPDATE resolution RTT', 'rsm.slv.epp.rtt.update.month', $hostid, VALUE_TYPE_PERC, [get_application_id(APP_SLV_MONTHLY, $hostid)]);
 #	create_slv_item('% of successful monthly EPP INFO resolution RTT', 'rsm.slv.epp.rtt.info.month', $hostid, VALUE_TYPE_PERC, [get_application_id(APP_SLV_MONTHLY, $hostid)]);
@@ -1264,8 +1263,6 @@ sub __usage {
     my $cfg_default_rdds_ns_string = cfg_default_rdds_ns_string;
 
     my $default_server_id = ($config ? "(default: " . get_rsm_local_id($config) . ")" : "");
-
-    # todo phase 1: updated --delete and --disable sections, explaining better how these options work
 
     print <<EOF;
 
@@ -1426,7 +1423,7 @@ sub validate_input {
 	$msg .= "EPP Server certificate file must be specified (--epp-servercert)\n" unless ($OPTS{'epp-servercert'});
     }
 
-    # todo phase 1: why on Earth? Do not do this.
+    # why on Earth? Do not do this.
     #$OPTS{'ipv4'} = 0 if (defined($OPTS{'update-nsservers'}));
     #$OPTS{'ipv6'} = 0 if (defined($OPTS{'update-nsservers'}));
 
@@ -1482,10 +1479,6 @@ sub create_tld_host($$)
 	create_slv_items($ns_servers, $tld_hostid, $tld_name);
 }
 
-# todo phase 1: moved create_probe_health_tmpl() to TLDs.pm to be used by both tld.pl and probes.pl
-
-# todo phase 1: fixed delete/disable TLD/service by handling services input (specifying none means action on the whole tld)
-# todo phase 1: fixed deletion of main host ($main_hostid)
 sub manage_tld_objects($$$$$$) {
     my $action = shift;
     my $tld = shift;
@@ -1598,9 +1591,7 @@ sub manage_tld_objects($$$$$$) {
 	my $template_items = get_items_like($main_templateid, $type, true);
 	my $host_items = get_items_like($main_hostid, $type, false);
 
-	# todo phase 1: bug fix, was "scalar(%)"
 	if (scalar(keys(%{$template_items}))) {
-	    # todo phase 1: bug fix, was "foreach (%)"
 	    foreach my $itemid (keys(%{$template_items})) {
 		push @itemids, $itemid;
 	    }
@@ -1609,9 +1600,7 @@ sub manage_tld_objects($$$$$$) {
 	    print "Could not find $type related items on the template level\n";
 	}
 
-	# todo phase 1: bug fix, was "scalar(%)"
 	if (scalar(keys(%{$host_items}))) {
-	    # todo phase 1: bug fix, was "foreach (%)"
 	    foreach my $itemid (keys(%{$host_items})) {
 		push @itemids, $itemid;
 	    }
@@ -1698,12 +1687,12 @@ sub update_nsservers($$) {
     my $TLD = shift;
     my $new_ns_servers = shift;
 
-    # todo phase 1: allow disabling all the NSs
+    # allow disabling all the NSs
     #return unless defined $new_ns_servers;
 
     my $old_ns_servers = get_nsservers_list($TLD);
 
-    # todo phase 1: allow adding NSs on an empty set
+    # allow adding NSs on an empty set
     #return unless defined $old_ns_servers;
 
     my @to_be_added = ();
@@ -1729,7 +1718,6 @@ sub update_nsservers($$) {
 			$ns_ip->{$new_ip}->{'proto'} = $proto;
 			push @to_be_added, $ns_ip;
 
-			# todo phase 1: added
 			print("add\t: $new_nsname ($new_ip)\n");
 		    }
 	    }
@@ -1761,7 +1749,6 @@ sub update_nsservers($$) {
 
 		    push @to_be_removed, $ns_ip;
 
-		    # todo phase 1: added
 		    print("disable\t: $old_nsname ($old_ip)\n");
 		}
 	    }
@@ -1806,7 +1793,7 @@ sub add_new_ns($) {
 	    create_item_dns_rtt($ns, $ip, $main_templateid, 'Template '.$TLD, 'tcp', $proto);
 	    create_item_dns_rtt($ns, $ip, $main_templateid, 'Template '.$TLD, 'udp', $proto);
 
-# todo phase 1: DNS NS are not currently used
+# DNS NS are not currently used
 #    	    create_all_slv_ns_items($ns, $ip, $main_hostid);
 	}
     }

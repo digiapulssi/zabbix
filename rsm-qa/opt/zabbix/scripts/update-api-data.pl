@@ -30,7 +30,7 @@ parse_opts('tld=s', 'service=s', 'period=n', 'from=n', 'continue!', 'print-perio
 # do not write any logs
 setopt('nolog');
 
-exit_if_running();
+fail_if_running();
 
 if (opt('debug'))
 {
@@ -42,7 +42,7 @@ __validate_input();	# needs to be connected to db
 
 ah_set_debug(getopt('debug'));
 
-if (!opt('dry-run') && (my $error = rsm_targets_prepare(AH_BASEV1_TMP_DIR, AH_BASEV1_DIR)))
+if (!opt('dry-run') && (my $error = rsm_targets_prepare(AH_SLA_API_TMP_DIR, AH_SLA_API_DIR)))
 {
 	fail($error);
 }
@@ -683,7 +683,7 @@ foreach (@server_keys)
 				}
 
 				my $rollweek;
-				if (get_current_value($rollweek_itemid, ITEM_VALUE_TYPE_FLOAT, \$rollweek, undef) != SUCCESS)
+				if (get_lastvalue($rollweek_itemid, ITEM_VALUE_TYPE_FLOAT, \$rollweek, undef) != SUCCESS)
 				{
 					wrn(uc($service), ": no rolling week data in the database yet");
 

@@ -33,8 +33,8 @@ use constant UP				=> 1;	# Up
 use constant UP_INCONCLUSIVE_NO_DATA	=> 2;	# Up-inconclusive-no-data
 use constant UP_INCONCLUSIVE_NO_PROBES	=> 3;	# Up-inconclusive-no-probes
 
-use constant ONLINE => 1;	# todo phase 1: check where these are used
-use constant OFFLINE => 0;	# todo phase 1: check where these are used
+use constant ONLINE => 1;	# todo: check where these are used
+use constant OFFLINE => 0;	# todo: check where these are used
 use constant SLV_UNAVAILABILITY_LIMIT => 49; # NB! must be in sync with frontend
 
 use constant MIN_LOGIN_ERROR => -205;
@@ -78,12 +78,14 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		UP_INCONCLUSIVE_NO_DATA PROTO_UDP PROTO_TCP
 		MAX_LOGIN_ERROR MIN_INFO_ERROR MAX_INFO_ERROR PROBE_ONLINE_STR
 		AVAIL_SHIFT_BACK ROLLWEEK_SHIFT_BACK PROBE_ONLINE_SHIFT
+		PROBE_KEY_MANUAL
 		ONLINE OFFLINE
 		get_macro_minns get_macro_dns_probe_online get_macro_rdds_probe_online get_macro_dns_rollweek_sla
 		get_macro_rdds_rollweek_sla get_macro_dns_udp_rtt_high get_macro_dns_udp_rtt_low
 		get_macro_dns_tcp_rtt_low get_macro_rdds_rtt_low get_dns_udp_delay get_dns_tcp_delay
 		get_rdds_delay get_epp_delay get_macro_epp_probe_online get_macro_epp_rollweek_sla
 		get_macro_dns_update_time get_macro_rdds_update_time get_tld_items get_hostid
+		get_rtt_low
 		get_macro_epp_rtt_low get_macro_probe_avail_limit get_itemid_by_key get_itemid_by_host
 		get_itemid_by_hostid get_itemid_like_by_hostid get_itemids_by_host_and_keypart get_lastclock get_tlds
 		get_oldest_clock
@@ -106,12 +108,15 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		float_value_exists
 		sql_time_condition get_incidents get_downtime get_downtime_prepare get_downtime_execute
 		history_table
-		get_current_value get_itemids_by_hostids get_nsip_values get_valuemaps get_statusmaps get_detailed_result
+		get_lastvalue get_itemids_by_hostids get_nsip_values get_valuemaps get_statusmaps get_detailed_result
 		get_avail_valuemaps slv_stats_reset
 		get_result_string get_tld_by_trigger truncate_from truncate_till alerts_enabled
 		get_real_services_period dbg info wrn fail set_on_fail
-		format_stats_time slv_finalize slv_exit exit_if_running trim parse_opts
-		parse_slv_opts
+		format_stats_time slv_finalize slv_exit
+		fail_if_running
+		exit_if_running
+		trim
+		parse_opts parse_slv_opts
 		opt getopt setopt unsetopt optkeys ts_str ts_full selected_period
 		write_file read_file
 		cycle_start
@@ -121,7 +126,7 @@ our @EXPORT = qw($result $dbh $tld $server_key
 # configuration, set in set_slv_config()
 my $config = undef;
 
-# this will be used for making sure only one copy of script runs (see function exit_if_running())
+# this will be used for making sure only one copy of script runs (see function __is_already_running())
 my $pidfile;
 use constant PID_DIR => '/tmp';
 
@@ -199,8 +204,8 @@ sub get_dns_tcp_delay
 {
 	my $value_time = (shift or time() - AVAIL_SHIFT_BACK);
 
-	# todo phase 3: Export DNS-TCP tests
-	# todo phase 3: if we really need DNS-TCP history the item must be added (to db schema and upgrade patch)
+	# todo: Export DNS-TCP tests
+	# todo: if we really need DNS-TCP history the item must be added (to db schema and upgrade patch)
 #	my $value = __get_configvalue(RSM_CONFIG_DNS_TCP_DELAY_ITEMID, $value_time);
 #
 #	return $value if (defined($value));
@@ -248,6 +253,46 @@ sub get_macro_epp_probe_online
 sub get_macro_epp_rollweek_sla
 {
 	return __get_macro('{$RSM.EPP.ROLLWEEK.SLA}');
+}
+
+sub get_rtt_low
+{
+	my $service = shift;
+	my $proto = shift;	# for DNS
+	my $command = shift;	# for EPP: 'login', 'info' or 'update'
+
+	if ($service eq 'dns' || $service eq 'dnssec')
+	{
+		fail("internal error: get_rtt_low() called for $service without specifying protocol")
+			unless (defined($proto));
+
+		if ($proto == PROTO_UDP)
+		{
+			return get_macro_dns_udp_rtt_low();	# can be per TLD
+		}
+		elsif ($proto == PROTO_TCP)
+		{
+			return get_macro_dns_tcp_rtt_low();	# can be per TLD
+		}
+		else
+		{
+			fail("dimir was wrong, besides protocols ", PROTO_UDP, " and ", PROTO_TCP,
+				" there is also ", $proto);
+		}
+	}
+
+	if ($service eq 'rdds')
+	{
+		return get_macro_rdds_rtt_low();
+	}
+
+	if ($service eq 'epp')
+	{
+		return get_macro_epp_rtt_low($command);	# can be per TLD
+	}
+
+	fail("dimir was wrong, thinking the only known services are \"dns\", \"dnssec\", \"rdds\" and \"epp\",",
+		" there is also \"$service\"");
 }
 
 sub get_macro_epp_rtt_low
@@ -390,7 +435,7 @@ sub get_lastclock($$$)
 	my $itemid = $rows_ref->[0]->[0];
 	my $lastclock;
 
-	if (get_current_value($itemid, $value_type, undef, \$lastclock) != SUCCESS)
+	if (get_lastvalue($itemid, $value_type, undef, \$lastclock) != SUCCESS)
 	{
 		$lastclock = 0;
 	}
@@ -460,7 +505,6 @@ sub get_tlds
 }
 
 # Returns a reference to hash of all probes (host => hostid).
-# todo phase 1: this function changed in phase 2, please check callers
 sub get_probes
 {
 	my $service = shift;
@@ -1041,7 +1085,6 @@ sub db_select
 	return $rows_ref;
 }
 
-# todo phase 1: taken from RSMSLV.pm phase 2
 sub db_select_binds
 {
 	$_global_sql = shift;
@@ -1104,7 +1147,6 @@ sub db_select_binds
 	return \@rows;
 }
 
-# todo phase 1: taken from RSMSLV.pm phase 2 for DaWa.pm::dw_get_id()
 sub db_exec
 {
 	$_global_sql = shift;
@@ -1169,7 +1211,6 @@ sub get_rollweek_bounds
 	return ($from, $till, cycle_start($till, $delay));
 }
 
-# todo phase 1: old name of this function was 'get_curmon_bounds'
 # Get bounds for monthly downtime calculation. $till is the last second of latest calculated test cycle.
 # $from is the first second of the month.
 sub get_downtime_bounds
@@ -1194,7 +1235,6 @@ sub max_avail_time
 	return truncate_till(time() - ROLLWEEK_SHIFT_BACK);
 }
 
-# todo phase 1: taken from RSMSLV.pm of phase 2
 sub __print_probe_times
 {
 	my $probe_times_ref = shift;
@@ -1679,7 +1719,7 @@ sub collect_slv_cycles($$$$$$)
 
 		my $itemid = get_itemid_by_host($tld, $cfg_key_out);
 
-		if (get_current_value($itemid, $value_type, \$lastvalue, \$lastclock) != SUCCESS)
+		if (get_lastvalue($itemid, $value_type, \$lastvalue, \$lastclock) != SUCCESS)
 		{
 			# new item
 			push(@{$cycles{$max_clock}}, $tld);
@@ -2326,7 +2366,7 @@ sub get_downtime
 			my $value = $row_ref->[0];
 			my $clock = $row_ref->[1];
 
-			# todo phase 1: do not ignore the first downtime minute
+			# NB! Do not ignore the first downtime minute
 			if ($value == DOWN && $prevclock == 0)
 			{
 				# first run
@@ -2495,8 +2535,7 @@ sub history_table($)
 # returns:
 # SUCCESS - last clock and value found
 # E_FAIL  - nothing found
-# todo phase 1: rename to get_lastvalue
-sub get_current_value($$$$)
+sub get_lastvalue($$$$)
 {
 	my $itemid = shift;
 	my $value_type = shift;
@@ -2642,8 +2681,8 @@ sub __get_valuemappings
 	return $result;
 }
 
-# todo phase 1: the $vmname's must be fixed accordingly in phase 2
-# todo phase 1: also, consider renaming to something like get_rtt_valuemaps()
+# todo: the $vmname's must be fixed accordingly
+# todo: also, consider renaming to something like get_rtt_valuemaps()
 sub get_valuemaps
 {
 	my $service = shift;
@@ -2673,8 +2712,8 @@ sub get_valuemaps
 	return __get_valuemappings($vmname);
 }
 
-# todo phase 1: the $vmname's must be fixed accordingly in phase 2
-# todo phase 1: also, consider renaming to something like get_result_valuemaps()
+# todo: the $vmname's must be fixed accordingly
+# todo: also, consider renaming to something like get_result_valuemaps()
 sub get_statusmaps
 {
 	my $service = shift;
@@ -2682,7 +2721,7 @@ sub get_statusmaps
 	my $vmname;
 	if ($service eq 'dns' or $service eq 'dnssec')
 	{
-		# todo phase 1: this will be used in phase 2 (many statuses)
+		# todo: this will be used later (many statuses)
 		#$vmname = 'RSM DNS result';
 		return undef;
 	}
@@ -2702,7 +2741,6 @@ sub get_statusmaps
 	return __get_valuemappings($vmname);
 }
 
-# todo phase 1: add to phase 2
 sub get_avail_valuemaps
 {
 	return __get_valuemappings('RSM Service Availability');
@@ -2924,25 +2962,58 @@ sub slv_stats_reset
 	$sql_count = 0;
 }
 
-sub exit_if_running
+sub __is_already_running()
 {
-	return if (opt('dry-run'));
-
 	my $filename = __get_pidfile();
 
 	$pidfile = File::Pid->new({ file => $filename });
+
 	fail("cannot lock script") unless (defined($pidfile));
 
 	$pidfile->write() or fail("cannot write to a pid file ", $pidfile->file);
 
+	# the only instance running is us
 	return if ($pidfile->pid == $$);
 
-	# pid file exists and has valid pid
+	# pid file exists, see if the pid in it is valid
 	my $pid = $pidfile->running();
-	fail(__script() . " is already running (pid:$pid)") if ($pid);
 
+	if ($pid)
+	{
+		# yes, we have another instance running
+		return $pid;
+	}
+
+	# invalid pid in the pid file, update it
 	$pidfile->pid($$);
 	$pidfile->write() or fail("cannot write to a pid file ", $pidfile->file);
+
+	return;
+}
+
+sub fail_if_running()
+{
+	return if (opt('dry-run'));
+
+	my $pid = __is_already_running();
+
+	if ($pid)
+	{
+		fail(__script() . " is already running (pid:$pid)");
+	}
+}
+
+sub exit_if_running()
+{
+	return if (opt('dry-run'));
+
+	my $pid = __is_already_running();
+
+	if ($pid)
+	{
+		wrn(__script() . " is already running (pid:$pid)");
+		exit 0;
+	}
 }
 
 sub dbg
@@ -3180,12 +3251,12 @@ sub __log
 	}
 	elsif ($syslog_priority eq 'err')
 	{
-		$stdout = 0 unless (opt('debug') || opt('dry-run'));	# todo phase 1: add this line to RSMSLV.pm of phase 2!
+		$stdout = 0 unless (opt('debug') || opt('dry-run'));
 		$priority = 'ERR';
 	}
 	elsif ($syslog_priority eq 'warning')
 	{
-		$stdout = 0 unless (opt('debug') || opt('dry-run'));	# todo phase 1: add this line to RSMSLV.pm of phase 2!
+		$stdout = 0 unless (opt('debug') || opt('dry-run'));
 		$priority = 'WRN';
 	}
 	elsif ($syslog_priority eq 'debug')

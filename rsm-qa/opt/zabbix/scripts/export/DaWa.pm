@@ -5,7 +5,7 @@ use warnings;
 use RSMSLV;
 use Text::CSV_XS;
 use File::Path qw(make_path);
-use Fcntl qw(:flock);		# todo phase 1: taken from phase 2 export.pl
+use Fcntl qw(:flock);
 
 use constant CSV_FILES_DIR => '/opt/zabbix/export-tmp';
 
@@ -299,7 +299,7 @@ sub dw_get_cycle_id
 			_DIGITS_IP_ID."s", $clock, $service_category_id, $tld_id, $ns_id, $ip_id);
 	}
 
-	# todo phase 1: for RDDS the target and the IP can be an empty string:
+	# todo: for RDDS the target and the IP can be an empty string
 	if ($service_category_id == 3)
 	{
 		$ns_id = 0 if ($ns_id eq "");
@@ -474,7 +474,6 @@ sub __write_csv_catalog
 	return 1;
 }
 
-# todo phase 1: this was taken from ApiHerlper.pm:__set_file_error of phase 2 (improved version)
 sub __get_file_error
 {
 	my $err = shift;
@@ -505,7 +504,6 @@ sub __make_path
 	die(__get_file_error($err)) if (@$err);
 }
 
-# todo phase 1: taken from RSMSLV.pm phase 2
 my $_lock_fh;
 use constant _LOCK_FILE => '/tmp/rsm.slv.data.export.lock';
 sub __slv_lock
@@ -519,7 +517,6 @@ sub __slv_lock
 	dbg(sprintf("%7d: %s", $$, 'LOCK'));
 }
 
-# todo phase 1: taken from RSMSLV.pm phase 2
 sub __slv_unlock
 {
 	close($_lock_fh) or fail("cannot close lock file " . _LOCK_FILE . ": $!");
@@ -527,51 +524,4 @@ sub __slv_unlock
 	dbg(sprintf("%7d: %s", $$, 'UNLOCK'));
 }
 
-#sub __read_csv_file
-#{
-# 	my $id_type = shift;
-#
-# 	my $file = __csv_file_name($id_type);
-#
-# 	if (!$_csv_files->{$file})
-# 	{
-# 		$_csv_files->{$file}->{'name'} =  __csv_file_name($file);
-# 	}
-#
-# 	my $name = $_csv_files->{$file}->{'name'};
-#
-# 	if (! -r $name)
-# 	{
-# 		# file do not exist
-# 		return 1;
-# 	}
-#
-# 	my $fh;
-#
-# 	unless (open($fh, "<:encoding(utf8)", $name))
-# 	{
-# 		die($name . ": $!");
-# 		return;
-# 	}
-#
-# 	my @rows;
-#
-# 	while (my $row = $_csv->getline($fh))
-# 	{
-# 		#$row->[2] =~ m/pattern/ or next; # 3rd field should match
-#
-# 		push(@rows, $row);
-# 	}
-#
-# 	close($fh);
-#
-# 	$_csv_files->{$file}->{'rows'} = \@rows;
-#
-# 	foreach my $row (@{$_csv_files->{$file}->{'rows'}})
-# 	{
-# 		dbg('read: ', join(',', @$row));
-# 	}
-#
-# 	return 1;
-# }
 1;

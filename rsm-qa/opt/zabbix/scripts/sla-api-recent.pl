@@ -37,7 +37,7 @@ setopt('nolog');
 
 usage() if (opt('help'));
 
-exit_if_running();
+exit_if_running();	# exit with 0 exit code
 
 if (opt('debug'))
 {
@@ -199,6 +199,10 @@ foreach (@server_keys)
 			undef($lastvalues{$tld}{$service}{'probes'});
 			undef($lastvalues{$tld}{$service}{'cycles'});
 		}
+
+		# DNSSEC is using DNS data
+		undef($lastvalues{$tld}{'dnssec'}{'probes'});
+		undef($lastvalues{$tld}{'dnssec'}{'cycles'});
 	}
 
 	if (!opt('dry-run') && !opt('now'))
@@ -226,7 +230,7 @@ sub cycles_to_calculate($$$$$$)
 
 	my @cycles;
 
-	if (defined($lastvalues_cache->{$tld}{$service}{'lastclock'}))
+	if (!opt('now') && defined($lastvalues_cache->{$tld}{$service}{'lastclock'}))
 	{
 		my $lastclock = $lastvalues_cache->{$tld}{$service}{'lastclock'};
 

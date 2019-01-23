@@ -29,9 +29,9 @@ use constant AH_INCIDENT_STATE_FILE => 'state';
 use constant AH_FALSE_POSITIVE_FILE => 'falsePositive';
 use constant AH_ALARMED_FILE => 'alarmed';
 use constant AH_DOWNTIME_FILE => 'downtime';
-use constant AH_BASEV1_DIR => '/opt/zabbix/sla';
-use constant AH_BASEV1_TMP_DIR => '/opt/zabbix/sla-tmp';
-use constant AH_BASEV2_DIR => '/opt/zabbix/sla-v2';
+use constant AH_SLA_API_DIR => '/opt/zabbix/sla';
+use constant AH_SLA_API_TMP_DIR => '/opt/zabbix/sla-tmp';
+use constant AH_SLA_API_RECENT_DIR => '/opt/zabbix/sla';
 
 use constant AH_ROOT_ZONE_DIR => 'zz--root';			# map root zone name (.) to something human readable
 
@@ -49,8 +49,8 @@ use constant JSON_OBJECT_DISABLED_SERVICE => {
 
 our @EXPORT = qw(
 	AH_SUCCESS AH_FAIL
-	AH_BASEV1_DIR AH_BASEV2_DIR
-	AH_BASEV1_TMP_DIR ah_set_debug ah_get_error ah_state_file_json ah_save_state
+	AH_SLA_API_DIR AH_SLA_API_RECENT_DIR
+	AH_SLA_API_TMP_DIR ah_set_debug ah_get_error ah_state_file_json ah_save_state
 	ah_save_alarmed ah_save_downtime ah_create_incident_json ah_save_incident
 	ah_save_false_positive ah_save_measurement ah_get_continue_file ah_get_api_tld ah_get_last_audit
 	ah_get_recent_measurement ah_save_recent_measurement ah_save_recent_cache ah_get_recent_cache
@@ -125,7 +125,7 @@ sub __make_base_path($$$)
 	my $service = shift;
 	my $result_path_ptr = shift;	# pointer
 
-	my $path = AH_BASEV1_TMP_DIR . '/' . __gen_base_path($tld, $service, undef);
+	my $path = AH_SLA_API_TMP_DIR . '/' . __gen_base_path($tld, $service, undef);
 
 	make_path($path, {error => \my $err});
 
@@ -148,7 +148,7 @@ sub __make_inc_path($$$$$)
 	my $eventid = shift;
 	my $inc_path_ptr = shift;	# pointer
 
-	my $path = AH_BASEV1_TMP_DIR . '/' . __gen_inc_path($tld, $service, $eventid, $start);
+	my $path = AH_SLA_API_TMP_DIR . '/' . __gen_inc_path($tld, $service, $eventid, $start);
 
 	make_path($path, {error => \my $err});
 
@@ -183,7 +183,6 @@ sub __set_error
 	$_error_string = join('', @_);
 }
 
-# todo phase 1: this improved version was taken from the same file of phase 2
 sub __set_file_error
 {
 	my $err = shift;
@@ -262,7 +261,7 @@ sub ah_state_file_json($$)
 	my $ah_tld = shift;
 	my $json_ref = shift;
 
-	my $state_path = AH_BASEV1_DIR . '/' . __gen_base_path($ah_tld, undef, undef) . '/' . AH_STATE_FILE;
+	my $state_path = AH_SLA_API_DIR . '/' . __gen_base_path($ah_tld, undef, undef) . '/' . AH_STATE_FILE;
 	my $buf;
 
 	return AH_FAIL unless (__read_file($state_path, \$buf) == AH_SUCCESS);
@@ -413,16 +412,16 @@ sub __read_inc_file($$$$$$)
 	my $file = shift;
 	my $buf_ref = shift;
 
-	$file = AH_BASEV1_DIR . '/' . __gen_inc_path($tld, $service, $eventid, $start) . '/' . $file;
+	$file = AH_SLA_API_DIR . '/' . __gen_inc_path($tld, $service, $eventid, $start) . '/' . $file;
 
 	dbg("file: $file");
 
 	return __read_file($file, $buf_ref);
 }
 
-# When saving false positiveness, read from AH_BASEV1_DIR, write to AH_BASEV1_TMP_DIR.
+# When saving false positiveness, read from AH_SLA_API_DIR, write to AH_SLA_API_TMP_DIR.
 #
-# We need to get the incident state file from AH_BASEV1_DIR in order to get current
+# We need to get the incident state file from AH_SLA_API_DIR in order to get current
 # "falsePositive" value and if it has changed, update it in the state file. We
 # don't want to change any other parameter (e. g. incident start time) of the
 # incident in the state file.
@@ -515,7 +514,7 @@ sub __gen_recent_measurement_path($$$$$)
 
 	my $add_path = sprintf("measurements/%04d/%02d/%02d", $year, $mon, $mday);
 
-	my $path = AH_BASEV2_DIR . '/' . __gen_base_path($ah_tld, $service, $add_path);
+	my $path = AH_SLA_API_RECENT_DIR . '/' . __gen_base_path($ah_tld, $service, $add_path);
 
 	if ($create)
 	{
@@ -622,14 +621,14 @@ sub dbg
 
 sub ah_get_continue_file
 {
-	return AH_BASEV1_DIR . '/' . AH_CONTINUE_FILE;
+	return AH_SLA_API_DIR . '/' . AH_CONTINUE_FILE;
 }
 
 sub ah_save_continue_file
 {
 	my $ts = shift;
 
-	return __write_file(AH_BASEV1_TMP_DIR . '/' . AH_CONTINUE_FILE, $ts);
+	return __write_file(AH_SLA_API_TMP_DIR . '/' . AH_CONTINUE_FILE, $ts);
 }
 
 sub ah_encode_pretty_json
@@ -650,7 +649,7 @@ sub __get_audit_file_path
 {
 	my $server_key = shift;
 
-	return AH_BASEV1_DIR . '/' . AH_AUDIT_FILE_PREFIX . $server_key . '.txt';
+	return AH_SLA_API_DIR . '/' . AH_AUDIT_FILE_PREFIX . $server_key . '.txt';
 }
 
 sub __encode_json
@@ -695,7 +694,7 @@ sub ah_save_audit
 
 	die("Internal error: ah_save_audit() server_key not specified") unless ($server_key && $clock);
 
-	return __write_file(AH_BASEV1_TMP_DIR . '/' . AH_AUDIT_FILE_PREFIX . $server_key . '.txt', $clock);
+	return __write_file(AH_SLA_API_TMP_DIR . '/' . AH_AUDIT_FILE_PREFIX . $server_key . '.txt', $clock);
 }
 
 sub ah_get_dns_interface($)

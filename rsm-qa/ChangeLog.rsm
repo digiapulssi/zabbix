@@ -1,3 +1,9 @@
+Changes for rsm1.2.0rc1
+
+Bug fixes:
+....I..... [sub-438] changed exit code to 0 if already running, removed unused data from cache, increased respect for --now option, save recent measurement files under SLA API base directory (dimir)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.2.0alpha3
 
 Bug fixes:

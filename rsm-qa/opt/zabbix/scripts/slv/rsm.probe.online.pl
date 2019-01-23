@@ -15,14 +15,10 @@ use RSMSLV;
 use TLD_constants qw(:items);
 
 use constant PROBE_LASTACCESS_ITEM	=> 'zabbix[proxy,{$RSM.PROXY_NAME},lastaccess]';
-use constant PROBE_KEY_MANUAL		=> 'rsm.probe.status[manual]';
 use constant PROBE_KEY_AUTOMATIC	=> 'rsm.probe.status[automatic,%]';	# match all in SQL
 
-use constant ONLINE	=> 1;
-use constant OFFLINE	=> 0;
-
 parse_opts('now=i');
-exit_if_running();
+fail_if_running();
 
 set_slv_config(get_rsm_config());
 
@@ -38,7 +34,6 @@ my $value_ts = $from;
 
 dbg("selected period: ", selected_period($from, $till), ", with value timestamp: ", ts_full($value_ts));
 
-# todo phase 1: add parameter: ENABLED_DNS
 my $probes_ref = get_probes();
 
 my $probe_times_ref = __get_main_probe_status_times($from, $till, $probes_ref);

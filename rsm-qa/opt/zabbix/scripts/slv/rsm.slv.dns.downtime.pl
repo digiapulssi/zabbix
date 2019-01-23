@@ -20,7 +20,7 @@ my $cfg_key_in = 'rsm.slv.dns.avail';
 my $cfg_key_out = 'rsm.slv.dns.downtime';
 
 parse_slv_opts();
-exit_if_running();
+fail_if_running();
 
 set_slv_config(get_rsm_config());
 

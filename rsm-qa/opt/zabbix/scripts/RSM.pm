@@ -93,7 +93,6 @@ sub get_rsm_local_id
 	return $id;
 }
 
-# todo phase 1: taken from ApiHelper:__system, should be removed from there in phase 2
 sub __system
 {
 	my $cmd = join('', @_);
@@ -113,7 +112,6 @@ sub __system
 	return undef;
 }
 
-# todo phase 1: this was made based on ApiHelper:ah_begin, which must be removed in phase 2
 sub rsm_targets_apply()
 {
 	my $strip_components = () = $_TMP_DIR =~ /\//g;
@@ -147,7 +145,6 @@ sub rsm_targets_apply()
 	return undef;
 }
 
-# todo phase 1: this was made based on ApiHelper:ah_end, which must be removed in phase 2
 sub rsm_targets_prepare($$)
 {
 	$_TMP_DIR = shift;
@@ -199,7 +196,6 @@ sub rsm_targets_prepare($$)
 	return undef;
 }
 
-# todo phase 1: new function
 sub rsm_targets_delete($)
 {
 	my $file = shift;	# file to delete from target
@@ -207,7 +203,6 @@ sub rsm_targets_delete($)
 	$_TO_DELETE{$file} = undef;	# use hash instead of array to avoid duplicates
 }
 
-# todo phase 1: this was taken from ApiHelper::__set_file_error, it must be decided what to do with 2 identical functions like that in phase 2
 sub __get_file_error
 {
 	my $err = shift;

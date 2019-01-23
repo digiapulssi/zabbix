@@ -7,9 +7,6 @@ use base 'Exporter';
 use constant true => 1;
 use constant false => 0;
 
-# todo phase 1: removed TIME_MINUTE, TIME_HOUR, TIME_DAY
-
-
 use constant LINUX_TEMPLATEID			=> 10001;	# Template "Template OS Linux"
 use constant APP_ZABBIX_PROXY_TEMPLATEID	=> 10058;	# Template "Template App Zabbix Proxy"
 use constant PROBE_ERRORS_TEMPLATEID		=> 99990;	# Template "Template Probe Errors"
@@ -80,7 +77,6 @@ use constant PROBE_KEY_ONLINE	=> 'rsm.probe.online';
 
 use constant CONFIGVALUE_DNS_UDP_RTT_HIGH_ITEMID	=> 100011;	# itemid of rsm.configvalue[RSM.DNS.UDP.RTT.HIGH] item
 
-# todo phase 1: changed ids
 use constant rsm_value_mappings => {
 	'service_state' => 1,
 	'rsm_dns_rtt' => 120,
