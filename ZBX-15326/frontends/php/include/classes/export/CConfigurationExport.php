@@ -447,12 +447,6 @@ class CConfigurationExport {
 		}
 		unset($item);
 
-		foreach ($items as $itemid => $item) {
-			if ($item['type'] == ITEM_TYPE_HTTPTEST) {
-				unset($items[$itemid]);
-			}
-		}
-
 		if ($inherited_master_items) {
 			$master_items = API::Item()->get([
 				'output' => ['key_'],
@@ -469,6 +463,12 @@ class CConfigurationExport {
 				else {
 					unset($items[$itemid]);
 				}
+			}
+		}
+
+		foreach ($items as $itemid => $item) {
+			if ($item['type'] == ITEM_TYPE_HTTPTEST) {
+				unset($items[$itemid]);
 			}
 		}
 
