@@ -888,7 +888,7 @@ function convertFunctionValue($value, $scale = 0) {
 			return bcmul($value, ZBX_MEBIBYTE, $scale);
 
 		case 'G':
-			return bcmul($value, '1073741824', $scale);
+			return bcmul($value, ZBX_GIBIBYTE, $scale);
 
 		case 'T':
 			return bcmul($value, '1099511627776', $scale);
