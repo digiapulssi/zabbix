@@ -15,33 +15,26 @@
 		<?php } ?>
 	}
 
-	jQuery(document).ready(function() {
-		'use strict';
-
-		jQuery('#paramtype').change(function() {
-			if (jQuery('#expr_type option:selected').val().substr(0, 4) == 'last'
-					|| jQuery('#expr_type option:selected').val().substr(0, 6) == 'strlen'
-					|| jQuery('#expr_type option:selected').val().substr(0, 4) == 'band') {
-				if (jQuery('#paramtype option:selected').val() == <?php echo PARAM_TYPE_COUNTS; ?>) {
-					jQuery('#params_0').removeAttr('readonly');
-				}
-				else {
-					jQuery('#params_0').attr('readonly', 'readonly');
-				}
-			}
+	jQuery(function($) {
+		$('#function').change(function() {
+			$('#spec_paramtype').remove();
+			$(this).closest('form').submit();
 		});
 
-		jQuery(document).ready(function() {
-			if (jQuery('#expr_type option:selected').val().substr(0, 4) == 'last'
-					|| jQuery('#expr_type option:selected').val().substr(0, 6) == 'strlen'
-					|| jQuery('#expr_type option:selected').val().substr(0, 4) == 'band') {
-				if (jQuery('#paramtype option:selected').val() == <?php echo PARAM_TYPE_COUNTS; ?>) {
-					jQuery('#params_0').removeAttr('readonly');
-				}
-				else {
-					jQuery('#params_0').attr('readonly', 'readonly');
-				}
+		$.valHooks.input = {
+			get: function(elem) {
+				return elem.value;
+			},
+			set: function(elem, value) {
+				var tmp = elem.value;
+					elem.value = value;
+
+				'description' === elem.id && tmp !== value && $(elem).trigger('change');
 			}
+		};
+
+		$('#description').change(function() {
+			$(this).closest('form').submit();
 		});
 	});
 </script>

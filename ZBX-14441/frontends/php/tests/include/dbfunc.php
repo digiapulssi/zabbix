@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2018 Zabbix SIA
+** Copyright (C) 2001-2019 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@ require_once dirname(__FILE__).'/../../include/gettextwrapper.inc.php';
 require_once dirname(__FILE__).'/../../include/defines.inc.php';
 require_once dirname(__FILE__).'/../../conf/zabbix.conf.php';
 require_once dirname(__FILE__).'/../../include/func.inc.php';
+require_once dirname(__FILE__).'/../../include/classes/api/CApiService.php';
 require_once dirname(__FILE__).'/../../include/db.inc.php';
 require_once dirname(__FILE__).'/../../include/classes/db/DB.php';
 require_once dirname(__FILE__).'/../../include/classes/user/CWebUser.php';

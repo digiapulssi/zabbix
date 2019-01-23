@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2018 Zabbix SIA
+** Copyright (C) 2001-2019 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -649,6 +649,7 @@ function getActionOperationDescriptions(array $actions) {
 
 					$result[$i][$j][] = [implode(', ', $templateList), BR()];
 					break;
+
 				case OPERATION_TYPE_HOST_INVENTORY:
 					$host_inventory_modes = getHostInventoryModes();
 					$result[$i][$j][] = bold(operation_type2str(OPERATION_TYPE_HOST_INVENTORY).': ');

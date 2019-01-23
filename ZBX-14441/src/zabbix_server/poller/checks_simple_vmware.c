@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2018 Zabbix SIA
+** Copyright (C) 2001-2019 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -215,6 +215,12 @@ static int	vmware_service_get_counter_value_by_id(zbx_vmware_service_t *service,
 		/* the requested counter has not been queried yet */
 		zabbix_log(LOG_LEVEL_DEBUG, "performance data is not yet ready, ignoring request");
 		ret = SYSINFO_RET_OK;
+		goto out;
+	}
+
+	if (NULL != entity->error)
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, entity->error));
 		goto out;
 	}
 
@@ -1869,7 +1875,7 @@ int	check_vcenter_hv_perfcounter(AGENT_REQUEST *request, const char *username, c
 	}
 
 	/* FAIL is returned if counter already exists */
-	if (SUCCEED == zbx_vmware_service_add_perf_counter(service, "HostSystem", hv->id, counterid))
+	if (SUCCEED == zbx_vmware_service_add_perf_counter(service, "HostSystem", hv->id, counterid, "*"))
 	{
 		ret = SYSINFO_RET_OK;
 		goto unlock;
@@ -2974,7 +2980,7 @@ int	check_vcenter_vm_perfcounter(AGENT_REQUEST *request, const char *username, c
 	}
 
 	/* FAIL is returned if counter already exists */
-	if (SUCCEED == zbx_vmware_service_add_perf_counter(service, "VirtualMachine", vm->id, counterid))
+	if (SUCCEED == zbx_vmware_service_add_perf_counter(service, "VirtualMachine", vm->id, counterid, "*"))
 	{
 		ret = SYSINFO_RET_OK;
 		goto unlock;

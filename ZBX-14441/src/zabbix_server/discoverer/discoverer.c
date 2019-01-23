@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2018 Zabbix SIA
+** Copyright (C) 2001-2019 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -689,14 +689,14 @@ out:
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }
 
-static int	process_discovery(int now)
+static int	process_discovery(void)
 {
 	DB_RESULT	result;
 	DB_ROW		row;
-	DB_DRULE	drule;
 	int		rule_count = 0;
-	zbx_uint64_t	druleid;
+	int		now;
 
+	now = (int)time(NULL);
 	result = DBselect(
 			"select distinct r.druleid,r.iprange,r.name,c.dcheckid,r.proxy_hostid"
 			" from drules r"
@@ -714,10 +714,14 @@ static int	process_discovery(int now)
 
 	while (NULL != (row = DBfetch(result)))
 	{
+		zbx_uint64_t	druleid;
+
 		ZBX_STR2UINT64(druleid, row[0]);
 
 		if (SUCCEED == DBis_null(row[4]))
 		{
+			DB_DRULE	drule;
+
 			memset(&drule, 0, sizeof(drule));
 
 			drule.druleid = druleid;
@@ -731,7 +735,7 @@ static int	process_discovery(int now)
 		if (0 != (program_type & ZBX_PROGRAM_TYPE_SERVER))
 			discovery_clean_services(druleid);
 
-		DBexecute("update drules set nextcheck=%d+delay where druleid=" ZBX_FS_UI64, now, druleid);
+		DBexecute("update drules set nextcheck=%d+delay where druleid=" ZBX_FS_UI64, (int)time(NULL), druleid);
 
 		rule_count++;
 	}
@@ -740,7 +744,7 @@ static int	process_discovery(int now)
 	return rule_count;	/* performance metric */
 }
 
-static int	get_minnextcheck(int now)
+static int	get_minnextcheck(void)
 {
 	DB_RESULT	result;
 	DB_ROW		row;
@@ -771,12 +775,10 @@ static int	get_minnextcheck(int now)
  *                                                                            *
  * Purpose: periodically try to find new hosts and services                   *
  *                                                                            *
- * Comments: executes once per 30 seconds (hardcoded)                         *
- *                                                                            *
  ******************************************************************************/
 ZBX_THREAD_ENTRY(discoverer_thread, args)
 {
-	int	now, nextcheck, sleeptime = -1, rule_count = 0, old_rule_count = 0;
+	int	nextcheck, sleeptime = -1, rule_count = 0, old_rule_count = 0;
 	double	sec, total_sec = 0.0, old_total_sec = 0.0;
 	time_t	last_stat_time;
 
@@ -813,12 +815,11 @@ ZBX_THREAD_ENTRY(discoverer_thread, args)
 					old_total_sec);
 		}
 
-		now = time(NULL);
 		sec = zbx_time();
-		rule_count += process_discovery(now);
+		rule_count += process_discovery();
 		total_sec += zbx_time() - sec;
 
-		nextcheck = get_minnextcheck(now);
+		nextcheck = get_minnextcheck();
 		sleeptime = calculate_sleeptime(nextcheck, DISCOVERER_DELAY);
 
 		if (0 != sleeptime || STAT_INTERVAL <= time(NULL) - last_stat_time)

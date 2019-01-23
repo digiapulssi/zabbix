@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2018 Zabbix SIA
+** Copyright (C) 2001-2019 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -545,7 +545,6 @@ class CHost extends CHostGeneral {
 
 			if (array_key_exists('inventory', $host) && $host['inventory']) {
 				$hostInventory = $host['inventory'];
-				$hostInventory['hostid'] = $hostid;
 				$hostInventory['inventory_mode'] = HOST_INVENTORY_MANUAL;
 			}
 			else {
@@ -553,11 +552,13 @@ class CHost extends CHostGeneral {
 			}
 
 			if (array_key_exists('inventory_mode', $host) && $host['inventory_mode'] != HOST_INVENTORY_DISABLED) {
-				$hostInventory['hostid'] = $hostid;
 				$hostInventory['inventory_mode'] = $host['inventory_mode'];
 			}
 
-			if ($hostInventory) {
+			if (array_key_exists('inventory_mode', $hostInventory)
+					&& ($hostInventory['inventory_mode'] == HOST_INVENTORY_MANUAL
+						|| $hostInventory['inventory_mode'] == HOST_INVENTORY_AUTOMATIC)) {
+				$hostInventory['hostid'] = $hostid;
 				DB::insert('host_inventory', [$hostInventory], false);
 			}
 		}
@@ -657,16 +658,14 @@ class CHost extends CHostGeneral {
 		]);
 
 		foreach ($hosts as $host) {
-			// extend host inventory with the required data
-			if (isset($host['inventory']) && $host['inventory']) {
-				$inventory = $inventories[$host['hostid']];
-
-				// if no host inventory record exists in the DB, it's disabled
-				if (!isset($inventory['inventory_mode'])) {
-					$inventory['inventory_mode'] = HOST_INVENTORY_DISABLED;
+			// Extend host inventory with the required data.
+			if (array_key_exists('inventory', $host) && $host['inventory']) {
+				// If inventory mode is HOST_INVENTORY_DISABLED, database record is not created.
+				if (array_key_exists('inventory_mode', $inventories[$host['hostid']])
+						&& ($inventories[$host['hostid']]['inventory_mode'] == HOST_INVENTORY_MANUAL
+							|| $inventories[$host['hostid']]['inventory_mode'] == HOST_INVENTORY_AUTOMATIC)) {
+					$host['inventory'] = $inventories[$host['hostid']];
 				}
-
-				$host['inventory'] = $inventory;
 			}
 
 			$data = $host;
@@ -766,6 +765,17 @@ class CHost extends CHostGeneral {
 			if (!array_key_exists($host['hostid'], $db_hosts)) {
 				self::exception(ZBX_API_ERROR_PERMISSIONS, _('You do not have permission to perform this operation.'));
 			}
+		}
+
+		// Check inventory mode value.
+		if (array_key_exists('inventory_mode', $data)) {
+			$valid_inventory_modes = [HOST_INVENTORY_DISABLED, HOST_INVENTORY_MANUAL, HOST_INVENTORY_AUTOMATIC];
+			$inventory_mode = new CLimitedSetValidator([
+				'values' => $valid_inventory_modes,
+				'messageInvalid' => _s('Incorrect value for field "%1$s": %2$s.', 'inventory_mode',
+					_s('value must be one of %1$s', implode(', ', $valid_inventory_modes)))
+			]);
+			$this->checkValidator($data['inventory_mode'], $inventory_mode);
 		}
 
 		// Check connection fields only for massupdate action.
@@ -1679,6 +1689,13 @@ class CHost extends CHostGeneral {
 
 		$inventory_fields = zbx_objectValues(getHostInventories(), 'db_field');
 
+		$valid_inventory_modes = [HOST_INVENTORY_DISABLED, HOST_INVENTORY_MANUAL, HOST_INVENTORY_AUTOMATIC];
+		$inventory_mode = new CLimitedSetValidator([
+			'values' => $valid_inventory_modes,
+			'messageInvalid' => _s('Incorrect value for field "%1$s": %2$s.', 'inventory_mode',
+				_s('value must be one of %1$s', implode(', ', $valid_inventory_modes)))
+		]);
+
 		$status_validator = new CLimitedSetValidator([
 			'values' => [HOST_STATUS_MONITORED, HOST_STATUS_NOT_MONITORED],
 			'messageInvalid' => _('Incorrect status for host "%1$s".')
@@ -1694,6 +1711,11 @@ class CHost extends CHostGeneral {
 			if (array_key_exists('status', $host)) {
 				$status_validator->setObjectName($host['host']);
 				$this->checkValidator($host['status'], $status_validator);
+			}
+
+			if (array_key_exists('inventory_mode', $host)) {
+				$inventory_mode->setObjectName($host['host']);
+				$this->checkValidator($host['inventory_mode'], $inventory_mode);
 			}
 
 			if (array_key_exists('inventory', $host) && $host['inventory']) {
@@ -1802,6 +1824,13 @@ class CHost extends CHostGeneral {
 
 		$inventory_fields = zbx_objectValues(getHostInventories(), 'db_field');
 
+		$valid_inventory_modes = [HOST_INVENTORY_DISABLED, HOST_INVENTORY_MANUAL, HOST_INVENTORY_AUTOMATIC];
+		$inventory_mode = new CLimitedSetValidator([
+			'values' => $valid_inventory_modes,
+			'messageInvalid' => _s('Incorrect value for field "%1$s": %2$s.', 'inventory_mode',
+				_s('value must be one of %1$s', implode(', ', $valid_inventory_modes)))
+		]);
+
 		$status_validator = new CLimitedSetValidator([
 			'values' => [HOST_STATUS_MONITORED, HOST_STATUS_NOT_MONITORED],
 			'messageInvalid' => _('Incorrect status for host "%1$s".')
@@ -1821,6 +1850,11 @@ class CHost extends CHostGeneral {
 			if (array_key_exists('status', $host)) {
 				$status_validator->setObjectName($host_name);
 				$this->checkValidator($host['status'], $status_validator);
+			}
+
+			if (array_key_exists('inventory_mode', $host)) {
+				$inventory_mode->setObjectName($host_name);
+				$this->checkValidator($host['inventory_mode'], $inventory_mode);
 			}
 
 			if (array_key_exists('inventory', $host) && $host['inventory']) {

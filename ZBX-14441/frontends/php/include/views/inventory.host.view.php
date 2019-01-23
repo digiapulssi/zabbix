@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2018 Zabbix SIA
+** Copyright (C) 2001-2019 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -141,8 +141,7 @@ $overviewFormList->addRow(_('Monitoring'),
 			'latest.php?form=1&select=&show_details=1&filter_set=Filter&hostids[]='.$data['host']['hostid']
 		),
 		new CLink(_('Triggers'),
-			'tr_status.php?filter_set=1&show_triggers=2&ack_status=1&show_events=1&show_events=0&show_details=1'.
-			'&txt_select=&show_maintenance=1&hostid='.$data['host']['hostid'].url_param('groupid')
+			'tr_status.php?filter_set=1&show_triggers=2&hostid='.$data['host']['hostid'].url_param('groupid')
 		),
 		new CLink(_('Events'),
 			'events.php?hostid='.$data['host']['hostid'].url_param('groupid').'&source='.EVENT_SOURCE_TRIGGERS

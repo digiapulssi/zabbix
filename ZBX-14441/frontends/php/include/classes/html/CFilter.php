@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2018 Zabbix SIA
+** Copyright (C) 2001-2019 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -138,6 +138,7 @@ class CFilter extends CTag {
 		$url = (new CUrl())
 			->removeArgument('filter_set')
 			->removeArgument('ddreset')
+			->removeArgument('action')
 			->setArgument('filter_rst', 1);
 
 		return (new CDiv())
@@ -151,8 +152,6 @@ class CFilter extends CTag {
 					->addClass(ZBX_STYLE_BTN_ALT)
 					->onClick('javascript: chkbxRange.clearSelectedOnFilterChange();')
 			);
-
-		return $buttons;
 	}
 
 	public function startToString() {

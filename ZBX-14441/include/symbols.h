@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2018 Zabbix SIA
+** Copyright (C) 2001-2019 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,8 +21,6 @@
 #define ZABBIX_SYMBOLS_H
 
 #if defined(_WINDOWS)
-
-#	define _WIN32_WINNT	0x0500	/* Target MS Windows 2000 and later. */
 
 /* some definitions which are not available on older MS Windows versions */
 typedef enum {

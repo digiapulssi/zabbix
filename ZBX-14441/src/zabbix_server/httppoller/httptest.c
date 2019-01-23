@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2018 Zabbix SIA
+** Copyright (C) 2001-2019 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -801,7 +801,7 @@ int	process_httptests(int httppoller_num, int now)
 	{
 		ZBX_STR2UINT64(host.hostid, row[0]);
 		strscpy(host.host, row[1]);
-		strscpy(host.name, row[2]);
+		zbx_strlcpy_utf8(host.name, row[2], sizeof(host.name));
 
 		ZBX_STR2UINT64(httptest.httptest.httptestid, row[3]);
 		httptest.httptest.name = row[4];

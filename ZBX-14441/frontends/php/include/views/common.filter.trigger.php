@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2018 Zabbix SIA
+** Copyright (C) 2001-2019 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,7 +27,8 @@ $config = $this->data['config'];
 $filterForm = (new CFilter($filter['filterid']))
 	->addVar('fullscreen', $filter['fullScreen'])
 	->addVar('groupid', $filter['groupId'])
-	->addVar('hostid', $filter['hostId']);
+	->addVar('hostid', $filter['hostId'])
+	->addVar('show_maintenance', 0);
 
 $column1 = (new CFormList())
 	->addRow(_('Triggers status'),

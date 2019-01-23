@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2018 Zabbix SIA
+** Copyright (C) 2001-2019 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -20,12 +20,14 @@
 #include "common.h"
 #include "threads.h"
 
+#include "../zbxcrypto/tls.h"
+
 #ifdef HAVE_ICONV
 #	include <iconv.h>
 #endif
 
 static const char	copyright_message[] =
-	"Copyright (C) 2018 Zabbix SIA\n"
+	"Copyright (C) 2019 Zabbix SIA\n"
 	"License GPLv2+: GNU GPL version 2 or later <http://gnu.org/licenses/gpl.html>.\n"
 	"This is free software: you are free to change and redistribute it according to\n"
 	"the license. There is NO WARRANTY, to the extent permitted by law.";
@@ -53,6 +55,10 @@ void	version(void)
 	printf("%s (Zabbix) %s\n", title_message, ZABBIX_VERSION);
 	printf("Revision %s %s, compilation time: %s %s\n\n", ZABBIX_REVISION, ZABBIX_REVDATE, __DATE__, __TIME__);
 	puts(copyright_message);
+#if defined(HAVE_POLARSSL) || defined(HAVE_GNUTLS) || defined(HAVE_OPENSSL)
+	printf("\n");
+	zbx_tls_version();
+#endif
 }
 
 /******************************************************************************
@@ -2658,6 +2664,9 @@ size_t	zbx_utf8_char_len(const char *text)
 		return 3;
 	else if (0xf0 == (*text & 0xf8))	/* 11110000-11110100 starts a 4-byte sequence */
 		return 4;
+#if ZBX_MAX_BYTES_IN_UTF8_CHAR != 4
+#	error "zbx_utf8_char_len() is not synchronized with ZBX_MAX_BYTES_IN_UTF8_CHAR"
+#endif
 	return 0;				/* not a valid UTF-8 character */
 }
 
@@ -3793,6 +3802,10 @@ static size_t	zbx_no_function(const char *expr)
 		{
 			ptr += len;	/* skip to the position after and/or/not operator */
 		}
+		else if (ptr > expr && 0 != isdigit(*(ptr - 1)) && NULL != strchr("KMGTsmhdw", *ptr))
+		{
+			ptr++;	/* skip unit suffix symbol if it's preceded by a digit */
+		}
 		else
 			break;
 	}
@@ -3949,7 +3962,7 @@ int	zbx_function_validate(const char *expr, size_t *par_l, size_t *par_r, char *
 		if (SUCCEED == function_match_parenthesis(expr, *par_l, par_r, &lpp_offset, &lpp_len))
 			return SUCCEED;
 
-		if (*par_l > *par_r && NULL != error)
+		if (NULL != error && *par_l > *par_r)
 		{
 			zbx_snprintf(error, max_error_len, "Incorrect function '%.*s' expression. "
 				"Check expression part starting from: %.*s",
