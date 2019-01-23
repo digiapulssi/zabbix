@@ -280,7 +280,7 @@ class CConfigurationExport {
 		if ($templates) {
 			$templates = $this->gatherTemplateScreens($templates);
 			$templates = $this->gatherApplications($templates);
-			$templates = $this->gatherItems($templates, true);
+			$templates = $this->gatherItems($templates);
 			$templates = $this->gatherDiscoveryRules($templates);
 			$templates = $this->gatherHttpTests($templates);
 		}
@@ -419,11 +419,10 @@ class CConfigurationExport {
 	 * Get hosts items from database.
 	 *
 	 * @param array $hosts
-	 * @param bool $templates_export  Export given hosts as if they were template.
 	 *
 	 * @return array
 	 */
-	protected function gatherItems(array $hosts, $templates_export = false) {
+	protected function gatherItems(array $hosts) {
 		$items = API::Item()->get([
 			'output' => $this->dataFields['item'],
 			'selectApplications' => ['name', 'flags'],
@@ -456,29 +455,18 @@ class CConfigurationExport {
 
 		if ($inherited_master_items) {
 			$options = [
-				'output' => $templates_export ? $this->dataFields['item'] : ['key_'],
+				'output' => ['key_'],
 				'itemids' => $inherited_master_items,
 				'webitems' => true,
 				'filter' => ['flags' => ZBX_FLAG_DISCOVERY_NORMAL],
 				'preservekeys' => true
 			];
 
-			if ($templates_export) {
-				$options += [
-					'selectApplications' => ['name', 'flags'],
-					'selectPreprocessing' => ['type', 'params']
-				];
-			}
-
 			$master_items = API::Item()->get($options);
 
 			foreach ($inherited_master_items as $itemid => $master_itemid) {
 				if (array_key_exists($master_itemid, $master_items)) {
-					$master_item = $master_items[$master_itemid];
-					$items[$itemid]['master_item'] = ['key_' => $master_item['key_']];
-					if ($templates_export) {
-						$items[$master_itemid] = $master_item;
-					}
+					$items[$itemid]['master_item'] = ['key_' => $master_items[$master_itemid]['key_']];
 				}
 				else {
 					unset($items[$itemid]);
