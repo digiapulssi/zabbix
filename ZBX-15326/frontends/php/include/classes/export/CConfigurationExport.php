@@ -455,30 +455,33 @@ class CConfigurationExport {
 		}
 
 		if ($inherited_master_items) {
-			$master_items = API::Item()->get([
-				'output' => $this->dataFields['item'],
-				'selectApplications' => ['name', 'flags'],
-				'selectPreprocessing' => ['type', 'params'],
-				'itemids' => array_values($inherited_master_items),
+			$options = [
+				'output' => $templates_export ? $this->dataFields['item'] : ['key_'],
+				'itemids' => $inherited_master_items,
 				'webitems' => true,
 				'filter' => ['flags' => ZBX_FLAG_DISCOVERY_NORMAL],
 				'preservekeys' => true
-			]);
+			];
 
-			foreach ($master_items as $master_itemid => $master_item) {
+			if ($templates_export) {
+				$options += [
+					'selectApplications' => ['name', 'flags'],
+					'selectPreprocessing' => ['type', 'params']
+				];
+			}
 
-				foreach ($inherited_master_items as $itemid => $master_itemid) {
+			$master_items = API::Item()->get($options);
 
-					if (array_key_exists($master_itemid, $master_items)) {
-						$master_item = $master_items[$master_itemid];
-						$items[$itemid]['master_item'] = ['key_' => $master_item['key_']];
-						if ($templates_export) {
-							$items[$master_itemid] = $master_item;
-						}
+			foreach ($inherited_master_items as $itemid => $master_itemid) {
+				if (array_key_exists($master_itemid, $master_items)) {
+					$master_item = $master_items[$master_itemid];
+					$items[$itemid]['master_item'] = ['key_' => $master_item['key_']];
+					if ($templates_export) {
+						$items[$master_itemid] = $master_item;
 					}
-					else {
-						unset($items[$itemid]);
-					}
+				}
+				else {
+					unset($items[$itemid]);
 				}
 			}
 		}
