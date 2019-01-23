@@ -428,8 +428,8 @@ class CConfigurationExport {
 			'selectApplications' => ['name', 'flags'],
 			'selectPreprocessing' => ['type', 'params'],
 			'hostids' => array_keys($hosts),
-			'webitems' => true,
 			'inherited' => false,
+			'webitems' => true,
 			'filter' => ['flags' => ZBX_FLAG_DISCOVERY_NORMAL],
 			'preservekeys' => true
 		]);
@@ -454,15 +454,13 @@ class CConfigurationExport {
 		}
 
 		if ($inherited_master_items) {
-			$options = [
+			$master_items = API::Item()->get([
 				'output' => ['key_'],
 				'itemids' => $inherited_master_items,
 				'webitems' => true,
 				'filter' => ['flags' => ZBX_FLAG_DISCOVERY_NORMAL],
 				'preservekeys' => true
-			];
-
-			$master_items = API::Item()->get($options);
+			]);
 
 			foreach ($inherited_master_items as $itemid => $master_itemid) {
 				if (array_key_exists($master_itemid, $master_items)) {
