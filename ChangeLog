@@ -11,7 +11,7 @@ A......... [ZBX-14331] fixed error allowed to change interface type which is alr
 A.F....... [ZBX-14592] fixed calculation of SLA and availability report when problem has negative duration (miks)
 A......... [ZBX-15156] fixed undefined offset error in host screen with web item (talbergs)
 ...G...... [ZBX-14624] fixed agent collector not releasing connection to missing/removed disk devices (Andris, yurii)
-..F....... [ZBX-14604] fixed displayng of the graph name on screens (miks)
+..F....... [ZBX-14604] fixed displaying of the graph name on screens (miks)
 ..F....... [ZBX-15233] renamed fuzzytime() function description in dropdown list (Ivo)
 ...G...... [ZBX-12801] excluded zabbix_sender.dll from MS Windows builds with TLS (viktors)
 ...G...... [ZBX-15260] improved misleading warning message when agent fails to find log file during processing logrt[] item (asitals)
