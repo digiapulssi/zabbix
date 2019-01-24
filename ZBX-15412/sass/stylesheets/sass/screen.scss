@@ -1116,6 +1116,21 @@ output {
 	}
 }
 
+td.table-container {
+	padding: 0 5px;
+
+	table {
+		width: 100%;
+	}
+}
+
+td.cell-small {
+	width: 30%;
+}
+td.cell-big {
+	width: 70%;
+}
+
 .paging-btn-container {
 	min-height: 24px;
 	position: relative;

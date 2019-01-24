@@ -58,17 +58,27 @@ foreach($data['db_exps'] as $exp) {
 	}
 
 	$expressions[$exp['regexpid']]->addRow([
-		new CCol($values[$exp['regexpid']]),
-		new CCol(' &raquo; '),
-		new CCol($exp['expression']),
+		(new CCol($values[$exp['regexpid']]))->addClass(ZBX_STYLE_CELL_WIDTH),
+		(new CCol(' &raquo; '))->addClass(ZBX_STYLE_CELL_WIDTH),
+		(new CCol(
+			(new CDiv((new CSpan($exp['expression']))->addClass('truncated')))
+				->setHint($exp['expression'])
+				->addClass(ZBX_STYLE_OVERFLOW_ELLIPSIS)
+			))
+				->addClass(ZBX_STYLE_CELL_BIG),
+
 		new CCol(' ['.expression_type2str($exp['expression_type']).']')
 	]);
 }
 foreach($data['regexps'] as $regexpid => $regexp) {
 	$regExpTable->addRow([
 		new CCheckBox('regexpids['.$regexp['regexpid'].']', $regexp['regexpid']),
-		new CLink($regexp['name'], 'adm.regexps.php?form=update'.'&regexpid='.$regexp['regexpid']),
-		isset($expressions[$regexpid]) ? $expressions[$regexpid] : ''
+		(new CCol(
+			new CLink($regexp['name'], 'adm.regexps.php?form=update'.'&regexpid='.$regexp['regexpid'])
+		))
+			->addClass(ZBX_STYLE_CELL_SMALL),
+		(new CCol(isset($expressions[$regexpid]) ? $expressions[$regexpid] : ''))
+			->addClass(ZBX_STYLE_CELL_TABLE_CONTAINER)
 	]);
 }
 

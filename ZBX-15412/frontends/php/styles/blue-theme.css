@@ -722,6 +722,17 @@ output {
   .table-paging a:focus .arrow-left {
     border-right-color: #fff; }
 
+td.table-container {
+  padding: 0 5px; }
+  td.table-container table {
+    width: 100%; }
+
+td.cell-small {
+  width: 30%; }
+
+td.cell-big {
+  width: 70%; }
+
 .paging-btn-container {
   min-height: 24px;
   position: relative; }

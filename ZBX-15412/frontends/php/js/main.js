@@ -437,12 +437,15 @@ var hintBox = {
 	 */
 	bindEvents: function () {
 		jQuery(document).on('keydown click mouseenter mouseleave', '[data-hintbox=1]', function (e) {
+			var target = jQuery(this);
 
 			if (jQuery(this).hasClass('hint-item')) {
-				var target = jQuery(this).siblings('.main-hint');
+				target = jQuery(this).siblings('.main-hint');
 			}
-			else {
-				var target = jQuery(this);
+			else if (jQuery(this).children('span').hasClass('truncated') &&
+					jQuery(this).children('span.truncated').width() < jQuery(this).width()) {
+				// show hint only on truncated content
+				return;
 			}
 
 			switch (e.type) {
