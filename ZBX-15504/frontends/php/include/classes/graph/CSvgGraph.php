@@ -479,6 +479,10 @@ class CSvgGraph extends CSvg {
 			$this->left_y_max += 0.5;
 		}
 
+		if ($this->left_y_min >= $this->left_y_max) {
+			$this->left_y_max = $this->left_y_min + 1;
+		}
+
 		$grid = $this->getValueGrid($this->left_y_min, $this->left_y_max);
 		$this->left_y_min = $grid[0];
 		$this->left_y_max = end($grid);
@@ -506,6 +510,10 @@ class CSvgGraph extends CSvg {
 			$this->right_y_max += 0.5;
 		}
 
+		if ($this->right_y_min >= $this->right_y_max) {
+			$this->right_y_max = $this->right_y_min + 1;
+		}
+
 		$grid = $this->getValueGrid($this->right_y_min, $this->right_y_max);
 		$this->right_y_min = $grid[0];
 		$this->right_y_max = end($grid);
@@ -524,7 +532,7 @@ class CSvgGraph extends CSvg {
 		$approx_width = 10;
 
 		if ($this->left_y_show) {
-			$values = $this->getValuesGridWithPosition(GRAPH_YAXIS_SIDE_LEFT, $this->left_y_empty);
+			$values = $this->getValuesGridWithPosition(GRAPH_YAXIS_SIDE_LEFT);
 
 			if ($values) {
 				$offset_left = max($this->offset_left, max(array_map('strlen', $values)) * $approx_width);
@@ -533,7 +541,7 @@ class CSvgGraph extends CSvg {
 		}
 
 		if ($this->right_y_show) {
-			$values = $this->getValuesGridWithPosition(GRAPH_YAXIS_SIDE_RIGHT, $this->right_y_empty);
+			$values = $this->getValuesGridWithPosition(GRAPH_YAXIS_SIDE_RIGHT);
 
 			if ($values) {
 				$offset_right = max($this->offset_right, max(array_map('strlen', $values)) * $approx_width);
@@ -561,22 +569,20 @@ class CSvgGraph extends CSvg {
 	 *
 	 * @return array
 	 */
-	protected function getValuesGridWithPosition($side, $empty_set = false) {
-		if ($empty_set) {
-			$units = '';
-		}
-		elseif ($side === GRAPH_YAXIS_SIDE_LEFT) {
+	protected function getValuesGridWithPosition($side) {
+		if ($side === GRAPH_YAXIS_SIDE_LEFT) {
 			$min_value = $this->left_y_min;
 			$max_value = $this->left_y_max;
-			$units = $this->left_y_units;
+			$units = $this->left_y_empty ? '' : $this->left_y_units;
 		}
 		else {
 			$min_value = $this->right_y_min;
 			$max_value = $this->right_y_max;
-			$units = $this->right_y_units;
+			$units = $this->right_y_empty ? '' : $this->right_y_units;
 		}
 
-		$grid = $empty_set ? [0, 1] : $this->getValueGrid($min_value, $max_value);
+		$grid = $this->getValueGrid($min_value, $max_value);
+
 		$min_value = $grid[0];
 		$max_value = end($grid);
 		$delta = ($max_value != $min_value)
