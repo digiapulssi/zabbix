@@ -262,7 +262,11 @@ foreach ($data['items'] as $item) {
 		empty($this->data['filter_hostid']) ? $item['host'] : null,
 		$description,
 		$triggerInfo,
-		CHtml::encode($item['key_']),
+		new CCol(
+			(new CDiv((new CSpan(CHtml::encode($item['key_'])))->addClass('truncated')))
+				->setHint(CHtml::encode($item['key_']))
+				->addClass(ZBX_STYLE_OVERFLOW_ELLIPSIS)
+		),
 		$item['delay'],
 		$item['history'],
 		$item['trends'],
