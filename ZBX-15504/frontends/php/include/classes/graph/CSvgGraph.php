@@ -573,12 +573,12 @@ class CSvgGraph extends CSvg {
 		if ($side === GRAPH_YAXIS_SIDE_LEFT) {
 			$min_value = $this->left_y_min;
 			$max_value = $this->left_y_max;
-			$units = $this->left_y_empty ? '' : $this->left_y_units;
+			$units = $this->left_y_units;
 		}
 		else {
 			$min_value = $this->right_y_min;
 			$max_value = $this->right_y_max;
-			$units = $this->right_y_empty ? '' : $this->right_y_units;
+			$units = $this->right_y_units;
 		}
 
 		$grid = $this->getValueGrid($min_value, $max_value);
