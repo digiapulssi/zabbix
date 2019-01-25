@@ -451,7 +451,9 @@ switch ($data['popup_type']) {
 					($options['hostid'] > 0) ? null : $item['hostname'],
 					$data['multiselect'] ? new CCheckBox('item[' . $checkbox_key . ']', $item['itemid']) : null,
 					$description,
-					$item['key_'],
+					(new CDiv((new CSpan(CHtml::encode($item['key_'])))->addClass('truncated')))
+						->setHint(CHtml::encode($item['key_']))
+						->addClass(ZBX_STYLE_OVERFLOW_ELLIPSIS),
 					item_type2str($item['type']),
 					itemValueTypeString($item['value_type']),
 					(new CSpan(itemIndicator($item['status'], $item['state'])))

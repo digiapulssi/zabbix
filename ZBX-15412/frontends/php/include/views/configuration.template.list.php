@@ -179,11 +179,9 @@ foreach ($data['templates'] as $template) {
 
 	$table->addRow([
 		new CCheckBox('templates['.$template['templateid'].']', $template['templateid']),
-		(new CCol(
-			(new CDiv((new CSpan($name))->addClass('truncated')))
-				->setHint($name, '', false)
-				->addClass(ZBX_STYLE_OVERFLOW_ELLIPSIS)
-		))
+		(new CDiv((new CSpan($name))->addClass('truncated')))
+			->setHint($name, '', false)
+			->addClass(ZBX_STYLE_OVERFLOW_ELLIPSIS)
 			->addClass(ZBX_STYLE_NOWRAP),
 		[
 			new CLink(_('Applications'), 'applications.php?hostid='.$template['templateid'].url_param('groupid')),

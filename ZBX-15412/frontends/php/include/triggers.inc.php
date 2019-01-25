@@ -1252,7 +1252,9 @@ function make_trigger_details($trigger) {
 	$table
 		->addRow([
 			new CCol(_('Problem expression')),
-			new CCol($trigger['expression'])
+			(new CDiv((new CSpan($trigger['expression']))->addClass('truncated')))
+				->setHint($trigger['expression'])
+				->addClass(ZBX_STYLE_OVERFLOW_ELLIPSIS)
 		])
 		->addRow([
 			new CCol(_('Recovery expression')),

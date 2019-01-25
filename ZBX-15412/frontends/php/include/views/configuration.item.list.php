@@ -191,7 +191,9 @@ foreach ($data['items'] as $item) {
 		$triggerHintTable->addRow([
 			getSeverityCell($trigger['priority'], $this->data['config']),
 			$trigger_description,
-			$expression,
+			(new CDiv((new CSpan($expression))->addClass('truncated')))
+				->setHint($expression, '', false)
+				->addClass(ZBX_STYLE_OVERFLOW_ELLIPSIS),
 			(new CSpan(triggerIndicator($trigger['status'], $trigger['state'])))
 				->addClass(triggerIndicatorStyle($trigger['status'], $trigger['state']))
 		]);
@@ -262,11 +264,9 @@ foreach ($data['items'] as $item) {
 		empty($this->data['filter_hostid']) ? $item['host'] : null,
 		$description,
 		$triggerInfo,
-		new CCol(
-			(new CDiv((new CSpan(CHtml::encode($item['key_'])))->addClass('truncated')))
-				->setHint(CHtml::encode($item['key_']))
-				->addClass(ZBX_STYLE_OVERFLOW_ELLIPSIS)
-		),
+		(new CDiv((new CSpan(CHtml::encode($item['key_'])))->addClass('truncated')))
+			->setHint(CHtml::encode($item['key_']))
+			->addClass(ZBX_STYLE_OVERFLOW_ELLIPSIS),
 		$item['delay'],
 		$item['history'],
 		$item['trends'],
