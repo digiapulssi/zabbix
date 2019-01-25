@@ -52,16 +52,21 @@ class CDropdownElement extends CElement {
 	}
 
 	/**
-	 * Select option by text.
-	 *
-	 * @param string $text    option text to be selected
-	 *
-	 * @return $this
-	 */
+	* Select option by text.
+	*
+	* @param string $text    option text to be selected
+	*
+	* @return $this
+	*/
 	public function select($text) {
 		$option = $this->query('xpath:.//option[text()='.CXPathHelper::escapeQuotes($text).']')->one();
 		if (!$option->isSelected()) {
-			$option->click();
+			if ($option->isClickable()) {
+				$option->click();
+			}
+			else {
+				throw new Exception('Cannot select disabled dropdown element.');
+			}
 		}
 
 		return $this;
