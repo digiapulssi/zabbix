@@ -315,7 +315,10 @@ foreach ($data['hosts'] as $host) {
 
 	$table->addRow([
 		new CCheckBox('hosts['.$host['hostid'].']', $host['hostid']),
-		(new CCol($description))->addClass(ZBX_STYLE_NOWRAP),
+		(new CDiv((new CSpan($description))->addClass('truncated')))
+			->setHint($description)
+			->addClass(ZBX_STYLE_NOWRAP)
+			->addClass(ZBX_STYLE_OVERFLOW_ELLIPSIS),
 		[
 			new CLink(_('Applications'), 'applications.php?groupid='.$data['groupId'].'&hostid='.$host['hostid']),
 			CViewHelper::showNum($host['applications'])
