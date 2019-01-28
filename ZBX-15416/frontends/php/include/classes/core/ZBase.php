@@ -133,8 +133,7 @@ class ZBase {
 			case self::EXEC_MODE_API:
 				$this->loadConfigFile();
 				$this->initDB();
-				CApiUser::setDefault();
-				$this->initLocales(CApiUser::$data);
+				$this->initLocales(['lang' => 'en_gb']);
 				break;
 
 			case self::EXEC_MODE_SETUP:
@@ -302,7 +301,7 @@ class ZBase {
 	/**
 	 * Initialize translations.
 	 */
-	protected function initLocales(array &$user_data) {
+	protected function initLocales(array $user_data) {
 		init_mbstrings();
 
 		$defaultLocales = [
@@ -323,7 +322,6 @@ class ZBase {
 
 				if (setlocale(LC_ALL, $locale)) {
 					$locale_found = true;
-					$user_data['locale'] = $locale;
 					break;
 				}
 			}
@@ -334,7 +332,7 @@ class ZBase {
 			// this will be unnecessary in PHP 5.5
 			setlocale(LC_CTYPE, $defaultLocales);
 
-			if (!$locale_found && $user_data['lang'] != 'en_GB' && $user_data['lang'] != 'en_gb') {
+			if (!$locale_found && $user_data['lang'] !== 'en_GB' && $user_data['lang'] !== 'en_gb') {
 				error('Locale for language "'.$user_data['lang'].'" is not found on the web server. Tried to set: '.implode(', ', $locales).'. Unable to translate Zabbix interface.');
 			}
 			bindtextdomain('frontend', 'locale');
