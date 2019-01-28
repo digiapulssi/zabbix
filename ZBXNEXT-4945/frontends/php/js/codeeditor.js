@@ -51,7 +51,8 @@
 						class: 'open-modal-code-editor',
 						readonly: true,
 						tabindex: -1,
-						placeholder: $input.prop('placeholder') || null
+						placeholder: $input.prop('placeholder') || null,
+						title: t('S_CLICK_TO_VIEW_OR_EDIT_CODE')
 					}).appendTo($input.parent()),
 					$button = $('<button>')
 						.html(t('S_OPEN'))
