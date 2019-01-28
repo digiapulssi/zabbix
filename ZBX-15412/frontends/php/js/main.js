@@ -439,11 +439,10 @@ var hintBox = {
 		jQuery(document).on('keydown click mouseenter mouseleave', '[data-hintbox=1]', function (e) {
 			var target = jQuery(this);
 
-			if (jQuery(this).hasClass('hint-item')) {
-				target = jQuery(this).siblings('.main-hint');
+			if (target.hasClass('hint-item')) {
+				target = target.siblings('.main-hint');
 			}
-			else if (jQuery(this).children('span').hasClass('truncated') &&
-					jQuery(this).children('span.truncated').width() < jQuery(this).width()) {
+			else if (target.children('.truncated').length && target.width() > target.children('.truncated').width()) {
 				// show hint only on truncated content
 				return;
 			}
