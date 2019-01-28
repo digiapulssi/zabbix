@@ -226,6 +226,15 @@ class CElement extends CBaseElement implements IWaitable {
 	}
 
 	/**
+	 * Get value of the "value" attribute.
+	 *
+	 * @return string
+	 */
+	public function getValue() {
+		return parent::getAttribute('value');
+	}
+
+	/**
 	 * Highlight the value in the field.
 	 *
 	 * @return $this
