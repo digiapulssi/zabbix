@@ -412,6 +412,19 @@ zbx_subarray_push($this->data['authTypeVisibility'], ITEM_AUTHTYPE_PUBLICKEY, 'r
 				organizeInterfaces(itemInterfaceTypes[parseInt(jQuery(this).val())]);
 
 				setAuthTypeLabel();
+
+				// Check HTTP auth and toggle HTTP username and password fields.
+				if (jQuery(this).val() == <?= ITEM_TYPE_HTTPAGENT ?>) {
+					if (jQuery('#http_authtype').val() == <?= HTTPTEST_AUTH_NONE ?>) {
+						jQuery('#http_username_row, #http_password_row').hide();
+					}
+					else {
+						jQuery('#http_username_row, #http_password_row').show();
+					}
+				}
+				else {
+					jQuery('#http_username_row, #http_password_row').hide();
+				}
 			})
 			.trigger('change');
 
