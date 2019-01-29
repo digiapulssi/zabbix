@@ -1,0 +1,134 @@
+{
+  "": "http://example.com",
+  "type": "object",
+  "properties": {
+    "cycleCalculationDateTime": {
+      "type": "integer",
+      "minimum": 1262296800
+    },
+    "tld": {
+      "type": "string",
+      "minLength": 1
+    },
+    "testedInterface": {
+      "type": "array",
+      "items": [
+        {
+          "type": "object",
+          "properties": {
+            "interface": {
+              "type": "string",
+	      "enum": ["DNS", "DNSSEC", "RDDS43", "RDDS80", "RDAP", "EPP"]
+            },
+            "probes": {
+              "type": "array",
+              "items": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "testData": {
+                      "type": "array",
+                      "items": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "status": {
+                              "type": "string",
+			      "enum": ["Up", "Down"]
+                            },
+                            "metrics": {
+                              "type": "array",
+                              "items": [
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "testDateTime": {
+                                      "type": "string"
+                                    },
+                                    "targetIP": {
+                                      "type": "string"
+                                    },
+                                    "result": {
+                                      "type": ["string", "integer"],
+				      "maximum": 0,
+				      "exclusiveMaximum": true
+                                    },
+                                    "rtt": {
+                                      "type": ["number", "null"],
+				      "minimum": 0
+                                    }
+                                  },
+                                  "required": [
+                                    "testDateTime",
+                                    "targetIP",
+                                    "result",
+                                    "rtt"
+                                  ]
+                                }
+                              ]
+                            },
+                            "target": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "status",
+                            "metrics",
+                            "target"
+                          ]
+                        }
+                      ]
+                    },
+                    "status": {
+                      "type": "string",
+		      "enum": ["Up", "Down", "Offline", "No result"]
+                    },
+                    "city": {
+                      "type": "string",
+		      "minLength": 2
+                    }
+                  },
+                  "required": [
+                    "testData",
+                    "status",
+                    "city"
+                  ]
+                }
+              ]
+            }
+          },
+          "required": [
+            "probes",
+            "interface"
+          ]
+        }
+      ]
+    },
+    "service": {
+      "type": "string",
+      "enum": ["dns", "dnssec", "rdds", "epp"]
+    },
+    "status": {
+      "type": "string",
+      "enum": ["Up", "Up-inconclusive-no-data", "Up-inconclusive-no-probes", "Down"]
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1
+    },
+    "lastUpdateApiDatabase": {
+      "type": "integer",
+      "minimum": 1262296800
+    }
+  },
+  "required": [
+    "cycleCalculationDateTime",
+    "tld",
+    "testedInterface",
+    "service",
+    "status",
+    "version",
+    "lastUpdateApiDatabase"
+  ]
+}
