@@ -35,7 +35,7 @@ class testProblemsWidget extends CWebTest {
 		// Check refresh interval of widget.
 		$this->assertEquals(60, $widget->getRefreshInterval());
 		$table = $widget->getContent()->asTable();
-		$this->assertSame(['Time', '', '', 'Info', 'Host', 'Problem - Severity', 'Duration', 'Ack', 'Actions', 'Tags'],
+		$this->assertSame(['Time', '', '', 'Info', 'Host', 'Problem • Severity', 'Duration', 'Ack', 'Actions', 'Tags'],
 			$table->getHeadersText());
 
 		// Expected table values.
@@ -49,7 +49,7 @@ class testProblemsWidget extends CWebTest {
 			],
 		];
 
-		$data = $table->index('Problem - Severity');
+		$data = $table->index('Problem • Severity');
 
 		foreach ($expected as $problem => $details) {
 			// Get table row by problem name.
@@ -129,7 +129,7 @@ class testProblemsWidget extends CWebTest {
 				}
 			}
 			else {
-				$this->assertSame(['Time', 'Info', 'Host', 'Problem - Severity', 'Duration', 'Ack', 'Actions'],
+				$this->assertSame(['Time', 'Info', 'Host', 'Problem • Severity', 'Duration', 'Ack', 'Actions'],
 					$table->getHeadersText());
 			}
 		}
@@ -299,8 +299,8 @@ class testProblemsWidget extends CWebTest {
 		// Check widget host groups.
 		if (array_key_exists('host_groups', $data) || array_key_exists('exclude_host_groups', $data)) {
 			$table = $widget->getContent()->asTable();
-			// Get table data as array where values from column 'Problem - Severity' are used as array keys.
-			$rows = $table->index('Problem - Severity');
+			// Get table data as array where values from column 'Problem • Severity' are used as array keys.
+			$rows = $table->index('Problem • Severity');
 
 			// If dataset doesn't contain host groups or exclude host groups, than replace it with empty array.
 			$empty_array = [];
