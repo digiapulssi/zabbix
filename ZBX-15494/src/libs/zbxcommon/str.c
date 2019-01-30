@@ -426,7 +426,9 @@ void	del_zeroes(char *s)
 
 	if (1 == trim)
 	{
-		for (size_t i = len - 1; ; i--)
+		size_t	i;
+
+		for (i = len - 1; ; i--)
 		{
 			if ('0' == s[i])
 			{
