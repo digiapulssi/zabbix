@@ -414,11 +414,13 @@ void	del_zeroes(char *s)
 			/* don't touch numbers that are written in scientific notation */
 			return;
 		}
+
 		if ('.' == s[len])
 		{
 			/* number has decimal part */
 			trim = 1;
 		}
+
 		len++;
 	}
 
