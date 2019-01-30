@@ -169,10 +169,9 @@ foreach ($data['hosts'] as $host) {
 			->addClass(ZBX_STYLE_ORANGE);
 		$description[] = NAME_DELIMITER;
 	}
+	$host_name = CHtml::encode($host['name']);
 
-	$description[] = new CLink(CHtml::encode($host['name']),
-		'hosts.php?form=update&hostid='.$host['hostid'].url_param('groupid')
-	);
+	$description[] = new CLink($host_name, 'hosts.php?form=update&hostid='.$host['hostid'].url_param('groupid'));
 
 	$hostInterface = ($interface['useip'] == INTERFACE_USE_IP) ? $interface['ip'] : $interface['dns'];
 	$hostInterface .= empty($interface['port']) ? '' : NAME_DELIMITER.$interface['port'];
@@ -316,7 +315,7 @@ foreach ($data['hosts'] as $host) {
 	$table->addRow([
 		new CCheckBox('hosts['.$host['hostid'].']', $host['hostid']),
 		(new CDiv((new CSpan($description))->addClass('truncated')))
-			->setHint($description)
+			->setHint($host_name)
 			->addClass(ZBX_STYLE_NOWRAP)
 			->addClass(ZBX_STYLE_OVERFLOW_ELLIPSIS),
 		[
