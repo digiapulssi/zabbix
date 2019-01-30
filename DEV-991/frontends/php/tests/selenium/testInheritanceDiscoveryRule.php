@@ -272,12 +272,14 @@ class testInheritanceDiscoveryRule extends CLegacyWebTest {
 				case 'Regular expression':
 					$this->assertTrue($custom_checkbox->isSelected());
 					$custom_radio = $this->query('id:preprocessing_'.$step_count.'_error_handler')->asSegmentedRadio()->one();
+					$this->assertFalse($custom_radio->isEnabled());
 					$this->assertEquals($custom_errors[$step_count], $custom_radio->getText());
 					break;
 				case 'JSONPath':
 				case 'Does not match regular expression':
 					$this->assertTrue($custom_checkbox->isSelected());
 					$custom_radio = $this->query('id:preprocessing_'.$step_count.'_error_handler')->asSegmentedRadio()->one();
+					$this->assertFalse($custom_radio->isEnabled());
 					$this->assertEquals($custom_errors[$step_count], $custom_radio->getText());
 					$custom_text = $this->query('id:preprocessing_'.$step_count.'_error_handler_params')->one()->getValue();
 					$this->assertEquals($custom_error_value_text.$step_count, $custom_text);
