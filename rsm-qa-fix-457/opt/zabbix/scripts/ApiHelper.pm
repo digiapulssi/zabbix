@@ -95,6 +95,10 @@ sub __ts_full
 	return __ts_str($ts) . " ($ts)";
 }
 
+# Generate path for SLA API file or directory, e. g.
+#
+#   [base_dir]/example/monitoring/dns
+#
 sub __gen_base_path($$$)
 {
 	my $tld = shift;
@@ -109,6 +113,10 @@ sub __gen_base_path($$$)
 	return $path;
 }
 
+# Generate path for SLA API incident directory, e. g.
+#
+#   [base_dir]/example/monitoring/dns/incidents/1548853740.13468
+#
 sub __gen_inc_path($$$$)
 {
 	my $tld = shift;
@@ -497,7 +505,7 @@ sub ah_save_measurement
 
 # Generate path for recent measurement, e. g.
 #
-#   [basev2_dir]/example/monitoring/dns/measurements/2018/02/28/<measurement>.json
+#   [base_dir]/example/monitoring/dns/measurements/2018/02/28/<measurement>.json
 #
 sub __gen_recent_measurement_path($$$$$)
 {
