@@ -407,7 +407,7 @@ void	del_zeroes(char *s)
 		return;
 	}
 
-	while (0 != s[len])
+	while ('\0' != s[len])
 	{
 		if ('e' == s[len] || 'E' == s[len])
 		{
@@ -432,11 +432,11 @@ void	del_zeroes(char *s)
 		{
 			if ('0' == s[i])
 			{
-				s[i] = 0;
+				s[i] = '\0';
 			}
 			else if ('.' == s[i])
 			{
-				s[i] = 0;
+				s[i] = '\0';
 				break;
 			}
 			else
