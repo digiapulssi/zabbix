@@ -42,8 +42,8 @@
 	var methods = {
 		init: function(options) {
 			return this.each(function() {
-				var $input = $(this).attr('type', 'hidden'),
-					editable = $input.attr('data-editable') != '',
+				var $input = $(this),
+					editable = $input.data('editable') != 0,
 					maxlength = $input.prop('maxlength'),
 					$clone = $('<input>', {
 						type: 'text',
@@ -53,14 +53,14 @@
 						tabindex: -1,
 						placeholder: $input.prop('placeholder') || null,
 						title: t('S_CLICK_TO_VIEW_OR_EDIT_CODE')
-					}).appendTo($input.parent()),
+					})
+						.toggleClass('editable', editable)
+						.appendTo($input.parent()),
 					$button = $('<button>')
 						.html(t('S_OPEN'))
 						.appendTo($input.parent());
 
-				if (editable) {
-					$clone.addClass('editable');
-				}
+				$input.hide();
 
 				$clone.add($button).on('click', function(e) {
 					e.preventDefault();
@@ -72,7 +72,7 @@
 							.appendTo($code_editor),
 						$textarea = $('<textarea>', {
 							class: 'code-editor-textarea',
-							text: ($clone.val() !== $clone.prop('placeholder')) ? $clone.val() : '',
+							text: $clone.val(),
 							maxlength: maxlength,
 							readonly: !editable
 						}).appendTo($code_editor);
@@ -120,7 +120,7 @@
 		destroy: function() {
 			return this.each(function() {
 				$(this)
-					.attr('type', 'text')
+					.show()
 					.siblings('.open-modal-code-editor, button').remove();
 			});
 		}

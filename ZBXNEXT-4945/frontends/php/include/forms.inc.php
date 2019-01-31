@@ -1513,7 +1513,7 @@ function getItemPreprocessing(CForm $form, array $preprocessing, $readonly, arra
 			case ZBX_PREPROC_SCRIPT:
 				$params[0]
 					->setAttribute('placeholder', _('script'))
-					->setAttribute('data-editable', !$readonly)
+					->setAttribute('data-editable', (int) !$readonly)
 					->setAttribute('maxlength', $script_maxlength)
 					->addClass('open-modal-code-editor');
 				$params[1]->addStyle('display: none;');
