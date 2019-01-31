@@ -1,6 +1,5 @@
 <script type="text/x-jquery-tmpl" id="preprocessing-steps-tmpl">
 	<?php
-	$script_maxlength = DB::getFieldLength('item_preproc', 'params');
 	$preproc_types_cbbox = new CComboBox('preprocessing[#{rowNum}][type]', '');
 
 	foreach (get_preprocessing_types(null, true, $data['preprocessing_types']) as $group) {
@@ -202,7 +201,7 @@
 					case '<?= ZBX_PREPROC_SCRIPT ?>':
 						$(params[0])
 							.attr('placeholder', <?= CJs::encodeJson(_('script')) ?>)
-							.attr('maxlength', <?= $script_maxlength ?>)
+							.attr('maxlength', <?= DB::getFieldLength('item_preproc', 'params') ?>)
 							.addClass('open-modal-code-editor')
 							.codeEditor()
 							.parent()
