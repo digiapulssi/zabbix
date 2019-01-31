@@ -2695,7 +2695,8 @@ button[disabled], button[disabled]:hover, button[disabled]:active {
     .overlay-dialogue.modal-code-editor .code-editor {
       position: relative;
       display: flex;
-      height: 548px;
+      height: calc(100vh - 190px);
+      max-height: 548px;
       overflow: hidden; }
       .overlay-dialogue.modal-code-editor .code-editor .line-numbers {
         margin-bottom: 5px;

@@ -3864,7 +3864,8 @@ $form-icon-btn: (
 		.code-editor {
 			position: relative;
 			display: flex;
-			height: 548px;
+			height: calc(100vh - 190px);
+			max-height: 548px;
 			overflow: hidden;
 
 			.line-numbers {
