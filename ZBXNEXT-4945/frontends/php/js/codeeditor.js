@@ -72,7 +72,7 @@
 							.appendTo($code_editor),
 						$textarea = $('<textarea>', {
 							class: 'code-editor-textarea',
-							text: $input.val(),
+							text: ($clone.val() !== $clone.prop('placeholder')) ? $clone.val() : '',
 							maxlength: maxlength,
 							readonly: !editable
 						}).appendTo($code_editor);
