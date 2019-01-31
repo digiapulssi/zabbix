@@ -2758,8 +2758,8 @@ input.open-modal-code-editor {
   font-family: "Courier New", Courier, monospace;
   border-right: none; }
   input.open-modal-code-editor.editable {
-    color: #525252 !important;
-    background-color: #383838 !important; }
+    background-color: #383838 !important;
+    border-color: #525252; }
   input.open-modal-code-editor + button {
     white-space: nowrap;
     border-top-left-radius: 0;

@@ -3969,8 +3969,8 @@ input.open-modal-code-editor {
 	border-right: none;
 
 	&.editable {
-		color: $form-disabled-font-color !important;
 		background-color: $form-bg-color !important;
+		border-color: $form-disabled-font-color;
 	}
 
 	+ button {
