@@ -78,7 +78,7 @@
 						}).appendTo($code_editor);
 
 					overlayDialogue({
-						'title': 'JavaScript',
+						'title': t('S_JAVASCRIPT'),
 						'class': 'modal-code-editor',
 						'content': $code_editor,
 						'buttons': [
