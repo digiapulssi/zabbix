@@ -224,7 +224,6 @@
 							.addClass('<?= ZBX_STYLE_COLUMN_20 ?>')
 							.next()
 								.show();
-					$(params[1]).val('');
 				}
 
 				// Disable "Custom on fail" for some of the preprocessing types.
