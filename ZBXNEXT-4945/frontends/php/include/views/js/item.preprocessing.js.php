@@ -200,6 +200,8 @@
 
 					case '<?= ZBX_PREPROC_SCRIPT ?>':
 						$(params[0])
+							.attr('type', 'hidden')
+							.val('')
 							.attr('placeholder', <?= CJs::encodeJson(_('script')) ?>)
 							.attr('maxlength', <?= DB::getFieldLength('item_preproc', 'params') ?>)
 							.addClass('open-modal-code-editor')
@@ -222,6 +224,7 @@
 							.addClass('<?= ZBX_STYLE_COLUMN_20 ?>')
 							.next()
 								.show();
+					$(params[1]).val('');
 				}
 
 				// Disable "Custom on fail" for some of the preprocessing types.

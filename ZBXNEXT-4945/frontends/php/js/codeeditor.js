@@ -47,7 +47,7 @@
 					maxlength = $input.prop('maxlength'),
 					$clone = $('<input>', {
 						type: 'text',
-						value: $input.val(),
+						value: $input.val().split("\n")[0],
 						class: 'open-modal-code-editor',
 						readonly: true,
 						tabindex: -1,
@@ -60,8 +60,6 @@
 						.html(t('S_OPEN'))
 						.appendTo($input.parent());
 
-				$input.hide();
-
 				$clone.add($button).on('click', function(e) {
 					e.preventDefault();
 
@@ -72,7 +70,7 @@
 							.appendTo($code_editor),
 						$textarea = $('<textarea>', {
 							class: 'code-editor-textarea',
-							text: $clone.val(),
+							text: $input.val(),
 							maxlength: maxlength,
 							readonly: !editable
 						}).appendTo($code_editor);
@@ -86,7 +84,15 @@
 								title: t('S_SAVE'),
 								enabled: editable,
 								action: function() {
-									$input.add($clone).val($textarea.val());
+									var new_value = $textarea.val();
+
+									if ($.trim(new_value).length) {
+										$input.val(new_value);
+										$clone.val(new_value.split("\n")[0]);
+									}
+									else {
+										$input.add($clone).val('');
+									}
 								}
 							},
 							{
@@ -120,7 +126,7 @@
 		destroy: function() {
 			return this.each(function() {
 				$(this)
-					.show()
+					.attr('type', 'text')
 					.siblings('.open-modal-code-editor, button').remove();
 			});
 		}
