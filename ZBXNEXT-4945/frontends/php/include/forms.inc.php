@@ -1512,15 +1512,14 @@ function getItemPreprocessing(CForm $form, array $preprocessing, $readonly, arra
 
 			case ZBX_PREPROC_SCRIPT:
 				$params[0]
-					->setAttribute('type', 'hidden')
-					->setAttribute('value', implode("", $step['params']))
 					->setAttribute('placeholder', _('script'))
-					->setAttribute('data-editable', (int) !$readonly)
 					->setAttribute('maxlength', $script_maxlength)
+					->setAttribute('title', _('Click to view or edit code'))
 					->addClass('open-modal-code-editor');
-				$params[1]
-					->setAttribute('value', '')
-					->addStyle('display: none;');
+				if (!$readonly) {
+					$params[0]->addClass('editable');
+				}
+				$params[1]->addStyle('display: none;');
 				break;
 		}
 
@@ -1599,7 +1598,12 @@ function getItemPreprocessing(CForm $form, array $preprocessing, $readonly, arra
 					(new CDiv($preproc_types_cbbox))
 						->addClass(ZBX_STYLE_COLUMN_35)
 						->addClass('list-numbered-item'),
-					(new CDiv($params[0]))->addClass(ZBX_STYLE_COLUMN_20),
+					(new CDiv([
+						$params[0],
+						($step['type'] == ZBX_PREPROC_SCRIPT)
+							? new CInput('hidden', $params[0]->getName(), implode('', $step['params']))
+							: null
+					]))->addClass(ZBX_STYLE_COLUMN_20),
 					(new CDiv($params[1]))->addClass(ZBX_STYLE_COLUMN_20),
 					(new CDiv($on_fail))
 						->addClass(ZBX_STYLE_COLUMN_15)

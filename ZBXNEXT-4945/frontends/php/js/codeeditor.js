@@ -42,25 +42,17 @@
 	var methods = {
 		init: function(options) {
 			return this.each(function() {
-				var $input = $(this),
-					editable = $input.data('editable') != 0,
-					maxlength = $input.prop('maxlength'),
-					$clone = $('<input>', {
-						type: 'text',
-						value: $input.val().split("\n")[0],
-						class: 'open-modal-code-editor',
-						readonly: true,
-						tabindex: -1,
-						placeholder: $input.prop('placeholder') || null,
-						title: t('S_CLICK_TO_VIEW_OR_EDIT_CODE')
-					})
-						.toggleClass('editable', editable)
-						.appendTo($input.parent()),
+				var $input = $(this)
+						.attr('tabindex', -1)
+						.prop('readonly', true),
+					editable = $input.hasClass('editable'),
+					maxlength = $input.attr('maxlength'),
+					$hidden = $input.siblings('input[type=hidden]'),
 					$button = $('<button>')
 						.html(t('S_OPEN'))
 						.appendTo($input.parent());
 
-				$clone.add($button).on('click', function(e) {
+				$input.add($button).on('click', function(e) {
 					e.preventDefault();
 
 					var $code_editor = $('<div>').addClass('code-editor'),
@@ -70,7 +62,7 @@
 							.appendTo($code_editor),
 						$textarea = $('<textarea>', {
 							class: 'code-editor-textarea',
-							text: $input.val(),
+							text: $hidden.val(),
 							maxlength: maxlength,
 							readonly: !editable
 						}).appendTo($code_editor);
@@ -87,11 +79,11 @@
 									var new_value = $textarea.val();
 
 									if ($.trim(new_value).length) {
-										$input.val(new_value);
-										$clone.val(new_value.split("\n")[0]);
+										$hidden.val(new_value);
+										$input.val(new_value.split("\n")[0]);
 									}
 									else {
-										$input.add($clone).val('');
+										$input.add($hidden).val('');
 									}
 								}
 							},
@@ -126,8 +118,10 @@
 		destroy: function() {
 			return this.each(function() {
 				$(this)
-					.attr('type', 'text')
-					.siblings('.open-modal-code-editor, button').remove();
+					.off()
+					.removeAttr('tabindex')
+					.removeAttr('readonly')
+					.siblings('input[type=hidden], button').remove();
 			});
 		}
 	};

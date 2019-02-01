@@ -129,7 +129,7 @@
 			.on('change', 'select[name*="type"]', function() {
 				var row = $(this).closest('.preprocessing-step'),
 					type = $(this).val(),
-					params = $(this).closest('.preprocessing-step').find('[name*="params"]'),
+					params = $(this).closest('.preprocessing-step').find('input[type="text"][name*="params"]'),
 					on_fail = $(this).closest('.preprocessing-step').find('[name*="on_fail"]');
 
 				$(params)
@@ -200,11 +200,16 @@
 
 					case '<?= ZBX_PREPROC_SCRIPT ?>':
 						$(params[0])
-							.attr('type', 'hidden')
-							.val('')
 							.attr('placeholder', <?= CJs::encodeJson(_('script')) ?>)
 							.attr('maxlength', <?= DB::getFieldLength('item_preproc', 'params') ?>)
+							.attr('title', <?= CJs::encodeJson(_('Click to view or edit code')) ?>)
 							.addClass('open-modal-code-editor')
+							.addClass('editable')
+							.show()
+							.after($('<input>').attr({
+								'type': 'hidden',
+								'name': $(params[0]).attr('name')
+							}))
 							.codeEditor()
 							.parent()
 								.removeClass()
@@ -218,7 +223,6 @@
 					$(params[0])
 						.codeEditor('destroy')
 						.removeClass()
-						.attr('maxlength', 255)
 						.parent()
 							.removeClass()
 							.addClass('<?= ZBX_STYLE_COLUMN_20 ?>')

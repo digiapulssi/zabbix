@@ -3973,7 +3973,7 @@ input.open-modal-code-editor {
 		border-color: $form-disabled-font-color;
 	}
 
-	+ button {
+	~ button {
 		white-space: nowrap;
 		border-top-left-radius: 0;
 		border-bottom-left-radius: 0;
