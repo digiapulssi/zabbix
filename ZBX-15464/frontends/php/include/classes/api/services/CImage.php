@@ -541,7 +541,7 @@ class CImage extends CApiService {
 	 */
 	protected function checkImage($image) {
 		// check size
-		if (strlen($image) > ZBX_MAX_IMAGE_SIZE) {
+		if (bccomp(strlen($image), ZBX_MAX_IMAGE_SIZE) == 1) {
 			self::exception(ZBX_API_ERROR_PARAMETERS,
 				_s('Image size must be less than %s.', convert_units([
 					'value' => ZBX_MAX_IMAGE_SIZE,

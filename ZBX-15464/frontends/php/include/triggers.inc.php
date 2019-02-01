@@ -2122,16 +2122,16 @@ function convert($value) {
 	$value = $arr['value'];
 	switch ($arr['mult']) {
 		case 'T':
-			$value *= ZBX_KIBIBYTE * ZBX_GIBIBYTE;
+			$value = bcmul($value, bcmul(ZBX_KIBIBYTE * ZBX_GIBIBYTE));
 			break;
 		case 'G':
-			$value *= ZBX_GIBIBYTE;
+			$value = bcmul($value, ZBX_GIBIBYTE);
 			break;
 		case 'M':
-			$value *= ZBX_MEBIBYTE;
+			$value = bcmul($value, ZBX_MEBIBYTE);
 			break;
 		case 'K':
-			$value *= ZBX_KIBIBYTE;
+			$value = bcmul($value, ZBX_KIBIBYTE);
 			break;
 		case 'm':
 			$value *= 60;

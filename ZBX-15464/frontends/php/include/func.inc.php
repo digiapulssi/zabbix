@@ -454,13 +454,13 @@ function str2mem($val) {
 
 	switch ($last) {
 		case 'g':
-			$val *= ZBX_KIBIBYTE;
+			$val = bcmul($val, ZBX_KIBIBYTE);
 			// break; is not missing here
 		case 'm':
-			$val *= ZBX_KIBIBYTE;
+			$val = bcmul($val, ZBX_KIBIBYTE);
 			// break; is not missing here
 		case 'k':
-			$val *= ZBX_KIBIBYTE;
+			$val = bcmul($val, ZBX_KIBIBYTE);
 	}
 
 	return $val;
@@ -468,12 +468,12 @@ function str2mem($val) {
 
 function mem2str($size) {
 	$prefix = 'B';
-	if ($size > ZBX_MEBIBYTE) {
-		$size = $size / ZBX_MEBIBYTE;
+	if (bccomp($size, ZBX_MEBIBYTE) == 1) {
+		$size = bcdiv($size, ZBX_MEBIBYTE, 6);
 		$prefix = 'M';
 	}
-	elseif ($size > ZBX_KIBIBYTE) {
-		$size = $size / ZBX_KIBIBYTE;
+	elseif (bccomp($size, ZBX_KIBIBYTE) == 1) {
+		$size = bcdiv($size, ZBX_KIBIBYTE, 6);
 		$prefix = 'K';
 	}
 
