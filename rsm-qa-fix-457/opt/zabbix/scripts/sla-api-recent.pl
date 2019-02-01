@@ -257,8 +257,8 @@ sub get_global_lastclock($$$)
 
 	$lastclock = get_oldest_clock($tld, $service_key, ITEM_VALUE_TYPE_UINT64);
 
+	fail("cannot yet calculate, no data in the database yet") unless (defined($lastclock));
 	fail("unexpected error: item \"$service_key\" not found on TLD $tld") if ($lastclock == E_FAIL);
-	fail("cannot yet calculate, no data in the database yet") if ($lastclock == 0);
 
 	dbg("using last clock from the database: ", ts_str($lastclock));
 
