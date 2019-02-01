@@ -24,7 +24,9 @@ use constant TARGET_PLACEHOLDER => 'TARGET_PLACEHOLDER';	# for non-DNS services
 
 use constant MAX_PERIOD => 30 * 60;	# 30 minutes
 
-sub cycles_to_calculate($$$$$$$);
+use constant SUBSTR_KEY_LEN => 12;	# for logging
+
+sub cycles_to_calculate($$$$$$$$);
 sub get_lastvalues_from_db($$);
 sub calculate_cycle($$$$$$$$);
 sub get_interfaces($$$);
@@ -144,16 +146,21 @@ foreach (@server_keys)
 
 			undef($global_lastclock);	# is used in the following function (should be used per service)
 
+			my @cycles_to_calculate;
+
 			# get actual cycle times to calculate
-			my @cycles_to_calculate = cycles_to_calculate(
-				$tld,
-				$service,
-				$delays{$service},
-				$max_period,
-				$service_keys{$service},
-				$lastvalues_db->{'tlds'},
-				$lastvalues_cache->{'tlds'}
-			);
+			if (cycles_to_calculate(
+					$tld,
+					$service,
+					$delays{$service},
+					$max_period,
+					$service_keys{$service},
+					$lastvalues_db->{'tlds'},
+					$lastvalues_cache->{'tlds'},
+					\@cycles_to_calculate) == E_FAIL)
+			{
+				next;
+			}
 
 			dbg("$service cycles to calculate: ", join(',', @cycles_to_calculate));
 
@@ -257,7 +264,12 @@ sub get_global_lastclock($$$)
 
 	$lastclock = get_oldest_clock($tld, $service_key, ITEM_VALUE_TYPE_UINT64);
 
-	fail("cannot yet calculate, no data in the database yet") unless (defined($lastclock));
+	if (!defined($lastclock))
+	{
+		dbg("cannot yet calculate, item ", substr($service_key, 0, SUBSTR_KEY_LEN), "has no data in the database yet");
+		return;
+	}
+
 	fail("unexpected error: item \"$service_key\" not found on TLD $tld") if ($lastclock == E_FAIL);
 
 	dbg("using last clock from the database: ", ts_str($lastclock));
@@ -293,7 +305,7 @@ sub add_cycles($$$$$$$$$$)
 #
 # TODO: This function currently updates cache, which doesn't coexist well with the name.
 #
-sub cycles_to_calculate($$$$$$$)
+sub cycles_to_calculate($$$$$$$$)
 {
 	my $tld = shift;
 	my $service = shift;
@@ -302,6 +314,7 @@ sub cycles_to_calculate($$$$$$$)
 	my $service_key = shift;
 	my $lastvalues_db = shift;
 	my $lastvalues_cache = shift;
+	my $cycles_ref = shift;	# result
 
 	my %cycles;
 
@@ -321,6 +334,8 @@ sub cycles_to_calculate($$$$$$$)
 				# this partilular item is not in cache yet, use $global_lastclock as starting point
 				$global_lastclock //= get_global_lastclock($tld, $service_key, $delay);
 
+				return E_FAIL unless (defined($global_lastclock));	# no data in the database yet, so nothing to do
+
 				$lastclock_cache = $global_lastclock;
 			}
 			else
@@ -339,7 +354,7 @@ sub cycles_to_calculate($$$$$$$)
 
 			if (opt('debug'))
 			{
-				my $key = substr($lastvalues_db->{$tld}{$service}{'probes'}{$probe}{$itemid}{'key'}, 0, 12) . '...';
+				my $key = substr($lastvalues_db->{$tld}{$service}{'probes'}{$probe}{$itemid}{'key'}, 0, SUBSTR_KEY_LEN) . '...';
 
 				dbg("$probe [$key] itemid:$itemid lastclock in db: ", ts_str($lastclock_db));
 			}
@@ -360,7 +375,11 @@ sub cycles_to_calculate($$$$$$$)
 		}
 	}
 
-	return sort(keys(%cycles));
+
+
+	@{$cycles_ref} = sort(keys(%cycles));
+
+	return SUCCESS;
 }
 
 # gets the history of item for a given period
