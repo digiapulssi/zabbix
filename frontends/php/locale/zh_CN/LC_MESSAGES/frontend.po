@@ -11437,7 +11437,7 @@ msgstr "属性"
 #: include/classes/screens/CScreenUrl.php:62 include/events.inc.php:290
 #, c-format
 msgid "Provided URL \"%1$s\" is invalid."
-msgstr ""
+msgstr "提供的 URL \"％1$s\" 无效。"
 
 #: app/views/administration.proxy.edit.php:24
 #: app/views/administration.proxy.list.php:27 include/menu.inc.php:266
@@ -13366,7 +13366,7 @@ msgstr "模板 \"%1$s\" 已存在."
 #: include/classes/api/services/CTemplate.php:946
 #, c-format
 msgid "Template \"%1$s\" cannot be without host group."
-msgstr ""
+msgstr "模板 \"％1$s\" 不能没有主机群组。"
 
 #: include/classes/import/importers/CHostImporter.php:46
 #, c-format
@@ -14690,7 +14690,7 @@ msgstr "用户"
 #: include/classes/api/services/CUser.php:293
 #, c-format
 msgid "User \"%1$s\" cannot be without user group."
-msgstr ""
+msgstr "用户 \"％1$s\" 不能没有用户组。"
 
 #: include/classes/api/services/CUser.php:552
 #, c-format
