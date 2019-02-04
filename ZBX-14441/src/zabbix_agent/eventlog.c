@@ -866,7 +866,6 @@ int	process_eventslog6(const char *server, unsigned short port, const char *fl_s
 			{
 				/* buffer is full, stop processing active checks */
 				/* till the buffer is cleared */
-				lastlogsize = metric->lastlogsize;
 				break;
 			}
 
@@ -1321,6 +1320,7 @@ int	process_eventslog(const char *server, unsigned short port, const char *fl_so
 			if (0 != timestamp || (DWORD)FirstID == ((PEVENTLOGRECORD)pELR)->RecordNumber)
 			{
 				/* increase counter only for records >= FirstID (start point for the search) */
+				/* to avoid wrap-around of the 32b RecordNumber we increase the 64b lastlogsize */
 				if (0 == timestamp)
 					lastlogsize = FirstID;
 				else
@@ -1388,7 +1388,6 @@ int	process_eventslog(const char *server, unsigned short port, const char *fl_so
 				{
 					/* buffer is full, stop processing active checks */
 					/* till the buffer is cleared */
-					lastlogsize = metric->lastlogsize;
 					break;
 				}
 
@@ -1403,6 +1402,9 @@ int	process_eventslog(const char *server, unsigned short port, const char *fl_so
 
 			pELR += ((PEVENTLOGRECORD)pELR)->Length;
 		}
+
+		if (pELR < pEndOfRecords)
+			dwErr = ERROR_NO_MORE_ITEMS;
 	}
 
 finish:
