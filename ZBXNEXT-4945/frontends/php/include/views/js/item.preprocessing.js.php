@@ -203,8 +203,7 @@
 							.attr('placeholder', <?= CJs::encodeJson(_('script')) ?>)
 							.attr('maxlength', <?= DB::getFieldLength('item_preproc', 'params') ?>)
 							.attr('title', <?= CJs::encodeJson(_('Click to view or edit code')) ?>)
-							.addClass('open-modal-code-editor')
-							.addClass('editable')
+							.addClass('open-modal-code-editor editable')
 							.show()
 							.after($('<input>').attr({
 								'type': 'hidden',
@@ -223,6 +222,7 @@
 					$(params[0])
 						.codeEditor('destroy')
 						.removeClass()
+						.prop('maxlength', 255)
 						.parent()
 							.removeClass()
 							.addClass('<?= ZBX_STYLE_COLUMN_20 ?>')

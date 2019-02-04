@@ -1512,6 +1512,7 @@ function getItemPreprocessing(CForm $form, array $preprocessing, $readonly, arra
 
 			case ZBX_PREPROC_SCRIPT:
 				$params[0]
+					->setAttribute('value', explode("\n", $step_param_0)[0])
 					->setAttribute('placeholder', _('script'))
 					->setAttribute('maxlength', $script_maxlength)
 					->setAttribute('title', _('Click to view or edit code'))

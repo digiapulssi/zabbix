@@ -1448,7 +1448,12 @@ if (isset($_REQUEST['form']) && str_in_array($_REQUEST['form'], ['create', 'upda
 		unset($item['hosts']);
 
 		foreach ($item['preprocessing'] as &$step) {
-			$step['params'] = explode("\n", $step['params']);
+			if ($step['type'] == ZBX_PREPROC_SCRIPT) {
+				$step['params'] = [$step['params'], ''];
+			}
+			else {
+				$step['params'] = explode("\n", $step['params']);
+			}
 		}
 		unset($step);
 

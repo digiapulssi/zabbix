@@ -119,8 +119,7 @@
 			return this.each(function() {
 				$(this)
 					.off()
-					.removeAttr('tabindex')
-					.removeAttr('readonly')
+					.removeAttr('tabindex readonly')
 					.siblings('input[type=hidden], button').remove();
 			});
 		}
