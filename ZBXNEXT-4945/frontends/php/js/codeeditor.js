@@ -76,15 +76,10 @@
 								title: t('S_SAVE'),
 								enabled: editable,
 								action: function() {
-									var new_value = $textarea.val();
+									var new_value = $.trim($textarea.val());
 
-									if ($.trim(new_value).length) {
-										$hidden.val(new_value);
-										$input.val(new_value.split("\n")[0]);
-									}
-									else {
-										$input.add($hidden).val('');
-									}
+									$input.val(new_value.split("\n")[0]);
+									$hidden.val(new_value);
 								}
 							},
 							{

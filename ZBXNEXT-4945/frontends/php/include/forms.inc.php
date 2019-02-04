@@ -1512,7 +1512,7 @@ function getItemPreprocessing(CForm $form, array $preprocessing, $readonly, arra
 
 			case ZBX_PREPROC_SCRIPT:
 				$params[0]
-					->setAttribute('value', explode("\n", $step_param_0)[0])
+					->setAttribute('value', explode("\n", trim($step_param_0))[0])
 					->setAttribute('placeholder', _('script'))
 					->setAttribute('maxlength', $script_maxlength)
 					->setAttribute('title', _('Click to view or edit code'))
@@ -1602,7 +1602,7 @@ function getItemPreprocessing(CForm $form, array $preprocessing, $readonly, arra
 					(new CDiv([
 						$params[0],
 						($step['type'] == ZBX_PREPROC_SCRIPT)
-							? new CInput('hidden', $params[0]->getName(), implode('', $step['params']))
+							? new CInput('hidden', $params[0]->getName(), trim(implode('', $step['params'])))
 							: null
 					]))->addClass(ZBX_STYLE_COLUMN_20),
 					(new CDiv($params[1]))->addClass(ZBX_STYLE_COLUMN_20),
