@@ -1,6 +1,7 @@
 Changes for rsm1.2.0rc2
 
 Bug fixes:
+....I..... [462] fixed sla-update-api.pl not setting endTime on incident/state file (yurii)
 ....I..... [457] fixed missing recent measurements (dimir)
 
 --------------------------------------------------------------------------------
