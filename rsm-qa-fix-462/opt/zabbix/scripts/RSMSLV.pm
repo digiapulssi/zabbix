@@ -445,7 +445,7 @@ sub get_lastclock($$$)
 
 # returns:
 # E_FAIL - if item was not found
-# 0      - if history table is empty
+# undef  - if history table is empty
 # *      - lastclock
 sub get_oldest_clock($$$)
 {
