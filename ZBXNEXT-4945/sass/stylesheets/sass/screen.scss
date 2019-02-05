@@ -3973,6 +3973,10 @@ input.open-modal-code-editor {
 		border-color: $form-disabled-font-color;
 	}
 
+	&:-ms-input-placeholder {
+		color: $input-placeholder-color !important;
+	}
+
 	~ button {
 		white-space: nowrap;
 		border-top-left-radius: 0;

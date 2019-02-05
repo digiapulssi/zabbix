@@ -2760,6 +2760,8 @@ input.open-modal-code-editor {
   input.open-modal-code-editor.editable {
     background-color: #383838 !important;
     border-color: #525252; }
+  input.open-modal-code-editor:-ms-input-placeholder {
+    color: #9d9d9d !important; }
   input.open-modal-code-editor ~ button {
     white-space: nowrap;
     border-top-left-radius: 0;
