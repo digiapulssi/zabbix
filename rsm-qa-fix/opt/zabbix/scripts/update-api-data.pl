@@ -112,7 +112,7 @@ db_disconnect();
 
 my $now = time();
 
-my $max_till = max_avail_time();
+my $max_till = truncate_till(time() - ROLLWEEK_SHIFT_BACK - 60);	# make sure all the data is already calculated
 
 my ($check_from, $check_till, $continue_file);
 

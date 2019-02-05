@@ -162,7 +162,10 @@ foreach (@server_keys)
 				next;
 			}
 
-			dbg("$service cycles to calculate: ", join(',', @cycles_to_calculate));
+			if (opt('debug'))
+			{
+				dbg("$service cycles to calculate: ", join(',', map {ts_str($_)} (@cycles_to_calculate)));
+			}
 
 			next if (scalar(@cycles_to_calculate) == 0);
 
@@ -303,7 +306,7 @@ sub add_cycles($$$$$$$$$$)
 }
 
 #
-# TODO: This function currently updates cache, which doesn't coexist well with the name.
+# TODO: This function currently updates cache, which is not reflected in the name.
 #
 sub cycles_to_calculate($$$$$$$$)
 {
@@ -329,12 +332,24 @@ sub cycles_to_calculate($$$$$$$$)
 
 			my $lastclock_cache;
 
-			if (!defined($lastvalues_cache->{$tld}{$service}{'probes'}{$probe}{$itemid}))
+			if (opt('now'))
 			{
-				# this partilular item is not in cache yet, use $global_lastclock as starting point
+				# time bounds were specified on the command line
 				$global_lastclock //= get_global_lastclock($tld, $service_key, $delay);
 
-				return E_FAIL unless (defined($global_lastclock));	# no data in the database yet, so nothing to do
+				$lastclock_cache = $global_lastclock;
+			}
+			elsif (!defined($lastvalues_cache->{$tld}{$service}{'probes'}{$probe}{$itemid}))
+			{
+				# this partilular item is not in cache yet, get the time starting point for it
+				$global_lastclock //= get_global_lastclock($tld, $service_key, $delay);
+
+				if (!defined($global_lastclock))
+				{
+					dbg("$service: no data in the database yet, so nothing to do");
+
+					return E_FAIL;
+				}
 
 				$lastclock_cache = $global_lastclock;
 			}
@@ -347,6 +362,8 @@ sub cycles_to_calculate($$$$$$$$)
 					fail("dimir was wrong, item ($itemid) clock ($lastclock_cache)".
 						" in cache can be newer than in database ($lastclock_db)");
 				}
+
+				dbg("using lastclock from cache: ", ts_str($lastclock_cache));
 
 				# what's in the cache is already calculated
 				$lastclock_cache += $delay;
@@ -429,7 +446,7 @@ sub get_historical_value_by_time($$)
 	return $value;
 }
 
-sub get_service_from_key($)
+sub get_service_from_probe_key($)
 {
 	my $key = shift;
 
@@ -454,6 +471,35 @@ sub get_service_from_key($)
 	return $service;
 }
 
+sub get_service_from_slv_key($)
+{
+	my $key = shift;
+
+	# remove possible "rsm.slv."
+	$key = substr($key, length("rsm.slv.")) if (substr($key, 0, length("rsm.slv.")) eq "rsm.slv.");
+
+	my $service;
+
+	if (substr($key, 0, length("dns.")) eq "dns.")
+	{
+		$service = "dns";
+	}
+	elsif (substr($key, 0, length("dnssec.")) eq "dnssec.")
+	{
+		$service = "dns";
+	}
+	elsif (substr($key, 0, length("rdds.")) eq "rdds.")
+	{
+		$service = "rdds";
+	}
+	else
+	{
+		fail("cannot extract service from item \"$key\"");
+	}
+
+	return $service;
+}
+
 sub get_lastvalues_from_db($$)
 {
 	my $lastvalues_db = shift;
@@ -461,7 +507,10 @@ sub get_lastvalues_from_db($$)
 
 	my $host_cond = '';
 
-	$host_cond = " and h.host like '".getopt('tld')." %'" if (opt('tld'));
+	if (opt('tld'))
+	{
+		$host_cond = " and (h.host like '".getopt('tld')." %' or h.host='".getopt('tld')."')";
+	}
 
 	# join lastvalue and lastvalue_str tables
 	my $rows_ref = db_select(
@@ -473,7 +522,7 @@ sub get_lastvalues_from_db($$)
 			" and i.type in (".ITEM_TYPE_SIMPLE.",".ITEM_TYPE_TRAPPER.")".
 			" and i.status=".ITEM_STATUS_ACTIVE.
 			" and h.status=".HOST_STATUS_MONITORED.
-			" and g.groupid=".TLD_PROBE_RESULTS_GROUPID.
+			" and (g.groupid=".TLD_PROBE_RESULTS_GROUPID." or g.groupid=".TLDS_GROUPID." and i.key_ like '%.avail')".
 			$host_cond.
 		" union ".
 		"select h.host,i.itemid,i.key_,i.value_type,l.clock".
@@ -500,11 +549,23 @@ sub get_lastvalues_from_db($$)
 
 		my $index = index($host, ' ');	# "<TLD> <Probe>" separator
 
-		$tld = substr($host, 0, $index);	# $tld is global variable
+		my ($probe, $key_service);
 
-		my $probe = substr($host, $index + 1);
+		if ($index == -1)
+		{
+			# this host just represents TLD
+			$tld = $host;	# $tld is global variable
+			$probe = '';
 
-		my $key_service = get_service_from_key($key);
+			$key_service = get_service_from_slv_key($key);
+		}
+		else
+		{
+			$tld = substr($host, 0, $index);	# $tld is global variable
+			$probe = substr($host, $index + 1);
+
+			$key_service = get_service_from_probe_key($key);
+		}
 
 		foreach my $service ($key_service eq 'dns' ? ('dns', 'dnssec') : ($key_service))
 		{
@@ -705,7 +766,7 @@ sub calculate_cycle($$$$$$$$)
 		next if (@itemids_uint == 0);
 
 		#
-		# fetch them separately
+		# Fetch availability (Integer) values (on a TLD level and Probe level).
 		#
 
 		my $rows_ref = db_select(
@@ -734,8 +795,17 @@ sub calculate_cycle($$$$$$$$)
 		{
 			my $key = $probes_data->{$probe}{$itemid}{'key'};
 
+			dbg("trying to identify interfaces of $service key \"$key\"...");
+
 			if (substr($key, 0, length("rsm.rdds")) eq "rsm.rdds")
 			{
+				#
+				# RDDS Availability on the Probe level. This item contains Availability of interfaces:
+				#
+				# - RDDS43
+				# - RDDS80
+				#
+
 				foreach my $value (@{$values{$itemid}})
 				{
 					$service_up = 0 unless ($value == RDDS_UP);
@@ -761,6 +831,12 @@ sub calculate_cycle($$$$$$$$)
 			}
 			elsif (substr($key, 0, length("rdap")) eq "rdap")
 			{
+				#
+				# RDAP Availability on the Probe level. This item contains Availability of interfaces:
+				#
+				# - RDAP
+				#
+
 				my $interface = AH_INTERFACE_RDAP;
 
 				my $city_status;
@@ -779,6 +855,13 @@ sub calculate_cycle($$$$$$$$)
 			}
 			elsif (substr($key, 0, length("rsm.dns.udp")) eq "rsm.dns.udp")
 			{
+				#
+				# DNS Availability on the Probe level. This item contains Availability of interfaces:
+				#
+				# - DNS
+				# - DNSSEC
+				#
+
 				my $interface;
 
 				if ($service eq 'dnssec')
@@ -803,6 +886,51 @@ sub calculate_cycle($$$$$$$$)
 
 				$tested_interfaces{$interface}{$probe}{'status'} = $city_status;
 			}
+			elsif (substr($key, 0, length("rsm.slv.")) eq "rsm.slv.")
+			{
+				#
+				# Service Availability on a TLD level.
+				#
+
+				my $sub_key = substr($key, length("rsm.slv."));
+
+				my $index = index($sub_key, '.');	# <SERVICE>.avail
+
+				fail("cannot extract Service from item \"$key\"") if ($index == -1);
+
+				my $key_service = substr($sub_key, 0, $index);
+
+				next unless ($key_service eq $service);
+
+				fail("dimir was wrong: $service status can be re-defined") if (defined($json->{'status'}));
+
+				if (scalar(@{$values{$itemid}}) != 1)
+				{
+					fail("dimir was wrong: item \"$key\" can contain more than 1 value at ",
+						selected_period($from, $till), ": ", join(',', @{$values{$itemid}}));
+				}
+
+				if ($values{$itemid}->[0] == UP)
+				{
+					$json->{'status'} = 'Up';
+				}
+				elsif ($values{$itemid}->[0] == DOWN)
+				{
+					$json->{'status'} = 'Down';
+				}
+				elsif ($values{$itemid}->[0] == UP_INCONCLUSIVE_NO_DATA)
+				{
+					$json->{'status'} = 'Up-inconclusive-no-data';
+				}
+				elsif ($values{$itemid}->[0] == UP_INCONCLUSIVE_NO_PROBES)
+				{
+					$json->{'status'} = 'Up-inconclusive-no-probes';
+				}
+				else
+				{
+					fail("dimir was wrong: item \"$key\" can contain unexpected value \"", $values{$itemid}->[0] , "\"");
+				}
+			}
 			else
 			{
 				fail("unexpected key \"$key\" when trying to identify Service interface");
@@ -819,7 +947,9 @@ sub calculate_cycle($$$$$$$$)
 		next if (@itemids_float == 0);
 
 		#
-		# collect clock->rtt keypairs (and clock->ip for DNS because for DNS metrics IP (and target) is taken from item key)
+		# Fetch RTT (Float) values (on Probe level). Fetch them in pairs:
+		#
+		# clock->rtt
 		#
 
 		$rows_ref = db_select(
@@ -862,6 +992,8 @@ sub calculate_cycle($$$$$$$$)
 					$target = TARGET_PLACEHOLDER;
 				}
 
+				dbg("found $service RTT: ", $value_ref->{'value'}, " IP: ", ($ip // 'UNDEF'), " (target: $target)");
+
 				$tested_interfaces{$interface}{$probe}{'testData'}{$target}{'metrics'}{$value_ref->{'clock'}}{'rtt'} = $value_ref->{'value'};
 				$tested_interfaces{$interface}{$probe}{'testData'}{$target}{'metrics'}{$value_ref->{'clock'}}{'ip'} = $ip;
 			}
@@ -870,7 +1002,11 @@ sub calculate_cycle($$$$$$$$)
 		next if (@itemids_str == 0);
 
 		#
-		# collect clock->ip keypairs for non-DNS services
+		# Fetch IP (String) values (on Probe level) used in DNS tests. Fetch them in pairs:
+		#
+		# clock->ip
+		#
+		# Note, for DNS tests IP (and target) are taken from item keys.
 		#
 
 		$rows_ref = db_select(
@@ -911,14 +1047,10 @@ sub calculate_cycle($$$$$$$$)
 			if (!$probe_online)
 			{
 				$tested_interfaces{$interface}{$probe}{'status'} = AH_CITY_OFFLINE;
-
-				undef($tested_interfaces{$interface}{$probe}{'testData'});
 			}
 			elsif (!defined($tested_interfaces{$interface}{$probe}{'status'}))
 			{
 				$tested_interfaces{$interface}{$probe}{'status'} = AH_CITY_NO_RESULT;
-
-				undef($tested_interfaces{$interface}{$probe}{'testData'});
 			}
 		}
 
@@ -967,23 +1099,32 @@ sub calculate_cycle($$$$$$$$)
 		$perc = $probes_with_positive * 100 / $probes_with_results;
 	}
 
-	my $detailed_info = sprintf("%d/%d positive, %.3f%%, %d online", $probes_with_positive, $probes_with_results, $perc, $probes_online);
+	my $detailed_info;
 
-	if ($probes_online < $cfg_minonline)
+	if (defined($json->{'status'}))
 	{
-		$json->{'status'} = 'Up-inconclusive-no-probes';
-	}
-	elsif ($probes_with_results < $cfg_minonline)
-	{
-		$json->{'status'} = 'Up-inconclusive-no-data';
-	}
-	elsif ($perc > SLV_UNAVAILABILITY_LIMIT)
-	{
-		$json->{'status'} = 'Up';
+		$detailed_info = "taken from Service Availability";
 	}
 	else
 	{
-		$json->{'status'} = 'Down';
+		$detailed_info = sprintf("%d/%d positive, %.3f%%, %d online", $probes_with_positive, $probes_with_results, $perc, $probes_online);
+
+		if ($probes_online < $cfg_minonline)
+		{
+			$json->{'status'} = 'Up-inconclusive-no-probes';
+		}
+		elsif ($probes_with_results < $cfg_minonline)
+		{
+			$json->{'status'} = 'Up-inconclusive-no-data';
+		}
+		elsif ($perc > SLV_UNAVAILABILITY_LIMIT)
+		{
+			$json->{'status'} = 'Up';
+		}
+		else
+		{
+			$json->{'status'} = 'Down';
+		}
 	}
 
 	dbg("cycle: $json->{'status'} ($detailed_info)");
@@ -992,6 +1133,11 @@ sub calculate_cycle($$$$$$$$)
 	{
 		print(Dumper($json));
 		return;
+	}
+
+	if (opt('debug'))
+	{
+		print(Dumper($json));
 	}
 
 	if (ah_save_recent_measurement(ah_get_api_tld($tld), $service, $json, $from) != AH_SUCCESS)
