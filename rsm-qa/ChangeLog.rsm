@@ -1,3 +1,12 @@
+Changes for rsm1.2.0rc2
+
+Bug fixes:
+....I..... [459] fixed sla-api-recent.pl script to re-generate recent measurement files when new data received (dimir)
+....I..... [461] fixed sla-api-recent.pl script to generate recent measurement files even when no data from Probes (dimir)
+....I..... [462] fixed update-api-data.pl not setting endTime on incident/state file (yurii)
+....I..... [457] fixed missing recent measurements (dimir)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.2.0rc1
 
 Bug fixes:

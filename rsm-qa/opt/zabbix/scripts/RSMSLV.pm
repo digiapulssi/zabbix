@@ -60,6 +60,7 @@ use constant RSM_CONFIG_EPP_DELAY_ITEMID => 100010;	# rsm.configvalue[RSM.EPP.DE
 # are available on the server (from proxies). We shift back 2 minutes
 # in case of "availability" and 3 minutes in case of "rolling week"
 # calculations.
+
 # NB! These numbers must be in sync with Frontend (details page)!
 use constant PROBE_ONLINE_SHIFT		=> 120;	# seconds (must be divisible by 60) to go back for Probe online status calculation
 use constant AVAIL_SHIFT_BACK		=> 120;	# seconds (must be divisible by 60) to go back for Service Availability calculation
@@ -75,6 +76,7 @@ our %OPTS; # specified command-line options
 
 our @EXPORT = qw($result $dbh $tld $server_key
 		SUCCESS E_FAIL E_ID_NONEXIST E_ID_MULTIPLE UP DOWN SLV_UNAVAILABILITY_LIMIT MIN_LOGIN_ERROR
+		UP_INCONCLUSIVE_NO_PROBES
 		UP_INCONCLUSIVE_NO_DATA PROTO_UDP PROTO_TCP
 		MAX_LOGIN_ERROR MIN_INFO_ERROR MAX_INFO_ERROR PROBE_ONLINE_STR
 		AVAIL_SHIFT_BACK ROLLWEEK_SHIFT_BACK PROBE_ONLINE_SHIFT
@@ -93,7 +95,7 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		get_templated_nsips db_exec tld_interface_enabled
 		tld_interface_enabled_create_cache tld_interface_enabled_delete_cache
 		db_select db_select_binds set_slv_config get_cycle_bounds get_rollweek_bounds get_downtime_bounds
-		max_avail_time get_probe_times probe_offline_at probes2tldhostids
+		get_probe_times probe_offline_at probes2tldhostids
 		get_probe_online_key_itemid
 		init_values push_value send_values get_nsip_from_key is_service_error get_templated_items_like
 		is_service_error_desc
@@ -445,7 +447,7 @@ sub get_lastclock($$$)
 
 # returns:
 # E_FAIL - if item was not found
-# 0      - if history table is empty
+# undef  - if history table is empty
 # *      - lastclock
 sub get_oldest_clock($$$)
 {
@@ -847,7 +849,7 @@ sub tld_interface_enabled_delete_cache()
 	@tlds_cache = ();
 }
 
-sub tld_interface_enabled
+sub tld_interface_enabled($$$)
 {
 	my $tld = shift;
 	my $interface = shift;
@@ -1227,12 +1229,6 @@ sub get_downtime_bounds
 	my $from = $dt->epoch;
 
 	return ($from, $till, cycle_start($till, $delay));
-}
-
-# guaranteed time when Service availabilities are calculated
-sub max_avail_time
-{
-	return truncate_till(time() - ROLLWEEK_SHIFT_BACK);
 }
 
 sub __print_probe_times

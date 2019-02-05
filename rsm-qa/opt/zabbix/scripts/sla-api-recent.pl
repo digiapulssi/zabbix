@@ -24,7 +24,9 @@ use constant TARGET_PLACEHOLDER => 'TARGET_PLACEHOLDER';	# for non-DNS services
 
 use constant MAX_PERIOD => 30 * 60;	# 30 minutes
 
-sub cycles_to_calculate($$$$$$);
+use constant SUBSTR_KEY_LEN => 12;	# for logging
+
+sub cycles_to_calculate($$$$$$$$);
 sub get_lastvalues_from_db($$);
 sub calculate_cycle($$$$$$$$);
 sub get_interfaces($$$);
@@ -84,6 +86,9 @@ my %service_keys = (
 	'rdds' => 'rsm.slv.rdds.avail'
 );
 
+# keep to avoid reading multiple times
+my $global_lastclock;
+
 db_disconnect();
 
 my %rtt_limits;
@@ -92,35 +97,33 @@ foreach (@server_keys)
 {
 	$server_key = $_;
 
-	# Last values actually contain lastclock of the items in "lastvalue" table.
-	# 'cycles' represents cycles to recalculate for tld-service pair.
+	# Last values from the "lastvalue" (uint, float) and "lastvalue_str" tables.
 	#
 	# {
-	#     tld => {
-	#         service => {
-	#            'probes' => {
-	#                 probe => {
-	#                     itemid = {
-	#                         'key' => key,
-	#                         'value_type' => value_type,
-	#                         'clock' => clock
+	#     'tlds' => {
+	#         tld => {
+	#             service => {
+	#                 'probes' => {
+	#                     probe => {
+	#                         itemid = {
+	#                             'key' => key,
+	#                             'value_type' => value_type,
+	#                             'clock' => clock
+	#                         }
 	#                     }
 	#                 }
-	#             },
-	#             'cycles' => {
-	#                 clock => 1
-	#             },
-	#             'lastclock' => clock
+	#             }
 	#         }
 	#     }
 	# }
-	my %lastvalues;
+	my $lastvalues_db = {'tlds' => {}};
 
-	my $lastvalues_cache = {};
+	my $lastvalues_cache;
 
 	if (ah_get_recent_cache($server_key, \$lastvalues_cache) != AH_SUCCESS)
 	{
 		dbg("there's no recent measurements cache file yet, but no worries");
+		$lastvalues_cache->{'tlds'} = {};
 	}
 
 	db_connect($server_key);
@@ -128,39 +131,54 @@ foreach (@server_keys)
 	# initialize probe online cache
 	probe_online_at_init();
 
-	get_lastvalues_from_db(\%lastvalues, \%delays);
+	get_lastvalues_from_db($lastvalues_db, \%delays);
 
 	# probes available for every service
 	my %probes;
 
-	foreach (sort(keys(%lastvalues)))
+	foreach (sort(keys(%{$lastvalues_db->{'tlds'}})))
 	{
 		$tld = $_;	# global variable
 
-		next if (opt('tld') && $tld ne getopt('tld'));
-
-		foreach my $service (sort(keys(%{$lastvalues{$tld}})))
+		foreach my $service (sort(keys(%{$lastvalues_db->{'tlds'}{$tld}})))
 		{
 			next if (opt('service') && $service ne getopt('service'));
 
+			undef($global_lastclock);	# is used in the following function (should be used per service)
+
+			my @cycles_to_calculate;
+
 			# get actual cycle times to calculate
-			my @cycles_to_calculate = cycles_to_calculate(
-				$tld,
-				$service,
-				$delays{$service},
-				$service_keys{$service},
-				\%lastvalues,
-				$lastvalues_cache
-			);
+			if (cycles_to_calculate(
+					$tld,
+					$service,
+					$delays{$service},
+					$max_period,
+					$service_keys{$service},
+					$lastvalues_db->{'tlds'},
+					$lastvalues_cache->{'tlds'},
+					\@cycles_to_calculate) == E_FAIL)
+			{
+				next;
+			}
+
+			if (opt('debug'))
+			{
+				dbg("$service cycles to calculate: ", join(',', map {ts_str($_)} (@cycles_to_calculate)));
+			}
 
 			next if (scalar(@cycles_to_calculate) == 0);
-			next unless (tld_service_enabled($tld, $service, $cycles_to_calculate[0]));
+
+			my $cycles_from = $cycles_to_calculate[0];
+			my $cycles_till = $cycles_to_calculate[-1];
+
+			next unless (tld_service_enabled($tld, $service, $cycles_from));
 
 			if (opt('print-period'))
 			{
 				info("selected $service period: ", selected_period(
-					$cycles_to_calculate[0],
-					cycle_end($cycles_to_calculate[-1], $delays{$service})
+					$cycles_from,
+					cycle_end($cycles_till, $delays{$service})
 				));
 			}
 
@@ -168,13 +186,13 @@ foreach (@server_keys)
 
 			$probes{$service} = get_probes($service) unless (defined($probes{$service}));
 
-			if ($service eq 'dns' && scalar(@cycles_to_calculate) != 0)
+			if ($service eq 'dns')
 			{
 				# rtt limits only considered for DNS currently
 				$rtt_limits{'dns'} = get_history_by_itemid(
 					CONFIGVALUE_DNS_UDP_RTT_HIGH_ITEMID,
-					$cycles_to_calculate[0],
-					$cycles_to_calculate[-1]
+					$cycles_from,
+					$cycles_till
 				);
 			}
 
@@ -184,30 +202,20 @@ foreach (@server_keys)
 				calculate_cycle(
 					$tld,
 					$service,
-					$lastvalues{$tld}{$service}{'probes'},
+					$lastvalues_db->{'tlds'}{$tld}{$service}{'probes'},
 					$clock,
 					$delays{$service},
 					$rtt_limits{$service},
 					$probes{$service},
 					$interfaces_ref
 				);
-
-				$lastvalues{$tld}{$service}{'lastclock'} = $clock;
 			}
-
-			# TODO: no need to have these in a cache but this could be done in a more elegant way
-			undef($lastvalues{$tld}{$service}{'probes'});
-			undef($lastvalues{$tld}{$service}{'cycles'});
 		}
-
-		# DNSSEC is using DNS data
-		undef($lastvalues{$tld}{'dnssec'}{'probes'});
-		undef($lastvalues{$tld}{'dnssec'}{'cycles'});
 	}
 
 	if (!opt('dry-run') && !opt('now'))
 	{
-		if (ah_save_recent_cache($server_key, \%lastvalues) != AH_SUCCESS)
+		if (ah_save_recent_cache($server_key, $lastvalues_cache) != AH_SUCCESS)
 		{
 			fail("cannot save recent measurements cache: ", ah_get_error());
 		}
@@ -216,93 +224,179 @@ foreach (@server_keys)
 	db_disconnect();
 }
 
-# keep to avoid reading multiple times
-my $global_lastclock;
+sub get_global_lastclock($$$)
+{
+	my $tld = shift;
+	my $service_key = shift;
+	my $delay = shift;
 
-sub cycles_to_calculate($$$$$$)
+	my $lastclock;
+
+	if (opt('now'))
+	{
+		$lastclock = cycle_start(getopt('now'), $delay);
+
+		dbg("using specified last clock: ", ts_str($lastclock));
+
+		return $lastclock;
+	}
+
+	# see if we have last_update.txt in SLA API directory
+
+	my $continue_file = ah_get_continue_file();
+
+	if (-e $continue_file)
+	{
+		my $error;
+
+		if (read_file($continue_file, \$lastclock, \$error) != SUCCESS)
+		{
+			fail("cannot read file \"$continue_file\": $error");
+		}
+
+		while (chomp($lastclock)) {}
+
+		dbg("using last clock from SLA API directory, file $continue_file: ", ts_str($lastclock));
+
+		$lastclock++;
+
+		return $lastclock;
+	}
+
+	# if not, get the oldest from the database
+
+	$lastclock = get_oldest_clock($tld, $service_key, ITEM_VALUE_TYPE_UINT64);
+
+	if (!defined($lastclock))
+	{
+		dbg("cannot yet calculate, item ", substr($service_key, 0, SUBSTR_KEY_LEN), "has no data in the database yet");
+		return;
+	}
+
+	fail("unexpected error: item \"$service_key\" not found on TLD $tld") if ($lastclock == E_FAIL);
+
+	dbg("using last clock from the database: ", ts_str($lastclock));
+
+	return $lastclock;
+}
+
+sub add_cycles($$$$$$$$$$)
+{
+	my $tld = shift;
+	my $service = shift;
+	my $probe = shift;
+	my $itemid = shift;
+	my $lastclock_cache = shift;
+	my $lastclock_db = shift;
+	my $delay = shift;
+	my $max_period = shift;
+	my $cycles_ref = shift;
+	my $lastvalues_cache = shift;
+
+	my $max_clock = $lastclock_cache + $max_period;
+
+	while ($lastclock_cache < $max_clock && $lastclock_cache <= $lastclock_db)
+	{
+		$cycles_ref->{$lastclock_cache} = 1;
+
+		$lastvalues_cache->{$tld}{$service}{'probes'}{$probe}{$itemid}{'clock'} = $lastclock_cache;
+
+		$lastclock_cache += $delay;
+	}
+}
+
+#
+# TODO: This function currently updates cache, which is not reflected in the name.
+#
+sub cycles_to_calculate($$$$$$$$)
 {
 	my $tld = shift;
 	my $service = shift;
 	my $delay = shift;
+	my $max_period = shift;	# seconds
 	my $service_key = shift;
-	my $lastvalues = shift;
+	my $lastvalues_db = shift;
 	my $lastvalues_cache = shift;
+	my $cycles_ref = shift;	# result
 
-	my @cycles;
+	my %cycles;
 
-	if (!opt('now') && defined($lastvalues_cache->{$tld}{$service}{'lastclock'}))
+	foreach my $probe (keys(%{$lastvalues_db->{$tld}{$service}{'probes'}}))
 	{
-		my $lastclock = $lastvalues_cache->{$tld}{$service}{'lastclock'};
-
-		dbg("using last clock from previous run: $lastclock");
-
-		$lastclock += $delay;
-
-		my $max_clock = $lastclock + $max_period;
-
-		while ($lastclock < $max_clock && $lastclock <= $lastvalues->{$tld}{$service}{'lastclock'})
+		foreach my $itemid (keys(%{$lastvalues_db->{$tld}{$service}{'probes'}{$probe}}))
 		{
-			push(@cycles, $lastclock);
+			my $lastclock_db = cycle_start(
+				$lastvalues_db->{$tld}{$service}{'probes'}{$probe}{$itemid}{'clock'},
+				$delay
+			);
 
-			$lastclock += $delay;
-		}
+			my $lastclock_cache;
 
-		return @cycles;
-	}
-
-	if (!defined($global_lastclock))
-	{
-		if (opt('now'))
-		{
-			$global_lastclock //= cycle_start(getopt('now'), $delay);
-
-			dbg("using specified last clock: $global_lastclock");
-		}
-		else
-		{
-			# see if we have last_update.txt in SLA API directory
-
-			my $continue_file //= ah_get_continue_file();
-
-			my $error;
-
-			if (-e $continue_file)
+			if (opt('now'))
 			{
-				if (read_file($continue_file, \$global_lastclock, \$error) != SUCCESS)
+				# time bounds were specified on the command line
+				$global_lastclock //= get_global_lastclock($tld, $service_key, $delay);
+
+				$lastclock_cache = $global_lastclock;
+			}
+			elsif (!defined($lastvalues_cache->{$tld}{$service}{'probes'}{$probe}{$itemid}))
+			{
+				# this partilular item is not in cache yet, get the time starting point for it
+				$global_lastclock //= get_global_lastclock($tld, $service_key, $delay);
+
+				if (!defined($global_lastclock))
 				{
-					fail("cannot read file \"$continue_file\": $error");
+					dbg("$service: no data in the database yet, so nothing to do");
+
+					return E_FAIL;
 				}
 
-				while (chomp($global_lastclock)) {}
-
-				$global_lastclock++;
-
-				dbg("using last clock from SLA API directory, file $continue_file: $global_lastclock");
+				$lastclock_cache = $global_lastclock;
 			}
 			else
 			{
-				# if not, get the oldest from the database
-				$global_lastclock //= get_oldest_clock($tld, $service_key, ITEM_VALUE_TYPE_UINT64);
+				$lastclock_cache = $lastvalues_cache->{$tld}{$service}{'probes'}{$probe}{$itemid}{'clock'};
 
-				fail("unexpected error: item \"$service_key\" not found on TLD $tld") if ($global_lastclock == E_FAIL);
-				fail("cannot yet calculate, no data in the database yet") if ($global_lastclock == 0);
+				if ($lastclock_cache > $lastclock_db)
+				{
+					fail("dimir was wrong, item ($itemid) clock ($lastclock_cache)".
+						" in cache can be newer than in database ($lastclock_db)");
+				}
 
-				dbg("using last clock from the database: $global_lastclock");
+				dbg("using lastclock from cache: ", ts_str($lastclock_cache));
+
+				# what's in the cache is already calculated
+				$lastclock_cache += $delay;
 			}
+
+			if (opt('debug'))
+			{
+				my $key = substr($lastvalues_db->{$tld}{$service}{'probes'}{$probe}{$itemid}{'key'}, 0, SUBSTR_KEY_LEN) . '...';
+
+				dbg("$probe [$key] itemid:$itemid lastclock in db: ", ts_str($lastclock_db));
+			}
+
+			add_cycles(
+				$tld,
+				$service,
+				$probe,
+				$itemid,
+				$lastclock_cache,
+				$lastclock_db,
+				$delay,
+				$max_period,
+				\%cycles,
+				$lastvalues_cache
+			);
+
 		}
 	}
 
-	my $lastclock = $global_lastclock;
-	my $max_clock = $lastclock + $max_period;
 
-	while ($lastclock < $max_clock && $lastclock < $real_now)
-	{
-		push(@cycles, $lastclock);
 
-		$lastclock += $delay;
-	}
+	@{$cycles_ref} = sort(keys(%cycles));
 
-	return @cycles;
+	return SUCCESS;
 }
 
 # gets the history of item for a given period
@@ -352,7 +446,7 @@ sub get_historical_value_by_time($$)
 	return $value;
 }
 
-sub get_service_from_key($)
+sub get_service_from_probe_key($)
 {
 	my $key = shift;
 
@@ -377,10 +471,46 @@ sub get_service_from_key($)
 	return $service;
 }
 
+sub get_service_from_slv_key($)
+{
+	my $key = shift;
+
+	# remove possible "rsm.slv."
+	$key = substr($key, length("rsm.slv.")) if (substr($key, 0, length("rsm.slv.")) eq "rsm.slv.");
+
+	my $service;
+
+	if (substr($key, 0, length("dns.")) eq "dns.")
+	{
+		$service = "dns";
+	}
+	elsif (substr($key, 0, length("dnssec.")) eq "dnssec.")
+	{
+		$service = "dns";
+	}
+	elsif (substr($key, 0, length("rdds.")) eq "rdds.")
+	{
+		$service = "rdds";
+	}
+	else
+	{
+		fail("cannot extract service from item \"$key\"");
+	}
+
+	return $service;
+}
+
 sub get_lastvalues_from_db($$)
 {
-	my $lastvalues = shift;
+	my $lastvalues_db = shift;
 	my $delays = shift;
+
+	my $host_cond = '';
+
+	if (opt('tld'))
+	{
+		$host_cond = " and (h.host like '".getopt('tld')." %' or h.host='".getopt('tld')."')";
+	}
 
 	# join lastvalue and lastvalue_str tables
 	my $rows_ref = db_select(
@@ -392,7 +522,8 @@ sub get_lastvalues_from_db($$)
 			" and i.type in (".ITEM_TYPE_SIMPLE.",".ITEM_TYPE_TRAPPER.")".
 			" and i.status=".ITEM_STATUS_ACTIVE.
 			" and h.status=".HOST_STATUS_MONITORED.
-			" and g.groupid=".TLD_PROBE_RESULTS_GROUPID.
+			" and (g.groupid=".TLD_PROBE_RESULTS_GROUPID." or g.groupid=".TLDS_GROUPID." and i.key_ like '%.avail')".
+			$host_cond.
 		" union ".
 		"select h.host,i.itemid,i.key_,i.value_type,l.clock".
 		" from lastvalue_str l,items i,hosts h,hosts_groups g".
@@ -402,7 +533,8 @@ sub get_lastvalues_from_db($$)
 			" and i.type in (".ITEM_TYPE_SIMPLE.",".ITEM_TYPE_TRAPPER.")".
 			" and i.status=".ITEM_STATUS_ACTIVE.
 			" and h.status=".HOST_STATUS_MONITORED.
-			" and g.groupid=".TLD_PROBE_RESULTS_GROUPID
+			" and g.groupid=".TLD_PROBE_RESULTS_GROUPID.
+			$host_cond
 	);
 
 	foreach my $row_ref (@{$rows_ref})
@@ -415,36 +547,34 @@ sub get_lastvalues_from_db($$)
 
 		next if (substr($key, 0, length("rsm.dns.tcp")) eq "rsm.dns.tcp");
 
-		my $index = index($host, ' ');
+		my $index = index($host, ' ');	# "<TLD> <Probe>" separator
 
-		$tld = substr($host, 0, $index);	# $tld is global variable
-		my $probe = substr($host, $index + 1);
+		my ($probe, $key_service);
 
-		my $service = get_service_from_key($key);
-
-		fail("cannot identify item \"$key\" at host \"$host\"") unless ($service);
-
-#		dbg($tld, "-", $service);
-
-		foreach my $serv ($service eq 'dns' ? ('dns', 'dnssec') : ($service))
+		if ($index == -1)
 		{
-			$lastvalues->{$tld}{$serv}{'probes'}{$probe}{$itemid} = {
+			# this host just represents TLD
+			$tld = $host;	# $tld is global variable
+			$probe = '';
+
+			$key_service = get_service_from_slv_key($key);
+		}
+		else
+		{
+			$tld = substr($host, 0, $index);	# $tld is global variable
+			$probe = substr($host, $index + 1);
+
+			$key_service = get_service_from_probe_key($key);
+		}
+
+		foreach my $service ($key_service eq 'dns' ? ('dns', 'dnssec') : ($key_service))
+		{
+			$lastvalues_db->{'tlds'}{$tld}{$service}{'probes'}{$probe}{$itemid} = {
 				'key' => $key,
 				'value_type' => $value_type,
 				'clock' => $clock
 			};
-
-			my $cycle_clock = cycle_start($clock, $delays->{$serv});
-
-			# 'lastclock' is the last cycle we want to calculate for this tld-service
-			if (!defined($lastvalues->{$tld}{$serv}{'lastclock'}) ||
-					$lastvalues->{$tld}{$serv}{'lastclock'} < $cycle_clock)
-			{
-				$lastvalues->{$tld}{$serv}{'lastclock'} = $cycle_clock;
-			}
 		}
-
-#		print(ts_str($clock), " $tld,$probe ($host) | $key\n");
 	}
 }
 
@@ -528,7 +658,7 @@ sub fill_test_data($$$$)
 }
 
 #
-# Probe status value cache, itemid - ID of PROBE_KEY_ONLINE item
+# Probe status value cache. itemid - PROBE_KEY_ONLINE item
 #
 # {
 #     probe => {
@@ -588,7 +718,7 @@ sub calculate_cycle($$$$$$$$)
 {
 	my $tld = shift;
 	my $service = shift;
-	my $probe_items = shift;
+	my $probes_data = shift;
 	my $cycle_clock = shift;
 	my $delay = shift;
 	my $rtt_limit = shift;
@@ -608,16 +738,16 @@ sub calculate_cycle($$$$$$$$)
 	my $probes_with_positive = 0;
 	my $probes_online = 0;
 
-	foreach my $probe (keys(%{$probe_items}))
+	foreach my $probe (keys(%{$probes_data}))
 	{
 		my (@itemids_uint, @itemids_float, @itemids_str);
 
 		#
-		# collect IDs of probe items, separate them by value_type to fetch values from history later
+		# collect itemids, separate them by value_type to fetch values from according history table later
 		#
 
 		map {
-			my $i = $probe_items->{$probe}{$_};
+			my $i = $probes_data->{$probe}{$_};
 
 			if ($i->{'value_type'} == ITEM_VALUE_TYPE_UINT64)
 			{
@@ -631,12 +761,12 @@ sub calculate_cycle($$$$$$$$)
 			{
 				push(@itemids_str, $_);
 			}
-		} (keys(%{$probe_items->{$probe}}));
+		} (keys(%{$probes_data->{$probe}}));
 
 		next if (@itemids_uint == 0);
 
 		#
-		# fetch them separately
+		# Fetch availability (Integer) values (on a TLD level and Probe level).
 		#
 
 		my $rows_ref = db_select(
@@ -663,10 +793,19 @@ sub calculate_cycle($$$$$$$$)
 
 		foreach my $itemid (keys(%values))
 		{
-			my $key = $probe_items->{$probe}{$itemid}{'key'};
+			my $key = $probes_data->{$probe}{$itemid}{'key'};
+
+			dbg("trying to identify interfaces of $service key \"$key\"...");
 
 			if (substr($key, 0, length("rsm.rdds")) eq "rsm.rdds")
 			{
+				#
+				# RDDS Availability on the Probe level. This item contains Availability of interfaces:
+				#
+				# - RDDS43
+				# - RDDS80
+				#
+
 				foreach my $value (@{$values{$itemid}})
 				{
 					$service_up = 0 unless ($value == RDDS_UP);
@@ -674,7 +813,7 @@ sub calculate_cycle($$$$$$$$)
 					my $interface = AH_INTERFACE_RDDS43;
 
 					if (!defined($tested_interfaces{$interface}{$probe}{'status'}) ||
-						$tested_interfaces{$interface}{$probe}{'status'} == AH_CITY_DOWN)
+						$tested_interfaces{$interface}{$probe}{'status'} eq AH_CITY_DOWN)
 					{
 						$tested_interfaces{$interface}{$probe}{'status'} =
 							($value == RDDS_UP || $value == RDDS_43_ONLY ? AH_CITY_UP : AH_CITY_DOWN);
@@ -683,7 +822,7 @@ sub calculate_cycle($$$$$$$$)
 					$interface = AH_INTERFACE_RDDS80;
 
 					if (!defined($tested_interfaces{$interface}{$probe}{'status'}) ||
-						$tested_interfaces{$interface}{$probe}{'status'} == AH_CITY_DOWN)
+						$tested_interfaces{$interface}{$probe}{'status'} eq AH_CITY_DOWN)
 					{
 						$tested_interfaces{$interface}{$probe}{'status'} =
 							($value == RDDS_UP || $value == RDDS_80_ONLY ? AH_CITY_UP : AH_CITY_DOWN);
@@ -692,6 +831,12 @@ sub calculate_cycle($$$$$$$$)
 			}
 			elsif (substr($key, 0, length("rdap")) eq "rdap")
 			{
+				#
+				# RDAP Availability on the Probe level. This item contains Availability of interfaces:
+				#
+				# - RDAP
+				#
+
 				my $interface = AH_INTERFACE_RDAP;
 
 				my $city_status;
@@ -710,6 +855,13 @@ sub calculate_cycle($$$$$$$$)
 			}
 			elsif (substr($key, 0, length("rsm.dns.udp")) eq "rsm.dns.udp")
 			{
+				#
+				# DNS Availability on the Probe level. This item contains Availability of interfaces:
+				#
+				# - DNS
+				# - DNSSEC
+				#
+
 				my $interface;
 
 				if ($service eq 'dnssec')
@@ -734,6 +886,51 @@ sub calculate_cycle($$$$$$$$)
 
 				$tested_interfaces{$interface}{$probe}{'status'} = $city_status;
 			}
+			elsif (substr($key, 0, length("rsm.slv.")) eq "rsm.slv.")
+			{
+				#
+				# Service Availability on a TLD level.
+				#
+
+				my $sub_key = substr($key, length("rsm.slv."));
+
+				my $index = index($sub_key, '.');	# <SERVICE>.avail
+
+				fail("cannot extract Service from item \"$key\"") if ($index == -1);
+
+				my $key_service = substr($sub_key, 0, $index);
+
+				next unless ($key_service eq $service);
+
+				fail("dimir was wrong: $service status can be re-defined") if (defined($json->{'status'}));
+
+				if (scalar(@{$values{$itemid}}) != 1)
+				{
+					fail("dimir was wrong: item \"$key\" can contain more than 1 value at ",
+						selected_period($from, $till), ": ", join(',', @{$values{$itemid}}));
+				}
+
+				if ($values{$itemid}->[0] == UP)
+				{
+					$json->{'status'} = 'Up';
+				}
+				elsif ($values{$itemid}->[0] == DOWN)
+				{
+					$json->{'status'} = 'Down';
+				}
+				elsif ($values{$itemid}->[0] == UP_INCONCLUSIVE_NO_DATA)
+				{
+					$json->{'status'} = 'Up-inconclusive-no-data';
+				}
+				elsif ($values{$itemid}->[0] == UP_INCONCLUSIVE_NO_PROBES)
+				{
+					$json->{'status'} = 'Up-inconclusive-no-probes';
+				}
+				else
+				{
+					fail("dimir was wrong: item \"$key\" can contain unexpected value \"", $values{$itemid}->[0] , "\"");
+				}
+			}
 			else
 			{
 				fail("unexpected key \"$key\" when trying to identify Service interface");
@@ -750,7 +947,9 @@ sub calculate_cycle($$$$$$$$)
 		next if (@itemids_float == 0);
 
 		#
-		# collect clock->rtt keypairs (and clock->ip for DNS because for DNS metrics IP (and target) is taken from item key)
+		# Fetch RTT (Float) values (on Probe level). Fetch them in pairs:
+		#
+		# clock->rtt
 		#
 
 		$rows_ref = db_select(
@@ -766,7 +965,7 @@ sub calculate_cycle($$$$$$$$)
 
 		foreach my $itemid (keys(%values))
 		{
-			my $i = $probe_items->{$probe}{$itemid};
+			my $i = $probes_data->{$probe}{$itemid};
 
 			foreach my $value_ref (@{$values{$itemid}})
 			{
@@ -793,6 +992,8 @@ sub calculate_cycle($$$$$$$$)
 					$target = TARGET_PLACEHOLDER;
 				}
 
+				dbg("found $service RTT: ", $value_ref->{'value'}, " IP: ", ($ip // 'UNDEF'), " (target: $target)");
+
 				$tested_interfaces{$interface}{$probe}{'testData'}{$target}{'metrics'}{$value_ref->{'clock'}}{'rtt'} = $value_ref->{'value'};
 				$tested_interfaces{$interface}{$probe}{'testData'}{$target}{'metrics'}{$value_ref->{'clock'}}{'ip'} = $ip;
 			}
@@ -801,7 +1002,11 @@ sub calculate_cycle($$$$$$$$)
 		next if (@itemids_str == 0);
 
 		#
-		# collect clock->ip keypairs for non-DNS services
+		# Fetch IP (String) values (on Probe level) used in DNS tests. Fetch them in pairs:
+		#
+		# clock->ip
+		#
+		# Note, for DNS tests IP (and target) are taken from item keys.
 		#
 
 		$rows_ref = db_select(
@@ -817,7 +1022,7 @@ sub calculate_cycle($$$$$$$$)
 
 		foreach my $itemid (keys(%values))
 		{
-			my $i = $probe_items->{$probe}{$itemid};
+			my $i = $probes_data->{$probe}{$itemid};
 
 			foreach my $value_ref (@{$values{$itemid}})
 			{
@@ -842,14 +1047,10 @@ sub calculate_cycle($$$$$$$$)
 			if (!$probe_online)
 			{
 				$tested_interfaces{$interface}{$probe}{'status'} = AH_CITY_OFFLINE;
-
-				undef($tested_interfaces{$interface}{$probe}{'testData'});
 			}
 			elsif (!defined($tested_interfaces{$interface}{$probe}{'status'}))
 			{
 				$tested_interfaces{$interface}{$probe}{'status'} = AH_CITY_NO_RESULT;
-
-				undef($tested_interfaces{$interface}{$probe}{'testData'});
 			}
 		}
 
@@ -898,23 +1099,32 @@ sub calculate_cycle($$$$$$$$)
 		$perc = $probes_with_positive * 100 / $probes_with_results;
 	}
 
-	my $detailed_info = sprintf("%d/%d positive, %.3f%%, %d online", $probes_with_positive, $probes_with_results, $perc, $probes_online);
+	my $detailed_info;
 
-	if ($probes_online < $cfg_minonline)
+	if (defined($json->{'status'}))
 	{
-		$json->{'status'} = 'Up-inconclusive-no-probes';
-	}
-	elsif ($probes_with_results < $cfg_minonline)
-	{
-		$json->{'status'} = 'Up-inconclusive-no-data';
-	}
-	elsif ($perc > SLV_UNAVAILABILITY_LIMIT)
-	{
-		$json->{'status'} = 'Up';
+		$detailed_info = "taken from Service Availability";
 	}
 	else
 	{
-		$json->{'status'} = 'Down';
+		$detailed_info = sprintf("%d/%d positive, %.3f%%, %d online", $probes_with_positive, $probes_with_results, $perc, $probes_online);
+
+		if ($probes_online < $cfg_minonline)
+		{
+			$json->{'status'} = 'Up-inconclusive-no-probes';
+		}
+		elsif ($probes_with_results < $cfg_minonline)
+		{
+			$json->{'status'} = 'Up-inconclusive-no-data';
+		}
+		elsif ($perc > SLV_UNAVAILABILITY_LIMIT)
+		{
+			$json->{'status'} = 'Up';
+		}
+		else
+		{
+			$json->{'status'} = 'Down';
+		}
 	}
 
 	dbg("cycle: $json->{'status'} ($detailed_info)");
@@ -923,6 +1133,11 @@ sub calculate_cycle($$$$$$$$)
 	{
 		print(Dumper($json));
 		return;
+	}
+
+	if (opt('debug'))
+	{
+		print(Dumper($json));
 	}
 
 	if (ah_save_recent_measurement(ah_get_api_tld($tld), $service, $json, $from) != AH_SUCCESS)
