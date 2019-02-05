@@ -201,12 +201,13 @@
 					case '<?= ZBX_PREPROC_SCRIPT ?>':
 						$(params[0])
 							.attr('placeholder', <?= CJs::encodeJson(_('script')) ?>)
-							.attr('maxlength', <?= DB::getFieldLength('item_preproc', 'params') ?>)
+							.attr('maxlength', <?= $data['preprocessing_script_maxlength'] ?>)
 							.attr('title', <?= CJs::encodeJson(_('Click to view or edit code')) ?>)
 							.addClass('open-modal-code-editor editable')
 							.show()
 							.after($('<input>').attr({
 								'type': 'hidden',
+								'id': $(params[0]).attr('id'),
 								'name': $(params[0]).attr('name')
 							}))
 							.codeEditor()

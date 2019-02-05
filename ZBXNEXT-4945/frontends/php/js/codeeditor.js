@@ -43,13 +43,14 @@
 		init: function(options) {
 			return this.each(function() {
 				var $input = $(this)
+						.removeAttr('id')
 						.attr('tabindex', -1)
 						.prop('readonly', true),
 					editable = $input.hasClass('editable'),
 					maxlength = $input.attr('maxlength'),
 					$hidden = $input.siblings('input[type=hidden]'),
 					$button = $('<button>')
-						.html(t('S_OPEN'))
+						.text(t('S_OPEN'))
 						.appendTo($input.parent());
 
 				$input.add($button).on('click', function(e) {
@@ -112,10 +113,15 @@
 		},
 		destroy: function() {
 			return this.each(function() {
-				$(this)
+				var $input = $(this),
+					$hidden = $input.siblings('input[type=hidden]');
+
+				$input
 					.off()
 					.removeAttr('tabindex readonly')
-					.siblings('input[type=hidden], button').remove();
+					.attr('id', $hidden.attr('id'))
+					.siblings('button').remove();
+				$hidden.remove();
 			});
 		}
 	};
