@@ -1204,7 +1204,7 @@ int	process_eventslog(const char *server, unsigned short port, const char *fl_so
 	wchar_t 	*wsource;
 	zbx_uint64_t	FirstID, LastID, lastlogsize;
 	int		buffer_size = 64 * ZBX_KIBIBYTE;
-	DWORD		dwRead = 0, dwNeeded, dwReadDirection, dwErr;
+	DWORD		dwRead = 0, dwNeeded, dwReadDirection, dwErr = ERROR_SUCCESS;
 	BYTE		*pELR, *pEndOfRecords, *pELRs = NULL;
 	int		s_count, p_count, send_err = SUCCEED;
 	unsigned long	logeventid, timestamp = 0;
@@ -1272,15 +1272,15 @@ int	process_eventslog(const char *server, unsigned short port, const char *fl_so
 		goto out;
 	}
 
+	zabbix_log(LOG_LEVEL_TRACE, "%s(): state before EventLog reading: dwRead=%d dwErr=%s FirstID="ZBX_FS_UI64
+			" LastID = "ZBX_FS_UI64" lastlogsize="ZBX_FS_UI64, __function_name, dwRead,
+			strerror_from_system(dwErr), FirstID, LastID, lastlogsize);
+
 	if (ERROR_HANDLE_EOF == dwErr)
 		goto finish;
 
 	s_count = 0;
 	p_count = 0;
-
-	zabbix_log(LOG_LEVEL_TRACE, "%s(): state before EventLog reading: dwRead=%d dwErr = %d FirstID = "
-			ZBX_FS_UI64" LastID = "ZBX_FS_UI64" lastlogsize="ZBX_FS_UI64, __function_name, dwRead, dwErr,
-			FirstID, LastID, lastlogsize);
 
 	/* Read blocks of records until you reach the end of the log or an           */
 	/* error occurs. The records are read from oldest to newest. If the buffer   */
