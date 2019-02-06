@@ -52,6 +52,9 @@ set_slv_config($config);
 
 my @server_keys = (opt('server-key') ? getopt('server-key') : get_rsm_server_keys($config));
 
+validate_tld(getopt('tld'), \@server_keys) if (opt('tld'));
+validate_service(getopt('service')) if (opt('service'));
+
 my $opt_from = getopt('from');
 
 if (defined($opt_from))
@@ -1026,15 +1029,6 @@ sub __update_false_positives
 
 sub __validate_input
 {
-	if (opt('service'))
-	{
-		if (getopt('service') ne 'dns' and getopt('service') ne 'dnssec' and getopt('service') ne 'rdds' and getopt('service') ne 'epp')
-		{
-			print("Error: \"", getopt('service'), "\" - unknown service\n");
-			usage();
-		}
-	}
-
 	if (opt('tld') and opt('ignore-file'))
 	{
 		print("Error: options --tld and --ignore-file cannot be used together\n");

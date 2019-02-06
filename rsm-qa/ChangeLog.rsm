@@ -1,6 +1,15 @@
+Changes for rsm1.2.0rc3
+
+Bug fixes:
+....I..... [sub-457] fixed missing IPs in recent measurement metrics (dimir)
+....I..... [463] removed double quotes from some timestamp values in sla json files (yurii)
+....I..... [458] fixed sla-api-recent.pl to exit with non-zero exit status if invalid tld/service specified (yurii, dimir)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.2.0rc2
 
 Bug fixes:
+....I..... [460] fixed setting Up-inconclusive-no-probes status (dimir)
 ....I..... [459] fixed sla-api-recent.pl script to re-generate recent measurement files when new data received (dimir)
 ....I..... [461] fixed sla-api-recent.pl script to generate recent measurement files even when no data from Probes (dimir)
 ....I..... [462] fixed update-api-data.pl not setting endTime on incident/state file (yurii)

@@ -258,7 +258,7 @@ sub __save_inc_false_positive($$$)
 	my $json =
 	{
 		'falsePositive' => ($false_positive ? Types::Serialiser::true : Types::Serialiser::false),
-		'updateTime' => $clock
+		'updateTime' => ah_int_or_null($clock)
 	};
 
 	return __write_file($false_positive_path, __encode_json($json));
@@ -339,8 +339,8 @@ sub ah_create_incident_json
 	return
 	{
 		'incidentID' => "$start.$eventid",
-		'startTime' => $start,
-		'endTime' => $end,
+		'startTime' => ah_int_or_null($start),
+		'endTime' => ah_int_or_null($end),
 		'falsePositive' => ($false_positive ? Types::Serialiser::true : Types::Serialiser::false),
 		'state' => (defined($end) ? JSON_VALUE_INCIDENT_RESOLVED : JSON_VALUE_INCIDENT_ACTIVE)
 	};
@@ -748,6 +748,12 @@ sub ah_get_interface($)
 	return $interface if (defined($interface));
 
 	return ah_get_rdds_interface($key);
+}
+
+sub ah_int_or_null
+{
+	my $val = shift;
+	return defined($val) ? int($val) : $val;
 }
 
 1;
