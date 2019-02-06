@@ -603,7 +603,7 @@ sub fill_test_data($$$$)
 			dbg("ns:$ns ip:", $test->{'targetIP'} // "UNDEF", " clock:", $test->{'testDateTime'} // "UNDEF", " rtt:", $test->{'rtt'} // "UNDEF");
 
 			my $metric = {
-				'testDateTime'	=> $clock,
+				'testDateTime'	=> ah_int_or_null($clock),
 				'targetIP'	=> $test->{'ip'}
 			};
 

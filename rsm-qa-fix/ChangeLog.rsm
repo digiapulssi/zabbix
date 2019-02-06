@@ -1,6 +1,7 @@
 Changes for rsm1.2.0rc3
 
 Bug fixes:
+....I..... [463] removed adding of double quotes to some timestamp values in sla json files
 ....I..... [458] fixed sla-api-recent.pl to return 1 when unable to get lastvalues from db
 
 --------------------------------------------------------------------------------

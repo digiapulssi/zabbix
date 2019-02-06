@@ -55,7 +55,7 @@ our @EXPORT = qw(
 	ah_save_false_positive ah_save_measurement ah_get_continue_file ah_get_api_tld ah_get_last_audit
 	ah_get_recent_measurement ah_save_recent_measurement ah_save_recent_cache ah_get_recent_cache
 	ah_save_audit ah_save_continue_file ah_encode_pretty_json JSON_OBJECT_DISABLED_SERVICE
-	ah_get_dns_interface ah_get_rdds_interface ah_get_interface
+	ah_get_dns_interface ah_get_rdds_interface ah_get_interface ah_int_or_null
 	AH_INTERFACE_DNS AH_INTERFACE_DNSSEC AH_INTERFACE_RDDS43 AH_INTERFACE_RDDS80 AH_INTERFACE_RDAP AH_INTERFACE_EPP
 	AH_CITY_UP AH_CITY_DOWN AH_CITY_NO_RESULT AH_CITY_OFFLINE
 );
@@ -258,7 +258,7 @@ sub __save_inc_false_positive($$$)
 	my $json =
 	{
 		'falsePositive' => ($false_positive ? Types::Serialiser::true : Types::Serialiser::false),
-		'updateTime' => $clock
+		'updateTime' => ah_int_or_null($clock)
 	};
 
 	return __write_file($false_positive_path, __encode_json($json));
@@ -339,8 +339,8 @@ sub ah_create_incident_json
 	return
 	{
 		'incidentID' => "$start.$eventid",
-		'startTime' => $start,
-		'endTime' => $end,
+		'startTime' => ah_int_or_null($start),
+		'endTime' => ah_int_or_null($end),
 		'falsePositive' => ($false_positive ? Types::Serialiser::true : Types::Serialiser::false),
 		'state' => (defined($end) ? JSON_VALUE_INCIDENT_RESOLVED : JSON_VALUE_INCIDENT_ACTIVE)
 	};
@@ -748,6 +748,12 @@ sub ah_get_interface($)
 	return $interface if (defined($interface));
 
 	return ah_get_rdds_interface($key);
+}
+
+sub ah_int_or_null
+{
+	my $val = shift;
+	return defined($val) ? int($val) : $val;
 }
 
 1;
