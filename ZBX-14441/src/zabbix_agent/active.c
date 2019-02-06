@@ -925,7 +925,8 @@ static int	process_value(const char *server, unsigned short port, const char *ho
 	int				i, ret = FAIL;
 	size_t				sz;
 
-	zabbix_log(LOG_LEVEL_DEBUG, "In %s() key:'%s:%s' value:'%s'", __function_name, host, key, ZBX_NULL2STR(value));
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s() id=%lu key:'%s:%s' value:'%s'", __function_name, *logeventid, host, key,
+			ZBX_NULL2STR(value));
 
 	send_buffer(server, port);
 
