@@ -131,7 +131,7 @@ foreach (@server_keys)
 	# initialize probe online cache
 	probe_online_at_init();
 
-	get_lastvalues_from_db($lastvalues_db, \%delays);
+	exit(1) if (get_lastvalues_from_db($lastvalues_db, \%delays) == 0);
 
 	# probes available for every service
 	my %probes;
@@ -537,6 +537,8 @@ sub get_lastvalues_from_db($$)
 			$host_cond
 	);
 
+	return 0 if(scalar(@$rows_ref) <= 0);
+
 	foreach my $row_ref (@{$rows_ref})
 	{
 		my $host = $row_ref->[0];
@@ -576,6 +578,8 @@ sub get_lastvalues_from_db($$)
 			};
 		}
 	}
+
+	return 1;
 }
 
 sub fill_test_data($$$$)
