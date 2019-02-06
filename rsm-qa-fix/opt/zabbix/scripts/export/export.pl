@@ -69,6 +69,11 @@ setopt('nolog');
 my $config = get_rsm_config();
 set_slv_config($config);
 
+my @server_keys = get_rsm_server_keys($config);
+
+validate_tld(getopt('tld'), \@server_keys) if (opt('tld'));
+validate_service(getopt('service')) if (opt('service'));
+
 db_connect();
 
 __validate_input() unless (opt('force'));
@@ -231,7 +236,7 @@ $fm->run_on_finish(
 );
 
 # go through all the databases
-my @server_keys = get_rsm_server_keys($config);
+
 foreach (@server_keys)
 {
 $server_key = $_;

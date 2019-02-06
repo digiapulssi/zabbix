@@ -92,6 +92,7 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		get_itemid_by_hostid get_itemid_like_by_hostid get_itemids_by_host_and_keypart get_lastclock get_tlds
 		get_oldest_clock
 		get_probes get_nsips get_nsip_items tld_exists tld_service_enabled db_connect db_disconnect
+		validate_tld validate_service
 		get_templated_nsips db_exec tld_interface_enabled
 		tld_interface_enabled_create_cache tld_interface_enabled_delete_cache
 		db_select db_select_binds set_slv_config get_cycle_bounds get_rollweek_bounds get_downtime_bounds
@@ -691,7 +692,7 @@ sub get_hostid
 	return $rows_ref->[0]->[0];
 }
 
-sub tld_exists
+sub tld_exists_locally($)
 {
 	my $tld = shift;
 
@@ -702,11 +703,48 @@ sub tld_exists
 			" and hg.groupid=g.groupid".
 			" and g.name='TLDs'".
 			" and h.status=0".
-			" and h.host='$tld'");
+			" and h.host='$tld'"
+	);
 
 	return 0 if (scalar(@$rows_ref) == 0);
 
 	return 1;
+}
+
+sub tld_exists($)
+{
+	return tld_exists_locally(shift);
+}
+
+sub validate_tld($$)
+{
+	my $tld = shift;
+	my $server_keys = shift;
+
+	foreach my $server_key (@{$server_keys})
+	{
+		db_connect($server_key);
+
+		my $rv = tld_exists_locally($tld);
+
+		db_disconnect();
+
+		if ($rv)
+		{
+			dbg("tld $tld found on $server_key");
+
+			return;
+		}
+	}
+
+	fail("tld \"$tld\" does not exist");
+}
+
+sub validate_service($)
+{
+	my $service = shift;
+
+	fail("service \"$service\" is unknown") if (!grep {/$service/} ('dns', 'dnssec', 'rdds', 'epp'));
 }
 
 sub tld_service_enabled
