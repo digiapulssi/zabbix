@@ -55,7 +55,7 @@ our @EXPORT = qw(
 	ah_save_false_positive ah_save_measurement ah_get_continue_file ah_get_api_tld ah_get_last_audit
 	ah_get_recent_measurement ah_save_recent_measurement ah_save_recent_cache ah_get_recent_cache
 	ah_save_audit ah_save_continue_file ah_encode_pretty_json JSON_OBJECT_DISABLED_SERVICE
-	ah_get_dns_interface ah_get_rdds_interface ah_get_interface ah_int_or_null
+	ah_get_dns_interface ah_get_rdds_interface ah_get_interface
 	AH_INTERFACE_DNS AH_INTERFACE_DNSSEC AH_INTERFACE_RDDS43 AH_INTERFACE_RDDS80 AH_INTERFACE_RDAP AH_INTERFACE_EPP
 	AH_CITY_UP AH_CITY_DOWN AH_CITY_NO_RESULT AH_CITY_OFFLINE
 );
