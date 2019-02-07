@@ -160,6 +160,8 @@ foreach (@server_keys)
 	get_lastvalues_from_db($lastvalues_db, \%delays);
 	db_disconnect();
 
+	$fm->run_on_wait( sub () { dbg("max children reached, please wait..."); } );
+
 	# probes available for every service
 	my %probes;
 
@@ -184,6 +186,7 @@ foreach (@server_keys)
 		
 	}
 
+	$fm->run_on_wait(undef);
 	$fm->wait_all_children();
 
 	if (!opt('dry-run') && !opt('now'))
