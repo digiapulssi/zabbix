@@ -24,7 +24,7 @@ use constant TARGET_PLACEHOLDER => 'TARGET_PLACEHOLDER';	# for non-DNS services
 
 use constant MAX_PERIOD => 30 * 60;	# 30 minutes
 
-use constant SUBSTR_KEY_LEN => 12;	# for logging
+use constant SUBSTR_KEY_LEN => 20;	# for logging
 
 sub cycles_to_calculate($$$$$$$$);
 sub get_lastvalues_from_db($$);
@@ -192,11 +192,13 @@ foreach (@server_keys)
 			if ($service eq 'dns')
 			{
 				# rtt limits only considered for DNS currently
-				$rtt_limits{'dns'} = get_history_by_itemid(
+				$rtt_limits{$service} = get_history_by_itemid(
 					CONFIGVALUE_DNS_UDP_RTT_HIGH_ITEMID,
 					$cycles_from,
-					$cycles_till
+					cycle_end($cycles_till, $delays{$service})
 				);
+
+				fail("no DNS RTT limits in history") unless (scalar(@{$rtt_limits{$service}}));
 			}
 
 			# these are cycles we are going to recalculate for this tld-service
@@ -261,9 +263,7 @@ sub get_global_lastclock($$$)
 
 		dbg("using last clock from SLA API directory, file $continue_file: ", ts_str($lastclock));
 
-		$lastclock++;
-
-		return $lastclock;
+		return cycle_start($lastclock, $delay);
 	}
 
 	# if not, get the oldest from the database
@@ -283,28 +283,60 @@ sub get_global_lastclock($$$)
 	return $lastclock;
 }
 
-sub add_cycles($$$$$$$$$$)
+sub add_cycles($$$$$$$$$$$)
 {
 	my $tld = shift;
 	my $service = shift;
 	my $probe = shift;
 	my $itemid = shift;
-	my $lastclock_cache = shift;
+	my $lastclock = shift;
 	my $lastclock_db = shift;
 	my $delay = shift;
 	my $max_period = shift;
 	my $cycles_ref = shift;
 	my $lastvalues_cache = shift;
+	my $lastvalues_db = shift;	# for debugging only
 
-	my $max_clock = $lastclock_cache + $max_period;
+	return if ($lastclock == $lastclock_db);	# we are up-to-date, according to cache
 
-	while ($lastclock_cache < $max_clock && $lastclock_cache <= $lastclock_db)
+	my $cycle_start = cycle_start($lastclock, $delay);
+
+	my $db_cycle_start = cycle_start($lastclock_db, $delay);
+
+	my $max_clock = cycle_end($cycle_start + $max_period, $delay);
+
+	# keep adding cycles to calculate while we are inside max period and within lastvalue
+	while ($cycle_start < $max_clock && $lastclock <= $lastclock_db)
 	{
-		$cycles_ref->{$lastclock_cache} = 1;
+		if ($cycle_start == $db_cycle_start)
+		{
+			# cache the real clock of the item
+			$lastvalues_cache->{$tld}{$service}{'probes'}{$probe}{$itemid}{'clock'} = $lastclock_db;
+		}
+		else
+		{
+			# we don't know the real clock so cache cycle start
+			$lastvalues_cache->{$tld}{$service}{'probes'}{$probe}{$itemid}{'clock'} = $cycle_start;
+		}
 
-		$lastvalues_cache->{$tld}{$service}{'probes'}{$probe}{$itemid}{'clock'} = $lastclock_cache;
+		if (opt('debug'))
+		{
+			dbg("cycle ", ts_str($cycle_start), " will be calculated because of item ",
+				substr(
+					$lastvalues_db->{$tld}{$service}{'probes'}{$probe}{$itemid}{'key'},
+					0,
+					SUBSTR_KEY_LEN
+				),
+				", cache clock ", ts_str($lastvalues_cache->{$tld}{$service}{'probes'}{$probe}{$itemid}{'clock'})
+			);
+		}
 
-		$lastclock_cache += $delay;
+		# for cycles_to_calculate we must use cycle start
+		$cycles_ref->{$cycle_start} = 1;
+
+		# move forward
+		$lastclock += $delay;
+		$cycle_start += $delay;
 	}
 }
 
@@ -328,19 +360,16 @@ sub cycles_to_calculate($$$$$$$$)
 	{
 		foreach my $itemid (keys(%{$lastvalues_db->{$tld}{$service}{'probes'}{$probe}}))
 		{
-			my $lastclock_db = cycle_start(
-				$lastvalues_db->{$tld}{$service}{'probes'}{$probe}{$itemid}{'clock'},
-				$delay
-			);
+			my $lastclock_db = $lastvalues_db->{$tld}{$service}{'probes'}{$probe}{$itemid}{'clock'};
 
-			my $lastclock_cache;
+			my $lastclock;
 
 			if (opt('now'))
 			{
 				# time bounds were specified on the command line
 				$global_lastclock //= get_global_lastclock($tld, $service_key, $delay);
 
-				$lastclock_cache = $global_lastclock;
+				$lastclock = $global_lastclock;
 			}
 			elsif (!defined($lastvalues_cache->{$tld}{$service}{'probes'}{$probe}{$itemid}))
 			{
@@ -354,29 +383,26 @@ sub cycles_to_calculate($$$$$$$$)
 					return E_FAIL;
 				}
 
-				$lastclock_cache = $global_lastclock;
+				$lastclock = $global_lastclock;
 			}
 			else
 			{
-				$lastclock_cache = $lastvalues_cache->{$tld}{$service}{'probes'}{$probe}{$itemid}{'clock'};
+				$lastclock = $lastvalues_cache->{$tld}{$service}{'probes'}{$probe}{$itemid}{'clock'};
 
-				if ($lastclock_cache > $lastclock_db)
+				if ($lastclock > $lastclock_db)
 				{
-					fail("dimir was wrong, item ($itemid) clock ($lastclock_cache)".
+					fail("dimir was wrong, item ($itemid) clock ($lastclock)".
 						" in cache can be newer than in database ($lastclock_db)");
 				}
-
-				dbg("using lastclock from cache: ", ts_str($lastclock_cache));
-
-				# what's in the cache is already calculated
-				$lastclock_cache += $delay;
 			}
 
 			if (opt('debug'))
 			{
-				my $key = substr($lastvalues_db->{$tld}{$service}{'probes'}{$probe}{$itemid}{'key'}, 0, SUBSTR_KEY_LEN) . '...';
+				my $key = substr($lastvalues_db->{$tld}{$service}{'probes'}{$probe}{$itemid}{'key'}, 0, SUBSTR_KEY_LEN);
 
-				dbg("$probe [$key] itemid:$itemid lastclock in db: ", ts_str($lastclock_db));
+				$key = sprintf("%".SUBSTR_KEY_LEN."s", $key);
+
+				dbg("[$key] last ", ($lastclock ? ts_str($lastclock) :'NULL'), ", db ", ts_str($lastclock_db), " $probe");
 			}
 
 			add_cycles(
@@ -384,12 +410,13 @@ sub cycles_to_calculate($$$$$$$$)
 				$service,
 				$probe,
 				$itemid,
-				$lastclock_cache,
+				$lastclock,
 				$lastclock_db,
 				$delay,
 				$max_period,
 				\%cycles,
-				$lastvalues_cache
+				$lastvalues_cache,
+				$lastvalues_db
 			);
 
 		}
@@ -429,22 +456,29 @@ sub get_historical_value_by_time($$)
 	my $history = shift;
 	my $timestamp = shift;
 
-	fail("internal error") unless ($timestamp);
+	fail("internal error: missing 2nd argument to get_historical_value_by_time()") unless ($timestamp);
+
+	my $value_timestamp = cycle_start($timestamp, 60);
 
 	# TODO implement binary search
 
-	my $value;
+	my ($value, $last_value);
 
 	foreach my $row (@{$history})
 	{
-		last if ($timestamp < $row->[0]);	# stop iterating if history clock overshot the timestamp
+		$last_value = $row->[1];
+
+		# stop iterating if history clock overshot the timestamp
+		last if ($value_timestamp < cycle_start($row->[0], 60));
 	}
 	continue
 	{
 		$value = $row->[1];	# keep the value preceeding overshooting
 	}
 
-	fail("timestamp $timestamp is out of bounds of selected historical data range") unless (defined($value));
+	$value = $last_value unless (defined($value));
+
+	fail("dimir was wrong: we can have 0 values in RTT LIMIT history") unless (defined($value));
 
 	return $value;
 }
@@ -640,9 +674,12 @@ sub fill_test_data($$$$)
 					{
 						if  (!defined($test_data_ref->{'status'}) || $test_data_ref->{'status'} eq "Up")
 						{
-							$test_data_ref->{'status'} =
-								($test->{'rtt'} > get_historical_value_by_time($hist,
-									$metric->{'testDateTime'}) ? "Down" : "Up");
+							$test_data_ref->{'status'} = (
+								$test->{'rtt'} > get_historical_value_by_time(
+									$hist,
+									$metric->{'testDateTime'}
+								) ? "Down" : "Up"
+							);
 						}
 					}
 					else
