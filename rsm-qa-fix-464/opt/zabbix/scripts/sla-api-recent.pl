@@ -202,7 +202,6 @@ foreach (@server_keys)
 		}
 		else
 		{
-			printf "forked: $tld: $pid\n";
 			$tldmap{$pid} = $tld;
 			next;
 		}
