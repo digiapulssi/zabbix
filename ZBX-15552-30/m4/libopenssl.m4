@@ -37,6 +37,21 @@ AC_TRY_LINK(
 found_openssl="yes",)
 ])dnl
 
+AC_DEFUN([LIBOPENSSL_TRY_LINK_PSK],
+[
+AC_TRY_LINK(
+[
+#include <openssl/ssl.h>
+],
+[
+	/* check if OPENSSL_NO_PSK is defined */
+#ifdef OPENSSL_NO_PSK
+	error "OPENSSL_NO_PSK is defined. PSK support not be available."
+#endif
+],
+found_openssl_with_psk="yes",)
+])dnl
+
 AC_DEFUN([LIBOPENSSL_ACCEPT_VERSION],
 [
 	# Zabbix minimal supported version of OpenSSL.
@@ -129,6 +144,17 @@ AC_HELP_STRING([--with-openssl@<:@=DIR@:>@],[use OpenSSL package @<:@default=no@
     if test "x$found_openssl" = "xyes"; then
       AC_DEFINE([HAVE_OPENSSL], 1, [Define to 1 if you have 'libssl' and 'libcrypto' libraries (-lssl -libcrypto)])
       AC_MSG_RESULT(yes)
+
+      AC_MSG_CHECKING(if OpenSSL supports PSK)
+      found_openssl_with_psk="no"
+      LIBOPENSSL_TRY_LINK_PSK([no])
+      if test "x$found_openssl_with_psk" = "xyes"; then
+        AC_DEFINE([HAVE_OPENSSL_WITH_PSK], 1, [Define to 1 if you have OpenSSL with PSK support])
+        AC_MSG_RESULT(yes)
+      else
+        AC_MSG_RESULT(no)
+      fi
+
     else
       AC_MSG_RESULT(no)
       OPENSSL_CFLAGS=""
