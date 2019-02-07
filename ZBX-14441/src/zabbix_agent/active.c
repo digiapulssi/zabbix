@@ -924,9 +924,15 @@ static int	process_value(const char *server, unsigned short port, const char *ho
 	ZBX_ACTIVE_BUFFER_ELEMENT	*el = NULL;
 	int				i, ret = FAIL;
 	size_t				sz;
+	char				log_llsz[MAX_STRING_LEN];
 
-	zabbix_log(LOG_LEVEL_DEBUG, "In %s() key:'%s:%s' lastlogsize:'%lu' value:'%s'", __function_name,
-			host, key, NULL != lastlogsize ? *lastlogsize : 0, ZBX_NULL2STR(value));
+	if (NULL != lastlogsize)
+		zbx_snprintf(log_llsz, sizeof(log_llsz), " lastlogsize:'%lu'", *lastlogsize);
+	else
+		*log_llsz = '\0';
+
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s() key:'%s:%s'%s value:'%s'", __function_name, host, key, log_llsz,
+			ZBX_NULL2STR(value));
 
 	send_buffer(server, port);
 
