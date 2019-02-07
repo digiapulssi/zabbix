@@ -8,6 +8,8 @@ use lib path($0)->parent->realpath()->stringify();
 
 use Data::Dumper;
 
+use Parallel::ForkManager;
+
 use RSM;
 use RSMSLV;
 use TLD_constants qw(:api :config :groups :items);
@@ -96,6 +98,27 @@ db_disconnect();
 
 my %rtt_limits;
 
+my $fm = new Parallel::ForkManager(opt('max-children') ? getopt('max-children') : 64);
+
+my $child_failed = 0;
+
+my %tldmap;
+
+$fm->run_on_finish( sub ($$$$$)
+{
+	my $pid = shift;
+	my $exit_code = shift;
+	my $id = shift;
+	my $exit_signal = shift;
+	my $core_dump = shift;
+
+	if ($exit_code != SUCCESS)
+	{
+		$child_failed = 1;
+		print "Child failed for ".$tldmap{$pid}." $pid\n";
+	}
+});
+
 foreach (@server_keys)
 {
 	$server_key = $_;
@@ -129,12 +152,13 @@ foreach (@server_keys)
 		$lastvalues_cache->{'tlds'} = {};
 	}
 
-	db_connect($server_key);
 
 	# initialize probe online cache
 	probe_online_at_init();
 
+	db_connect($server_key);
 	get_lastvalues_from_db($lastvalues_db, \%delays);
+	db_disconnect();
 
 	# probes available for every service
 	my %probes;
@@ -143,78 +167,24 @@ foreach (@server_keys)
 	{
 		$tld = $_;	# global variable
 
-		foreach my $service (sort(keys(%{$lastvalues_db->{'tlds'}{$tld}})))
+		my $pid = $fm->start();
+
+		if ($pid == 0)
 		{
-			next if (opt('service') && $service ne getopt('service'));
-
-			undef($global_lastclock);	# is used in the following function (should be used per service)
-
-			my @cycles_to_calculate;
-
-			# get actual cycle times to calculate
-			if (cycles_to_calculate(
-					$tld,
-					$service,
-					$delays{$service},
-					$max_period,
-					$service_keys{$service},
-					$lastvalues_db->{'tlds'},
-					$lastvalues_cache->{'tlds'},
-					\@cycles_to_calculate) == E_FAIL)
-			{
-				next;
-			}
-
-			if (opt('debug'))
-			{
-				dbg("$service cycles to calculate: ", join(',', map {ts_str($_)} (@cycles_to_calculate)));
-			}
-
-			next if (scalar(@cycles_to_calculate) == 0);
-
-			my $cycles_from = $cycles_to_calculate[0];
-			my $cycles_till = $cycles_to_calculate[-1];
-
-			next unless (tld_service_enabled($tld, $service, $cycles_from));
-
-			if (opt('print-period'))
-			{
-				info("selected $service period: ", selected_period(
-					$cycles_from,
-					cycle_end($cycles_till, $delays{$service})
-				));
-			}
-
-			my $interfaces_ref = get_interfaces($tld, $service, $now);
-
-			$probes{$service} = get_probes($service) unless (defined($probes{$service}));
-
-			if ($service eq 'dns')
-			{
-				# rtt limits only considered for DNS currently
-				$rtt_limits{'dns'} = get_history_by_itemid(
-					CONFIGVALUE_DNS_UDP_RTT_HIGH_ITEMID,
-					$cycles_from,
-					$cycles_till
-				);
-			}
-
-			# these are cycles we are going to recalculate for this tld-service
-			foreach my $clock (@cycles_to_calculate)
-			{
-				calculate_cycle(
-					$tld,
-					$service,
-					$lastvalues_db->{'tlds'}{$tld}{$service}{'probes'},
-					$clock,
-					$delays{$service},
-					$rtt_limits{$service},
-					$probes{$service},
-					$interfaces_ref
-				);
-			}
+			process_tld($tld, \%probes, $lastvalues_db, $lastvalues_cache, $server_key);
+			$fm->finish(SUCCESS);
+			last;
 		}
+		else
+		{
+			printf "forked: $tld: $pid\n";
+			$tldmap{$pid} = $tld;
+			next;
+		}
+		
 	}
+
+	$fm->wait_all_children();
 
 	if (!opt('dry-run') && !opt('now'))
 	{
@@ -223,6 +193,89 @@ foreach (@server_keys)
 			fail("cannot save recent measurements cache: ", ah_get_error());
 		}
 	}
+}
+
+sub process_tld
+{
+	my $tld = shift;
+	my $probes = shift;
+	my $lastvalues_db = shift;
+	my $lastvalues_cache = shift;
+	my $server_key = shift;
+
+	db_connect($server_key);
+
+	foreach my $service (sort(keys(%{$lastvalues_db->{'tlds'}{$tld}})))
+	{
+		next if (opt('service') && $service ne getopt('service'));
+
+		undef($global_lastclock);	# is used in the following function (should be used per service)
+
+		my @cycles_to_calculate;
+
+		# get actual cycle times to calculate
+		if (cycles_to_calculate(
+				$tld,
+				$service,
+				$delays{$service},
+				$max_period,
+				$service_keys{$service},
+				$lastvalues_db->{'tlds'},
+				$lastvalues_cache->{'tlds'},
+				\@cycles_to_calculate) == E_FAIL)
+		{
+			next;
+		}
+
+		if (opt('debug'))
+		{
+			dbg("$service cycles to calculate: ", join(',', map {ts_str($_)} (@cycles_to_calculate)));
+		}
+
+		next if (scalar(@cycles_to_calculate) == 0);
+
+		my $cycles_from = $cycles_to_calculate[0];
+		my $cycles_till = $cycles_to_calculate[-1];
+
+		next unless (tld_service_enabled($tld, $service, $cycles_from));
+
+		if (opt('print-period'))
+		{
+			info("selected $service period: ", selected_period(
+				$cycles_from,
+				cycle_end($cycles_till, $delays{$service})
+			));
+		}
+
+		my $interfaces_ref = get_interfaces($tld, $service, $now);
+
+		$probes->{$service} = get_probes($service) unless (defined($probes->{$service}));
+
+		if ($service eq 'dns')
+		{
+			# rtt limits only considered for DNS currently
+			$rtt_limits{'dns'} = get_history_by_itemid(
+				CONFIGVALUE_DNS_UDP_RTT_HIGH_ITEMID,
+				$cycles_from,
+				$cycles_till
+			);
+		}
+
+		# these are cycles we are going to recalculate for this tld-service
+		foreach my $clock (@cycles_to_calculate)
+		{
+			calculate_cycle(
+				$tld,
+				$service,
+				$lastvalues_db->{'tlds'}{$tld}{$service}{'probes'},
+				$clock,
+				$delays{$service},
+				$rtt_limits{$service},
+				$probes->{$service},
+				$interfaces_ref
+			);
+		}
+	} # service
 
 	db_disconnect();
 }
