@@ -957,7 +957,10 @@ static int	seek_eventlog(HANDLE *eventlog_handle, zbx_uint64_t FirstID, DWORD dw
 	zbx_uint64_t	skip_count = 0;
 
 	if (0 == dwReadDirection)	/* we will read EvenLog from the first record */
+	{
+		*dwErr = ERROR_SUCCESS;
 		return SUCCEED;
+	}
 
 	if (LastID < FirstID)		/* no one new records */
 	{
@@ -1204,7 +1207,7 @@ int	process_eventslog(const char *server, unsigned short port, const char *fl_so
 	wchar_t 	*wsource;
 	zbx_uint64_t	FirstID, LastID, lastlogsize;
 	int		buffer_size = 64 * ZBX_KIBIBYTE;
-	DWORD		dwRead = 0, dwNeeded, dwReadDirection, dwErr = ERROR_SUCCESS;
+	DWORD		dwRead = 0, dwNeeded, dwReadDirection, dwErr;
 	BYTE		*pELR, *pEndOfRecords, *pELRs = NULL;
 	int		s_count, p_count, send_err = SUCCEED;
 	unsigned long	logeventid, timestamp = 0;
