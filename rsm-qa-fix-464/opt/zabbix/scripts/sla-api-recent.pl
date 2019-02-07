@@ -28,6 +28,7 @@ use constant MAX_PERIOD => 30 * 60;	# 30 minutes
 
 use constant SUBSTR_KEY_LEN => 12;	# for logging
 
+sub process_tld($$$$);
 sub cycles_to_calculate($$$$$$$$);
 sub get_lastvalues_from_db($$);
 sub calculate_cycle($$$$$$$$);
@@ -101,6 +102,7 @@ my %rtt_limits;
 my $fm = new Parallel::ForkManager(opt('max-children') ? getopt('max-children') : 64);
 
 my $child_failed = 0;
+my $signal_sent = 0;
 
 my %tldmap;
 
@@ -112,10 +114,27 @@ $fm->run_on_finish( sub ($$$$$)
 	my $exit_signal = shift;
 	my $core_dump = shift;
 
-	if ($exit_code != SUCCESS)
+	
+	if ($core_dump == 1)
 	{
 		$child_failed = 1;
-		print "Child failed for ".$tldmap{$pid}." $pid\n";
+		info("child (PID:$pid) handling TLD ", $tldmap{$pid}, " core dumped");
+	}
+	elsif ($exit_code != SUCCESS)
+	{
+		$child_failed = 1;
+		info("child (PID:$pid) handling TLD ", $tldmap{$pid},
+				($exit_signal == 0 ? "" : " got signal " . sig_name($exit_signal) . " and"),
+				" exited with code $exit_code");
+	}
+	elsif ($exit_code != SUCCESS)
+	{
+		$child_failed = 1;
+		info("child (PID:$pid) handling TLD ", $tldmap{$pid}, " got signal ", sig_name($exit_signal));
+	}
+	else
+	{
+		dbg("child (PID:$pid) handling TLD ", $tldmap{$pid}, " exited successfully");
 	}
 });
 
@@ -169,11 +188,15 @@ foreach (@server_keys)
 	{
 		$tld = $_;	# global variable
 
+		child_failed() if ($child_failed);
+
 		my $pid = $fm->start();
 
 		if ($pid == 0)
 		{
-			process_tld($tld, \%probes, $lastvalues_db, $lastvalues_cache, $server_key);
+			db_connect($server_key);
+			process_tld($tld, \%probes, $lastvalues_db, $lastvalues_cache);
+			db_disconnect();
 			$fm->finish(SUCCESS);
 			last;
 		}
@@ -198,15 +221,36 @@ foreach (@server_keys)
 	}
 }
 
-sub process_tld
+sub child_failed
+{
+	$fm->run_on_wait( sub () {
+		# This callback ensures that before waiting for the next child to terminate we check the $child_failed
+		# flag and send terminate all running children if needed. After sending SIGTERM we raise $signal_sent
+		# flag to make sure that we don't do it multiple times.
+
+		return unless ($child_failed);
+		return if ($signal_sent);
+
+		info("one of the child processes failed, terminating others...");
+
+		$SIG{'TERM'} = 'IGNORE';	# ignore signal we will send to ourselves in the next step
+		kill('TERM', 0);		# send signal to the entire process group
+		$SIG{'TERM'} = 'DEFAULT';	# restore default signal handler
+
+		$signal_sent = 1;
+	});
+
+	$fm->wait_all_children();
+
+	slv_exit(E_FAIL) if ($child_failed);
+}
+
+sub process_tld($$$$)
 {
 	my $tld = shift;
 	my $probes = shift;
 	my $lastvalues_db = shift;
 	my $lastvalues_cache = shift;
-	my $server_key = shift;
-
-	db_connect($server_key);
 
 	foreach my $service (sort(keys(%{$lastvalues_db->{'tlds'}{$tld}})))
 	{
@@ -279,8 +323,6 @@ sub process_tld
 			);
 		}
 	} # service
-
-	db_disconnect();
 }
 
 sub get_global_lastclock($$$)
