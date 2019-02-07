@@ -35,6 +35,7 @@ sub calculate_cycle($$$$$$$$);
 sub get_interfaces($$$);
 sub probe_online_at_init();
 sub get_history_by_itemid($$$);
+sub init_child_exit($);
 
 parse_opts('tld=s', 'service=s', 'server-id=i', 'now=i', 'period=i', 'print-period!', 'max-children=i');
 
@@ -86,6 +87,8 @@ my %delays;
 $delays{'dns'} = $delays{'dnssec'} = get_dns_udp_delay($now);
 $delays{'rdds'} = get_rdds_delay($now);
 
+db_disconnect();
+
 my %service_keys = (
 	'dns' => 'rsm.slv.dns.avail',
 	'dnssec' => 'rsm.slv.dnssec.avail',
@@ -95,48 +98,15 @@ my %service_keys = (
 # keep to avoid reading multiple times
 my $global_lastclock;
 
-db_disconnect();
-
 my %rtt_limits;
 
 my $fm = new Parallel::ForkManager(opt('max-children') ? getopt('max-children') : 64);
 
+init_child_exit($fm);
+
 my $child_failed = 0;
 my $signal_sent = 0;
-
 my %tldmap;
-
-$fm->run_on_finish( sub ($$$$$)
-{
-	my $pid = shift;
-	my $exit_code = shift;
-	my $id = shift;
-	my $exit_signal = shift;
-	my $core_dump = shift;
-
-	
-	if ($core_dump == 1)
-	{
-		$child_failed = 1;
-		info("child (PID:$pid) handling TLD ", $tldmap{$pid}, " core dumped");
-	}
-	elsif ($exit_code != SUCCESS)
-	{
-		$child_failed = 1;
-		info("child (PID:$pid) handling TLD ", $tldmap{$pid},
-				($exit_signal == 0 ? "" : " got signal " . sig_name($exit_signal) . " and"),
-				" exited with code $exit_code");
-	}
-	elsif ($exit_code != SUCCESS)
-	{
-		$child_failed = 1;
-		info("child (PID:$pid) handling TLD ", $tldmap{$pid}, " got signal ", sig_name($exit_signal));
-	}
-	else
-	{
-		dbg("child (PID:$pid) handling TLD ", $tldmap{$pid}, " exited successfully");
-	}
-});
 
 foreach (@server_keys)
 {
@@ -218,30 +188,6 @@ foreach (@server_keys)
 			fail("cannot save recent measurements cache: ", ah_get_error());
 		}
 	}
-}
-
-sub child_failed
-{
-	$fm->run_on_wait( sub () {
-		# This callback ensures that before waiting for the next child to terminate we check the $child_failed
-		# flag and send terminate all running children if needed. After sending SIGTERM we raise $signal_sent
-		# flag to make sure that we don't do it multiple times.
-
-		return unless ($child_failed);
-		return if ($signal_sent);
-
-		info("one of the child processes failed, terminating others...");
-
-		$SIG{'TERM'} = 'IGNORE';	# ignore signal we will send to ourselves in the next step
-		kill('TERM', 0);		# send signal to the entire process group
-		$SIG{'TERM'} = 'DEFAULT';	# restore default signal handler
-
-		$signal_sent = 1;
-	});
-
-	$fm->wait_all_children();
-
-	slv_exit(E_FAIL) if ($child_failed);
 }
 
 sub process_tld($$$$)
@@ -1299,6 +1245,67 @@ sub get_interfaces($$$)
 	}
 
 	return \@result;
+}
+
+sub init_child_exit($)
+{
+	my $fm = shift;
+
+	$fm->run_on_finish( sub ($$$$$)
+	{
+		my $pid = shift;
+		my $exit_code = shift;
+		my $id = shift;
+		my $exit_signal = shift;
+		my $core_dump = shift;
+
+		
+		if ($core_dump == 1)
+		{
+			$child_failed = 1;
+			info("child (PID:$pid) handling TLD ", $tldmap{$pid}, " core dumped");
+		}
+		elsif ($exit_code != SUCCESS)
+		{
+			$child_failed = 1;
+			info("child (PID:$pid) handling TLD ", $tldmap{$pid},
+					($exit_signal == 0 ? "" : " got signal " . sig_name($exit_signal) . " and"),
+					" exited with code $exit_code");
+		}
+		elsif ($exit_code != SUCCESS)
+		{
+			$child_failed = 1;
+			info("child (PID:$pid) handling TLD ", $tldmap{$pid}, " got signal ", sig_name($exit_signal));
+		}
+		else
+		{
+			dbg("child (PID:$pid) handling TLD ", $tldmap{$pid}, " exited successfully");
+		}
+	});
+}
+
+sub child_failed
+{
+	$fm->run_on_wait( sub () {
+		# This callback ensures that before waiting for the next child to terminate we check the $child_failed
+		# flag and send terminate all running children if needed. After sending SIGTERM we raise $signal_sent
+		# flag to make sure that we don't do it multiple times.
+
+		return unless ($child_failed);
+		return if ($signal_sent);
+
+		info("one of the child processes failed, terminating others...");
+
+		$SIG{'TERM'} = 'IGNORE';	# ignore signal we will send to ourselves in the next step
+		kill('TERM', 0);		# send signal to the entire process group
+		$SIG{'TERM'} = 'DEFAULT';	# restore default signal handler
+
+		$signal_sent = 1;
+	});
+
+	$fm->wait_all_children();
+
+	slv_exit(E_FAIL) if ($child_failed);
 }
 
 __END__
