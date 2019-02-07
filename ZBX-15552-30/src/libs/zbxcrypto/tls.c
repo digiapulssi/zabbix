@@ -213,6 +213,7 @@ static int							init_done 		= 0;
 #elif defined(HAVE_OPENSSL)
 ZBX_THREAD_LOCAL static const SSL_METHOD	*method			= NULL;
 ZBX_THREAD_LOCAL static SSL_CTX			*ctx_cert		= NULL;
+#ifdef HAVE_OPENSSL_WITH_PSK
 ZBX_THREAD_LOCAL static SSL_CTX			*ctx_psk		= NULL;
 ZBX_THREAD_LOCAL static SSL_CTX			*ctx_all		= NULL;
 /* variables for passing required PSK identity and PSK info to client callback function */
@@ -220,10 +221,13 @@ ZBX_THREAD_LOCAL static char			*psk_identity_for_cb	= NULL;
 ZBX_THREAD_LOCAL static size_t			psk_identity_len_for_cb	= 0;
 ZBX_THREAD_LOCAL static char			*psk_for_cb		= NULL;
 ZBX_THREAD_LOCAL static size_t			psk_len_for_cb		= 0;
+#endif
 static int					init_done 		= 0;
+#ifdef HAVE_OPENSSL_WITH_PSK
 /* variables for capturing PSK identity from server callback function */
 ZBX_THREAD_LOCAL static int			incoming_connection_has_psk = 0;
 ZBX_THREAD_LOCAL static char			incoming_connection_psk_id[PSK_MAX_IDENTITY_LEN + 1];
+#endif
 /* buffer for messages produced by zbx_openssl_info_cb() */
 ZBX_THREAD_LOCAL char				info_buf[256];
 #endif
@@ -1338,7 +1342,7 @@ static int	zbx_psk_cb(gnutls_session_t session, const char *psk_identity, gnutls
 
 	return -1;	/* PSK not found */
 }
-#elif defined(HAVE_OPENSSL)
+#elif defined(HAVE_OPENSSL) && defined(HAVE_OPENSSL_WITH_PSK)
 /******************************************************************************
  *                                                                            *
  * Function: zbx_psk_client_cb                                                *
@@ -3067,11 +3071,14 @@ static const char	*zbx_ctx_name(SSL_CTX *param)
 {
 	if (ctx_cert == param)
 		return "certificate-based encryption";
+
+#if defined(HAVE_OPENSSL_WITH_PSK)
 	if (ctx_psk == param)
 		return "PSK-based encryption";
+
 	if (ctx_all == param)
 		return "certificate and PSK-based encryption";
-
+#endif
 	THIS_SHOULD_NEVER_HAPPEN;
 	return ZBX_NULL2STR(NULL);
 }
@@ -3112,18 +3119,20 @@ void	zbx_tls_init_child(void)
 #define ZBX_CIPHERS_CERT_ECDHE		"EECDH+aRSA+AES128:"
 #define ZBX_CIPHERS_CERT		"RSA+aRSA+AES128"
 
-#if OPENSSL_VERSION_NUMBER >= 0x1010100fL	/* OpenSSL 1.1.1 or newer */
+#if defined(HAVE_OPENSSL_WITH_PSK) && OPENSSL_VERSION_NUMBER >= 0x1010100fL	/* OpenSSL 1.1.1 or newer */
 	/* TLS_AES_256_GCM_SHA384 is excluded from client ciphersuite list for PSK based connections. */
 	/* By default, in TLS 1.3 only *-SHA256 ciphersuites work with PSK. */
 #	define ZBX_CIPHERS_PSK_TLS13	"TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256"
 #endif
 
+#if defined(HAVE_OPENSSL_WITH_PSK)
 #if OPENSSL_VERSION_NUMBER >= 0x1010000fL	/* OpenSSL 1.1.0 or newer */
 #	define ZBX_CIPHERS_PSK_ECDHE	"kECDHEPSK+AES128:"
 #	define ZBX_CIPHERS_PSK		"kPSK+AES128"
 #else
 #	define ZBX_CIPHERS_PSK_ECDHE	""
 #	define ZBX_CIPHERS_PSK		"PSK-AES128-CBC-SHA"
+#endif
 #endif
 
 	const char	*__function_name = "zbx_tls_init_child";
@@ -3167,7 +3176,7 @@ void	zbx_tls_init_child(void)
 		if (1 != SSL_CTX_set_min_proto_version(ctx_cert, TLS1_2_VERSION))
 			goto out_method;
 	}
-
+#if defined(HAVE_OPENSSL_WITH_PSK)
 	/* Create context for PSK-only authentication. PSK can come from configuration file (in proxy, agentd) */
 	/* and later from database (in server, proxy). */
 	if (NULL != CONFIG_TLS_PSK_FILE || 0 != (program_type & (ZBX_PROGRAM_TYPE_SERVER | ZBX_PROGRAM_TYPE_PROXY)))
@@ -3189,13 +3198,17 @@ void	zbx_tls_init_child(void)
 		if (1 != SSL_CTX_set_min_proto_version(ctx_all, TLS1_2_VERSION))
 			goto out_method;
 	}
-
+#endif
 	/* 'TLSCAFile' parameter (in zabbix_server.conf, zabbix_proxy.conf, zabbix_agentd.conf) */
 	if (NULL != CONFIG_TLS_CA_FILE)
 	{
+#if defined(HAVE_OPENSSL_WITH_PSK)
 		if (1 != SSL_CTX_load_verify_locations(ctx_cert, CONFIG_TLS_CA_FILE, NULL) ||
 				(NULL != ctx_all && 1 != SSL_CTX_load_verify_locations(ctx_all, CONFIG_TLS_CA_FILE,
 				NULL)))
+#else
+		if (1 != SSL_CTX_load_verify_locations(ctx_cert, CONFIG_TLS_CA_FILE, NULL))
+#endif
 		{
 			zbx_snprintf_alloc(&error, &error_alloc, &error_offset, "cannot load CA certificate(s) from"
 					" file \"%s\":", CONFIG_TLS_CA_FILE);
@@ -3205,14 +3218,16 @@ void	zbx_tls_init_child(void)
 		zabbix_log(LOG_LEVEL_DEBUG, "%s() loaded CA certificate(s) from file \"%s\"", __function_name,
 				CONFIG_TLS_CA_FILE);
 
-		SSL_CTX_set_verify(ctx_cert, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, NULL);
-
 		/* It is possible to limit the length of certificate chain being verified. For example: */
 		/* SSL_CTX_set_verify_depth(ctx_cert, 2); */
 		/* Currently use the default depth 100. */
 
+		SSL_CTX_set_verify(ctx_cert, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, NULL);
+
+#if defined(HAVE_OPENSSL_WITH_PSK)
 		if (NULL != ctx_all)
 			SSL_CTX_set_verify(ctx_all, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, NULL);
+#endif
 	}
 
 	/* 'TLSCRLFile' parameter (in zabbix_server.conf, zabbix_proxy.conf, zabbix_agentd.conf). */
@@ -3245,7 +3260,7 @@ void	zbx_tls_init_child(void)
 					" loading CRL(s) from file \"%s\":", 1, CONFIG_TLS_CRL_FILE);
 			goto out;
 		}
-
+#if defined(HAVE_OPENSSL_WITH_PSK)
 		if (NULL != ctx_all)
 		{
 			X509_STORE	*store_all;
@@ -3285,7 +3300,7 @@ void	zbx_tls_init_child(void)
 				goto out;
 			}
 		}
-
+#endif
 		zabbix_log(LOG_LEVEL_DEBUG, "%s() loaded %d CRL(s) from file \"%s\"", __function_name, count_cert,
 				CONFIG_TLS_CRL_FILE);
 	}
@@ -3294,8 +3309,12 @@ void	zbx_tls_init_child(void)
 	/* Load certificate. */
 	if (NULL != CONFIG_TLS_CERT_FILE)
 	{
+#if defined(HAVE_OPENSSL_WITH_PSK)
 		if (1 != SSL_CTX_use_certificate_chain_file(ctx_cert, CONFIG_TLS_CERT_FILE) || (NULL != ctx_all &&
 				1 != SSL_CTX_use_certificate_chain_file(ctx_all, CONFIG_TLS_CERT_FILE)))
+#else
+		if (1 != SSL_CTX_use_certificate_chain_file(ctx_cert, CONFIG_TLS_CERT_FILE))
+#endif
 		{
 			zbx_snprintf_alloc(&error, &error_alloc, &error_offset, "cannot load certificate(s) from file"
 					" \"%s\":", CONFIG_TLS_CERT_FILE);
@@ -3310,9 +3329,13 @@ void	zbx_tls_init_child(void)
 	/* Load private key. */
 	if (NULL != CONFIG_TLS_KEY_FILE)
 	{
+#if defined(HAVE_OPENSSL_WITH_PSK)
 		if (1 != SSL_CTX_use_PrivateKey_file(ctx_cert, CONFIG_TLS_KEY_FILE, SSL_FILETYPE_PEM) ||
 				(NULL != ctx_all && 1 != SSL_CTX_use_PrivateKey_file(ctx_all, CONFIG_TLS_KEY_FILE,
 				SSL_FILETYPE_PEM)))
+#else
+		if (1 != SSL_CTX_use_PrivateKey_file(ctx_cert, CONFIG_TLS_KEY_FILE, SSL_FILETYPE_PEM))
+#endif
 		{
 			zbx_snprintf_alloc(&error, &error_alloc, &error_offset, "cannot load private key from file"
 					" \"%s\":", CONFIG_TLS_KEY_FILE);
@@ -3346,7 +3369,7 @@ void	zbx_tls_init_child(void)
 
 		zabbix_log(LOG_LEVEL_DEBUG, "%s() loaded PSK from file \"%s\"", __function_name, CONFIG_TLS_PSK_FILE);
 	}
-
+#if defined(HAVE_OPENSSL_WITH_PSK)
 	/* set up PSK global variables for client callback if PSK comes only from configuration file or command line */
 
 	if (NULL != ctx_psk && 0 != (program_type & (ZBX_PROGRAM_TYPE_AGENTD | ZBX_PROGRAM_TYPE_SENDER |
@@ -3357,7 +3380,7 @@ void	zbx_tls_init_child(void)
 		psk_for_cb = my_psk;
 		psk_len_for_cb = my_psk_len;
 	}
-
+#endif
 	if (NULL != ctx_cert)
 	{
 		const char	*ciphers;
@@ -3392,7 +3415,7 @@ void	zbx_tls_init_child(void)
 
 		zbx_log_ciphersuites(__function_name, "certificate", ctx_cert);
 	}
-
+#if defined(HAVE_OPENSSL_WITH_PSK)
 	if (NULL != ctx_psk)
 	{
 		const char	*ciphers;
@@ -3462,7 +3485,7 @@ void	zbx_tls_init_child(void)
 
 		zbx_log_ciphersuites(__function_name, "certificate and PSK", ctx_all);
 	}
-
+#endif /* defined(HAVE_OPENSSL_WITH_PSK) */
 #ifndef _WINDOWS
 	sigprocmask(SIG_SETMASK, &orig_mask, NULL);
 #endif
@@ -3474,7 +3497,9 @@ out_method:
 	zbx_snprintf_alloc(&error, &error_alloc, &error_offset, "cannot initialize TLS method:");
 out:
 	zbx_tls_error_msg(&error, &error_alloc, &error_offset);
+#if defined(HAVE_OPENSSL_WITH_PSK)
 out1:
+#endif
 	zabbix_log(LOG_LEVEL_CRIT, "%s", error);
 	zbx_free(error);
 	zbx_tls_free();
@@ -3484,9 +3509,7 @@ out1:
 #undef ZBX_CIPHERS_CERT
 #undef ZBX_CIPHERS_PSK_ECDHE
 #undef ZBX_CIPHERS_PSK
-#if OPENSSL_VERSION_NUMBER >= 0x1010100fL	/* OpenSSL 1.1.1 or newer */
-#	undef ZBX_CIPHERS_PSK_TLS13
-#endif
+#undef ZBX_CIPHERS_PSK_TLS13
 }
 #endif
 
@@ -3604,12 +3627,13 @@ void	zbx_tls_free(void)
 	if (NULL != ctx_cert)
 		SSL_CTX_free(ctx_cert);
 
+#if defined(HAVE_OPENSSL_WITH_PSK)
 	if (NULL != ctx_psk)
 		SSL_CTX_free(ctx_psk);
 
 	if (NULL != ctx_all)
 		SSL_CTX_free(ctx_all);
-
+#endif
 	if (NULL != my_psk)
 	{
 		zbx_guaranteed_memset(my_psk, 0, my_psk_len);
@@ -4144,7 +4168,9 @@ int	zbx_tls_connect(zbx_socket_t *s, unsigned int tls_connect, char *tls_arg1, c
 #if defined(_WINDOWS)
 	double		sec;
 #endif
+#if defined(HAVE_OPENSSL_WITH_PSK)
 	char		psk_buf[HOST_TLS_PSK_LEN / 2];
+#endif
 
 	s->tls_ctx = zbx_malloc(s->tls_ctx, sizeof(zbx_tls_context_t));
 	s->tls_ctx->ctx = NULL;
@@ -4172,7 +4198,7 @@ int	zbx_tls_connect(zbx_socket_t *s, unsigned int tls_connect, char *tls_arg1, c
 	{
 		zabbix_log(LOG_LEVEL_DEBUG, "In %s(): psk_identity:\"%s\"", __function_name,
 				ZBX_NULL2EMPTY_STR(tls_arg1));
-
+#if defined(HAVE_OPENSSL_WITH_PSK)
 		if (NULL == ctx_psk)
 		{
 			*error = zbx_strdup(*error, "cannot connect with TLS and PSK: no valid PSK loaded");
@@ -4221,6 +4247,10 @@ int	zbx_tls_connect(zbx_socket_t *s, unsigned int tls_connect, char *tls_arg1, c
 			psk_for_cb = psk_buf;				/* buffer is on stack */
 			psk_len_for_cb = (size_t)psk_len;
 		}
+#else
+		*error = zbx_strdup(*error, "cannot connect with TLS and PSK: support for PSK was not compiled in");
+		goto out;
+#endif
 	}
 	else
 	{
@@ -4883,10 +4913,12 @@ int	zbx_tls_accept(zbx_socket_t *s, unsigned int tls_accept, char **error)
 	s->tls_ctx = zbx_malloc(s->tls_ctx, sizeof(zbx_tls_context_t));
 	s->tls_ctx->ctx = NULL;
 
+#if defined(HAVE_OPENSSL_WITH_PSK)
 	incoming_connection_has_psk = 0;	/* assume certificate-based connection by default */
-
+#endif
 	if ((ZBX_TCP_SEC_TLS_CERT | ZBX_TCP_SEC_TLS_PSK) == (tls_accept & (ZBX_TCP_SEC_TLS_CERT | ZBX_TCP_SEC_TLS_PSK)))
 	{
+#if defined(HAVE_OPENSSL_WITH_PSK)
 		/* common case in trapper - be ready for all types of incoming connections but possible also in */
 		/* agentd listener */
 
@@ -4901,18 +4933,24 @@ int	zbx_tls_accept(zbx_socket_t *s, unsigned int tls_accept, char **error)
 			}
 		}
 		else if (0 != (program_type & ZBX_PROGRAM_TYPE_AGENTD))
+#else
+		if (0 != (program_type & ZBX_PROGRAM_TYPE_AGENTD))
+#endif
 		{
 			zbx_snprintf_alloc(error, &error_alloc, &error_offset, "not ready for both certificate and"
 					" PSK-based incoming connection:");
 
 			if (NULL == ctx_cert)
 				zbx_snprintf_alloc(error, &error_alloc, &error_offset, " certificate not loaded");
-
+#if defined(HAVE_OPENSSL_WITH_PSK)
 			if (NULL == ctx_psk)
 				zbx_snprintf_alloc(error, &error_alloc, &error_offset, " PSK not loaded");
-
+#else
+			zbx_snprintf_alloc(error, &error_alloc, &error_offset, " support for PSK was not compiled in");
+#endif
 			goto out;
 		}
+#if defined(HAVE_OPENSSL_WITH_PSK)
 		else if (NULL != ctx_psk)
 		{
 			/* Server or proxy with no certificate configured. PSK is always assumed to be configured on */
@@ -4931,6 +4969,7 @@ int	zbx_tls_accept(zbx_socket_t *s, unsigned int tls_accept, char **error)
 			THIS_SHOULD_NEVER_HAPPEN;
 			goto out;
 		}
+#endif
 	}
 	else if (0 != (tls_accept & ZBX_TCP_SEC_TLS_CERT))
 	{
@@ -4953,6 +4992,7 @@ int	zbx_tls_accept(zbx_socket_t *s, unsigned int tls_accept, char **error)
 	}
 	else	/* PSK */
 	{
+#if defined(HAVE_OPENSSL_WITH_PSK)
 		if (NULL != ctx_psk)
 		{
 			if (NULL == (s->tls_ctx->ctx = SSL_new(ctx_psk)))
@@ -4968,6 +5008,10 @@ int	zbx_tls_accept(zbx_socket_t *s, unsigned int tls_accept, char **error)
 			*error = zbx_strdup(*error, "not ready for PSK-based incoming connection: PSK not loaded");
 			goto out;
 		}
+#else
+		*error = zbx_strdup(*error, "support for PSK was not compiled in");
+		goto out;
+#endif
 	}
 
 #if OPENSSL_VERSION_NUMBER >= 0x1010100fL	/* OpenSSL 1.1.1 or newer */
@@ -5036,11 +5080,13 @@ int	zbx_tls_accept(zbx_socket_t *s, unsigned int tls_accept, char **error)
 
 	cipher_name = SSL_get_cipher(s->tls_ctx->ctx);
 
+#if defined(HAVE_OPENSSL_WITH_PSK)
 	if (1 == incoming_connection_has_psk)
 	{
 		s->connection_type = ZBX_TCP_SEC_TLS_PSK;
 	}
 	else if (0 != strncmp("(NONE)", cipher_name, ZBX_CONST_STRLEN("(NONE)")))
+#endif
 	{
 		s->connection_type = ZBX_TCP_SEC_TLS_CERT;
 
@@ -5058,13 +5104,14 @@ int	zbx_tls_accept(zbx_socket_t *s, unsigned int tls_accept, char **error)
 
 		/* Issuer and Subject will be verified later, after receiving sender type and host name */
 	}
+#if defined(HAVE_OPENSSL_WITH_PSK)
 	else
 	{
 		THIS_SHOULD_NEVER_HAPPEN;
 		zbx_tls_close(s);
 		return FAIL;
 	}
-
+#endif
 	if (SUCCEED == zabbix_check_log_level(LOG_LEVEL_DEBUG))
 	{
 		zabbix_log(LOG_LEVEL_DEBUG, "End of %s():SUCCEED (established %s %s)", __function_name,
@@ -5510,32 +5557,37 @@ int	zbx_tls_get_attr_cert(const zbx_socket_t *s, zbx_tls_conn_attr_t *attr)
  *     Implementation for OpenSSL is server-side only, too.                   *
  *                                                                            *
  ******************************************************************************/
+#if defined(HAVE_POLARSSL)
 int	zbx_tls_get_attr_psk(const zbx_socket_t *s, zbx_tls_conn_attr_t *attr)
 {
-#if defined(HAVE_POLARSSL)
 	attr->psk_identity = (char *)s->tls_ctx->ctx->psk_identity;
 	attr->psk_identity_len = s->tls_ctx->ctx->psk_identity_len;
+	return SUCCEED;
+}
 #elif defined(HAVE_GNUTLS)
-	if (NULL != (attr->psk_identity = gnutls_psk_server_get_username(s->tls_ctx->ctx)))
-		attr->psk_identity_len = strlen(attr->psk_identity);
-	else
+int	zbx_tls_get_attr_psk(const zbx_socket_t *s, zbx_tls_conn_attr_t *attr)
+{
+	if (NULL == (attr->psk_identity = gnutls_psk_server_get_username(s->tls_ctx->ctx)))
 		return FAIL;
-#elif defined(HAVE_OPENSSL)
+
+	attr->psk_identity_len = strlen(attr->psk_identity);
+	return SUCCEED;
+}
+#elif defined(HAVE_OPENSSL) && defined(HAVE_OPENSSL_WITH_PSK)
+int	zbx_tls_get_attr_psk(const zbx_socket_t *s, zbx_tls_conn_attr_t *attr)
+{
 	ZBX_UNUSED(s);
 
 	/* SSL_get_psk_identity() is not used here. It works with TLS 1.2, */
 	/* but returns NULL with TLS 1.3 in OpenSSL 1.1.1 */
-	if ('\0' != incoming_connection_psk_id[0])
-	{
-		attr->psk_identity = incoming_connection_psk_id;
-		attr->psk_identity_len = strlen(attr->psk_identity);
-	}
-	else
+	if ('\0' == incoming_connection_psk_id[0])
 		return FAIL;
-#endif
 
+	attr->psk_identity = incoming_connection_psk_id;
+	attr->psk_identity_len = strlen(attr->psk_identity);
 	return SUCCEED;
 }
+#endif
 
 #if defined(_WINDOWS)
 /******************************************************************************
