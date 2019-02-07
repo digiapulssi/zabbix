@@ -267,7 +267,7 @@ sub process_tld($$$$)
 				$interfaces_ref
 			);
 		}
-	} # service
+	}
 }
 
 sub get_global_lastclock($$$)
