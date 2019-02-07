@@ -36,7 +36,7 @@ sub get_interfaces($$$);
 sub probe_online_at_init();
 sub get_history_by_itemid($$$);
 
-parse_opts('tld=s', 'service=s', 'server-id=i', 'now=i', 'period=i', 'print-period!');
+parse_opts('tld=s', 'service=s', 'server-id=i', 'now=i', 'period=i', 'print-period!', 'max-children=i');
 
 setopt('nolog');
 
@@ -1310,7 +1310,7 @@ sla-api-current.pl - generate recent SLA API measurement files for newly collect
 
 =head1 SYNOPSIS
 
-sla-api-current.pl [--tld <tld>] [--service <name>] [--server-id <id>] [--now unixtimestamp] [--period minutes] [--print-period] [--debug] [--dry-run] [--help]
+sla-api-current.pl [--tld <tld>] [--service <name>] [--server-id <id>] [--now unixtimestamp] [--period minutes] [--print-period] [--max-children] [--debug] [--dry-run] [--help]
 
 =head1 OPTIONS
 
@@ -1339,6 +1339,10 @@ Optionally specify maximum period to handle (default: 30 minutes).
 =item B<--print-period>
 
 Print selected period on the screen.
+
+=item B<--max-children> n
+
+Specify maximum number of child processes to run in parallel.
 
 =item B<--debug>
 
