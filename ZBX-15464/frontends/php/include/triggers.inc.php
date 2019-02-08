@@ -2111,6 +2111,14 @@ function evalExpressionData($expression, $replaceFunctionMacros) {
 	return $result;
 }
 
+/**
+ * Converts a string represantition of various time and byte measures
+ * into corresponding ISO unit value.
+ *
+ * @param string $value  String value with byte or time suffix.
+ *
+ * @return string  Corresponding ISO unit value.
+ */
 function convert($value) {
 	$value = trim($value);
 
@@ -2122,7 +2130,7 @@ function convert($value) {
 	$value = $arr['value'];
 	switch ($arr['mult']) {
 		case 'T':
-			$value = bcmul($value, bcmul(ZBX_KIBIBYTE * ZBX_GIBIBYTE));
+			$value = bcmul($value, bcmul(ZBX_KIBIBYTE, ZBX_GIBIBYTE));
 			break;
 		case 'G':
 			$value = bcmul($value, ZBX_GIBIBYTE);
