@@ -2113,11 +2113,11 @@ function evalExpressionData($expression, $replaceFunctionMacros) {
 
 /**
  * Converts a string represantition of various time and byte measures
- * into corresponding ISO unit value.
+ * into corresponding SI unit value.
  *
  * @param string $value  String value with byte or time suffix.
  *
- * @return string  Corresponding ISO unit value.
+ * @return string  Corresponding SI unit value.
  */
 function convert($value) {
 	$value = trim($value);
