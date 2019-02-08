@@ -1,6 +1,7 @@
 Changes for rsm1.2.0rc5
 
 Bug fixes:
+....I..... [464] implemented parallel processing of TLDs (yurii)
 ....I..... [sub-460] removed metrics from measurement files if probe is Offline (dimir)
 ....I..... [sub-466] joined rtt and ip values in single RDDS metric (dimir)
 
