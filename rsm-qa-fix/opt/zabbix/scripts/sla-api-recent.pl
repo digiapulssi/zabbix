@@ -774,8 +774,6 @@ sub calculate_cycle($$$$$$$$)
 
 	my %tested_interfaces;
 
-#	print("$tld:\n");
-
 	my $probes_with_results = 0;
 	my $probes_with_positive = 0;
 	my $probes_online = 0;
@@ -830,8 +828,6 @@ sub calculate_cycle($$$$$$$$)
 
 		# skip cycles that do not have test result
 		next if (scalar(keys(%values)) == 0);
-
-#		print("  $probe:\n");
 
 		my $service_up = 1;
 
@@ -1116,6 +1112,10 @@ sub calculate_cycle($$$$$$$$)
 			if (!$probe_online)
 			{
 				$tested_interfaces{$interface}{$probe}{'status'} = AH_CITY_OFFLINE;
+
+				# We detected that probe was offline but there might be still results.
+				# It is requested to ignore those in both here and in Frontend.
+				undef($tested_interfaces{$interface}{$probe}{'testData'});
 			}
 			elsif (!defined($tested_interfaces{$interface}{$probe}{'status'}))
 			{
