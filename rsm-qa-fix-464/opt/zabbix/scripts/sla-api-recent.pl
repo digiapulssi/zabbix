@@ -35,7 +35,7 @@ sub calculate_cycle($$$$$$$$);
 sub get_interfaces($$$);
 sub probe_online_at_init();
 sub get_history_by_itemid($$$);
-sub init_child_exit($);
+sub set_on_finish($);
 
 parse_opts('tld=s', 'service=s', 'server-id=i', 'now=i', 'period=i', 'print-period!', 'max-children=i');
 
@@ -102,7 +102,7 @@ my %rtt_limits;
 
 my $fm = new Parallel::ForkManager(opt('max-children') ? getopt('max-children') : 64);
 
-init_child_exit($fm);
+set_on_finish($fm);
 
 my $child_failed = 0;
 my $signal_sent = 0;
@@ -175,7 +175,6 @@ foreach (@server_keys)
 			$tldmap{$pid} = $tld;
 			next;
 		}
-		
 	}
 
 	$fm->run_on_wait(undef);
@@ -194,10 +193,10 @@ sub process_tld($$$$)
 {
 	my $tld = shift;
 	my $probes = shift;
-	my $lastvalues_db_of_tld = shift;
-	my $lastvalues_cache_of_tld = shift;
+	my $lastvalues_db_tld = shift;
+	my $lastvalues_cache_tld = shift;
 
-	foreach my $service (sort(keys(%{$lastvalues_db_of_tld})))
+	foreach my $service (sort(keys(%{$lastvalues_db_tld})))
 	{
 		next if (opt('service') && $service ne getopt('service'));
 
@@ -212,8 +211,8 @@ sub process_tld($$$$)
 				$delays{$service},
 				$max_period,
 				$service_keys{$service},
-				$lastvalues_db_of_tld,
-				$lastvalues_cache_of_tld,
+				$lastvalues_db_tld,
+				$lastvalues_cache_tld,
 				\@cycles_to_calculate) == E_FAIL)
 		{
 			next;
@@ -261,7 +260,7 @@ sub process_tld($$$$)
 			calculate_cycle(
 				$tld,
 				$service,
-				$lastvalues_db_of_tld->{$service}{'probes'},
+				$lastvalues_db_tld->{$service}{'probes'},
 				$clock,
 				$delays{$service},
 				$rtt_limits{$service},
@@ -337,8 +336,8 @@ sub add_cycles($$$$$$$$$$$)
 	my $delay = shift;
 	my $max_period = shift;
 	my $cycles_ref = shift;
-	my $lastvalues_cache_of_tld = shift;
-	my $lastvalues_db_of_tld = shift;	# for debugging only
+	my $lastvalues_cache_tld = shift;
+	my $lastvalues_db_tld = shift;	# for debugging only
 
 	return if ($lastclock == $lastclock_db);	# we are up-to-date, according to cache
 
@@ -354,23 +353,23 @@ sub add_cycles($$$$$$$$$$$)
 		if ($cycle_start == $db_cycle_start)
 		{
 			# cache the real clock of the item
-			$lastvalues_cache_of_tld->{$service}{'probes'}{$probe}{$itemid}{'clock'} = $lastclock_db;
+			$lastvalues_cache_tld->{$service}{'probes'}{$probe}{$itemid}{'clock'} = $lastclock_db;
 		}
 		else
 		{
 			# we don't know the real clock so cache cycle start
-			$lastvalues_cache_of_tld->{$service}{'probes'}{$probe}{$itemid}{'clock'} = $cycle_start;
+			$lastvalues_cache_tld->{$service}{'probes'}{$probe}{$itemid}{'clock'} = $cycle_start;
 		}
 
 		if (opt('debug'))
 		{
 			dbg("cycle ", ts_str($cycle_start), " will be calculated because of item ",
 				substr(
-					$lastvalues_db_of_tld->{$service}{'probes'}{$probe}{$itemid}{'key'},
+					$lastvalues_db_tld->{$service}{'probes'}{$probe}{$itemid}{'key'},
 					0,
 					SUBSTR_KEY_LEN
 				),
-				", cache clock ", ts_str($lastvalues_cache_of_tld->{$service}{'probes'}{$probe}{$itemid}{'clock'})
+				", cache clock ", ts_str($lastvalues_cache_tld->{$service}{'probes'}{$probe}{$itemid}{'clock'})
 			);
 		}
 
@@ -393,17 +392,17 @@ sub cycles_to_calculate($$$$$$$$)
 	my $delay = shift;
 	my $max_period = shift;	# seconds
 	my $service_key = shift;
-	my $lastvalues_db_of_tld = shift;
-	my $lastvalues_cache_of_tld = shift;
+	my $lastvalues_db_tld = shift;
+	my $lastvalues_cache_tld = shift;
 	my $cycles_ref = shift;	# result
 
 	my %cycles;
 
-	foreach my $probe (keys(%{$lastvalues_db_of_tld->{$service}{'probes'}}))
+	foreach my $probe (keys(%{$lastvalues_db_tld->{$service}{'probes'}}))
 	{
-		foreach my $itemid (keys(%{$lastvalues_db_of_tld->{$service}{'probes'}{$probe}}))
+		foreach my $itemid (keys(%{$lastvalues_db_tld->{$service}{'probes'}{$probe}}))
 		{
-			my $lastclock_db = $lastvalues_db_of_tld->{$service}{'probes'}{$probe}{$itemid}{'clock'};
+			my $lastclock_db = $lastvalues_db_tld->{$service}{'probes'}{$probe}{$itemid}{'clock'};
 
 			my $lastclock;
 
@@ -414,7 +413,7 @@ sub cycles_to_calculate($$$$$$$$)
 
 				$lastclock = $global_lastclock;
 			}
-			elsif (!defined($lastvalues_cache_of_tld->{$service}{'probes'}{$probe}{$itemid}))
+			elsif (!defined($lastvalues_cache_tld->{$service}{'probes'}{$probe}{$itemid}))
 			{
 				# this partilular item is not in cache yet, get the time starting point for it
 				$global_lastclock //= get_global_lastclock($tld, $service_key, $delay);
@@ -430,7 +429,7 @@ sub cycles_to_calculate($$$$$$$$)
 			}
 			else
 			{
-				$lastclock = $lastvalues_cache_of_tld->{$service}{'probes'}{$probe}{$itemid}{'clock'};
+				$lastclock = $lastvalues_cache_tld->{$service}{'probes'}{$probe}{$itemid}{'clock'};
 
 				if ($lastclock > $lastclock_db)
 				{
@@ -441,7 +440,7 @@ sub cycles_to_calculate($$$$$$$$)
 
 			if (opt('debug'))
 			{
-				my $key = substr($lastvalues_db_of_tld->{$service}{'probes'}{$probe}{$itemid}{'key'}, 0, SUBSTR_KEY_LEN);
+				my $key = substr($lastvalues_db_tld->{$service}{'probes'}{$probe}{$itemid}{'key'}, 0, SUBSTR_KEY_LEN);
 
 				$key = sprintf("%".SUBSTR_KEY_LEN."s", $key);
 
@@ -458,8 +457,8 @@ sub cycles_to_calculate($$$$$$$$)
 				$delay,
 				$max_period,
 				\%cycles,
-				$lastvalues_cache_of_tld,
-				$lastvalues_db_of_tld
+				$lastvalues_cache_tld,
+				$lastvalues_db_tld
 			);
 
 		}
@@ -1290,63 +1289,68 @@ sub get_interfaces($$$)
 	return \@result;
 }
 
-sub init_child_exit($)
+sub set_on_finish($)
 {
 	my $fm = shift;
 
-	$fm->run_on_finish( sub ($$$$$)
-	{
-		my $pid = shift;
-		my $exit_code = shift;
-		my $id = shift;
-		my $exit_signal = shift;
-		my $core_dump = shift;
-		my $child_data = shift;
+	$fm->run_on_finish(
+		sub ($$$$$)
+		{
+			my $pid = shift;
+			my $exit_code = shift;
+			my $id = shift;
+			my $exit_signal = shift;
+			my $core_dump = shift;
+			my $child_data = shift;
 
-		if ($core_dump == 1)
-		{
-			$child_failed = 1;
-			info("child (PID:$pid) handling TLD ", $tldmap{$pid}, " core dumped");
-		}
-		elsif ($exit_code != SUCCESS)
-		{
-			$child_failed = 1;
-			info("child (PID:$pid) handling TLD ", $tldmap{$pid},
+			if ($core_dump == 1)
+			{
+				$child_failed = 1;
+				info("child (PID:$pid) handling TLD ", $tldmap{$pid}, " core dumped");
+			}
+			elsif ($exit_code != SUCCESS)
+			{
+				$child_failed = 1;
+				info("child (PID:$pid) handling TLD ", $tldmap{$pid},
 					($exit_signal == 0 ? "" : " got signal " . sig_name($exit_signal) . " and"),
 					" exited with code $exit_code");
-		}
-		elsif ($exit_code != SUCCESS)
-		{
-			$child_failed = 1;
-			info("child (PID:$pid) handling TLD ", $tldmap{$pid}, " got signal ", sig_name($exit_signal));
-		}
-		else
-		{
-			dbg("child (PID:$pid) handling TLD ", $tldmap{$pid}, " exited successfully");
+			}
+			elsif ($exit_code != SUCCESS)
+			{
+				$child_failed = 1;
+				info("child (PID:$pid) handling TLD ", $tldmap{$pid}, " got signal ", sig_name($exit_signal));
+			}
+			else
+			{
+				dbg("child (PID:$pid) handling TLD ", $tldmap{$pid}, " exited successfully");
 
-			$lastvalues_cache->{'tlds'}{$tldmap{$pid}} = $child_data;
+				$lastvalues_cache->{'tlds'}{$tldmap{$pid}} = $child_data;
+			}
 		}
-	});
+	);
 }
 
 sub child_failed
 {
-	$fm->run_on_wait( sub () {
-		# This callback ensures that before waiting for the next child to terminate we check the $child_failed
-		# flag and send terminate all running children if needed. After sending SIGTERM we raise $signal_sent
-		# flag to make sure that we don't do it multiple times.
+	$fm->run_on_wait(
+		sub ()
+		{
+			# This callback ensures that before waiting for the next child to terminate we check the $child_failed
+			# flag and send terminate all running children if needed. After sending SIGTERM we raise $signal_sent
+			# flag to make sure that we don't do it multiple times.
 
-		return unless ($child_failed);
-		return if ($signal_sent);
+			return unless ($child_failed);
+			return if ($signal_sent);
 
-		info("one of the child processes failed, terminating others...");
+			info("one of the child processes failed, terminating others...");
 
-		$SIG{'TERM'} = 'IGNORE';	# ignore signal we will send to ourselves in the next step
-		kill('TERM', 0);		# send signal to the entire process group
-		$SIG{'TERM'} = 'DEFAULT';	# restore default signal handler
+			$SIG{'TERM'} = 'IGNORE';	# ignore signal we will send to ourselves in the next step
+			kill('TERM', 0);		# send signal to the entire process group
+			$SIG{'TERM'} = 'DEFAULT';	# restore default signal handler
 
-		$signal_sent = 1;
-	});
+			$signal_sent = 1;
+		}
+	);
 
 	$fm->wait_all_children();
 
