@@ -262,7 +262,6 @@ sub process_tld($$$$)
 				cycle_end($cycles_till, $delays{$service})
 			);
 
-			fail("BANG");
 			wrn("no DNS RTT limits in history for period ", ts_str($cycles_from),
 					" - ", ts_str(cycle_end($cycles_till, $delays{$service})))
 				unless (scalar(@{$rtt_limits{$service}}));
