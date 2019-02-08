@@ -99,6 +99,5 @@ fi
 
 for file in $files; do
 	ls -l $file
-	cat $file | jq -SC .testedInterface[0].probes[].city
-	cat $file | jq -SC .testedInterface[0].probes[].testData[].metrics[]
+	cat $file | jq -C '.testedInterface[0].probes[] | .city, .testData[].metrics[]'
 done
