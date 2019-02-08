@@ -107,6 +107,7 @@ init_child_exit($fm);
 my $child_failed = 0;
 my $signal_sent = 0;
 my %tldmap;
+my $lastvalues_cache = {};
 
 foreach (@server_keys)
 {
@@ -133,14 +134,13 @@ foreach (@server_keys)
 	# }
 	my $lastvalues_db = {'tlds' => {}};
 
-	my $lastvalues_cache;
+	$lastvalues_cache = {};
 
 	if (ah_get_recent_cache($server_key, \$lastvalues_cache) != AH_SUCCESS)
 	{
 		dbg("there's no recent measurements cache file yet, but no worries");
 		$lastvalues_cache->{'tlds'} = {};
 	}
-
 
 	# initialize probe online cache
 	probe_online_at_init();
@@ -167,7 +167,7 @@ foreach (@server_keys)
 			db_connect($server_key);
 			process_tld($tld, \%probes, $lastvalues_db, $lastvalues_cache);
 			db_disconnect();
-			$fm->finish(SUCCESS);
+			$fm->finish(SUCCESS, $lastvalues_cache->{'tlds'}{$tld});
 			last;
 		}
 		else
@@ -1295,8 +1295,8 @@ sub init_child_exit($)
 		my $id = shift;
 		my $exit_signal = shift;
 		my $core_dump = shift;
+		my $child_data = shift;
 
-		
 		if ($core_dump == 1)
 		{
 			$child_failed = 1;
@@ -1317,6 +1317,8 @@ sub init_child_exit($)
 		else
 		{
 			dbg("child (PID:$pid) handling TLD ", $tldmap{$pid}, " exited successfully");
+
+			$lastvalues_cache->{'tlds'}{$tldmap{$pid}} = $child_data;
 		}
 	});
 }
