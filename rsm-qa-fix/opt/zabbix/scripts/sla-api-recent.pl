@@ -622,75 +622,71 @@ sub fill_test_data($$$$)
 	my $dst = shift;
 	my $hist = shift;
 
-	foreach my $ns (keys(%{$src}))
+	foreach my $target (keys(%{$src}))
 	{
 		my $test_data_ref = {
-			'target'	=> ($ns eq TARGET_PLACEHOLDER ? undef : $ns),
+			'target'	=> ($target eq TARGET_PLACEHOLDER ? undef : $target),
 			'status'	=> undef,
 			'metrics'	=> []
 		};
 
-		foreach my $item_ref (values(%{$src->{$ns}}))
+		foreach my $src_metric_ref (@{$src->{$target}})
 		{
-			foreach my $clock (sort(keys(%{$item_ref})))
+			my $metric = {
+				'testDateTime'	=> int($src_metric_ref->{'clock'}),
+				'targetIP'	=> $src_metric_ref->{'ip'}
+			};
+
+			my $rtt = $src_metric_ref->{'rtt'};
+
+			if (!defined($rtt))
 			{
-				my $test = $item_ref->{$clock};
+				$metric->{'rtt'} = undef;
+				$metric->{'result'} = 'no data';
+			}
+			elsif (is_internal_error_desc($rtt))
+			{
+				$metric->{'rtt'} = undef;
+				$metric->{'result'} = $rtt;
 
-				my $metric = {
-					'testDateTime'	=> int($clock),
-					'targetIP'	=> $test->{'ip'}
-				};
-
-				if (!defined($test->{'rtt'}))
+				# don't override NS status with "Up" if NS is already known to be down
+				if (!defined($test_data_ref->{'status'}) || $test_data_ref->{'status'} ne "Down")
 				{
-					$metric->{'rtt'} = undef;
-					$metric->{'result'} = 'no data';
+					$test_data_ref->{'status'} = "Up";
 				}
-				elsif (is_internal_error_desc($test->{'rtt'}))
-				{
-					$metric->{'rtt'} = undef;
-					$metric->{'result'} = $test->{'rtt'};
+			}
+			elsif (is_service_error_desc($service, $rtt))
+			{
+				$metric->{'rtt'} = undef;
+				$metric->{'result'} = $rtt;
 
-					# don't override NS status with "Up" if NS is already known to be down
-					if (!defined($test_data_ref->{'status'}) || $test_data_ref->{'status'} ne "Down")
+				$test_data_ref->{'status'} = "Down";
+			}
+			else
+			{
+				$metric->{'rtt'} = $rtt;
+				$metric->{'result'} = "ok";
+
+				# skip threshold check if NS is already known to be down
+				if ($hist)
+				{
+					if  (!defined($test_data_ref->{'status'}) || $test_data_ref->{'status'} eq "Up")
 					{
-						$test_data_ref->{'status'} = "Up";
+						$test_data_ref->{'status'} = (
+							$rtt > get_historical_value_by_time(
+								$hist,
+								$metric->{'testDateTime'}
+							) ? "Down" : "Up"
+						);
 					}
-				}
-				elsif (is_service_error_desc($service, $test->{'rtt'}))
-				{
-					$metric->{'rtt'} = undef;
-					$metric->{'result'} = $test->{'rtt'};
-
-					$test_data_ref->{'status'} = "Down";
 				}
 				else
 				{
-					$metric->{'rtt'} = $test->{'rtt'};
-					$metric->{'result'} = "ok";
-
-					# skip threshold check if NS is already known to be down
-					if ($hist)
-					{
-						if  (!defined($test_data_ref->{'status'}) || $test_data_ref->{'status'} eq "Up")
-						{
-							$test_data_ref->{'status'} = (
-								$test->{'rtt'} > get_historical_value_by_time(
-									$hist,
-									$metric->{'testDateTime'}
-								) ? "Down" : "Up"
-							);
-						}
-					}
-					else
-					{
-						$test_data_ref->{'status'} = "Up";
-					}
+					$test_data_ref->{'status'} = "Up";
 				}
-
-				push(@{$test_data_ref->{'metrics'}}, $metric);
 			}
 
+			push(@{$test_data_ref->{'metrics'}}, $metric);
 		}
 
 		$test_data_ref->{'status'} //= AH_CITY_NO_RESULT;
@@ -989,10 +985,12 @@ sub calculate_cycle($$$$$$$$)
 		#
 		# Fetch RTT (Float) values (on Probe level).
 		#
-		# Note, for DNS service we will also collect target and IPs
-		# because currently it is provided in RTT items, e. g.:
+		# Note, for DNS service we will also collect target (Name Server) and IP
+		# because these are provided in RTT items, e. g.:
 		#
 		# rsm.dns.udp.rtt["ns1.example.com",1.2.3.4]
+		#
+		# For other services the IPs are located in separate items which we collect on the next run.
 		#
 
 		$rows_ref = db_select(
@@ -1047,19 +1045,25 @@ sub calculate_cycle($$$$$$$$)
 
 				dbg("found $service RTT: ", $value_ref->{'value'}, " IP: ", ($ip // 'UNDEF'), " (target: $target)");
 
-				$tested_interfaces{$interface}{$probe}{'testData'}{$target}{$itemid}{$value_ref->{'clock'}}{'rtt'} = $value_ref->{'value'};
-				$tested_interfaces{$interface}{$probe}{'testData'}{$target}{$itemid}{$value_ref->{'clock'}}{'ip'} = $ip;
+				push(@{$tested_interfaces{$interface}{$probe}{'testData'}{$target}}, {
+						'clock' => $value_ref->{'clock'},
+						'rtt' => $value_ref->{'value'},
+						'ip' => $ip
+					}
+				);
 			}
 		}
 
 		next if (@itemids_str == 0);
 
 		#
-		# Fetch IP (String) values (on Probe level) used in non-DNS tests.
+		# Fetch IP (String) values (on Probe level) for non-DNS tests.
 		#
-		# Note, this is because corrently items for storing IPs exist only for non-DNS services, e. g.:
+		# Note, this is because only for non-DNS services there are special items for IP, e. g.:
 		#
 		# rsm.rdds.43.ip
+		#
+		# Note, targets (Name Servers) are unused in non-DNS services.
 		#
 
 		$rows_ref = db_select(
@@ -1079,6 +1083,8 @@ sub calculate_cycle($$$$$$$$)
 		#         }
 		#     ]
 		# }
+		#
+		# Note, we only have non-DNS items here, for DNS we have collected everything above.
 		%values = ();
 
 		map {push(@{$values{$_->[0]}}, {'value' => $_->[1], 'clock' => $_->[2]})} (@{$rows_ref});
@@ -1097,7 +1103,9 @@ sub calculate_cycle($$$$$$$$)
 
 				dbg("found $service IP: ", $value_ref->{'value'}, " (target: $target)");
 
-				$tested_interfaces{$interface}{$probe}{'testData'}{$target}{$itemid}{$value_ref->{'clock'}}{'ip'} = $value_ref->{'value'};
+				# For non-DNS we have only 1 metric, thus we refer to the first element of array.
+				# "clock" and "rtt" of this metric were already collected above.
+				$tested_interfaces{$interface}{$probe}{'testData'}{$target}->[0]->{'ip'} = $value_ref->{'value'};
 			}
 		}
 	}
