@@ -1,6 +1,12 @@
+Changes for rsm1.2.0rc5
+
+Bug fixes:
+
+--------------------------------------------------------------------------------
 Changes for rsm1.2.0rc4
 
 Bug fixes:
+....I..... [466] fixed missing RDDS values in recent measurement metrics (dimir)
 
 --------------------------------------------------------------------------------
 Changes for rsm1.2.0rc3
