@@ -113,7 +113,7 @@ foreach (@server_keys)
 {
 	$server_key = $_;
 
-	# Last values from the "lastvalue" (uint, float) and "lastvalue_str" tables.
+	# Last values from the "lastvalue" (availability, RTTs) and "lastvalue_str" (IPs) tables.
 	#
 	# {
 	#     'tlds' => {
@@ -132,6 +132,10 @@ foreach (@server_keys)
 	#         }
 	#     }
 	# }
+	#
+	# NB! Besides results from probes we process Service Availability values, which
+	# are per TLD, for those we will use empty string ("") as probe.
+
 	my $lastvalues_db = {'tlds' => {}};
 
 	$lastvalues_cache = {};
@@ -149,21 +153,21 @@ foreach (@server_keys)
 	get_lastvalues_from_db($lastvalues_db, \%delays);
 	db_disconnect();
 
-	$fm->run_on_wait( sub () { dbg("max children reached, please wait..."); } );
+	$fm->run_on_wait(sub() {dbg("max children reached, please wait...");});
 
 	# probes available for every service
 	my %probes;
 
-	foreach (sort(keys(%{$lastvalues_db->{'tlds'}})))
+	foreach my $tld_for_a_child_to_process (sort(keys(%{$lastvalues_db->{'tlds'}})))
 	{
-		$tld = $_;	# global variable
-
 		child_failed() if ($child_failed);
 
 		my $pid = $fm->start();
 
 		if ($pid == 0)
 		{
+			$tld = $tld_for_a_child_to_process;	# global variable
+
 			db_connect($server_key);
 			process_tld($tld, \%probes, $lastvalues_db->{'tlds'}{$tld}, $lastvalues_cache->{'tlds'}{$tld});
 			db_disconnect();
@@ -172,13 +176,17 @@ foreach (@server_keys)
 		}
 		else
 		{
-			$tldmap{$pid} = $tld;
+			$tldmap{$pid} = $tld_for_a_child_to_process;
+
 			next;
 		}
 	}
 
 	$fm->run_on_wait(undef);
 	$fm->wait_all_children();
+
+	# Do not update cache if something happened.
+	child_failed() if ($child_failed);
 
 	if (!opt('dry-run') && !opt('now'))
 	{
@@ -242,6 +250,9 @@ sub process_tld($$$$)
 
 		$probes->{$service} = get_probes($service) unless (defined($probes->{$service}));
 
+		# TODO: RTT limits are currently stored per Server, not per TLD, so we
+		#       shouldn't be collecting them for the periods we aready handled.
+
 		if ($service eq 'dns')
 		{
 			# rtt limits only considered for DNS currently
@@ -251,7 +262,10 @@ sub process_tld($$$$)
 				cycle_end($cycles_till, $delays{$service})
 			);
 
-			fail("no DNS RTT limits in history") unless (scalar(@{$rtt_limits{$service}}));
+			fail("BANG");
+			wrn("no DNS RTT limits in history for period ", ts_str($cycles_from),
+					" - ", ts_str(cycle_end($cycles_till, $delays{$service})))
+				unless (scalar(@{$rtt_limits{$service}}));
 		}
 
 		# these are cycles we are going to recalculate for this tld-service
@@ -626,19 +640,19 @@ sub get_lastvalues_from_db($$)
 
 		my $index = index($host, ' ');	# "<TLD> <Probe>" separator
 
-		my ($probe, $key_service);
+		my ($probe, $key_service, $tld);
 
 		if ($index == -1)
 		{
 			# this host just represents TLD
-			$tld = $host;	# $tld is global variable
+			$tld = $host;
 			$probe = '';
 
 			$key_service = get_service_from_slv_key($key);
 		}
 		else
 		{
-			$tld = substr($host, 0, $index);	# $tld is global variable
+			$tld = substr($host, 0, $index);
 			$probe = substr($host, $index + 1);
 
 			$key_service = get_service_from_probe_key($key);
