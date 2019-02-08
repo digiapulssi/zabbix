@@ -8,6 +8,8 @@ use lib path($0)->parent->realpath()->stringify();
 
 use Data::Dumper;
 
+use Parallel::ForkManager;
+
 use RSM;
 use RSMSLV;
 use TLD_constants qw(:api :config :groups :items);
@@ -26,14 +28,16 @@ use constant MAX_PERIOD => 30 * 60;	# 30 minutes
 
 use constant SUBSTR_KEY_LEN => 20;	# for logging
 
+sub process_tld($$$$);
 sub cycles_to_calculate($$$$$$$$);
 sub get_lastvalues_from_db($$);
 sub calculate_cycle($$$$$$$$);
 sub get_interfaces($$$);
 sub probe_online_at_init();
 sub get_history_by_itemid($$$);
+sub set_on_finish($);
 
-parse_opts('tld=s', 'service=s', 'server-id=i', 'now=i', 'period=i', 'print-period!');
+parse_opts('tld=s', 'service=s', 'server-id=i', 'now=i', 'period=i', 'print-period!', 'max-children=i');
 
 setopt('nolog');
 
@@ -83,6 +87,8 @@ my %delays;
 $delays{'dns'} = $delays{'dnssec'} = get_dns_udp_delay($now);
 $delays{'rdds'} = get_rdds_delay($now);
 
+db_disconnect();
+
 my %service_keys = (
 	'dns' => 'rsm.slv.dns.avail',
 	'dnssec' => 'rsm.slv.dnssec.avail',
@@ -92,15 +98,22 @@ my %service_keys = (
 # keep to avoid reading multiple times
 my $global_lastclock;
 
-db_disconnect();
-
 my %rtt_limits;
+
+my $fm = new Parallel::ForkManager(opt('max-children') ? getopt('max-children') : 64);
+
+set_on_finish($fm);
+
+my $child_failed = 0;
+my $signal_sent = 0;
+my %tldmap;
+my $lastvalues_cache = {};
 
 foreach (@server_keys)
 {
 	$server_key = $_;
 
-	# Last values from the "lastvalue" (uint, float) and "lastvalue_str" tables.
+	# Last values from the "lastvalue" (availability, RTTs) and "lastvalue_str" (IPs) tables.
 	#
 	# {
 	#     'tlds' => {
@@ -119,9 +132,13 @@ foreach (@server_keys)
 	#         }
 	#     }
 	# }
+	#
+	# NB! Besides results from probes we process Service Availability values, which
+	# are per TLD, for those we will use empty string ("") as probe.
+
 	my $lastvalues_db = {'tlds' => {}};
 
-	my $lastvalues_cache;
+	$lastvalues_cache = {};
 
 	if (ah_get_recent_cache($server_key, \$lastvalues_cache) != AH_SUCCESS)
 	{
@@ -129,94 +146,47 @@ foreach (@server_keys)
 		$lastvalues_cache->{'tlds'} = {};
 	}
 
-	db_connect($server_key);
-
 	# initialize probe online cache
 	probe_online_at_init();
 
+	db_connect($server_key);
 	get_lastvalues_from_db($lastvalues_db, \%delays);
+	db_disconnect();
+
+	$fm->run_on_wait(sub() {dbg("max children reached, please wait...");});
 
 	# probes available for every service
 	my %probes;
 
-	foreach (sort(keys(%{$lastvalues_db->{'tlds'}})))
+	foreach my $tld_for_a_child_to_process (sort(keys(%{$lastvalues_db->{'tlds'}})))
 	{
-		$tld = $_;	# global variable
+		child_failed() if ($child_failed);
 
-		foreach my $service (sort(keys(%{$lastvalues_db->{'tlds'}{$tld}})))
+		my $pid = $fm->start();
+
+		if ($pid == 0)
 		{
-			next if (opt('service') && $service ne getopt('service'));
+			$tld = $tld_for_a_child_to_process;	# global variable
 
-			undef($global_lastclock);	# is used in the following function (should be used per service)
+			db_connect($server_key);
+			process_tld($tld, \%probes, $lastvalues_db->{'tlds'}{$tld}, $lastvalues_cache->{'tlds'}{$tld});
+			db_disconnect();
+			$fm->finish(SUCCESS, $lastvalues_cache->{'tlds'}{$tld});
+			last;
+		}
+		else
+		{
+			$tldmap{$pid} = $tld_for_a_child_to_process;
 
-			my @cycles_to_calculate;
-
-			# get actual cycle times to calculate
-			if (cycles_to_calculate(
-					$tld,
-					$service,
-					$delays{$service},
-					$max_period,
-					$service_keys{$service},
-					$lastvalues_db->{'tlds'},
-					$lastvalues_cache->{'tlds'},
-					\@cycles_to_calculate) == E_FAIL)
-			{
-				next;
-			}
-
-			if (opt('debug'))
-			{
-				dbg("$service cycles to calculate: ", join(',', map {ts_str($_)} (@cycles_to_calculate)));
-			}
-
-			next if (scalar(@cycles_to_calculate) == 0);
-
-			my $cycles_from = $cycles_to_calculate[0];
-			my $cycles_till = $cycles_to_calculate[-1];
-
-			next unless (tld_service_enabled($tld, $service, $cycles_from));
-
-			if (opt('print-period'))
-			{
-				info("selected $service period: ", selected_period(
-					$cycles_from,
-					cycle_end($cycles_till, $delays{$service})
-				));
-			}
-
-			my $interfaces_ref = get_interfaces($tld, $service, $now);
-
-			$probes{$service} = get_probes($service) unless (defined($probes{$service}));
-
-			if ($service eq 'dns')
-			{
-				# rtt limits only considered for DNS currently
-				$rtt_limits{$service} = get_history_by_itemid(
-					CONFIGVALUE_DNS_UDP_RTT_HIGH_ITEMID,
-					$cycles_from,
-					cycle_end($cycles_till, $delays{$service})
-				);
-
-				fail("no DNS RTT limits in history") unless (scalar(@{$rtt_limits{$service}}));
-			}
-
-			# these are cycles we are going to recalculate for this tld-service
-			foreach my $clock (@cycles_to_calculate)
-			{
-				calculate_cycle(
-					$tld,
-					$service,
-					$lastvalues_db->{'tlds'}{$tld}{$service}{'probes'},
-					$clock,
-					$delays{$service},
-					$rtt_limits{$service},
-					$probes{$service},
-					$interfaces_ref
-				);
-			}
+			next;
 		}
 	}
+
+	$fm->run_on_wait(undef);
+	$fm->wait_all_children();
+
+	# Do not update cache if something happened.
+	child_failed() if ($child_failed);
 
 	if (!opt('dry-run') && !opt('now'))
 	{
@@ -225,8 +195,93 @@ foreach (@server_keys)
 			fail("cannot save recent measurements cache: ", ah_get_error());
 		}
 	}
+}
 
-	db_disconnect();
+sub process_tld($$$$)
+{
+	my $tld = shift;
+	my $probes = shift;
+	my $lastvalues_db_tld = shift;
+	my $lastvalues_cache_tld = shift;
+
+	foreach my $service (sort(keys(%{$lastvalues_db_tld})))
+	{
+		next if (opt('service') && $service ne getopt('service'));
+
+		undef($global_lastclock);	# is used in the following function (should be used per service)
+
+		my @cycles_to_calculate;
+
+		# get actual cycle times to calculate
+		if (cycles_to_calculate(
+				$tld,
+				$service,
+				$delays{$service},
+				$max_period,
+				$service_keys{$service},
+				$lastvalues_db_tld,
+				$lastvalues_cache_tld,
+				\@cycles_to_calculate) == E_FAIL)
+		{
+			next;
+		}
+
+		if (opt('debug'))
+		{
+			dbg("$service cycles to calculate: ", join(',', map {ts_str($_)} (@cycles_to_calculate)));
+		}
+
+		next if (scalar(@cycles_to_calculate) == 0);
+
+		my $cycles_from = $cycles_to_calculate[0];
+		my $cycles_till = $cycles_to_calculate[-1];
+
+		next unless (tld_service_enabled($tld, $service, $cycles_from));
+
+		if (opt('print-period'))
+		{
+			info("selected $service period: ", selected_period(
+				$cycles_from,
+				cycle_end($cycles_till, $delays{$service})
+			));
+		}
+
+		my $interfaces_ref = get_interfaces($tld, $service, $now);
+
+		$probes->{$service} = get_probes($service) unless (defined($probes->{$service}));
+
+		# TODO: RTT limits are currently stored per Server, not per TLD, so we
+		#       shouldn't be collecting them for the periods we aready handled.
+
+		if ($service eq 'dns')
+		{
+			# rtt limits only considered for DNS currently
+			$rtt_limits{$service} = get_history_by_itemid(
+				CONFIGVALUE_DNS_UDP_RTT_HIGH_ITEMID,
+				$cycles_from,
+				cycle_end($cycles_till, $delays{$service})
+			);
+
+			wrn("no DNS RTT limits in history for period ", ts_str($cycles_from),
+					" - ", ts_str(cycle_end($cycles_till, $delays{$service})))
+				unless (scalar(@{$rtt_limits{$service}}));
+		}
+
+		# these are cycles we are going to recalculate for this tld-service
+		foreach my $clock (@cycles_to_calculate)
+		{
+			calculate_cycle(
+				$tld,
+				$service,
+				$lastvalues_db_tld->{$service}{'probes'},
+				$clock,
+				$delays{$service},
+				$rtt_limits{$service},
+				$probes->{$service},
+				$interfaces_ref
+			);
+		}
+	}
 }
 
 sub get_global_lastclock($$$)
@@ -294,8 +349,8 @@ sub add_cycles($$$$$$$$$$$)
 	my $delay = shift;
 	my $max_period = shift;
 	my $cycles_ref = shift;
-	my $lastvalues_cache = shift;
-	my $lastvalues_db = shift;	# for debugging only
+	my $lastvalues_cache_tld = shift;
+	my $lastvalues_db_tld = shift;	# for debugging only
 
 	return if ($lastclock == $lastclock_db);	# we are up-to-date, according to cache
 
@@ -311,23 +366,23 @@ sub add_cycles($$$$$$$$$$$)
 		if ($cycle_start == $db_cycle_start)
 		{
 			# cache the real clock of the item
-			$lastvalues_cache->{$tld}{$service}{'probes'}{$probe}{$itemid}{'clock'} = $lastclock_db;
+			$lastvalues_cache_tld->{$service}{'probes'}{$probe}{$itemid}{'clock'} = $lastclock_db;
 		}
 		else
 		{
 			# we don't know the real clock so cache cycle start
-			$lastvalues_cache->{$tld}{$service}{'probes'}{$probe}{$itemid}{'clock'} = $cycle_start;
+			$lastvalues_cache_tld->{$service}{'probes'}{$probe}{$itemid}{'clock'} = $cycle_start;
 		}
 
 		if (opt('debug'))
 		{
 			dbg("cycle ", ts_str($cycle_start), " will be calculated because of item ",
 				substr(
-					$lastvalues_db->{$tld}{$service}{'probes'}{$probe}{$itemid}{'key'},
+					$lastvalues_db_tld->{$service}{'probes'}{$probe}{$itemid}{'key'},
 					0,
 					SUBSTR_KEY_LEN
 				),
-				", cache clock ", ts_str($lastvalues_cache->{$tld}{$service}{'probes'}{$probe}{$itemid}{'clock'})
+				", cache clock ", ts_str($lastvalues_cache_tld->{$service}{'probes'}{$probe}{$itemid}{'clock'})
 			);
 		}
 
@@ -350,17 +405,17 @@ sub cycles_to_calculate($$$$$$$$)
 	my $delay = shift;
 	my $max_period = shift;	# seconds
 	my $service_key = shift;
-	my $lastvalues_db = shift;
-	my $lastvalues_cache = shift;
+	my $lastvalues_db_tld = shift;
+	my $lastvalues_cache_tld = shift;
 	my $cycles_ref = shift;	# result
 
 	my %cycles;
 
-	foreach my $probe (keys(%{$lastvalues_db->{$tld}{$service}{'probes'}}))
+	foreach my $probe (keys(%{$lastvalues_db_tld->{$service}{'probes'}}))
 	{
-		foreach my $itemid (keys(%{$lastvalues_db->{$tld}{$service}{'probes'}{$probe}}))
+		foreach my $itemid (keys(%{$lastvalues_db_tld->{$service}{'probes'}{$probe}}))
 		{
-			my $lastclock_db = $lastvalues_db->{$tld}{$service}{'probes'}{$probe}{$itemid}{'clock'};
+			my $lastclock_db = $lastvalues_db_tld->{$service}{'probes'}{$probe}{$itemid}{'clock'};
 
 			my $lastclock;
 
@@ -371,7 +426,7 @@ sub cycles_to_calculate($$$$$$$$)
 
 				$lastclock = $global_lastclock;
 			}
-			elsif (!defined($lastvalues_cache->{$tld}{$service}{'probes'}{$probe}{$itemid}))
+			elsif (!defined($lastvalues_cache_tld->{$service}{'probes'}{$probe}{$itemid}))
 			{
 				# this partilular item is not in cache yet, get the time starting point for it
 				$global_lastclock //= get_global_lastclock($tld, $service_key, $delay);
@@ -387,7 +442,7 @@ sub cycles_to_calculate($$$$$$$$)
 			}
 			else
 			{
-				$lastclock = $lastvalues_cache->{$tld}{$service}{'probes'}{$probe}{$itemid}{'clock'};
+				$lastclock = $lastvalues_cache_tld->{$service}{'probes'}{$probe}{$itemid}{'clock'};
 
 				if ($lastclock > $lastclock_db)
 				{
@@ -398,7 +453,7 @@ sub cycles_to_calculate($$$$$$$$)
 
 			if (opt('debug'))
 			{
-				my $key = substr($lastvalues_db->{$tld}{$service}{'probes'}{$probe}{$itemid}{'key'}, 0, SUBSTR_KEY_LEN);
+				my $key = substr($lastvalues_db_tld->{$service}{'probes'}{$probe}{$itemid}{'key'}, 0, SUBSTR_KEY_LEN);
 
 				$key = sprintf("%".SUBSTR_KEY_LEN."s", $key);
 
@@ -415,14 +470,12 @@ sub cycles_to_calculate($$$$$$$$)
 				$delay,
 				$max_period,
 				\%cycles,
-				$lastvalues_cache,
-				$lastvalues_db
+				$lastvalues_cache_tld,
+				$lastvalues_db_tld
 			);
 
 		}
 	}
-
-
 
 	@{$cycles_ref} = sort(keys(%cycles));
 
@@ -586,19 +639,19 @@ sub get_lastvalues_from_db($$)
 
 		my $index = index($host, ' ');	# "<TLD> <Probe>" separator
 
-		my ($probe, $key_service);
+		my ($probe, $key_service, $tld);
 
 		if ($index == -1)
 		{
 			# this host just represents TLD
-			$tld = $host;	# $tld is global variable
+			$tld = $host;
 			$probe = '';
 
 			$key_service = get_service_from_slv_key($key);
 		}
 		else
 		{
-			$tld = substr($host, 0, $index);	# $tld is global variable
+			$tld = substr($host, 0, $index);
 			$probe = substr($host, $index + 1);
 
 			$key_service = get_service_from_probe_key($key);
@@ -1249,6 +1302,74 @@ sub get_interfaces($$$)
 	return \@result;
 }
 
+sub set_on_finish($)
+{
+	my $fm = shift;
+
+	$fm->run_on_finish(
+		sub ($$$$$)
+		{
+			my $pid = shift;
+			my $exit_code = shift;
+			my $id = shift;
+			my $exit_signal = shift;
+			my $core_dump = shift;
+			my $child_data = shift;
+
+			if ($core_dump == 1)
+			{
+				$child_failed = 1;
+				info("child (PID:$pid) handling TLD ", $tldmap{$pid}, " core dumped");
+			}
+			elsif ($exit_code != SUCCESS)
+			{
+				$child_failed = 1;
+				info("child (PID:$pid) handling TLD ", $tldmap{$pid},
+					($exit_signal == 0 ? "" : " got signal " . sig_name($exit_signal) . " and"),
+					" exited with code $exit_code");
+			}
+			elsif ($exit_code != SUCCESS)
+			{
+				$child_failed = 1;
+				info("child (PID:$pid) handling TLD ", $tldmap{$pid}, " got signal ", sig_name($exit_signal));
+			}
+			else
+			{
+				dbg("child (PID:$pid) handling TLD ", $tldmap{$pid}, " exited successfully");
+
+				$lastvalues_cache->{'tlds'}{$tldmap{$pid}} = $child_data;
+			}
+		}
+	);
+}
+
+sub child_failed
+{
+	$fm->run_on_wait(
+		sub ()
+		{
+			# This callback ensures that before waiting for the next child to terminate we check the $child_failed
+			# flag and send terminate all running children if needed. After sending SIGTERM we raise $signal_sent
+			# flag to make sure that we don't do it multiple times.
+
+			return unless ($child_failed);
+			return if ($signal_sent);
+
+			info("one of the child processes failed, terminating others...");
+
+			$SIG{'TERM'} = 'IGNORE';	# ignore signal we will send to ourselves in the next step
+			kill('TERM', 0);		# send signal to the entire process group
+			$SIG{'TERM'} = 'DEFAULT';	# restore default signal handler
+
+			$signal_sent = 1;
+		}
+	);
+
+	$fm->wait_all_children();
+
+	slv_exit(E_FAIL) if ($child_failed);
+}
+
 __END__
 
 =head1 NAME
@@ -1257,7 +1378,7 @@ sla-api-current.pl - generate recent SLA API measurement files for newly collect
 
 =head1 SYNOPSIS
 
-sla-api-current.pl [--tld <tld>] [--service <name>] [--server-id <id>] [--now unixtimestamp] [--period minutes] [--print-period] [--debug] [--dry-run] [--help]
+sla-api-current.pl [--tld <tld>] [--service <name>] [--server-id <id>] [--now unixtimestamp] [--period minutes] [--print-period] [--max-children n] [--debug] [--dry-run] [--help]
 
 =head1 OPTIONS
 
@@ -1286,6 +1407,10 @@ Optionally specify maximum period to handle (default: 30 minutes).
 =item B<--print-period>
 
 Print selected period on the screen.
+
+=item B<--max-children> n
+
+Specify maximum number of child processes to run in parallel (default: 64).
 
 =item B<--debug>
 
