@@ -1379,7 +1379,7 @@ sla-api-current.pl - generate recent SLA API measurement files for newly collect
 
 =head1 SYNOPSIS
 
-sla-api-current.pl [--tld <tld>] [--service <name>] [--server-id <id>] [--now unixtimestamp] [--period minutes] [--print-period] [--max-children] [--debug] [--dry-run] [--help]
+sla-api-current.pl [--tld <tld>] [--service <name>] [--server-id <id>] [--now unixtimestamp] [--period minutes] [--print-period] [--max-children n] [--debug] [--dry-run] [--help]
 
 =head1 OPTIONS
 
@@ -1411,7 +1411,7 @@ Print selected period on the screen.
 
 =item B<--max-children> n
 
-Specify maximum number of child processes to run in parallel.
+Specify maximum number of child processes to run in parallel (default: 64).
 
 =item B<--debug>
 
