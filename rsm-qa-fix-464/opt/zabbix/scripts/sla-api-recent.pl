@@ -165,7 +165,7 @@ foreach (@server_keys)
 		if ($pid == 0)
 		{
 			db_connect($server_key);
-			process_tld($tld, \%probes, $lastvalues_db, $lastvalues_cache);
+			process_tld($tld, \%probes, $lastvalues_db, $lastvalues_cache->{'tlds'}{$tld});
 			db_disconnect();
 			$fm->finish(SUCCESS, $lastvalues_cache->{'tlds'}{$tld});
 			last;
@@ -195,7 +195,7 @@ sub process_tld($$$$)
 	my $tld = shift;
 	my $probes = shift;
 	my $lastvalues_db = shift;
-	my $lastvalues_cache = shift;
+	my $lastvalues_cache_of_tld = shift;
 
 	foreach my $service (sort(keys(%{$lastvalues_db->{'tlds'}{$tld}})))
 	{
@@ -213,7 +213,7 @@ sub process_tld($$$$)
 				$max_period,
 				$service_keys{$service},
 				$lastvalues_db->{'tlds'},
-				$lastvalues_cache->{'tlds'},
+				$lastvalues_cache_of_tld,
 				\@cycles_to_calculate) == E_FAIL)
 		{
 			next;
@@ -337,7 +337,7 @@ sub add_cycles($$$$$$$$$$$)
 	my $delay = shift;
 	my $max_period = shift;
 	my $cycles_ref = shift;
-	my $lastvalues_cache = shift;
+	my $lastvalues_cache_of_tld = shift;
 	my $lastvalues_db = shift;	# for debugging only
 
 	return if ($lastclock == $lastclock_db);	# we are up-to-date, according to cache
@@ -354,12 +354,12 @@ sub add_cycles($$$$$$$$$$$)
 		if ($cycle_start == $db_cycle_start)
 		{
 			# cache the real clock of the item
-			$lastvalues_cache->{$tld}{$service}{'probes'}{$probe}{$itemid}{'clock'} = $lastclock_db;
+			$lastvalues_cache_of_tld->{$service}{'probes'}{$probe}{$itemid}{'clock'} = $lastclock_db;
 		}
 		else
 		{
 			# we don't know the real clock so cache cycle start
-			$lastvalues_cache->{$tld}{$service}{'probes'}{$probe}{$itemid}{'clock'} = $cycle_start;
+			$lastvalues_cache_of_tld->{$service}{'probes'}{$probe}{$itemid}{'clock'} = $cycle_start;
 		}
 
 		if (opt('debug'))
@@ -370,7 +370,7 @@ sub add_cycles($$$$$$$$$$$)
 					0,
 					SUBSTR_KEY_LEN
 				),
-				", cache clock ", ts_str($lastvalues_cache->{$tld}{$service}{'probes'}{$probe}{$itemid}{'clock'})
+				", cache clock ", ts_str($lastvalues_cache_of_tld->{$service}{'probes'}{$probe}{$itemid}{'clock'})
 			);
 		}
 
@@ -394,7 +394,7 @@ sub cycles_to_calculate($$$$$$$$)
 	my $max_period = shift;	# seconds
 	my $service_key = shift;
 	my $lastvalues_db = shift;
-	my $lastvalues_cache = shift;
+	my $lastvalues_cache_of_tld = shift;
 	my $cycles_ref = shift;	# result
 
 	my %cycles;
@@ -414,7 +414,7 @@ sub cycles_to_calculate($$$$$$$$)
 
 				$lastclock = $global_lastclock;
 			}
-			elsif (!defined($lastvalues_cache->{$tld}{$service}{'probes'}{$probe}{$itemid}))
+			elsif (!defined($lastvalues_cache_of_tld->{$service}{'probes'}{$probe}{$itemid}))
 			{
 				# this partilular item is not in cache yet, get the time starting point for it
 				$global_lastclock //= get_global_lastclock($tld, $service_key, $delay);
@@ -430,7 +430,7 @@ sub cycles_to_calculate($$$$$$$$)
 			}
 			else
 			{
-				$lastclock = $lastvalues_cache->{$tld}{$service}{'probes'}{$probe}{$itemid}{'clock'};
+				$lastclock = $lastvalues_cache_of_tld->{$service}{'probes'}{$probe}{$itemid}{'clock'};
 
 				if ($lastclock > $lastclock_db)
 				{
@@ -458,14 +458,12 @@ sub cycles_to_calculate($$$$$$$$)
 				$delay,
 				$max_period,
 				\%cycles,
-				$lastvalues_cache,
+				$lastvalues_cache_of_tld,
 				$lastvalues_db
 			);
 
 		}
 	}
-
-
 
 	@{$cycles_ref} = sort(keys(%cycles));
 
