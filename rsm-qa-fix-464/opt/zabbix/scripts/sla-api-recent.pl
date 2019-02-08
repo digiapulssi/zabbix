@@ -165,7 +165,7 @@ foreach (@server_keys)
 		if ($pid == 0)
 		{
 			db_connect($server_key);
-			process_tld($tld, \%probes, $lastvalues_db, $lastvalues_cache->{'tlds'}{$tld});
+			process_tld($tld, \%probes, $lastvalues_db->{'tlds'}{$tld}, $lastvalues_cache->{'tlds'}{$tld});
 			db_disconnect();
 			$fm->finish(SUCCESS, $lastvalues_cache->{'tlds'}{$tld});
 			last;
@@ -194,10 +194,10 @@ sub process_tld($$$$)
 {
 	my $tld = shift;
 	my $probes = shift;
-	my $lastvalues_db = shift;
+	my $lastvalues_db_of_tld = shift;
 	my $lastvalues_cache_of_tld = shift;
 
-	foreach my $service (sort(keys(%{$lastvalues_db->{'tlds'}{$tld}})))
+	foreach my $service (sort(keys(%{$lastvalues_db_of_tld})))
 	{
 		next if (opt('service') && $service ne getopt('service'));
 
@@ -212,7 +212,7 @@ sub process_tld($$$$)
 				$delays{$service},
 				$max_period,
 				$service_keys{$service},
-				$lastvalues_db->{'tlds'},
+				$lastvalues_db_of_tld,
 				$lastvalues_cache_of_tld,
 				\@cycles_to_calculate) == E_FAIL)
 		{
@@ -261,7 +261,7 @@ sub process_tld($$$$)
 			calculate_cycle(
 				$tld,
 				$service,
-				$lastvalues_db->{'tlds'}{$tld}{$service}{'probes'},
+				$lastvalues_db_of_tld->{$service}{'probes'},
 				$clock,
 				$delays{$service},
 				$rtt_limits{$service},
@@ -338,7 +338,7 @@ sub add_cycles($$$$$$$$$$$)
 	my $max_period = shift;
 	my $cycles_ref = shift;
 	my $lastvalues_cache_of_tld = shift;
-	my $lastvalues_db = shift;	# for debugging only
+	my $lastvalues_db_of_tld = shift;	# for debugging only
 
 	return if ($lastclock == $lastclock_db);	# we are up-to-date, according to cache
 
@@ -366,7 +366,7 @@ sub add_cycles($$$$$$$$$$$)
 		{
 			dbg("cycle ", ts_str($cycle_start), " will be calculated because of item ",
 				substr(
-					$lastvalues_db->{$tld}{$service}{'probes'}{$probe}{$itemid}{'key'},
+					$lastvalues_db_of_tld->{$service}{'probes'}{$probe}{$itemid}{'key'},
 					0,
 					SUBSTR_KEY_LEN
 				),
@@ -393,17 +393,17 @@ sub cycles_to_calculate($$$$$$$$)
 	my $delay = shift;
 	my $max_period = shift;	# seconds
 	my $service_key = shift;
-	my $lastvalues_db = shift;
+	my $lastvalues_db_of_tld = shift;
 	my $lastvalues_cache_of_tld = shift;
 	my $cycles_ref = shift;	# result
 
 	my %cycles;
 
-	foreach my $probe (keys(%{$lastvalues_db->{$tld}{$service}{'probes'}}))
+	foreach my $probe (keys(%{$lastvalues_db_of_tld->{$service}{'probes'}}))
 	{
-		foreach my $itemid (keys(%{$lastvalues_db->{$tld}{$service}{'probes'}{$probe}}))
+		foreach my $itemid (keys(%{$lastvalues_db_of_tld->{$service}{'probes'}{$probe}}))
 		{
-			my $lastclock_db = $lastvalues_db->{$tld}{$service}{'probes'}{$probe}{$itemid}{'clock'};
+			my $lastclock_db = $lastvalues_db_of_tld->{$service}{'probes'}{$probe}{$itemid}{'clock'};
 
 			my $lastclock;
 
@@ -441,7 +441,7 @@ sub cycles_to_calculate($$$$$$$$)
 
 			if (opt('debug'))
 			{
-				my $key = substr($lastvalues_db->{$tld}{$service}{'probes'}{$probe}{$itemid}{'key'}, 0, SUBSTR_KEY_LEN);
+				my $key = substr($lastvalues_db_of_tld->{$service}{'probes'}{$probe}{$itemid}{'key'}, 0, SUBSTR_KEY_LEN);
 
 				$key = sprintf("%".SUBSTR_KEY_LEN."s", $key);
 
@@ -459,7 +459,7 @@ sub cycles_to_calculate($$$$$$$$)
 				$max_period,
 				\%cycles,
 				$lastvalues_cache_of_tld,
-				$lastvalues_db
+				$lastvalues_db_of_tld
 			);
 
 		}
