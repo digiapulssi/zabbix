@@ -35,7 +35,7 @@ sub probe_online_at_init();
 sub get_history_by_itemid($$$);
 sub set_on_finish($);
 
-parse_opts('tld=s', 'service=s', 'server-id=i', 'now=i', 'period=i', 'print-period!', 'max-children=i');
+parse_opts('tld=s', 'service=s', 'server-id=i', 'now=i', 'period=i', 'print-period!', 'max-children=i', 'max-tlds-per-child=i');
 
 setopt('nolog');
 
@@ -157,10 +157,9 @@ foreach (@server_keys)
 
 	my @tld_keys = sort(keys(%{$lastvalues_db->{'tlds'}}));
 	my $total_tld_count = scalar(@tld_keys);
-	print "$total_tld_count\n";
 
 	# figure out child count to spawn
-	my $max_tlds_per_child = 32;
+	my $max_tlds_per_child = (opt('max-tlds-per-child') ? getopt('max-tlds-per-child') : 16);
 	my $child_count = int($total_tld_count) / int($max_tlds_per_child);
 	$child_count += (int($total_tld_count) % int($max_tlds_per_child)) ? 1 : 0;
 
@@ -1430,6 +1429,10 @@ Print selected period on the screen.
 =item B<--max-children> n
 
 Specify maximum number of child processes to run in parallel (default: 64).
+
+=item B<--max-tlds-per-child> n
+
+Specify maximum number of tlds to be processed by each child (default: 16).
 
 =item B<--debug>
 
