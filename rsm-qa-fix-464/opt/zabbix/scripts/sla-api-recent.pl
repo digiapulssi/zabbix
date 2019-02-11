@@ -104,7 +104,6 @@ set_on_finish($fm);
 
 my $child_failed = 0;
 my $signal_sent = 0;
-my %tldmap;
 my $lastvalues_cache = {};
 
 foreach (@server_keys)
@@ -156,7 +155,16 @@ foreach (@server_keys)
 	# probes available for every service
 	my %probes;
 
-	foreach my $tld_for_a_child_to_process (sort(keys(%{$lastvalues_db->{'tlds'}})))
+	my @tld_keys = sort(keys(%{$lastvalues_db->{'tlds'}}));
+	my $total_tld_count = scalar(@tld_keys);
+	print "$total_tld_count\n";
+
+	# figure out child count to spawn
+	my $max_tlds_per_child = 32;
+	my $child_count = int($total_tld_count) / int($max_tlds_per_child);
+	$child_count += (int($total_tld_count) % int($max_tlds_per_child)) ? 1 : 0;
+
+	for (my $n = 0; $n < $child_count; $n++)
 	{
 		child_failed() if ($child_failed);
 
@@ -164,19 +172,29 @@ foreach (@server_keys)
 
 		if ($pid == 0)
 		{
-			$tld = $tld_for_a_child_to_process;	# global variable
+			my %child_tlds;
 
 			db_connect($server_key);
-			process_tld($tld, \%probes, $lastvalues_db->{'tlds'}{$tld}, $lastvalues_cache->{'tlds'}{$tld});
-			db_disconnect();
-			$fm->finish(SUCCESS, $lastvalues_cache->{'tlds'}{$tld});
-			last;
-		}
-		else
-		{
-			$tldmap{$pid} = $tld_for_a_child_to_process;
 
-			next;
+			for (my $i = 0; $i < $max_tlds_per_child; $i++)
+			{
+				my $tldi = $n * $max_tlds_per_child + $i;
+				last if $tldi >= $total_tld_count;
+
+				$tld = $tld_keys[$tldi]; # global variable
+
+				my $lastvalues_db_tld = $lastvalues_db->{'tlds'}{$tld};
+				my $lastvalues_cache_tld = $lastvalues_cache->{'tlds'}{$tld} = {};
+
+				process_tld($tld, \%probes, $lastvalues_db_tld, $lastvalues_cache_tld);
+
+				$child_tlds{$tld} = $lastvalues_cache->{'tlds'}{$tld};
+			}
+
+			db_disconnect();
+
+			$fm->finish(SUCCESS, \%child_tlds);
+			last;
 		}
 	}
 
@@ -1317,25 +1335,28 @@ sub set_on_finish($)
 			if ($core_dump == 1)
 			{
 				$child_failed = 1;
-				info("child (PID:$pid) handling TLD ", $tldmap{$pid}, " core dumped");
+				info("child (PID:$pid) core dumped");
 			}
 			elsif ($exit_code != SUCCESS)
 			{
 				$child_failed = 1;
-				info("child (PID:$pid) handling TLD ", $tldmap{$pid},
+				info("child (PID:$pid) ",
 					($exit_signal == 0 ? "" : " got signal " . sig_name($exit_signal) . " and"),
 					" exited with code $exit_code");
 			}
 			elsif ($exit_code != SUCCESS)
 			{
 				$child_failed = 1;
-				info("child (PID:$pid) handling TLD ", $tldmap{$pid}, " got signal ", sig_name($exit_signal));
+				info("child (PID:$pid) got signal ", sig_name($exit_signal));
 			}
 			else
 			{
-				dbg("child (PID:$pid) handling TLD ", $tldmap{$pid}, " exited successfully");
+				dbg("child (PID:$pid) exited successfully");
 
-				$lastvalues_cache->{'tlds'}{$tldmap{$pid}} = $child_data;
+				foreach my $tld (keys(%$child_data))
+				{
+					$lastvalues_cache->{'tlds'}{$tld} = $child_data;
+				}
 			}
 		}
 	);
