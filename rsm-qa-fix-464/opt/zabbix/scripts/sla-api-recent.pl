@@ -20,8 +20,6 @@ $Data::Dumper::Pair = " : ";	# use separator instead of " => "
 $Data::Dumper::Useqq = 1;	# use double quotes instead of single quotes
 $Data::Dumper::Indent = 1;	# 1 provides less indentation instead of 2
 
-use constant SLV_UNAVAILABILITY_LIMIT => 49;
-
 use constant TARGET_PLACEHOLDER => 'TARGET_PLACEHOLDER';	# for non-DNS services
 
 use constant MAX_PERIOD => 30 * 60;	# 30 minutes
