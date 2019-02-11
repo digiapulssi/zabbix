@@ -57,7 +57,8 @@
 #	define ZBX_TLS_CIPHERSUITE_ALL	2			/* select ciphersuites with certificate and PSK */
 #endif
 
-#if defined(HAVE_OPENSSL) && OPENSSL_VERSION_NUMBER < 0x1010000fL	/* for OpenSSL 1.0.1/1.0.2 (before 1.1.0) */
+#if defined(HAVE_OPENSSL) && OPENSSL_VERSION_NUMBER < 0x1010000fL || defined(LIBRESSL_VERSION_NUMBER)
+/* for OpenSSL 1.0.1/1.0.2 (before 1.1.0) or LibreSSL */
 
 /* mutexes for multi-threaded OpenSSL (see "man 3ssl threads" and example in crypto/threads/mttest.c) */
 
@@ -119,20 +120,28 @@ static void	zbx_openssl_thread_cleanup(void)
 }
 #endif	/* _WINDOWS */
 
+#if !defined(LIBRESSL_VERSION_NUMBER)
 #define OPENSSL_INIT_LOAD_SSL_STRINGS			0
 #define OPENSSL_INIT_LOAD_CRYPTO_STRINGS		0
 #define OPENSSL_VERSION					SSLEAY_VERSION
+#endif
 #define OpenSSL_version					SSLeay_version
 #define TLS_method					TLSv1_2_method
 #define TLS_client_method				TLSv1_2_client_method
 #define SSL_CTX_get_ciphers(ciphers)			((ciphers)->cipher_list)
+#if !defined(LIBRESSL_VERSION_NUMBER)
 #define SSL_CTX_set_min_proto_version(ctx, TLSv)	1
+#endif
 
-static int	OPENSSL_init_ssl(int opts, void *settings)
+static int	zbx_openssl_init_ssl(int opts, void *settings)
 {
+#if defined(HAVE_OPENSSL) && OPENSSL_VERSION_NUMBER < 0x1010000fL
 	SSL_load_error_strings();
 	ERR_load_BIO_strings();
 	SSL_library_init();
+#elif defined(LIBRESSL_VERSION_NUMBER)
+	OPENSSL_init_ssl(opts, settings);
+#endif
 #ifdef _WINDOWS
 	zbx_openssl_thread_setup();
 #endif
@@ -146,6 +155,14 @@ static void	OPENSSL_cleanup(void)
 #ifdef _WINDOWS
 	zbx_openssl_thread_cleanup();
 #endif
+}
+#endif	/* defined(HAVE_OPENSSL) && OPENSSL_VERSION_NUMBER < 0x1010000fL || defined(LIBRESSL_VERSION_NUMBER) */
+
+#if defined(HAVE_OPENSSL) && OPENSSL_VERSION_NUMBER >= 0x1010000fL && !defined(LIBRESSL_VERSION_NUMBER)
+/* OpenSSL 1.1.0 or newer, not LibreSSL */
+static int	zbx_openssl_init_ssl(int opts, void *settings)
+{
+	return OPENSSL_init_ssl(opts, settings);
 }
 #endif
 
@@ -2589,7 +2606,7 @@ static void	zbx_tls_library_init(void)
 
 	zabbix_log(LOG_LEVEL_DEBUG, "GnuTLS library (version %s) initialized", gnutls_check_version(NULL));
 #elif defined(HAVE_OPENSSL)
-	if (1 != OPENSSL_init_ssl(OPENSSL_INIT_LOAD_SSL_STRINGS | OPENSSL_INIT_LOAD_CRYPTO_STRINGS, NULL))
+	if (1 != zbx_openssl_init_ssl(OPENSSL_INIT_LOAD_SSL_STRINGS | OPENSSL_INIT_LOAD_CRYPTO_STRINGS, NULL))
 	{
 		zabbix_log(LOG_LEVEL_CRIT, "cannot initialize OpenSSL library");
 		exit(EXIT_FAILURE);
@@ -3119,13 +3136,12 @@ void	zbx_tls_init_child(void)
 #define ZBX_CIPHERS_CERT_ECDHE		"EECDH+aRSA+AES128:"
 #define ZBX_CIPHERS_CERT		"RSA+aRSA+AES128"
 
-#if defined(HAVE_OPENSSL_WITH_PSK) && OPENSSL_VERSION_NUMBER >= 0x1010100fL	/* OpenSSL 1.1.1 or newer */
+#if defined(HAVE_OPENSSL_WITH_PSK)
+#if OPENSSL_VERSION_NUMBER >= 0x1010100fL	/* OpenSSL 1.1.1 or newer */
 	/* TLS_AES_256_GCM_SHA384 is excluded from client ciphersuite list for PSK based connections. */
 	/* By default, in TLS 1.3 only *-SHA256 ciphersuites work with PSK. */
 #	define ZBX_CIPHERS_PSK_TLS13	"TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256"
 #endif
-
-#if defined(HAVE_OPENSSL_WITH_PSK)
 #if OPENSSL_VERSION_NUMBER >= 0x1010000fL	/* OpenSSL 1.1.0 or newer */
 #	define ZBX_CIPHERS_PSK_ECDHE	"kECDHEPSK+AES128:"
 #	define ZBX_CIPHERS_PSK		"kPSK+AES128"
@@ -4905,7 +4921,7 @@ int	zbx_tls_accept(zbx_socket_t *s, unsigned int tls_accept, char **error)
 #if defined(_WINDOWS)
 	double		sec;
 #endif
-#if OPENSSL_VERSION_NUMBER >= 0x1010100fL	/* OpenSSL 1.1.1 or newer */
+#if OPENSSL_VERSION_NUMBER >= 0x1010100fL	/* OpenSSL 1.1.1 or newer, or LibreSSL */
 	const unsigned char	session_id_context[] = {'Z', 'b', 'x'};
 #endif
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
@@ -5014,7 +5030,7 @@ int	zbx_tls_accept(zbx_socket_t *s, unsigned int tls_accept, char **error)
 #endif
 	}
 
-#if OPENSSL_VERSION_NUMBER >= 0x1010100fL	/* OpenSSL 1.1.1 or newer */
+#if OPENSSL_VERSION_NUMBER >= 0x1010100fL	/* OpenSSL 1.1.1 or newer, or LibreSSL */
 	if (1 != SSL_set_session_id_context(s->tls_ctx->ctx, session_id_context, sizeof(session_id_context)))
 	{
 		*error = zbx_strdup(*error, "cannot set session_id_context");
