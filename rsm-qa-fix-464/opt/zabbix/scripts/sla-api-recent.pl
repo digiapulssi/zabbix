@@ -1364,7 +1364,7 @@ sub set_on_finish($)
 
 				foreach my $tld (keys(%$child_data))
 				{
-					$lastvalues_cache->{'tlds'}{$tld} = $child_data;
+					$lastvalues_cache->{'tlds'}{$tld} = $child_data->{$tld};
 				}
 			}
 		}
