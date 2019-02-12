@@ -1,6 +1,6 @@
 #!/bin/bash
 
-BASE="/opt/zabbix/sla-v2"
+BASE="/opt/zabbix/sla"
 SCHEMA_FILE="$(dirname $0)/test-sla-api-recent.schema"
 
 declare -A DELAYS=([dns]=60 [dnssec]=60 [rdds]=300)

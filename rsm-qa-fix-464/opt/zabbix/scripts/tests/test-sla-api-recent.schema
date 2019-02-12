@@ -43,7 +43,7 @@
                                   "type": "object",
                                   "properties": {
                                     "testDateTime": {
-                                      "type": "string"
+                                      "type": "integer"
                                     },
                                     "targetIP": {
                                       "type": "string"
