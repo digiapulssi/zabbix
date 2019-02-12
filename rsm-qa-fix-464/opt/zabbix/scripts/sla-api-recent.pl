@@ -35,7 +35,7 @@ sub probe_online_at_init();
 sub get_history_by_itemid($$$);
 sub set_on_finish($);
 
-parse_opts('tld=s', 'service=s', 'server-id=i', 'now=i', 'period=i', 'print-period!', 'max-children=i', 'max-tlds-per-child=i');
+parse_opts('tld=s', 'service=s', 'server-id=i', 'now=i', 'period=i', 'print-period!', 'max-children=i');
 
 setopt('nolog');
 
@@ -98,7 +98,9 @@ my $global_lastclock;
 
 my %rtt_limits;
 
-my $fm = new Parallel::ForkManager(opt('max-children') ? getopt('max-children') : 64);
+my $max_children = opt('max-children') ? getopt('max-children') : 64;
+
+my $fm = new Parallel::ForkManager();
 
 set_on_finish($fm);
 
@@ -158,12 +160,20 @@ foreach (@server_keys)
 	my @tld_keys = sort(keys(%{$lastvalues_db->{'tlds'}}));
 	my $total_tld_count = scalar(@tld_keys);
 
-	# figure out child count to spawn
-	my $max_tlds_per_child = (opt('max-tlds-per-child') ? getopt('max-tlds-per-child') : 16);
-	my $child_count = int($total_tld_count) / int($max_tlds_per_child);
-	$child_count += (int($total_tld_count) % int($max_tlds_per_child)) ? 1 : 0;
+	my $max_tlds_per_child = 1;
 
-	for (my $n = 0; $n < $child_count; $n++)
+	if ($max_children < $total_tld_count)
+	{
+		$max_tlds_per_child = int(int($total_tld_count) / int($max_children));
+		if ((int($total_tld_count) % int($max_children)) > 0)
+		{
+			$max_children++; #one extra child to process the remainder
+		}
+	}
+
+	$fm->set_max_procs($max_children);
+
+	for (my $n = 0; $n < $max_children; $n++)
 	{
 		child_failed() if ($child_failed);
 
@@ -1429,10 +1439,6 @@ Print selected period on the screen.
 =item B<--max-children> n
 
 Specify maximum number of child processes to run in parallel (default: 64).
-
-=item B<--max-tlds-per-child> n
-
-Specify maximum number of tlds to be processed by each child (default: 16).
 
 =item B<--debug>
 
