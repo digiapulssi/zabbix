@@ -5637,12 +5637,14 @@ void	zbx_tls_pass_vars(ZBX_THREAD_SENDVAL_TLS_ARGS *args)
 	args->ciphersuites_psk = ciphersuites_psk;
 #elif defined(HAVE_OPENSSL)
 	args->ctx_cert = ctx_cert;
+#if defined(HAVE_OPENSSL_WITH_PSK)
 	args->ctx_psk = ctx_psk;
 	args->psk_identity_for_cb = psk_identity_for_cb;
 	args->psk_identity_len_for_cb = psk_identity_len_for_cb;
 	args->psk_for_cb = psk_for_cb;
 	args->psk_len_for_cb = psk_len_for_cb;
 #endif
+#endif	/* defined(HAVE_OPENSSL) */
 }
 
 /******************************************************************************
@@ -5676,12 +5678,14 @@ void	zbx_tls_take_vars(ZBX_THREAD_SENDVAL_TLS_ARGS *args)
 	ciphersuites_psk = args->ciphersuites_psk;
 #elif defined(HAVE_OPENSSL)
 	ctx_cert = args->ctx_cert;
+#if defined(HAVE_OPENSSL_WITH_PSK)
 	ctx_psk = args->ctx_psk;
 	psk_identity_for_cb = args->psk_identity_for_cb;
 	psk_identity_len_for_cb = args->psk_identity_len_for_cb;
 	psk_for_cb = args->psk_for_cb;
 	psk_len_for_cb = args->psk_len_for_cb;
 #endif
+#endif	/* defined(HAVE_OPENSSL) */
 }
 #endif
 
