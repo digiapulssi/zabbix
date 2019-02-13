@@ -445,12 +445,11 @@ function zbx_num2bitstr($num, $rev = false) {
  *
  * @param string $val
  *
- * @return int
+ * @return string
  */
 function str2mem($val) {
 	$val = trim($val);
 	$last = strtolower(substr($val, -1));
-	$val = (int) $val;
 
 	switch ($last) {
 		case 'g':
