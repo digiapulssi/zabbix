@@ -402,11 +402,6 @@ void	del_zeroes(char *s)
 	int	trim = 0;
 	size_t	len = 0;
 
-	if (NULL == s)
-	{
-		return;
-	}
-
 	while ('\0' != s[len])
 	{
 		if ('e' == s[len] || 'E' == s[len])
