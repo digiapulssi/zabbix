@@ -160,15 +160,21 @@ foreach (@server_keys)
 	my @tld_keys = sort(keys(%{$lastvalues_db->{'tlds'}}));
 	my $total_tld_count = scalar(@tld_keys);
 
-	my $max_tlds_per_child = 1;
+	my $max_tlds_per_child;
 
 	if ($max_children < $total_tld_count)
 	{
 		$max_tlds_per_child = int(int($total_tld_count) / int($max_children));
+
 		if ((int($total_tld_count) % int($max_children)) > 0)
 		{
-			$max_children++; #one extra child to process the remainder
+			$max_children++;	# one extra child to process the remainder
 		}
+	}
+	else
+	{
+		$max_children = $total_tld_count;
+		$max_tlds_per_child = 1;
 	}
 
 	$fm->set_max_procs($max_children);
@@ -188,6 +194,7 @@ foreach (@server_keys)
 			for (my $i = 0; $i < $max_tlds_per_child; $i++)
 			{
 				my $tldi = $n * $max_tlds_per_child + $i;
+
 				last if $tldi >= $total_tld_count;
 
 				$tld = $tld_keys[$tldi]; # global variable
@@ -1349,7 +1356,7 @@ sub set_on_finish($)
 			elsif ($exit_code != SUCCESS)
 			{
 				$child_failed = 1;
-				info("child (PID:$pid) ",
+				info("child (PID:$pid)",
 					($exit_signal == 0 ? "" : " got signal " . sig_name($exit_signal) . " and"),
 					" exited with code $exit_code");
 			}
