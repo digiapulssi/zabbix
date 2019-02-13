@@ -20,8 +20,6 @@ $Data::Dumper::Pair = " : ";	# use separator instead of " => "
 $Data::Dumper::Useqq = 1;	# use double quotes instead of single quotes
 $Data::Dumper::Indent = 1;	# 1 provides less indentation instead of 2
 
-use constant SLV_UNAVAILABILITY_LIMIT => 49;
-
 use constant TARGET_PLACEHOLDER => 'TARGET_PLACEHOLDER';	# for non-DNS services
 
 use constant MAX_PERIOD => 30 * 60;	# 30 minutes
@@ -100,13 +98,14 @@ my $global_lastclock;
 
 my %rtt_limits;
 
-my $fm = new Parallel::ForkManager(opt('max-children') ? getopt('max-children') : 64);
+my $max_children = opt('max-children') ? getopt('max-children') : 64;
+
+my $fm = new Parallel::ForkManager();
 
 set_on_finish($fm);
 
 my $child_failed = 0;
 my $signal_sent = 0;
-my %tldmap;
 my $lastvalues_cache = {};
 
 foreach (@server_keys)
@@ -158,7 +157,29 @@ foreach (@server_keys)
 	# probes available for every service
 	my %probes;
 
-	foreach my $tld_for_a_child_to_process (sort(keys(%{$lastvalues_db->{'tlds'}})))
+	my @tld_keys = sort(keys(%{$lastvalues_db->{'tlds'}}));
+	my $total_tld_count = scalar(@tld_keys);
+
+	my $max_tlds_per_child;
+
+	if ($max_children < $total_tld_count)
+	{
+		$max_tlds_per_child = int(int($total_tld_count) / int($max_children));
+
+		if ((int($total_tld_count) % int($max_children)) > 0)
+		{
+			$max_children++;	# one extra child to process the remainder
+		}
+	}
+	else
+	{
+		$max_children = $total_tld_count;
+		$max_tlds_per_child = 1;
+	}
+
+	$fm->set_max_procs($max_children);
+
+	for (my $n = 0; $n < $max_children; $n++)
 	{
 		child_failed() if ($child_failed);
 
@@ -166,19 +187,30 @@ foreach (@server_keys)
 
 		if ($pid == 0)
 		{
-			$tld = $tld_for_a_child_to_process;	# global variable
+			my %child_tlds;
 
 			db_connect($server_key);
-			process_tld($tld, \%probes, $lastvalues_db->{'tlds'}{$tld}, $lastvalues_cache->{'tlds'}{$tld});
-			db_disconnect();
-			$fm->finish(SUCCESS, $lastvalues_cache->{'tlds'}{$tld});
-			last;
-		}
-		else
-		{
-			$tldmap{$pid} = $tld_for_a_child_to_process;
 
-			next;
+			for (my $i = 0; $i < $max_tlds_per_child; $i++)
+			{
+				my $tldi = $n * $max_tlds_per_child + $i;
+
+				last if $tldi >= $total_tld_count;
+
+				$tld = $tld_keys[$tldi]; # global variable
+
+				my $lastvalues_db_tld = $lastvalues_db->{'tlds'}{$tld};
+				my $lastvalues_cache_tld = $lastvalues_cache->{'tlds'}{$tld} = {};
+
+				process_tld($tld, \%probes, $lastvalues_db_tld, $lastvalues_cache_tld);
+
+				$child_tlds{$tld} = $lastvalues_cache->{'tlds'}{$tld};
+			}
+
+			db_disconnect();
+
+			$fm->finish(SUCCESS, \%child_tlds);
+			last;
 		}
 	}
 
@@ -602,30 +634,29 @@ sub get_lastvalues_from_db($$)
 		$host_cond = " and (h.host like '".getopt('tld')." %' or h.host='".getopt('tld')."')";
 	}
 
-	# join lastvalue and lastvalue_str tables
+	# get everything from lastvalue, lastvalue_str tables
 	my $rows_ref = db_select(
-		"select h.host,i.itemid,i.key_,i.value_type,l.clock".
-		" from lastvalue l,items i,hosts h,hosts_groups g".
-		" where g.hostid=h.hostid".
-			" and h.hostid=i.hostid".
-			" and i.itemid=l.itemid".
-			" and i.type in (".ITEM_TYPE_SIMPLE.",".ITEM_TYPE_TRAPPER.")".
+		"select itemid,clock".
+		" from lastvalue".
+		" union".
+		" select itemid,clock".
+		" from lastvalue_str"
+	);
+
+	my %lastvalues_map;
+
+	map {$lastvalues_map{$_->[0]} = $_->[1]} (@{$rows_ref});
+
+	$rows_ref = db_select(
+		"select h.host,i.itemid,i.key_,i.value_type".
+		" from items i,hosts h".
+		" where h.hostid=i.hostid".
 			" and i.status=".ITEM_STATUS_ACTIVE.
 			" and h.status=".HOST_STATUS_MONITORED.
-			" and (g.groupid=".TLD_PROBE_RESULTS_GROUPID." or g.groupid=".TLDS_GROUPID." and i.key_ like '%.avail')".
-			$host_cond.
-		" union ".
-		"select h.host,i.itemid,i.key_,i.value_type,l.clock".
-		" from lastvalue_str l,items i,hosts h,hosts_groups g".
-		" where g.hostid=h.hostid".
-			" and h.hostid=i.hostid".
-			" and i.itemid=l.itemid".
-			" and i.type in (".ITEM_TYPE_SIMPLE.",".ITEM_TYPE_TRAPPER.")".
-			" and i.status=".ITEM_STATUS_ACTIVE.
-			" and h.status=".HOST_STATUS_MONITORED.
-			" and g.groupid=".TLD_PROBE_RESULTS_GROUPID.
 			$host_cond
 	);
+
+	# join items and lastvalues
 
 	foreach my $row_ref (@{$rows_ref})
 	{
@@ -633,9 +664,10 @@ sub get_lastvalues_from_db($$)
 		my $itemid = $row_ref->[1];
 		my $key = $row_ref->[2];
 		my $value_type = $row_ref->[3];
-		my $clock = $row_ref->[4];
 
-		next if (substr($key, 0, length("rsm.dns.tcp")) eq "rsm.dns.tcp");
+		next unless(defined($lastvalues_map{$itemid}));
+
+		my $clock = $lastvalues_map{$itemid};
 
 		my $index = index($host, ' ');	# "<TLD> <Probe>" separator
 
@@ -643,7 +675,9 @@ sub get_lastvalues_from_db($$)
 
 		if ($index == -1)
 		{
-			# this host just represents TLD
+			# this item belongs to TLD (we only care about Service availability (*.avail) items)
+			next unless (substr($key, -5) eq "avail");
+
 			$tld = $host;
 			$probe = '';
 
@@ -651,11 +685,23 @@ sub get_lastvalues_from_db($$)
 		}
 		else
 		{
+			# this item belongs to Probe (we do not care about DNS TCP)
+			next if (substr($key, 0, length("rsm.dns.tcp")) eq "rsm.dns.tcp");
+			next if (substr($key, 0, length("rsm.conf")) eq "rsm.conf");
+			next if (substr($key, 0, length("rsm.probe")) eq "rsm.probe");
+
+			next unless (substr($key, 0, length("rsm.")) eq "rsm." ||
+				substr($key, 0, length("rdap[")) eq "rdap[" ||
+				substr($key, 0, length("rdap.ip")) eq "rdap.ip" ||
+				substr($key, 0, length("rdap.rtt")) eq "rdap.rtt");
+
 			$tld = substr($host, 0, $index);
 			$probe = substr($host, $index + 1);
 
 			$key_service = get_service_from_probe_key($key);
 		}
+
+		fail("cannot identify Service of key \"$key\"") unless ($key_service);
 
 		foreach my $service ($key_service eq 'dns' ? ('dns', 'dnssec') : ($key_service))
 		{
@@ -1319,25 +1365,28 @@ sub set_on_finish($)
 			if ($core_dump == 1)
 			{
 				$child_failed = 1;
-				info("child (PID:$pid) handling TLD ", $tldmap{$pid}, " core dumped");
+				info("child (PID:$pid) core dumped");
 			}
 			elsif ($exit_code != SUCCESS)
 			{
 				$child_failed = 1;
-				info("child (PID:$pid) handling TLD ", $tldmap{$pid},
+				info("child (PID:$pid)",
 					($exit_signal == 0 ? "" : " got signal " . sig_name($exit_signal) . " and"),
 					" exited with code $exit_code");
 			}
 			elsif ($exit_code != SUCCESS)
 			{
 				$child_failed = 1;
-				info("child (PID:$pid) handling TLD ", $tldmap{$pid}, " got signal ", sig_name($exit_signal));
+				info("child (PID:$pid) got signal ", sig_name($exit_signal));
 			}
 			else
 			{
-				dbg("child (PID:$pid) handling TLD ", $tldmap{$pid}, " exited successfully");
+				dbg("child (PID:$pid) exited successfully");
 
-				$lastvalues_cache->{'tlds'}{$tldmap{$pid}} = $child_data;
+				foreach my $tld (keys(%$child_data))
+				{
+					$lastvalues_cache->{'tlds'}{$tld} = $child_data->{$tld};
+				}
 			}
 		}
 	);
