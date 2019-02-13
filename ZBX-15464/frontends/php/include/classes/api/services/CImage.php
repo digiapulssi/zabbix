@@ -427,14 +427,18 @@ class CImage extends CApiService {
 	 * @throws APIException if wrong fields are passed.
 	 * @throws APIException if image with same name already exists.
 	 */
-	protected function validateCreate(array $images) {
+	protected function validateCreate(array &$images) {
 		// validate permissions
 		if (self::$userData['type'] < USER_TYPE_ZABBIX_ADMIN) {
 			self::exception(ZBX_API_ERROR_PERMISSIONS, _('No permissions to referred object or it does not exist!'));
 		}
 
+		if (!$images) {
+			self::exception(ZBX_API_ERROR_PARAMETERS, _('Empty input parameter.'));
+		}
+
 		// check fields
-		foreach ($images as $image) {
+		foreach ($images as &$image) {
 			$imageDbFields = [
 				'name' => null,
 				'image' => null,
@@ -442,9 +446,10 @@ class CImage extends CApiService {
 			];
 
 			if (!check_db_fields($imageDbFields, $image)) {
-				self::exception(ZBX_API_ERROR_PARAMETERS, _s('Wrong fields for image "%1$s".', $image['name']));
+				self::exception(ZBX_API_ERROR_PARAMETERS, _('Incorrect input parameters.'));
 			}
 		}
+		unset($image);
 
 		// check host name duplicates
 		$collectionValidator = new CCollectionValidator([
