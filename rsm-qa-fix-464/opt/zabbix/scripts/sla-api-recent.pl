@@ -634,30 +634,29 @@ sub get_lastvalues_from_db($$)
 		$host_cond = " and (h.host like '".getopt('tld')." %' or h.host='".getopt('tld')."')";
 	}
 
-	# join lastvalue and lastvalue_str tables
+	# get everything from lastvalue, lastvalue_str tables
 	my $rows_ref = db_select(
-		"select h.host,i.itemid,i.key_,i.value_type,l.clock".
-		" from lastvalue l,items i,hosts h,hosts_groups g".
-		" where g.hostid=h.hostid".
-			" and h.hostid=i.hostid".
-			" and i.itemid=l.itemid".
-			" and i.type in (".ITEM_TYPE_SIMPLE.",".ITEM_TYPE_TRAPPER.")".
+		"select itemid,clock".
+		" from lastvalue".
+		" union".
+		" select itemid,clock".
+		" from lastvalue_str"
+	);
+
+	my %lastvalues_map;
+
+	map {$lastvalues_map{$_->[0]} = $_->[1]} (@{$rows_ref});
+
+	$rows_ref = db_select(
+		"select h.host,i.itemid,i.key_,i.value_type".
+		" from items i,hosts h".
+		" where h.hostid=i.hostid".
 			" and i.status=".ITEM_STATUS_ACTIVE.
 			" and h.status=".HOST_STATUS_MONITORED.
-			" and (g.groupid=".TLD_PROBE_RESULTS_GROUPID." or g.groupid=".TLDS_GROUPID." and i.key_ like '%.avail')".
-			$host_cond.
-		" union ".
-		"select h.host,i.itemid,i.key_,i.value_type,l.clock".
-		" from lastvalue_str l,items i,hosts h,hosts_groups g".
-		" where g.hostid=h.hostid".
-			" and h.hostid=i.hostid".
-			" and i.itemid=l.itemid".
-			" and i.type in (".ITEM_TYPE_SIMPLE.",".ITEM_TYPE_TRAPPER.")".
-			" and i.status=".ITEM_STATUS_ACTIVE.
-			" and h.status=".HOST_STATUS_MONITORED.
-			" and g.groupid=".TLD_PROBE_RESULTS_GROUPID.
 			$host_cond
 	);
+
+	# join items and lastvalues
 
 	foreach my $row_ref (@{$rows_ref})
 	{
@@ -665,9 +664,10 @@ sub get_lastvalues_from_db($$)
 		my $itemid = $row_ref->[1];
 		my $key = $row_ref->[2];
 		my $value_type = $row_ref->[3];
-		my $clock = $row_ref->[4];
 
-		next if (substr($key, 0, length("rsm.dns.tcp")) eq "rsm.dns.tcp");
+		next unless(defined($lastvalues_map{$itemid}));
+
+		my $clock = $lastvalues_map{$itemid};
 
 		my $index = index($host, ' ');	# "<TLD> <Probe>" separator
 
@@ -675,7 +675,9 @@ sub get_lastvalues_from_db($$)
 
 		if ($index == -1)
 		{
-			# this host just represents TLD
+			# this item belongs to TLD (we only care about Service availability (*.avail) items)
+			next unless (substr($key, -5) eq "avail");
+
 			$tld = $host;
 			$probe = '';
 
@@ -683,11 +685,23 @@ sub get_lastvalues_from_db($$)
 		}
 		else
 		{
+			# this item belongs to Probe (we do not care about DNS TCP)
+			next if (substr($key, 0, length("rsm.dns.tcp")) eq "rsm.dns.tcp");
+			next if (substr($key, 0, length("rsm.conf")) eq "rsm.conf");
+			next if (substr($key, 0, length("rsm.probe")) eq "rsm.probe");
+
+			next unless (substr($key, 0, length("rsm.")) eq "rsm." ||
+				substr($key, 0, length("rdap[")) eq "rdap[" ||
+				substr($key, 0, length("rdap.ip")) eq "rdap.ip" ||
+				substr($key, 0, length("rdap.rtt")) eq "rdap.rtt");
+
 			$tld = substr($host, 0, $index);
 			$probe = substr($host, $index + 1);
 
 			$key_service = get_service_from_probe_key($key);
 		}
+
+		fail("cannot identify Service of key \"$key\"") unless ($key_service);
 
 		foreach my $service ($key_service eq 'dns' ? ('dns', 'dnssec') : ($key_service))
 		{
