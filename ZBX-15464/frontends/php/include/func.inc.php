@@ -448,18 +448,24 @@ function zbx_num2bitstr($num, $rev = false) {
  * @return string
  */
 function str2mem($val) {
-	$val = trim($val);
-	$last = strtolower(substr($val, -1));
+	$matched = preg_match('/(\d+)([g,m,k]{0,1})$/', strtolower(trim($val)), $match);
 
-	switch ($last) {
+	if ($matched == 0) {
+		return "";
+	}
+
+	$val = $match[1];
+
+	switch ($match[2]) {
 		case 'g':
-			$val = bcmul($val, ZBX_KIBIBYTE);
-			// break; is not missing here
+			$val = bcmul($val, ZBX_GIBIBYTE, 0);
+			break;
 		case 'm':
-			$val = bcmul($val, ZBX_KIBIBYTE);
-			// break; is not missing here
+			$val = bcmul($val, ZBX_MEBIBYTE, 0);
+			break;
 		case 'k':
-			$val = bcmul($val, ZBX_KIBIBYTE);
+			$val = bcmul($val, ZBX_KIBIBYTE, 0);
+			break;
 	}
 
 	return $val;
