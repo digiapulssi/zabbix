@@ -441,7 +441,7 @@ function zbx_num2bitstr($num, $rev = false) {
 }
 
 /**
- * Converts strings like 2M or 5k to bytes
+ * Converts strings like 2M or 5k to bytes.
  *
  * @param string $val
  *
@@ -471,18 +471,25 @@ function str2mem($val) {
 	return $val;
 }
 
+/**
+ * Converts bytes into human-readable form.
+ *
+ * @param string|int $size
+ *
+ * @return string
+ */
 function mem2str($size) {
 	$prefix = 'B';
 	if (bccomp($size, ZBX_MEBIBYTE) == 1) {
-		$size = bcdiv($size, ZBX_MEBIBYTE, 6);
+		$size = bcdiv($size, ZBX_MEBIBYTE, ZBX_UNITS_ROUNDOFF_LOWER_LIMIT);
 		$prefix = 'M';
 	}
 	elseif (bccomp($size, ZBX_KIBIBYTE) == 1) {
-		$size = bcdiv($size, ZBX_KIBIBYTE, 6);
+		$size = bcdiv($size, ZBX_KIBIBYTE, ZBX_UNITS_ROUNDOFF_LOWER_LIMIT);
 		$prefix = 'K';
 	}
 
-	return round($size, 6).$prefix;
+	return round($size, ZBX_UNITS_ROUNDOFF_LOWER_LIMIT).$prefix;
 }
 
 function convertUnitsUptime($value) {
