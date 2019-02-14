@@ -1,0 +1,39 @@
+
+module zabbix_proxy 1.0;
+
+require {
+    type user_home_t;
+    type zabbix_t;
+    type mysqld_port_t;
+    type whois_port_t;
+    type unreserved_port_t;
+    type var_lib_t;
+    class process setrlimit;
+    class tcp_socket { name_bind name_connect };
+    class file { open read };
+    class sock_file write;
+}
+
+#============= zabbix_t ==============
+
+#!!!! This avc is allowed in the current policy
+allow zabbix_t mysqld_port_t:tcp_socket name_connect;
+
+#!!!! This avc is allowed in the current policy
+allow zabbix_t self:process setrlimit;
+
+#!!!! This avc is allowed in the current policy
+allow zabbix_t unreserved_port_t:tcp_socket name_bind;
+
+#!!!! This avc can be allowed using one of the these booleans:
+#     nis_enabled, zabbix_can_network
+allow zabbix_t unreserved_port_t:tcp_socket name_connect;
+
+#!!!! This avc is allowed in the current policy
+allow zabbix_t user_home_t:file { open read };
+
+#!!!! This avc is allowed in the current policy
+allow zabbix_t whois_port_t:tcp_socket name_connect;
+
+#!!!! This avc is allowed in the current policy
+allow zabbix_t var_lib_t:sock_file write;
