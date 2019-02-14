@@ -2558,7 +2558,7 @@ int	check_vcenter_vm_storage_unshared(AGENT_REQUEST *request, const char *userna
 int	check_vcenter_vm_storage_uncommitted(AGENT_REQUEST *request, const char *username, const char *password,
 		AGENT_RESULT *result)
 {
-	const char	*__function_name = "check_vcenter_vm_storage_committed";
+	const char	*__function_name = "check_vcenter_vm_storage_uncommitted";
 
 	int		ret;
 

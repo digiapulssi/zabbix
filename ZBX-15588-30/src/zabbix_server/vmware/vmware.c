@@ -1763,7 +1763,7 @@ static int	vmware_service_get_perf_counter_refreshrate(zbx_vmware_service_t *ser
 		"</ns0:QueryPerfProviderSummary>"				\
 		ZBX_POST_VSPHERE_FOOTER
 
-	const char	*__function_name = "vmware_service_get_perfcounter_refreshrate";
+	const char	*__function_name = "vmware_service_get_perf_counter_refreshrate";
 
 	char		tmp[MAX_STRING_LEN], *value = NULL, *id_esc;
 	int		err, opt, ret = FAIL;
@@ -1856,7 +1856,7 @@ static int	vmware_service_get_perf_counters(zbx_vmware_service_t *service, CURL 
 		"</ns0:RetrieveProperties>"							\
 		ZBX_POST_VSPHERE_FOOTER
 
-	const char	*__function_name = "vmware_service_get_perfcounters";
+	const char	*__function_name = "vmware_service_get_perf_counters";
 	char		tmp[MAX_STRING_LEN], *group = NULL, *key = NULL, *rollup = NULL,
 			*counterid = NULL;
 	xmlDoc		*doc;
@@ -1975,7 +1975,7 @@ out:
  ******************************************************************************/
 static void	vmware_vm_get_nic_devices(zbx_vmware_vm_t *vm, const char *details)
 {
-	const char	*__function_name = "wmware_vm_get_nic_devices";
+	const char	*__function_name = "vmware_vm_get_nic_devices";
 
 	xmlDoc		*doc;
 	xmlXPathContext	*xpathCtx;
@@ -2040,7 +2040,7 @@ out:
  ******************************************************************************/
 static void	vmware_vm_get_disk_devices(zbx_vmware_vm_t *vm, const char *details)
 {
-	const char	*__function_name = "wmware_vm_get_disk_devices";
+	const char	*__function_name = "vmware_vm_get_disk_devices";
 
 	xmlDoc		*doc;
 	xmlXPathContext	*xpathCtx;
@@ -4698,7 +4698,7 @@ int	zbx_vmware_service_get_counterid(zbx_vmware_service_t *service, const char *
 		zbx_uint64_t *counterid)
 {
 #if defined(HAVE_LIBXML2) && defined(HAVE_LIBCURL)
-	const char		*__function_name = "zbx_vmware_service_get_perfcounterid";
+	const char		*__function_name = "zbx_vmware_service_get_counterid";
 	zbx_vmware_counter_t	*counter;
 	int			ret = FAIL;
 
@@ -4741,7 +4741,7 @@ out:
 int	zbx_vmware_service_add_perf_counter(zbx_vmware_service_t *service, const char *type, const char *id,
 		zbx_uint64_t counterid, const char *instance)
 {
-	const char			*__function_name = "zbx_vmware_service_start_monitoring";
+	const char			*__function_name = "zbx_vmware_service_add_perf_counter";
 	zbx_vmware_perf_entity_t	*pentity, entity;
 	int				ret = FAIL;
 
