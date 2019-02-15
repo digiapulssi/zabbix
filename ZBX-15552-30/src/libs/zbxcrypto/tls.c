@@ -4996,7 +4996,7 @@ int	zbx_tls_accept(zbx_socket_t *s, unsigned int tls_accept, char **error)
 			else
 			{
 				*error = zbx_strdup(*error, "not ready for certificate-based incoming connection:"
-						" certificate not loaded");
+						" certificate not loaded. PSK support not compiled in.");
 				goto out;
 			}
 		}
