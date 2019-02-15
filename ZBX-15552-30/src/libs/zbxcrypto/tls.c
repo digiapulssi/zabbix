@@ -648,6 +648,7 @@ static void	zbx_tls_parameter_not_empty(char **param)
 #define ZBX_TLS_VALIDATION_DEPENDENCY	1
 #define ZBX_TLS_VALIDATION_REQUIREMENT	2
 #define ZBX_TLS_VALIDATION_UTF8		3
+#define ZBX_TLS_VALIDATION_NO_PSK	4
 static void	zbx_tls_validation_error(int type, char **param1, char **param2)
 {
 	if (ZBX_TLS_VALIDATION_INVALID == type)
@@ -736,6 +737,28 @@ static void	zbx_tls_validation_error(int type, char **param1, char **param2)
 					zbx_tls_parameter_name(ZBX_TLS_PARAMETER_CONFIG_FILE, param1));
 		}
 	}
+	else if (ZBX_TLS_VALIDATION_NO_PSK == type)
+	{
+		if (0 != (program_type & ZBX_PROGRAM_TYPE_SENDER))
+		{
+			zabbix_log(LOG_LEVEL_CRIT, "value of parameter \"%s\" or \"%s\" requires support of encrypted"
+					" connection with PSK but support for PSK was not compiled in",
+					zbx_tls_parameter_name(ZBX_TLS_PARAMETER_CONFIG_FILE, param1),
+					zbx_tls_parameter_name(ZBX_TLS_PARAMETER_COMMAND_LINE, param1));
+		}
+		else if (0 != (program_type & ZBX_PROGRAM_TYPE_GET))
+		{
+			zabbix_log(LOG_LEVEL_CRIT, "value of parameter \"%s\" requires support of encrypted"
+					" connection with PSK but support for PSK was not compiled in",
+					zbx_tls_parameter_name(ZBX_TLS_PARAMETER_COMMAND_LINE, param1));
+		}
+		else
+		{
+			zabbix_log(LOG_LEVEL_CRIT, "value of parameter \"%s\" requires support of encrypted"
+					" connection with PSK but support for PSK was not compiled in",
+					zbx_tls_parameter_name(ZBX_TLS_PARAMETER_CONFIG_FILE, param1));
+		}
+	}
 	else
 		THIS_SHOULD_NEVER_HAPPEN;
 
@@ -792,7 +815,11 @@ void	zbx_tls_validate_config(void)
 		else if (0 == strcmp(CONFIG_TLS_CONNECT, ZBX_TCP_SEC_TLS_CERT_TXT))
 			configured_tls_connect_mode = ZBX_TCP_SEC_TLS_CERT;
 		else if (0 == strcmp(CONFIG_TLS_CONNECT, ZBX_TCP_SEC_TLS_PSK_TXT))
+#if defined(HAVE_OPENSSL) && defined(HAVE_OPENSSL_WITH_PSK)
 			configured_tls_connect_mode = ZBX_TCP_SEC_TLS_PSK;
+#else
+			zbx_tls_validation_error(ZBX_TLS_VALIDATION_NO_PSK, &CONFIG_TLS_CONNECT, NULL);
+#endif
 		else
 			zbx_tls_validation_error(ZBX_TLS_VALIDATION_INVALID, &CONFIG_TLS_CONNECT, NULL);
 	}
@@ -821,7 +848,11 @@ void	zbx_tls_validate_config(void)
 			else if (0 == strcmp(p, ZBX_TCP_SEC_TLS_CERT_TXT))
 				accept_modes_tmp |= ZBX_TCP_SEC_TLS_CERT;
 			else if (0 == strcmp(p, ZBX_TCP_SEC_TLS_PSK_TXT))
+#if defined(HAVE_OPENSSL) && defined(HAVE_OPENSSL_WITH_PSK)
 				accept_modes_tmp |= ZBX_TCP_SEC_TLS_PSK;
+#else
+				zbx_tls_validation_error(ZBX_TLS_VALIDATION_NO_PSK, &CONFIG_TLS_ACCEPT, NULL);
+#endif
 			else
 			{
 				zbx_free(s);
