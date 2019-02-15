@@ -4948,28 +4948,31 @@ int	zbx_tls_accept(zbx_socket_t *s, unsigned int tls_accept, char **error)
 				goto out;
 			}
 		}
-		else if (0 != (program_type & ZBX_PROGRAM_TYPE_AGENTD))
 #else
-		if (NULL != ctx_cert)
+		if (0 != (program_type & (ZBX_PROGRAM_TYPE_PROXY | ZBX_PROGRAM_TYPE_SERVER)))
 		{
-			if (NULL == (s->tls_ctx->ctx = SSL_new(ctx_cert)))
+			/* server or proxy running with OpenSSL or LibreSSL without PSK support */
+			if (NULL != ctx_cert)
 			{
-				zbx_snprintf_alloc(error, &error_alloc, &error_offset, "cannot create context to accept"
-						" connection:");
-				zbx_tls_error_msg(error, &error_alloc, &error_offset);
+				if (NULL == (s->tls_ctx->ctx = SSL_new(ctx_cert)))
+				{
+					zbx_snprintf_alloc(error, &error_alloc, &error_offset, "cannot create context"
+							" to accept connection:");
+					zbx_tls_error_msg(error, &error_alloc, &error_offset);
+					goto out;
+				}
+			}
+			else
+			{
+				*error = zbx_strdup(*error, "not ready for certificate-based incoming connection:"
+						" certificate not loaded");
 				goto out;
 			}
 		}
-		else
-		{
-			*error = zbx_strdup(*error, "not ready for certificate-based incoming connection: certificate"
-					" not loaded");
-			goto out;
-		}
-
-		if (0 != (program_type & ZBX_PROGRAM_TYPE_AGENTD))
 #endif
+		else if (0 != (program_type & ZBX_PROGRAM_TYPE_AGENTD))
 		{
+			/* agent with TLSAccept=cert,psk, but one of them is not available */
 			zbx_snprintf_alloc(error, &error_alloc, &error_offset, "not ready for both certificate and"
 					" PSK-based incoming connection:");
 
