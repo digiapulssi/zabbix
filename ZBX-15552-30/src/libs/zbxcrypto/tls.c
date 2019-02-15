@@ -5003,18 +5003,7 @@ int	zbx_tls_accept(zbx_socket_t *s, unsigned int tls_accept, char **error)
 #endif
 		else if (0 != (program_type & ZBX_PROGRAM_TYPE_AGENTD))
 		{
-			/* agent with TLSAccept=cert,psk, but one of them is not available */
-			zbx_snprintf_alloc(error, &error_alloc, &error_offset, "not ready for both certificate and"
-					" PSK-based incoming connection:");
-
-			if (NULL == ctx_cert)
-				zbx_snprintf_alloc(error, &error_alloc, &error_offset, " certificate not loaded");
-#if defined(HAVE_OPENSSL_WITH_PSK)
-			if (NULL == ctx_psk)
-				zbx_snprintf_alloc(error, &error_alloc, &error_offset, " PSK not loaded");
-#else
-			zbx_snprintf_alloc(error, &error_alloc, &error_offset, " support for PSK was not compiled in");
-#endif
+			THIS_SHOULD_NEVER_HAPPEN;
 			goto out;
 		}
 #if defined(HAVE_OPENSSL_WITH_PSK)
