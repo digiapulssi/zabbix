@@ -26,6 +26,7 @@ use constant MAX_PERIOD => 30 * 60;	# 30 minutes
 
 use constant SUBSTR_KEY_LEN => 20;	# for logging
 
+sub process_server($);
 sub process_tld($$$$);
 sub cycles_to_calculate($$$$$$$$);
 sub get_lastvalues_from_db($$);
@@ -34,6 +35,7 @@ sub get_interfaces($$$);
 sub probe_online_at_init();
 sub get_history_by_itemid($$$);
 sub set_on_finish($);
+sub check_child_errors($$$$$$);
 
 parse_opts('tld=s', 'service=s', 'server-id=i', 'now=i', 'period=i', 'print-period!', 'max-children=i');
 
@@ -98,19 +100,33 @@ my $global_lastclock;
 
 my %rtt_limits;
 
-my $max_children = opt('max-children') ? getopt('max-children') : 64;
-
-my $fm = new Parallel::ForkManager();
-
-set_on_finish($fm);
+my $max_children = opt('max-children') ? getopt('max-children') : 16;
 
 my $child_failed = 0;
 my $signal_sent = 0;
 my $lastvalues_cache = {};
 
+my $fm = new Parallel::ForkManager(4);
+
 foreach (@server_keys)
 {
-	$server_key = $_;
+	my $pid = $fm->start();
+
+	if ($pid == 0)
+	{
+		process_server($_);
+		$fm->finish(SUCCESS);
+		last;
+	}
+}
+
+$fm->wait_all_children();
+
+slv_exit(SUCCESS);
+
+sub process_server($)
+{
+	my $server_key = shift;
 
 	# Last values from the "lastvalue" (availability, RTTs) and "lastvalue_str" (IPs) tables.
 	#
@@ -152,8 +168,6 @@ foreach (@server_keys)
 	get_lastvalues_from_db($lastvalues_db, \%delays);
 	db_disconnect();
 
-	$fm->run_on_wait(sub() {dbg("max children reached, please wait...");});
-
 	# probes available for every service
 	my %probes;
 
@@ -177,6 +191,9 @@ foreach (@server_keys)
 		$max_tlds_per_child = 1;
 	}
 
+	my $fm = new Parallel::ForkManager();
+	set_on_finish($fm);
+	$fm->run_on_wait(sub() {dbg("max children reached, please wait...");});
 	$fm->set_max_procs($max_children);
 
 	for (my $n = 0; $n < $max_children; $n++)
@@ -1348,6 +1365,31 @@ sub get_interfaces($$$)
 	return \@result;
 }
 
+sub check_child_errors($$$$$$)
+{
+	my $pid = shift;
+	my $exit_code = shift;
+	my $id = shift;
+	my $exit_signal = shift;
+	my $core_dump = shift;
+	my $child_data = shift;
+
+	if ($core_dump == 1)
+	{
+		info("child (PID:$pid) core dumped");
+		return 1;
+	}
+	elsif ($exit_code != SUCCESS)
+	{
+		info("child (PID:$pid)",
+			($exit_signal == 0 ? "" : " got signal " . sig_name($exit_signal) . " and"),
+			" exited with code $exit_code");
+		return 1;
+	}
+
+	return 0;
+}
+
 sub set_on_finish($)
 {
 	my $fm = shift;
@@ -1362,22 +1404,9 @@ sub set_on_finish($)
 			my $core_dump = shift;
 			my $child_data = shift;
 
-			if ($core_dump == 1)
+			if (check_child_errors($pid, $exit_code, $id, $exit_signal, $core_dump, $child_data))
 			{
 				$child_failed = 1;
-				info("child (PID:$pid) core dumped");
-			}
-			elsif ($exit_code != SUCCESS)
-			{
-				$child_failed = 1;
-				info("child (PID:$pid)",
-					($exit_signal == 0 ? "" : " got signal " . sig_name($exit_signal) . " and"),
-					" exited with code $exit_code");
-			}
-			elsif ($exit_code != SUCCESS)
-			{
-				$child_failed = 1;
-				info("child (PID:$pid) got signal ", sig_name($exit_signal));
 			}
 			else
 			{
