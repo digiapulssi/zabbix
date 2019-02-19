@@ -62,7 +62,7 @@ class CUrl {
 	 * Creates a HTTP query string from the arguments set in self::$arguments and saves it in self::$query.
 	 */
 	public function formatQuery() {
-		$this->query = http_build_query($this->arguments);
+		$this->query = http_build_query($this->arguments, '', '&amp;');
 	}
 
 	public function formatGetArguments() {

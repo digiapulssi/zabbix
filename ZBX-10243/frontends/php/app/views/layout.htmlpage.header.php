@@ -54,11 +54,20 @@ $showGuiMessaging = (!defined('ZBX_PAGE_NO_MENU')
 	|| in_array($data['web_layout_mode'], [ZBX_LAYOUT_FULLSCREEN, ZBX_LAYOUT_KIOSKMODE])) ? 1 : 0;
 
 $pageHeader->addJsFile('js/browsers.js');
-$path = 'jsLoader.php?ver='.ZABBIX_VERSION.'&amp;lang='.$data['user']['lang'].'&showGuiMessaging='.$showGuiMessaging;
+$path = (new CUrl('jsLoader.php'))
+	->setArgument('lang', $data['user']['lang'])
+	->setArgument('ver', ZABBIX_VERSION)
+	->setArgument('showGuiMessaging', $showGuiMessaging)
+	->getUrl();
+
 $pageHeader->addJsFile($path);
 
 if ($scripts) {
-	$pageHeader->addJsFile('jsLoader.php?'.'files[]='.implode('&amp;files[]=', $scripts).'&amp;lang='.$data['user']['lang']);
+	$pageHeader->addJsFile((new CUrl('jsLoader.php'))
+		->setArgument('lang', $data['user']['lang'])
+		->setArgument('files', $scripts)
+		->getUrl()
+	);
 }
 $pageHeader->display();
 
