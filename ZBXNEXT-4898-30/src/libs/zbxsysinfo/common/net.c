@@ -179,8 +179,9 @@ static char	*get_name(unsigned char *msg, unsigned char *msg_end, unsigned char 
 }
 #endif	/* !defined(_WINDOWS) */
 
-#if defined(_WINDOWS) && (_WIN32_WINNT < _WIN32_WINNT_VISTA)
-const char *inet_ntop(int af, const void *src, char *dst, size_t size)
+/* Replace zbx_inet_ntop with inet_ntop in case of drop Windows XP/W2k3 support */
+#if defined(_WINDOWS)
+const char *zbx_inet_ntop(int af, const void *src, char *dst, size_t size)
 {
 	struct sockaddr_storage ss;
 	unsigned long s = size;
@@ -437,7 +438,7 @@ static int	dns_query(AGENT_REQUEST *request, AGENT_RESULT *result, int short_ans
 			case T_AAAA:
 				memcpy(&in6addr.s6_addr, &(pDnsRecord->Data.AAAA.Ip6Address), sizeof(in6addr.s6_addr));
 				offset += zbx_snprintf(buffer + offset, sizeof(buffer) - offset, " %s",
-						inet_ntop(AF_INET6, &in6addr, tmp, sizeof(tmp)));
+						zbx_inet_ntop(AF_INET6, &in6addr, tmp, sizeof(tmp)));
 				break;
 			case T_NS:
 				offset += zbx_snprintf(buffer + offset, sizeof(buffer) - offset, " %s",
