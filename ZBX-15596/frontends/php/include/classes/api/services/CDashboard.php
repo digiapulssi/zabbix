@@ -213,8 +213,8 @@ class CDashboard extends CApiService {
 				'name' =>				['type' => API_STRING_UTF8, 'length' => DB::getFieldLength('widget', 'name'), 'default' => DB::getDefault('widget', 'name')],
 				'x' =>					['type' => API_INT32, 'in' => '0:'.self::MAX_X, 'default' => DB::getDefault('widget', 'x')],
 				'y' =>					['type' => API_INT32, 'in' => '0:'.self::MAX_Y, 'default' => DB::getDefault('widget', 'y')],
-				'width' =>				['type' => API_INT32, 'in' => '1:12', 'default' => DB::getDefault('widget', 'width')],
-				'height' =>				['type' => API_INT32, 'in' => '2:32', 'default' => DB::getDefault('widget', 'height')],
+				'width' =>				['type' => API_INT32, 'in' => '1:'.DASHBOARD_MAX_COLUMNS, 'default' => DB::getDefault('widget', 'width')],
+				'height' =>				['type' => API_INT32, 'in' => '2:'.DASHBOARD_MAX_ROWS, 'default' => DB::getDefault('widget', 'height')],
 				'fields' =>				['type' => API_OBJECTS, 'fields' => [
 					'type' =>				['type' => API_INT32, 'flags' => API_REQUIRED, 'in' => implode(',', $widget_field_types)],
 					'name' =>				['type' => API_STRING_UTF8, 'length' => DB::getFieldLength('widget_field', 'name'), 'default' => DB::getDefault('widget_field', 'name')],
@@ -323,8 +323,8 @@ class CDashboard extends CApiService {
 				'name' =>				['type' => API_STRING_UTF8, 'length' => DB::getFieldLength('widget', 'name')],
 				'x' =>					['type' => API_INT32, 'in' => '0:'.self::MAX_X],
 				'y' =>					['type' => API_INT32, 'in' => '0:'.self::MAX_Y],
-				'width' =>				['type' => API_INT32, 'in' => '1:12'],
-				'height' =>				['type' => API_INT32, 'in' => '2:32'],
+				'width' =>				['type' => API_INT32, 'in' => '1:'.DASHBOARD_MAX_COLUMNS],
+				'height' =>				['type' => API_INT32, 'in' => '2:'.DASHBOARD_MAX_ROWS],
 				'fields' =>				['type' => API_OBJECTS, 'fields' => [
 					'type' =>				['type' => API_INT32, 'flags' => API_REQUIRED, 'in' => implode(',', $widget_field_types)],
 					'name' =>				['type' => API_STRING_UTF8, 'length' => DB::getFieldLength('widget_field', 'name'), 'default' => DB::getDefault('widget_field', 'name')],
