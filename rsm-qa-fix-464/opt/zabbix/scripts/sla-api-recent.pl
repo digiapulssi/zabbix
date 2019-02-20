@@ -27,6 +27,7 @@ use constant MAX_PERIOD => 30 * 60;	# 30 minutes
 use constant SUBSTR_KEY_LEN => 20;	# for logging
 
 sub process_server($);
+sub process_tld_batch($$$$$);
 sub process_tld($$$$);
 sub cycles_to_calculate($$$$$$$$);
 sub get_lastvalues_from_db($$$);
@@ -34,8 +35,9 @@ sub calculate_cycle($$$$$$$$);
 sub get_interfaces($$$);
 sub probe_online_at_init();
 sub get_history_by_itemid($$$);
-sub set_on_finish($);
 sub check_child_errors($$$$$$);
+sub save_child_lastvalues_cache($);
+sub set_on_finish($);
 
 parse_opts('tld=s', 'service=s', 'server-id=i', 'now=i', 'period=i', 'print-period!', 'max-children=i');
 
@@ -71,6 +73,8 @@ else
 validate_tld(getopt('tld'), \@server_keys) if (opt('tld'));
 validate_service(getopt('service')) if (opt('service'));
 
+my $server_count = scalar(@server_keys);
+
 my $real_now = time();
 my $now = (getopt('now') // $real_now);
 
@@ -100,7 +104,14 @@ my $global_lastclock;
 
 my %rtt_limits;
 
-my $max_children = opt('max-children') ? getopt('max-children') : 16;
+my $max_children = opt('max-children') ? getopt('max-children') : 64;
+
+if (int($max_children) % int($server_count) != 0)
+{
+	fail("max-children value must be divisible by the number of servers ($max_children % $server_count)");
+}
+
+$max_children = int(int($max_children) / int($server_count)); #from now on this is count per server
 
 my $child_failed = 0;
 my $signal_sent = 0;
@@ -154,22 +165,22 @@ sub process_server($)
 		db_disconnect($server_key);
 	}
 
-	my $total_tld_count = scalar(@{$server_tlds});
+	my $server_tld_count = scalar(@{$server_tlds});
 
 	my $max_tlds_per_child;
 
-	if ($max_children < $total_tld_count)
+	if ($max_children < $server_tld_count)
 	{
-		$max_tlds_per_child = int(int($total_tld_count) / int($max_children));
+		$max_tlds_per_child = int(int($server_tld_count) / int($max_children));
 
-		if ((int($total_tld_count) % int($max_children)) > 0)
+		if ((int($server_tld_count) % int($max_children)) > 0)
 		{
-			$max_children++;	# one extra child to process the remainder
+# 			$max_children++;	# one extra child to process the remainder
 		}
 	}
 	else
 	{
-		$max_children = $total_tld_count;
+		$max_children = $server_tld_count;
 		$max_tlds_per_child = 1;
 	}
 
@@ -182,60 +193,26 @@ sub process_server($)
 	{
 		child_failed() if ($child_failed);
 
-		my $pid = $fm->start();
+		my $tldi_begin = $n * $max_tlds_per_child;
+		my $tldi_end = $tldi_begin + $max_tlds_per_child;
 
-		if ($pid == 0)
+		my %child_data;
+
+		if ($tldi_end > $server_tld_count) #got remainder
 		{
-			my %child_tlds;
+			process_tld_batch($server_tlds, $tldi_begin, $server_tld_count, \%child_data, \%probes);
+			save_child_lastvalues_cache(\%child_data)
+		}
+		else
+		{
+			my $pid = $fm->start();
 
-			db_connect($server_key);
-
-			for (my $i = 0; $i < $max_tlds_per_child; $i++)
+			if ($pid == 0)
 			{
-				my $tldi = $n * $max_tlds_per_child + $i;
-
-				last if $tldi >= $total_tld_count;
-
-				$tld = $server_tlds->[$tldi]; # global variable
-
-				# Last values from the "lastvalue" (availability, RTTs) and "lastvalue_str" (IPs) tables.
-				#
-				# {
-				#     'tlds' => {
-				#         tld => {
-				#             service => {
-				#                 'probes' => {
-				#                     probe => {
-				#                         itemid = {
-				#                             'key' => key,
-				#                             'value_type' => value_type,
-				#                             'clock' => clock
-				#                         }
-				#                     }
-				#                 }
-				#             }
-				#         }
-				#     }
-				# }
-				#
-				# NB! Besides results from probes we process Service Availability values, which
-				# are per TLD, for those we will use empty string ("") as probe.
-	
-				my $lastvalues_db = {'tlds' => {}};
-				get_lastvalues_from_db($lastvalues_db, $tld, \%delays);
-
-				my $lastvalues_db_tld = $lastvalues_db->{'tlds'}{$tld};
-				my $lastvalues_cache_tld = $lastvalues_cache->{'tlds'}{$tld} = {};
-
-				process_tld($tld, \%probes, $lastvalues_db_tld, $lastvalues_cache_tld);
-
-				$child_tlds{$tld} = $lastvalues_cache->{'tlds'}{$tld};
+				process_tld_batch($server_tlds, $tldi_begin, $tldi_end, \%child_data, \%probes);
+				$fm->finish(SUCCESS, \%child_data);
+				last;
 			}
-
-			db_disconnect();
-
-			$fm->finish(SUCCESS, \%child_tlds);
-			last;
 		}
 	}
 
@@ -252,6 +229,57 @@ sub process_server($)
 			fail("cannot save recent measurements cache: ", ah_get_error());
 		}
 	}
+}
+
+sub process_tld_batch($$$$$)
+{
+	my $tlds = shift;
+	my $tldi_begin = shift;
+	my $tldi_end = shift;
+	my $child_data_ref = shift;
+	my $probes_ref = shift;
+
+	db_connect($server_key);
+
+	for (my $tldi = $tldi_begin; $tldi != $tldi_end; $tldi++)
+	{
+		$tld = $tlds->[$tldi]; # global variable
+
+		# Last values from the "lastvalue" (availability, RTTs) and "lastvalue_str" (IPs) tables.
+		#
+		# {
+		#     'tlds' => {
+		#         tld => {
+		#             service => {
+		#                 'probes' => {
+		#                     probe => {
+		#                         itemid = {
+		#                             'key' => key,
+		#                             'value_type' => value_type,
+		#                             'clock' => clock
+		#                         }
+		#                     }
+		#                 }
+		#             }
+		#         }
+		#     }
+		# }
+		#
+		# NB! Besides results from probes we process Service Availability values, which
+		# are per TLD, for those we will use empty string ("") as probe.
+
+		my $lastvalues_db = {'tlds' => {}};
+		get_lastvalues_from_db($lastvalues_db, $tld, \%delays);
+
+		my $lastvalues_db_tld = $lastvalues_db->{'tlds'}{$tld};
+		my $lastvalues_cache_tld = $lastvalues_cache->{'tlds'}{$tld} = {};
+
+		process_tld($tld, $probes_ref, $lastvalues_db_tld, $lastvalues_cache_tld);
+
+		$child_data_ref->{$tld} = $lastvalues_cache->{'tlds'}{$tld};
+	}
+
+	db_disconnect();
 }
 
 sub process_tld($$$$)
@@ -1426,62 +1454,6 @@ sub get_interfaces($$$)
 	return \@result;
 }
 
-sub check_child_errors($$$$$$)
-{
-	my $pid = shift;
-	my $exit_code = shift;
-	my $id = shift;
-	my $exit_signal = shift;
-	my $core_dump = shift;
-	my $child_data = shift;
-
-	if ($core_dump == 1)
-	{
-		info("child (PID:$pid) core dumped");
-		return 1;
-	}
-	elsif ($exit_code != SUCCESS)
-	{
-		info("child (PID:$pid)",
-			($exit_signal == 0 ? "" : " got signal " . sig_name($exit_signal) . " and"),
-			" exited with code $exit_code");
-		return 1;
-	}
-
-	return 0;
-}
-
-sub set_on_finish($)
-{
-	my $fm = shift;
-
-	$fm->run_on_finish(
-		sub ($$$$$)
-		{
-			my $pid = shift;
-			my $exit_code = shift;
-			my $id = shift;
-			my $exit_signal = shift;
-			my $core_dump = shift;
-			my $child_data = shift;
-
-			if (check_child_errors($pid, $exit_code, $id, $exit_signal, $core_dump, $child_data))
-			{
-				$child_failed = 1;
-			}
-			else
-			{
-				dbg("child (PID:$pid) exited successfully");
-
-				foreach my $tld (keys(%$child_data))
-				{
-					$lastvalues_cache->{'tlds'}{$tld} = $child_data->{$tld};
-				}
-			}
-		}
-	);
-}
-
 sub child_failed
 {
 	$fm->run_on_wait(
@@ -1507,6 +1479,68 @@ sub child_failed
 	$fm->wait_all_children();
 
 	slv_exit(E_FAIL) if ($child_failed);
+}
+
+sub check_child_errors($$$$$$)
+{
+	my $pid = shift;
+	my $exit_code = shift;
+	my $id = shift;
+	my $exit_signal = shift;
+	my $core_dump = shift;
+	my $child_data_ref = shift;
+
+	if ($core_dump == 1)
+	{
+		info("child (PID:$pid) core dumped");
+		return 1;
+	}
+	elsif ($exit_code != SUCCESS)
+	{
+		info("child (PID:$pid)",
+			($exit_signal == 0 ? "" : " got signal " . sig_name($exit_signal) . " and"),
+			" exited with code $exit_code");
+		return 1;
+	}
+
+	return 0;
+}
+
+sub save_child_lastvalues_cache($)
+{
+	my $child_data_ref = shift;
+
+	foreach my $tld (keys(%{$child_data_ref}))
+	{
+		$lastvalues_cache->{'tlds'}{$tld} = $child_data_ref->{$tld};
+	}
+}
+
+sub set_on_finish($)
+{
+	my $fm = shift;
+
+	$fm->run_on_finish(
+		sub ($$$$$)
+		{
+			my $pid = shift;
+			my $exit_code = shift;
+			my $id = shift;
+			my $exit_signal = shift;
+			my $core_dump = shift;
+			my $child_data = shift;
+
+			if (check_child_errors($pid, $exit_code, $id, $exit_signal, $core_dump, $child_data))
+			{
+				$child_failed = 1;
+			}
+			else
+			{
+				dbg("child (PID:$pid) exited successfully");
+				save_child_lastvalues_cache($child_data);
+			}
+		}
+	);
 }
 
 __END__
