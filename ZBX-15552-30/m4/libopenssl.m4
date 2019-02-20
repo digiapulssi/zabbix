@@ -46,7 +46,7 @@ AC_TRY_LINK(
 [
 	/* check if OPENSSL_NO_PSK is defined */
 #ifdef OPENSSL_NO_PSK
-	error "OPENSSL_NO_PSK is defined. PSK support not be available."
+	error "OPENSSL_NO_PSK is defined. PSK support will not be available."
 #endif
 ],
 found_openssl_with_psk="yes",)
