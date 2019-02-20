@@ -483,7 +483,7 @@ function mem2str($size) {
 		$prefix = 'K';
 	}
 
-	return round($size, ZBX_UNITS_ROUNDOFF_LOWER_LIMIT).$prefix;
+	return $size.$prefix;
 }
 
 function convertUnitsUptime($value) {
