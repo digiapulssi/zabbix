@@ -151,8 +151,10 @@ AC_HELP_STRING([--with-openssl@<:@=DIR@:>@],[use OpenSSL package @<:@default=no@
       if test "x$found_openssl_with_psk" = "xyes"; then
         AC_DEFINE([HAVE_OPENSSL_WITH_PSK], 1, [Define to 1 if you have OpenSSL with PSK support])
         AC_MSG_RESULT(yes)
+        found_openssl="OpenSSL"
       else
         AC_MSG_RESULT(no)
+        found_openssl="OpenSSL (PSK not supported)"
       fi
 
     else
