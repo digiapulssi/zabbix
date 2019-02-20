@@ -850,15 +850,11 @@ function find_period_end($periods, $time, $max_time) {
  *  204800 (200 KBytes) with '1024' step convert to 209715,2 (0.2MB (204.8 KBytes))
  *
  * @param string|int $value
- * @param string|int $step
+ * @param string $step
  *
  * @return array
  */
-function convertToBase1024($value, $step = false) {
-	if (!$step) {
-		$step = 1000;
-	}
-
+function convertToBase1024($value, $step = '1000') {
 	if ($value < 0) {
 		$abs = bcmul($value, '-1');
 	}
