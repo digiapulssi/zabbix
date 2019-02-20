@@ -51,19 +51,22 @@ $pageHeader
 
 // show GUI messages in pages with menus and in fullscreen and kiosk mode
 $showGuiMessaging = (!defined('ZBX_PAGE_NO_MENU')
-	|| in_array($data['web_layout_mode'], [ZBX_LAYOUT_FULLSCREEN, ZBX_LAYOUT_KIOSKMODE])) ? 1 : 0;
+	|| in_array($data['web_layout_mode'], [ZBX_LAYOUT_FULLSCREEN, ZBX_LAYOUT_KIOSKMODE]));
 
-$pageHeader->addJsFile('js/browsers.js');
+$pageHeader->addJsFile((new CUrl('js/browsers.js'))->setArgument('ver', ZABBIX_VERSION)->getUrl());
 $path = (new CUrl('jsLoader.php'))
 	->setArgument('lang', $data['user']['lang'])
-	->setArgument('ver', ZABBIX_VERSION)
-	->setArgument('showGuiMessaging', $showGuiMessaging)
-	->getUrl();
+	->setArgument('ver', ZABBIX_VERSION);
 
-$pageHeader->addJsFile($path);
+if ($showGuiMessaging) {
+	$path->setArgument('showGuiMessaging', '1');
+}
+
+$pageHeader->addJsFile($path->getUrl());
 
 if ($scripts) {
 	$pageHeader->addJsFile((new CUrl('jsLoader.php'))
+		->setArgument('ver', ZABBIX_VERSION)
 		->setArgument('lang', $data['user']['lang'])
 		->setArgument('files', $scripts)
 		->getUrl()

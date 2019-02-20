@@ -186,22 +186,34 @@ if ($page['type'] == PAGE_TYPE_HTML) {
 		$pageHeader->addCssFile('imgstore.php?css=1&output=css');
 	}
 	$pageHeader
-		->addJsFile('js/browsers.js')
+		->addJsFile((new CUrl('js/browsers.js'))->setArgument('ver', ZABBIX_VERSION)->getUrl())
 		->addJsBeforeScripts(
 			'var PHP_TZ_OFFSET = '.date('Z').','.
 				'PHP_ZBX_FULL_DATE_TIME = "'.ZBX_FULL_DATE_TIME.'";'
 	);
 
 	// show GUI messages in pages with menus and in fullscreen mode
-	$path = 'jsLoader.php?ver='.ZABBIX_VERSION.'&amp;lang='.CWebUser::$data['lang'].'&amp;showGuiMessaging='
-		.($is_standard_page ? '1' : '0');
-	$pageHeader->addJsFile($path);
+	$path = (new CUrl('jsLoader.php'))
+		->setArgument('ver', ZABBIX_VERSION)
+		->setArgument('lang', CWebUser::$data['lang']);
+
+	if ($is_standard_page) {
+		$path->setArgument('showGuiMessaging', '1');
+	}
+
+	$pageHeader->addJsFile($path->getUrl());
 
 	if (!empty($page['scripts']) && is_array($page['scripts'])) {
-		foreach ($page['scripts'] as $script) {
-			$path .= '&amp;files[]='.$script;
+		$path = (new CUrl('jsLoader.php'))
+			->setArgument('ver', ZABBIX_VERSION)
+			->setArgument('lang', CWebUser::$data['lang'])
+			->setArgument('files', $page['scripts']);
+
+		if ($is_standard_page) {
+			$path->setArgument('showGuiMessaging', '1');
 		}
-		$pageHeader->addJsFile($path);
+
+		$pageHeader->addJsFile($path->getUrl());
 	}
 	$pageHeader->display();
 ?>
