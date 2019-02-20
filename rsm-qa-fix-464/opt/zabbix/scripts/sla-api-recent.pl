@@ -29,7 +29,7 @@ use constant SUBSTR_KEY_LEN => 20;	# for logging
 sub process_server($);
 sub process_tld($$$$);
 sub cycles_to_calculate($$$$$$$$);
-sub get_lastvalues_from_db($$);
+sub get_lastvalues_from_db($$$);
 sub calculate_cycle($$$$$$$$);
 sub get_interfaces($$$);
 sub probe_online_at_init();
@@ -128,31 +128,6 @@ sub process_server($)
 {
 	my $server_key = shift;
 
-	# Last values from the "lastvalue" (availability, RTTs) and "lastvalue_str" (IPs) tables.
-	#
-	# {
-	#     'tlds' => {
-	#         tld => {
-	#             service => {
-	#                 'probes' => {
-	#                     probe => {
-	#                         itemid = {
-	#                             'key' => key,
-	#                             'value_type' => value_type,
-	#                             'clock' => clock
-	#                         }
-	#                     }
-	#                 }
-	#             }
-	#         }
-	#     }
-	# }
-	#
-	# NB! Besides results from probes we process Service Availability values, which
-	# are per TLD, for those we will use empty string ("") as probe.
-
-	my $lastvalues_db = {'tlds' => {}};
-
 	$lastvalues_cache = {};
 
 	if (ah_get_recent_cache($server_key, \$lastvalues_cache) != AH_SUCCESS)
@@ -164,15 +139,22 @@ sub process_server($)
 	# initialize probe online cache
 	probe_online_at_init();
 
-	db_connect($server_key);
-	get_lastvalues_from_db($lastvalues_db, \%delays);
-	db_disconnect();
-
 	# probes available for every service
 	my %probes;
+	my $server_tlds;
 
-	my @tld_keys = sort(keys(%{$lastvalues_db->{'tlds'}}));
-	my $total_tld_count = scalar(@tld_keys);
+	if (opt('tld'))
+	{
+		$server_tlds = [getopt('tld')];
+	}
+	else
+	{
+		db_connect($server_key);
+		$server_tlds = get_tlds_from_db();
+		db_disconnect($server_key);
+	}
+
+	my $total_tld_count = scalar(@{$server_tlds});
 
 	my $max_tlds_per_child;
 
@@ -214,7 +196,33 @@ sub process_server($)
 
 				last if $tldi >= $total_tld_count;
 
-				$tld = $tld_keys[$tldi]; # global variable
+				$tld = $server_tlds->[$tldi]; # global variable
+
+				# Last values from the "lastvalue" (availability, RTTs) and "lastvalue_str" (IPs) tables.
+				#
+				# {
+				#     'tlds' => {
+				#         tld => {
+				#             service => {
+				#                 'probes' => {
+				#                     probe => {
+				#                         itemid = {
+				#                             'key' => key,
+				#                             'value_type' => value_type,
+				#                             'clock' => clock
+				#                         }
+				#                     }
+				#                 }
+				#             }
+				#         }
+				#     }
+				# }
+				#
+				# NB! Besides results from probes we process Service Availability values, which
+				# are per TLD, for those we will use empty string ("") as probe.
+	
+				my $lastvalues_db = {'tlds' => {}};
+				get_lastvalues_from_db($lastvalues_db, $tld, \%delays);
 
 				my $lastvalues_db_tld = $lastvalues_db->{'tlds'}{$tld};
 				my $lastvalues_cache_tld = $lastvalues_cache->{'tlds'}{$tld} = {};
@@ -639,43 +647,96 @@ sub get_service_from_slv_key($)
 	return $service;
 }
 
-sub get_lastvalues_from_db($$)
+sub get_tlds_from_db()
 {
-	my $lastvalues_db = shift;
-	my $delays = shift;
-
-	my $host_cond = '';
-
-	if (opt('tld'))
-	{
-		$host_cond = " and (h.host like '".getopt('tld')." %' or h.host='".getopt('tld')."')";
-	}
-
-	# get everything from lastvalue, lastvalue_str tables
 	my $rows_ref = db_select(
-		"select itemid,clock".
-		" from lastvalue".
-		" union".
-		" select itemid,clock".
-		" from lastvalue_str"
+		"select distinct h.host ".
+		" from hosts h,hosts_groups hg".
+		" where h.hostid=hg.hostid and hg.groupid=140 and h.status=0 order by h.host"
 	);
 
-	my %lastvalues_map;
+	my @tlds;
 
-	map {$lastvalues_map{$_->[0]} = $_->[1]} (@{$rows_ref});
+	foreach my $row (@{$rows_ref})
+	{
+		push(@tlds, $row->[0]);
+	}
 
-	$rows_ref = db_select(
+	return \@tlds;
+}
+
+sub get_lastvalues_from_db($$$)
+{
+	my $lastvalues_db = shift;
+	my $tld = shift;
+	my $delays = shift;
+
+	my $host_cond = " and h.host like '%$tld%'";
+
+	my $item_num_rows_ref = db_select(
 		"select h.host,i.itemid,i.key_,i.value_type".
 		" from items i,hosts h".
 		" where h.hostid=i.hostid".
 			" and i.status=".ITEM_STATUS_ACTIVE.
 			" and h.status=".HOST_STATUS_MONITORED.
+			" and (i.value_type=".ITEM_VALUE_TYPE_FLOAT.
+			" or i.value_type=".ITEM_VALUE_TYPE_UINT64.")".
 			$host_cond
 	);
 
+	my $itemids_num = '';
+
+	foreach my $row_ref (@{$item_num_rows_ref})
+	{
+		$itemids_num .= $row_ref->[1];
+		$itemids_num .= ',';
+	}
+
+	chop($itemids_num);
+
+	my $item_str_rows_ref = db_select(
+		"select h.host,i.itemid,i.key_,i.value_type".
+		" from items i,hosts h".
+		" where h.hostid=i.hostid".
+			" and i.status=".ITEM_STATUS_ACTIVE.
+			" and h.status=".HOST_STATUS_MONITORED.
+			" and i.value_type=".ITEM_VALUE_TYPE_STR.
+			$host_cond
+	);
+
+	my $itemids_str = '';
+
+	foreach my $row_ref (@{$item_str_rows_ref})
+	{
+		$itemids_str .= $row_ref->[1];
+		$itemids_str .= ',';
+	}
+
+	chop($itemids_str);
+
+	# get everything from lastvalue, lastvalue_str tables
+	my $lastval_rows_ref = db_select(
+		"select itemid,clock".
+		" from lastvalue".
+		" where itemid in ($itemids_num)".
+		" union".
+		" select itemid,clock".
+		" from lastvalue_str".
+		" where itemid in ($itemids_str)"
+	);
+
+	my %lastvalues_map;
+
+	map {$lastvalues_map{$_->[0]} = $_->[1]} (@{$lastval_rows_ref});
+	undef($lastval_rows_ref);
+
 	# join items and lastvalues
 
-	foreach my $row_ref (@{$rows_ref})
+	my @item_rows_ref = (@{$item_num_rows_ref}, @{$item_str_rows_ref});
+	undef($item_num_rows_ref);
+	undef($item_str_rows_ref);
+
+	foreach my $row_ref (@item_rows_ref)
 	{
 		my $host = $row_ref->[0];
 		my $itemid = $row_ref->[1];
