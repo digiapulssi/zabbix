@@ -167,43 +167,44 @@ sub process_server($)
 
 	my $server_tld_count = scalar(@{$server_tlds});
 
-	my $max_tlds_per_child;
+	my $tlds_per_child;
+	my $tlds_remainder;
 
 	if ($max_children < $server_tld_count)
 	{
-		$max_tlds_per_child = int(int($server_tld_count) / int($max_children));
-
-		if ((int($server_tld_count) % int($max_children)) > 0)
-		{
-# 			$max_children++;	# one extra child to process the remainder
-		}
+		$tlds_per_child = int(int($server_tld_count) / int($max_children));
+		$tlds_remainder = int(int($server_tld_count) % int($max_children));
 	}
 	else
 	{
 		$max_children = $server_tld_count;
-		$max_tlds_per_child = 1;
+		$tlds_per_child = 1;
+		$tlds_remainder = 0;
 	}
 
 	my $fm = new Parallel::ForkManager();
 	set_on_finish($fm);
+	$fm->set_max_procs($max_children - 1); # we count this process as one of the children
 	$fm->run_on_wait(sub() {dbg("max children reached, please wait...");});
-	$fm->set_max_procs($max_children);
 
-	for (my $n = 0; $n < $max_children; $n++)
+	my $tldi_begin = 0;
+
+	while ($tldi_begin < $server_tld_count)
 	{
 		child_failed() if ($child_failed);
 
-		my $tldi_begin = $n * $max_tlds_per_child;
-		my $tldi_end = $tldi_begin + $max_tlds_per_child;
+		my $tldi_end = $tldi_begin + $tlds_per_child;
+
+		# spread remainder equally between children
+		if ($tlds_remainder > 0)
+		{
+			$tldi_end++;
+			$tlds_remainder--;
+		}
 
 		my %child_data;
 
-		if ($tldi_end > $server_tld_count) #got remainder
-		{
-			process_tld_batch($server_tlds, $tldi_begin, $server_tld_count, \%child_data, \%probes);
-			save_child_lastvalues_cache(\%child_data)
-		}
-		else
+		if ($tldi_end < $server_tld_count)	
 		{
 			my $pid = $fm->start();
 
@@ -214,6 +215,13 @@ sub process_server($)
 				last;
 			}
 		}
+		else # don't fork for the last batch
+		{
+			process_tld_batch($server_tlds, $tldi_begin, $server_tld_count, \%child_data, \%probes);
+			save_child_lastvalues_cache(\%child_data)
+		}
+
+		$tldi_begin = $tldi_end;
 	}
 
 	$fm->run_on_wait(undef);
