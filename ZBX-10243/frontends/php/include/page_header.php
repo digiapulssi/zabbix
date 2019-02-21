@@ -185,36 +185,33 @@ if ($page['type'] == PAGE_TYPE_HTML) {
 	if ($page['file'] == 'sysmap.php') {
 		$pageHeader->addCssFile('imgstore.php?css=1&output=css');
 	}
+
 	$pageHeader
-		->addJsFile((new CUrl('js/browsers.js'))->setArgument('ver', ZABBIX_VERSION)->getUrl())
+		->addJsFile((new CUrl('js/browsers.js'))
+			->setArgument('ver', ZABBIX_VERSION)
+			->getUrl()
+		)
 		->addJsBeforeScripts(
 			'var PHP_TZ_OFFSET = '.date('Z').','.
 				'PHP_ZBX_FULL_DATE_TIME = "'.ZBX_FULL_DATE_TIME.'";'
-	);
-
-	// show GUI messages in pages with menus and in fullscreen mode
-	$path = (new CUrl('jsLoader.php'))
-		->setArgument('ver', ZABBIX_VERSION)
-		->setArgument('lang', CWebUser::$data['lang']);
-
-	if ($is_standard_page) {
-		$path->setArgument('showGuiMessaging', '1');
-	}
-
-	$pageHeader->addJsFile($path->getUrl());
-
-	if (!empty($page['scripts']) && is_array($page['scripts'])) {
-		$path = (new CUrl('jsLoader.php'))
+		)
+		// Show GUI messages in pages with menus and in fullscreen mode.
+		->addJsFile((new CUrl('jsLoader.php'))
 			->setArgument('ver', ZABBIX_VERSION)
 			->setArgument('lang', CWebUser::$data['lang'])
-			->setArgument('files', $page['scripts']);
+			->setArgument('showGuiMessaging', $is_standard_page ? 1 : null)
+			->getUrl()
+		);
 
-		if ($is_standard_page) {
-			$path->setArgument('showGuiMessaging', '1');
-		}
-
-		$pageHeader->addJsFile($path->getUrl());
+	if ($page['scripts']) {
+		$pageHeader->addJsFile((new CUrl('jsLoader.php'))
+			->setArgument('ver', ZABBIX_VERSION)
+			->setArgument('lang', CWebUser::$data['lang'])
+			->setArgument('files', $page['scripts'])
+			->getUrl()
+		);
 	}
+
 	$pageHeader->display();
 ?>
 <body lang="<?= CWebUser::getLang() ?>">

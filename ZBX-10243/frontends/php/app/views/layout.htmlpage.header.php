@@ -42,27 +42,27 @@ if (!empty($DB['DB'])) {
 		$scripts[] = 'servercheck.js';
 	}
 }
+
+// Show GUI messages in pages with menus and in fullscreen and kiosk mode.
+$show_gui_messaging = (!defined('ZBX_PAGE_NO_MENU')
+	|| in_array($data['web_layout_mode'], [ZBX_LAYOUT_FULLSCREEN, ZBX_LAYOUT_KIOSKMODE])) ? 1 : null;
+
 $pageHeader
 	->addCssFile('styles/'.CHtml::encode($theme).'.css')
 	->addJsBeforeScripts(
 		'var PHP_TZ_OFFSET = '.date('Z').','.
 			'PHP_ZBX_FULL_DATE_TIME = "'.ZBX_FULL_DATE_TIME.'";'
-);
-
-// show GUI messages in pages with menus and in fullscreen and kiosk mode
-$showGuiMessaging = (!defined('ZBX_PAGE_NO_MENU')
-	|| in_array($data['web_layout_mode'], [ZBX_LAYOUT_FULLSCREEN, ZBX_LAYOUT_KIOSKMODE]));
-
-$pageHeader->addJsFile((new CUrl('js/browsers.js'))->setArgument('ver', ZABBIX_VERSION)->getUrl());
-$path = (new CUrl('jsLoader.php'))
-	->setArgument('lang', $data['user']['lang'])
-	->setArgument('ver', ZABBIX_VERSION);
-
-if ($showGuiMessaging) {
-	$path->setArgument('showGuiMessaging', '1');
-}
-
-$pageHeader->addJsFile($path->getUrl());
+	)
+	->addJsFile((new CUrl('js/browsers.js'))
+		->setArgument('ver', ZABBIX_VERSION)
+		->getUrl()
+	)
+	->addJsFile((new CUrl('jsLoader.php'))
+		->setArgument('lang', $data['user']['lang'])
+		->setArgument('ver', ZABBIX_VERSION)
+		->setArgument('showGuiMessaging', $show_gui_messaging)
+		->getUrl()
+	);
 
 if ($scripts) {
 	$pageHeader->addJsFile((new CUrl('jsLoader.php'))
