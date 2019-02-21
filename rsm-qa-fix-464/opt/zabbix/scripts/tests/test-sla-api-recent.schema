@@ -46,7 +46,7 @@
                                       "type": "integer"
                                     },
                                     "targetIP": {
-                                      "type": "string"
+                                      "type": ["string", "null"]
                                     },
                                     "result": {
                                       "type": ["string", "integer"],
@@ -68,7 +68,7 @@
                               ]
                             },
                             "target": {
-                              "type": "string"
+                              "type": ["string", "null"]
                             }
                           },
                           "required": [
