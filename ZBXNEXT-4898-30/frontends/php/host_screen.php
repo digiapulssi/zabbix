@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2018 Zabbix SIA
+** Copyright (C) 2001-2019 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -72,6 +72,15 @@ $data = [
 	'stime' => getRequest('stime')
 ];
 CProfile::update('web.hostscreen.screenid', $data['screenid'], PROFILE_TYPE_ID);
+
+$host = API::Host()->get([
+	'output' => [],
+	'hostids' => $data['hostid']
+]);
+
+if (!$host) {
+	access_deny();
+}
 
 // get screen list
 $data['screens'] = API::TemplateScreen()->get([

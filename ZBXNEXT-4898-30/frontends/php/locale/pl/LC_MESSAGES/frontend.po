@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Zabbix 3.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-12-04 09:17+0200\n"
+"POT-Creation-Date: 2019-01-13 23:35+0200\n"
 "PO-Revision-Date: 2017-05-08 13:09+0300\n"
 "Last-Translator: Paweł <pawel.seledec@zeto.olsztyn.pl>\n"
 "Language-Team: Zabbix <info@zabbix.com>\n"
@@ -752,7 +752,7 @@ msgstr[0] "Usunięto aplikację"
 msgstr[1] "Usunięto aplikacje"
 msgstr[2] "Usunięto aplikacje"
 
-#: include/classes/core/CJsonRpc.php:208
+#: include/classes/core/CJsonRpc.php:210
 msgid "Application error."
 msgstr "Błąd aplikacji."
 
@@ -2213,8 +2213,8 @@ msgstr "Nie można ustawić \"%1$s\" dla grupy hostów \"%2$s\"."
 msgid "Cannot set \"%1$s\" for item \"%2$s\"."
 msgstr "Nie można ustawić \"%1$s\" dla pozycji \"%2$s\"."
 
-#: include/classes/api/services/CTemplateScreen.php:606
-#: include/classes/api/services/CTemplateScreen.php:704
+#: include/classes/api/services/CTemplateScreen.php:608
+#: include/classes/api/services/CTemplateScreen.php:706
 #, c-format
 msgid "Cannot set \"%1$s\" for template screen \"%2$s\"."
 msgstr "Nie można ustawić \"%1$s\" dla ekranu szablonu \"%2$s\"."
@@ -2251,7 +2251,7 @@ msgstr "Nie można ustawić pól inwentarza dla wyłączonego inwentarza."
 msgid "Cannot set resource ID for screen element."
 msgstr "Nie można ustawić ID zasobu dla elementu ekranu."
 
-#: include/classes/api/services/CHostInterface.php:245
+#: include/classes/api/services/CHostInterface.php:246
 msgid "Cannot switch host for interface."
 msgstr "Nie można przełączyć hosta dla interfejsu."
 
@@ -2366,7 +2366,7 @@ msgstr "Nie można zaktualizować \"templateid\" dla prototypu wykresu \"%1$s\".
 msgid "Cannot update \"templateid\" for screen \"%1$s\"."
 msgstr "Nie można zaktualizować \"templateid\" dla ekranu \"%1$s\"."
 
-#: include/classes/api/services/CTemplateScreen.php:694
+#: include/classes/api/services/CTemplateScreen.php:696
 #, c-format
 msgid "Cannot update \"templateid\" for template screen \"%1$s\"."
 msgstr "Nie można zaktualizować \"templateid\" dla ekranu szablonu \"%1$s\"."
@@ -2461,7 +2461,7 @@ msgstr "Nie można zaktualizować mapy ikon"
 msgid "Cannot update image"
 msgstr "Nie można zaktualizować obrazu"
 
-#: include/classes/api/services/CHostInterface.php:318
+#: include/classes/api/services/CHostInterface.php:327
 #, c-format
 msgid "Cannot update interface for discovered host \"%1$s\"."
 msgstr "Nie można zaktualizować interfejsu na wykrytym hoście \"%1$s\"."
@@ -4843,7 +4843,7 @@ msgstr "Pusty host."
 #: include/classes/api/services/CGraphPrototype.php:542
 #: include/classes/api/services/CHostGroup.php:416
 #: include/classes/api/services/CHostGroup.php:493
-#: include/classes/api/services/CHostInterface.php:388
+#: include/classes/api/services/CHostInterface.php:397
 #: include/classes/api/services/CHost.php:1155
 #: include/classes/api/services/CHostPrototype.php:929
 #: include/classes/api/services/CIconMap.php:301
@@ -4910,7 +4910,7 @@ msgstr "Pusta nazwa dla prototypu hosta \"%1$s\"."
 msgid "Empty name for script \"%1$s\"."
 msgstr "Pusta nazwa dla skryptu \"%1$s\"."
 
-#: include/classes/api/services/CService.php:909
+#: include/classes/api/services/CService.php:905
 msgid "Empty name."
 msgstr "Pusta nazwa."
 
@@ -4932,7 +4932,7 @@ msgstr "Pusta odpowiedź otrzymana z serwera Zabbix \"%1$s\"."
 msgid "Empty screen ID for screen."
 msgstr "Puste ID ekranu dla ekranu."
 
-#: include/classes/api/services/CTemplateScreen.php:661
+#: include/classes/api/services/CTemplateScreen.php:663
 msgid "Empty screen ID for template screen."
 msgstr "Puste ID ekranu dla szablonu ekranu."
 
@@ -5246,7 +5246,7 @@ msgstr "Rozwiń makra"
 msgid "Expand single problem"
 msgstr "Rozwiń pojedynczy problem"
 
-#: include/classes/core/CJsonRpc.php:108
+#: include/classes/core/CJsonRpc.php:110
 #, c-format
 msgid "Expecting JSON-rpc version 2.0, \"%s\" is given."
 msgstr "Oczekiwano wersji 2.0 JSON-rpc, otrzymano wersję \"%s\"."
@@ -5773,7 +5773,7 @@ msgstr "Wykres \"%1$s\" nie może dziedziczyć. Brak wymaganej pozycji dla \"%2$
 msgid "Graph \"%1$s\" cannot inherit. No required items on \"%2$s\"."
 msgstr "Wykres \"%1$s\" nie może dziedziczyć. Brak wymaganej pozycji dla \"%2$s\"."
 
-#: include/classes/api/services/CTemplateScreen.php:547
+#: include/classes/api/services/CTemplateScreen.php:549
 #, c-format
 msgid "Graph \"%1$s\" does not exist on template \"%2$s\"."
 msgstr "W szablonie \"%2$s\" nie ma wykresu \"%1$s\"."
@@ -6253,7 +6253,7 @@ msgstr "Dostęp do hosta"
 msgid "Host added"
 msgstr "Dodano hosta"
 
-#: include/classes/api/services/CHostInterface.php:823
+#: include/classes/api/services/CHostInterface.php:832
 msgid "Host cannot have more than one default interface of the same type."
 msgstr "Host nie może posiadać więcej niż jeden interfejs tego samego typu."
 
@@ -6627,7 +6627,7 @@ msgstr "Adres IP nie może być pusty."
 msgid "IP address range cannot be empty."
 msgstr "Zakres adresów IP nie może być pusty"
 
-#: include/classes/api/services/CHostInterface.php:268
+#: include/classes/api/services/CHostInterface.php:273
 msgid "IP and DNS cannot be empty for host interface."
 msgstr "Pola IP oraz DNS interfejsu hosta nie mogą być puste."
 
@@ -7024,7 +7024,7 @@ msgstr "Błędna wartość \"private\" (prywatne) \"%1$s\" dla mapy \"%2$s\"."
 msgid "Incorrect \"private\" value \"%1$s\" for screen \"%2$s\"."
 msgstr "Błędna wartość \"private\" (prywatne) \"%1$s\" dla ekranu \"%2$s\"."
 
-#: include/classes/api/services/CService.php:1131
+#: include/classes/api/services/CService.php:1127
 #, c-format
 msgid "Incorrect \"soft\" field value for dependency for service \"%1$s\"."
 msgstr "Błędna wartość pola \"soft\" dla zależności usługi \"%1$s\"."
@@ -7072,7 +7072,7 @@ msgstr "Błędna wartość hosta weryfikacji SSL dla scenariusza sieci www \"%1$
 msgid "Incorrect SSL verify peer value for web scenario \"%1$s\"."
 msgstr "Błędna wartość podmiotu weryfikacji SSL dla scenariusza sieci www \"%1$s\"."
 
-#: include/classes/api/services/CService.php:961
+#: include/classes/api/services/CService.php:957
 #, c-format
 msgid "Incorrect acceptable SLA for service \"%1$s\"."
 msgstr "Błędne akceptowalne SLA dla usługi \"%1$s\"."
@@ -7189,7 +7189,7 @@ msgstr "Błędny użytkownik dla operacji akcji. Użytkownik nie istnieje lub br
 msgid "Incorrect action operationid."
 msgstr "Błędne operationid akcji."
 
-#: include/classes/api/services/CService.php:924
+#: include/classes/api/services/CService.php:920
 #, c-format
 msgid "Incorrect algorithm for service \"%1$s\"."
 msgstr "Błędny algorytm dla serwisu \"%1$s\"."
@@ -7201,8 +7201,8 @@ msgstr "Błędne argumenty przekazane do funkcji"
 
 #: include/classes/api/services/CApplication.php:274
 #: include/classes/api/services/CEvent.php:434
-#: include/classes/api/services/CHostInterface.php:235
-#: include/classes/api/services/CHostInterface.php:436
+#: include/classes/api/services/CHostInterface.php:236
+#: include/classes/api/services/CHostInterface.php:445
 #: include/classes/api/services/CItemGeneral.php:204
 #: include/classes/api/services/CMap.php:465
 #: include/classes/api/services/CMap.php:539
@@ -7229,7 +7229,7 @@ msgstr "Błędne argumenty przekazane do funkcji"
 msgid "Incorrect arguments passed to function."
 msgstr "Błędne argumenty przekazane do funkcji."
 
-#: include/classes/api/services/CHostInterface.php:263
+#: include/classes/api/services/CHostInterface.php:268
 msgid "Incorrect arguments passed to method."
 msgstr "Błędne argumenty przekazane do metody."
 
@@ -7243,11 +7243,11 @@ msgstr "Błędny protokół uwierzytelniania dla reguły wyszukiwania \"%1$s\"."
 msgid "Incorrect authentication protocol for item \"%1$s\"."
 msgstr "Błędny protokół uwierzytelniania dla pozycji \"%1$s\"."
 
-#: include/classes/api/services/CHostInterface.php:666
+#: include/classes/api/services/CHostInterface.php:675
 msgid "Incorrect bulk value for interface."
 msgstr "Błędna wartość zbiorcza dla interfejsu."
 
-#: include/classes/api/services/CService.php:943
+#: include/classes/api/services/CService.php:939
 #, c-format
 msgid "Incorrect calculate SLA value for service \"%1$s\"."
 msgstr "Błędna wyliczona wartość SLA dla usługi \"%1$s\"."
@@ -7429,16 +7429,16 @@ msgstr "Błędny indeks obrazu."
 #: include/classes/api/services/CAction.php:2012
 #: include/classes/api/services/CImage.php:498
 #: include/classes/api/services/CScreen.php:455
-#: include/classes/api/services/CTemplateScreen.php:597
+#: include/classes/api/services/CTemplateScreen.php:599
 msgid "Incorrect input parameters."
 msgstr "Błędne parametry wejściowe."
 
-#: include/classes/api/services/CHostInterface.php:591
+#: include/classes/api/services/CHostInterface.php:600
 #, c-format
 msgid "Incorrect interface DNS parameter \"%s\" provided."
 msgstr "Podano błędny parametr DNS \"%s\" interfejsu."
 
-#: include/classes/api/services/CHostInterface.php:634
+#: include/classes/api/services/CHostInterface.php:643
 #, c-format
 msgid "Incorrect interface port \"%s\" provided."
 msgstr "Podano błędny port interfejsu \"%s\"."
@@ -7591,12 +7591,12 @@ msgstr "Błędne parametry dla utrzymania."
 msgid "Incorrect parameters for user group."
 msgstr "Błędne parametry dla grupy użytkowników."
 
-#: include/classes/api/services/CService.php:1009
+#: include/classes/api/services/CService.php:1005
 #, c-format
 msgid "Incorrect parent for service \"%1$s\"."
 msgstr "Błędny rodzic dla serwisu \"%1$s\"."
 
-#: include/classes/api/services/CService.php:1012
+#: include/classes/api/services/CService.php:1008
 msgid "Incorrect parent service."
 msgstr "Błędny serwis nadrzędny."
 
@@ -7663,7 +7663,7 @@ msgstr "Błędny czas startu usługi."
 msgid "Incorrect service time type."
 msgstr "Błędny typ czasu usługi."
 
-#: include/classes/api/services/CService.php:978
+#: include/classes/api/services/CService.php:974
 #, c-format
 msgid "Incorrect sorder order for service \"%1$s\"."
 msgstr "Błędna kolejność sorder dla usługi \"%1$s\"."
@@ -7683,7 +7683,7 @@ msgstr "Błędny stan hosta \"%1$s\"."
 msgid "Incorrect status for host prototype \"%1$s\"."
 msgstr "Błędny stan dla prototypu hosta \"%1$s\"."
 
-#: include/classes/api/services/CService.php:1032
+#: include/classes/api/services/CService.php:1028
 #, c-format
 msgid "Incorrect status for service \"%1$s\"."
 msgstr "Błędny stan dla serwisu \"%1$s\"."
@@ -7696,7 +7696,7 @@ msgstr "Błędny stan."
 msgid "Incorrect style provided for screen element."
 msgstr "Błędny styl ustawiony dla elementu ekranu."
 
-#: include/classes/api/services/CTemplateScreen.php:662
+#: include/classes/api/services/CTemplateScreen.php:664
 msgid "Incorrect template screen ID."
 msgstr "Błędny ID ekranu szablonu."
 
@@ -7725,7 +7725,7 @@ msgstr "Błędny okres \"%1$s\" czas początkowy musi być mniejszy od czasu ko�
 msgid "Incorrect time period \"%1$s\"."
 msgstr "Błędny okres \"%1$s\"."
 
-#: include/classes/api/services/CService.php:993
+#: include/classes/api/services/CService.php:989
 #, c-format
 msgid "Incorrect trigger ID for service \"%1$s\"."
 msgstr "Błędne ID wyzwalacza dla usługi \"%1$s\"."
@@ -7981,7 +7981,7 @@ msgstr "Nazwa instalatora"
 msgid "Interface"
 msgstr "Interfejs"
 
-#: include/classes/api/services/CHostInterface.php:843
+#: include/classes/api/services/CHostInterface.php:852
 #, c-format
 msgid "Interface is linked to item \"%1$s\" on \"%2$s\"."
 msgstr "Interfejs jest połączony z pozycją \"%1$s\" w \"%2$s\"."
@@ -7990,18 +7990,18 @@ msgstr "Interfejs jest połączony z pozycją \"%1$s\" w \"%2$s\"."
 msgid "Interface is used by items that require this type of the interface."
 msgstr "Interfejs jest wykorzystywany przez pozycje, które wymagają tego typu interfejsu."
 
-#: include/classes/api/services/CHostInterface.php:272
+#: include/classes/api/services/CHostInterface.php:277
 #, c-format
 msgid "Interface with DNS \"%1$s\" cannot have empty IP address."
 msgstr "Interfejs z polem DNS \"%1$s\" nie może mieć pustego adresu IP."
 
-#: include/classes/api/services/CHostInterface.php:278
-#: include/classes/api/services/CHostInterface.php:285
+#: include/classes/api/services/CHostInterface.php:283
+#: include/classes/api/services/CHostInterface.php:290
 #, c-format
 msgid "Interface with IP \"%1$s\" cannot have empty DNS name while having \"Use DNS\" property on \"%2$s\"."
 msgstr "Interfejs o IP \"%1$s\" nie może mieć pustej nazwy DNS jeżeli właściwość \"Use DNS\" jest \"%2$s\"."
 
-#: include/classes/api/services/CHostInterface.php:291
+#: include/classes/api/services/CHostInterface.php:296
 #, c-format
 msgid "Interface with IP \"%1$s\" cannot have empty DNS name."
 msgstr "Interfejs z polem IP \"%1$s\" nie może mieć pustej nazwy DNS."
@@ -8021,7 +8021,7 @@ msgctxt "user type"
 msgid "Internal"
 msgstr "Wewnętrzny"
 
-#: include/classes/core/CJsonRpc.php:204
+#: include/classes/core/CJsonRpc.php:206
 msgid "Internal JSON-RPC error."
 msgstr "Błąd wewnętrzny JSON-RPC."
 
@@ -8029,7 +8029,7 @@ msgstr "Błąd wewnętrzny JSON-RPC."
 msgid "Internal data storage period (in days)"
 msgstr "Okres przechowywania danych wewnętrznych (w dniach)"
 
-#: include/classes/core/CJsonRpc.php:203
+#: include/classes/core/CJsonRpc.php:205
 #: include/classes/import/validators/CXmlValidatorGeneral.php:147
 msgid "Internal error."
 msgstr "Błąd wewnętrzny."
@@ -8079,11 +8079,11 @@ msgstr "Nieprawidłowy zakres adresów IP \"%1$s\"."
 msgid "Invalid IP address range \"%1$s\": must be a string."
 msgstr "Nieprawidłowy zakres adresów IP \"%1$s\": musi być ciągiem znaków."
 
-#: include/classes/core/CJsonRpc.php:184
+#: include/classes/core/CJsonRpc.php:186
 msgid "Invalid JSON. An error occurred on the server while parsing the JSON text."
 msgstr "Nieprawidłowe dane JSON. Wystąpił błąd serwera podczas przetwarzania tekstu JSON."
 
-#: include/classes/core/CJsonRpc.php:188
+#: include/classes/core/CJsonRpc.php:190
 msgid "Invalid Request."
 msgstr "Nieprawidłowe żądanie."
 
@@ -8247,12 +8247,12 @@ msgstr "Nieprawidłowy okres utrzymania"
 #: include/classes/api/services/CScript.php:427
 #: include/classes/api/services/CService.php:206
 #: include/classes/api/services/CService.php:381
-#: include/classes/api/services/CService.php:1270
+#: include/classes/api/services/CService.php:1266
 #: include/classes/api/services/CUser.php:699
 #: include/classes/api/services/CUser.php:719
 #: include/classes/api/services/CUser.php:877
 #: include/classes/api/services/CUser.php:922
-#: include/classes/core/CJsonRpc.php:199
+#: include/classes/core/CJsonRpc.php:201
 msgid "Invalid method parameters."
 msgstr "Nieprawidłowe parametry metody."
 
@@ -8260,7 +8260,7 @@ msgstr "Nieprawidłowe parametry metody."
 msgid "Invalid number of parameters."
 msgstr "Nieprawidłowa liczba parametrów."
 
-#: include/classes/core/CJsonRpc.php:198
+#: include/classes/core/CJsonRpc.php:200
 msgid "Invalid params."
 msgstr "Nieprawidłowe parametry."
 
@@ -8385,7 +8385,7 @@ msgstr "Pozycja \"%1$s\" już istnieje w \"%2$s\"."
 msgid "Item \"%1$s\" cannot populate a missing host inventory field number \"%2$d\". Choices are: from 0 (do not populate) to %3$d."
 msgstr "Pozycja \"%1$s\" nie może wypełnić brakującego pola inwentarzowego hosta \"%2$d\". Wybór jest pomiędzy 0 (nie wypełniaj pola) do %3$d."
 
-#: include/classes/api/services/CTemplateScreen.php:565
+#: include/classes/api/services/CTemplateScreen.php:567
 #, c-format
 msgid "Item \"%1$s\" does not exist on template \"%2$s\"."
 msgstr "W szablonie \"%2$s\" nie ma pozycji \"%1$s\"."
@@ -8600,20 +8600,20 @@ msgstr "Agent JMX"
 msgid "JMX interfaces"
 msgstr "Interfejsy JMX"
 
-#: include/classes/core/CJsonRpc.php:156
+#: include/classes/core/CJsonRpc.php:158
 #, c-format
 msgid "JSON-rpc error generation failed. No such error \"%s\"."
 msgstr "JSON-rpc: wygenerowanie błędu się nie powiodło. Nie ma takiego błędu jak \"%s\"."
 
-#: include/classes/core/CJsonRpc.php:113
+#: include/classes/core/CJsonRpc.php:115
 msgid "JSON-rpc method is not defined."
 msgstr "Metoda JSON-rpc nie jest zdefiniowana."
 
-#: include/classes/core/CJsonRpc.php:118
+#: include/classes/core/CJsonRpc.php:120
 msgid "JSON-rpc params is not an Array."
 msgstr "Parametry wywołania JSON-rpc nie są tablicą."
 
-#: include/classes/core/CJsonRpc.php:103
+#: include/classes/core/CJsonRpc.php:105
 msgid "JSON-rpc version is not specified."
 msgstr "Nie podano wersji JSON-rpc."
 
@@ -9494,7 +9494,7 @@ msgstr "Komunikaty"
 msgid "Messaging"
 msgstr "Komunikaty"
 
-#: include/classes/core/CJsonRpc.php:193
+#: include/classes/core/CJsonRpc.php:195
 msgid "Method not found."
 msgstr "Nie znaleziono metody."
 
@@ -9899,7 +9899,7 @@ msgstr "Nie podano \"%1$s\" dla typu mediów."
 msgid "No \"%1$s\" given for screen."
 msgstr "Nie podano \"%1$s\" dla ekranu."
 
-#: include/classes/api/services/CTemplateScreen.php:660
+#: include/classes/api/services/CTemplateScreen.php:662
 #, c-format
 msgid "No \"%1$s\" given for template screen."
 msgstr "Nie podano \"%1$s\" dla ekranu szablonu."
@@ -10022,13 +10022,13 @@ msgstr "Bez zbierania danych"
 msgid "No data found."
 msgstr "Nie znaleziono danych."
 
-#: include/classes/api/services/CHostInterface.php:819
+#: include/classes/api/services/CHostInterface.php:828
 #, c-format
 msgid "No default interface for \"%1$s\" type on \"%2$s\"."
 msgstr "Brak domyślnego interfejsu dla typu \"%1$s\" w \"%2$s\"."
 
-#: include/classes/core/CJsonRpc.php:209 include/classes/core/CJsonRpc.php:214
-#: include/classes/core/CJsonRpc.php:219
+#: include/classes/core/CJsonRpc.php:211 include/classes/core/CJsonRpc.php:216
+#: include/classes/core/CJsonRpc.php:221
 msgid "No details"
 msgstr "Bez szczegółów"
 
@@ -10222,10 +10222,10 @@ msgstr "Brak uprawnień dla dostępu do systemu."
 #: include/classes/api/services/CHostGroup.php:1027
 #: include/classes/api/services/CHostGroup.php:1141
 #: include/classes/api/services/CHostGroup.php:1160
-#: include/classes/api/services/CHostInterface.php:240
-#: include/classes/api/services/CHostInterface.php:256
-#: include/classes/api/services/CHostInterface.php:399
-#: include/classes/api/services/CHostInterface.php:647
+#: include/classes/api/services/CHostInterface.php:241
+#: include/classes/api/services/CHostInterface.php:261
+#: include/classes/api/services/CHostInterface.php:408
+#: include/classes/api/services/CHostInterface.php:656
 #: include/classes/api/services/CHost.php:1500
 #: include/classes/api/services/CHost.php:1684
 #: include/classes/api/services/CHost.php:1811
@@ -10271,14 +10271,14 @@ msgstr "Brak uprawnień dla dostępu do systemu."
 #: include/classes/api/services/CScreen.php:1238
 #: include/classes/api/services/CScript.php:287
 #: include/classes/api/services/CScript.php:297
-#: include/classes/api/services/CService.php:1053
-#: include/classes/api/services/CService.php:1068
+#: include/classes/api/services/CService.php:1049
+#: include/classes/api/services/CService.php:1064
 #: include/classes/api/services/CTemplate.php:699
 #: include/classes/api/services/CTemplate.php:708
-#: include/classes/api/services/CTemplateScreen.php:632
-#: include/classes/api/services/CTemplateScreen.php:683
-#: include/classes/api/services/CTemplateScreen.php:746
-#: include/classes/api/services/CTemplateScreen.php:752
+#: include/classes/api/services/CTemplateScreen.php:634
+#: include/classes/api/services/CTemplateScreen.php:685
+#: include/classes/api/services/CTemplateScreen.php:748
+#: include/classes/api/services/CTemplateScreen.php:754
 #: include/classes/api/services/CTrigger.php:502
 #: include/classes/api/services/CTrigger.php:856
 #: include/classes/api/services/CTrigger.php:877
@@ -11255,7 +11255,7 @@ msgstr "Nadrzędne scenariusze sieci www"
 msgid "Parse SQL error [%1$s] in [%2$s]."
 msgstr "Błąd składni SQL [%1$s] w [%2$s]."
 
-#: include/classes/core/CJsonRpc.php:183
+#: include/classes/core/CJsonRpc.php:185
 msgid "Parse error"
 msgstr "Błąd przetwarzania"
 
@@ -11435,7 +11435,7 @@ msgstr "Powielaj pola inwentarza hosta"
 msgid "Port"
 msgstr "Port"
 
-#: include/classes/api/services/CHostInterface.php:631
+#: include/classes/api/services/CHostInterface.php:640
 msgid "Port cannot be empty for host interface."
 msgstr "Pole port nie może być puste dla interfejsu hosta."
 
@@ -12382,7 +12382,7 @@ msgstr "Harmonogramowanie"
 msgid "Screen"
 msgstr "Ekran"
 
-#: include/classes/api/services/CTemplateScreen.php:774
+#: include/classes/api/services/CTemplateScreen.php:776
 #, c-format
 msgid "Screen \"%1$s\" already exists on template \"%2$s\"."
 msgstr "Ekran \"%1$s\" już istnieje w szablonie \"%2$s\"."
@@ -12765,27 +12765,27 @@ msgstr "Czas serwera"
 msgid "Service"
 msgstr "Usługa"
 
-#: include/classes/api/services/CService.php:1099
+#: include/classes/api/services/CService.php:1095
 #, c-format
 msgid "Service \"%1$s\" cannot be deleted, because it is dependent on another service."
 msgstr "Nie można usunąć usługi \"%1$s\", ponieważ zależy od innej usługi."
 
-#: include/classes/api/services/CService.php:1120
+#: include/classes/api/services/CService.php:1116
 #, c-format
 msgid "Service \"%1$s\" cannot be dependent on itself."
 msgstr "Usługa \"%1$s\" nie może zależeć od samej siebie."
 
-#: include/classes/api/services/CService.php:1199
+#: include/classes/api/services/CService.php:1195
 #, c-format
 msgid "Service \"%1$s\" cannot be linked to a trigger and have children at the same time."
 msgstr "Usługa \"%1$s\" nie może być podłączona do wyzwalacza i jednocześnie mieć usługi potomne."
 
-#: include/classes/api/services/CService.php:1174
+#: include/classes/api/services/CService.php:1170
 #, c-format
 msgid "Service \"%1$s\" is already hardlinked to a different service."
 msgstr "Usługa \"%1$s\" nie może mieć twardego połączenia z inną usługą."
 
-#: include/classes/api/services/CService.php:1017
+#: include/classes/api/services/CService.php:1013
 msgid "Service cannot be parent and child at the same time."
 msgstr "Usługa nie może być jednocześnie elementem potomnym jak i nadrzędnym."
 
@@ -12821,7 +12821,7 @@ msgstr "Zaktualizowano usługę"
 msgid "Services"
 msgstr "Usługi"
 
-#: include/classes/api/services/CService.php:1250
+#: include/classes/api/services/CService.php:1246
 msgid "Services form a circular dependency."
 msgstr "Usługi tworzą cykliczną zależność."
 
@@ -13409,7 +13409,7 @@ msgstr "Domyślny systemowy"
 msgid "System error occurred. Please contact Zabbix administrator."
 msgstr ""
 
-#: include/classes/core/CJsonRpc.php:213
+#: include/classes/core/CJsonRpc.php:215
 msgid "System error."
 msgstr "Błąd systemowy."
 
@@ -13557,8 +13557,8 @@ msgstr "Makra szablonu"
 msgid "Template name"
 msgstr "Nazwa szablonu"
 
-#: include/classes/api/services/CTemplateScreen.php:641
-#: include/classes/api/services/CTemplateScreen.php:721
+#: include/classes/api/services/CTemplateScreen.php:643
+#: include/classes/api/services/CTemplateScreen.php:723
 #, c-format
 msgid "Template screen \"%1$s\" already exists."
 msgstr "Ekran szablonu \"%1$s\" już istnieje."
@@ -13747,11 +13747,11 @@ msgstr "Pozycja nie jest już wykrywana i zostanie usunięta przy następnym prz
 msgid "The number of processes. Returns integer"
 msgstr "Liczba procesów. Zwraca liczbę całkowitą"
 
-#: include/classes/core/CJsonRpc.php:189
+#: include/classes/core/CJsonRpc.php:191
 msgid "The received JSON is not a valid JSON-RPC Request."
 msgstr "Otrzymane dane JSON nie są poprawnym żądaniem JSON-RPC."
 
-#: include/classes/core/CJsonRpc.php:194
+#: include/classes/core/CJsonRpc.php:196
 msgid "The requested remote-procedure does not exist / is not available"
 msgstr "Żądana zdalna procedura nie istnieje / nie jest dostępna"
 
@@ -13929,7 +13929,7 @@ msgstr "Transakcja nie została zamknięta. Przerywanie..."
 msgid "Transform SQL query result into a JSON object for low-level discovery."
 msgstr "Przekształca rezultat zapytania SQL na obiekt JSON dla niskopoziomowych reguł wykrywania."
 
-#: include/classes/core/CJsonRpc.php:218
+#: include/classes/core/CJsonRpc.php:220
 msgid "Transport error."
 msgstr "Błąd przesyłu."
 
@@ -16258,7 +16258,7 @@ msgid "forecast() - Forecast for next t seconds based on period T"
 msgstr ""
 
 #: popup_trexpr.php:286
-msgid "fuzzytime() - Difference between item timestamp value and Zabbix server timestamp is over T seconds (1 - true, 0 - false)"
+msgid "fuzzytime() - Difference between item value (as timestamp) and Zabbix server timestamp is less than or equal to T seconds (1 - true, 0 - false)"
 msgstr ""
 
 #: include/views/configuration.item.edit.php:331

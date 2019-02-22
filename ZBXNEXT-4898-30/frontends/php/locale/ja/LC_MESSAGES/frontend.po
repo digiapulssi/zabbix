@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Zabbix 3.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-12-04 09:17+0200\n"
-"PO-Revision-Date: 2018-11-30 15:30+0300\n"
+"POT-Creation-Date: 2019-01-13 23:35+0200\n"
+"PO-Revision-Date: 2018-12-25 01:40+0300\n"
 "Last-Translator: Atsushi <a.tanaka77@gmail.com>\n"
 "Language-Team: Zabbix\n"
 "Language: ja\n"
@@ -13,7 +13,7 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Generator: Pootle 2.5.1.3\n"
 "X-Poedit-Basepath: ../../\n"
-"X-POOTLE-MTIME: 1543584623.000000\n"
+"X-POOTLE-MTIME: 1545694831.000000\n"
 
 #: include/classes/import/validators/C10XmlValidator.php:358
 #: include/classes/import/validators/C10XmlValidator.php:375
@@ -724,7 +724,7 @@ msgid "Application deleted"
 msgid_plural "Applications deleted"
 msgstr[0] "アプリケーションを削除しました"
 
-#: include/classes/core/CJsonRpc.php:208
+#: include/classes/core/CJsonRpc.php:210
 msgid "Application error."
 msgstr "アプリケーションエラー。"
 
@@ -2111,8 +2111,8 @@ msgstr "ホストグループ\"%2$s\"に\"%1$s\"を設定できません。"
 msgid "Cannot set \"%1$s\" for item \"%2$s\"."
 msgstr "アイテム\"%2$s\"に\"%1$s\"を設定できません。"
 
-#: include/classes/api/services/CTemplateScreen.php:606
-#: include/classes/api/services/CTemplateScreen.php:704
+#: include/classes/api/services/CTemplateScreen.php:608
+#: include/classes/api/services/CTemplateScreen.php:706
 #, c-format
 msgid "Cannot set \"%1$s\" for template screen \"%2$s\"."
 msgstr "テンプレートスクリーン\"%2$s\"に\"%1$s\"を設定できません。"
@@ -2149,7 +2149,7 @@ msgstr "無効の状態のインベントリのフィールドは設定できま
 msgid "Cannot set resource ID for screen element."
 msgstr "スクリーンの要素のリソースIDが設定できません。"
 
-#: include/classes/api/services/CHostInterface.php:245
+#: include/classes/api/services/CHostInterface.php:246
 msgid "Cannot switch host for interface."
 msgstr "インターフェースのためのホストを切り替えできません。"
 
@@ -2264,7 +2264,7 @@ msgstr "グラフのプロトタイプ\"%1$s\"の\"templateid\"を更新でき�
 msgid "Cannot update \"templateid\" for screen \"%1$s\"."
 msgstr "スクリーン\"%1$s\"の\"templateid\"を更新できません。"
 
-#: include/classes/api/services/CTemplateScreen.php:694
+#: include/classes/api/services/CTemplateScreen.php:696
 #, c-format
 msgid "Cannot update \"templateid\" for template screen \"%1$s\"."
 msgstr "テンプレートスクリーン\"%1$s\"の\"templateid\"を更新できません。"
@@ -2359,7 +2359,7 @@ msgstr "アイコンのマッピングを更新できません"
 msgid "Cannot update image"
 msgstr "イメージを更新できません"
 
-#: include/classes/api/services/CHostInterface.php:318
+#: include/classes/api/services/CHostInterface.php:327
 #, c-format
 msgid "Cannot update interface for discovered host \"%1$s\"."
 msgstr "ディスカバリされたホスト\"%1$s\"のインターフェースを更新できません。"
@@ -4733,7 +4733,7 @@ msgstr "ホストが空白です。"
 #: include/classes/api/services/CGraphPrototype.php:542
 #: include/classes/api/services/CHostGroup.php:416
 #: include/classes/api/services/CHostGroup.php:493
-#: include/classes/api/services/CHostInterface.php:388
+#: include/classes/api/services/CHostInterface.php:397
 #: include/classes/api/services/CHost.php:1155
 #: include/classes/api/services/CHostPrototype.php:929
 #: include/classes/api/services/CIconMap.php:301
@@ -4800,7 +4800,7 @@ msgstr "ホストのプロトタイプ\"%1$s\"の名前が空白です。"
 msgid "Empty name for script \"%1$s\"."
 msgstr "スクリプト\"%1$s\"の名前が空白です。"
 
-#: include/classes/api/services/CService.php:909
+#: include/classes/api/services/CService.php:905
 msgid "Empty name."
 msgstr "名前が空白です。"
 
@@ -4822,7 +4822,7 @@ msgstr "Zabbixサーバー\"%1$s\"から空のデータを受信しました。"
 msgid "Empty screen ID for screen."
 msgstr "スクリーンのスクリーンIDが空白です。"
 
-#: include/classes/api/services/CTemplateScreen.php:661
+#: include/classes/api/services/CTemplateScreen.php:663
 msgid "Empty screen ID for template screen."
 msgstr "プンプレートスクリーンのスクリーンIDが空白です。"
 
@@ -5134,7 +5134,7 @@ msgstr "マクロの展開"
 msgid "Expand single problem"
 msgstr "障害が1つのときに詳細を展開"
 
-#: include/classes/core/CJsonRpc.php:108
+#: include/classes/core/CJsonRpc.php:110
 #, c-format
 msgid "Expecting JSON-rpc version 2.0, \"%s\" is given."
 msgstr "JSON-rpc version 2.0が必要です, \"%s\" でリクエストされました。"
@@ -5661,7 +5661,7 @@ msgstr "グラフ\"%1$s\"は継承できません。指定されたアイテム�
 msgid "Graph \"%1$s\" cannot inherit. No required items on \"%2$s\"."
 msgstr "グラフ\"%1$s\"は継承できません。指定されたアイテムは\"%2$s\"に存在しません。"
 
-#: include/classes/api/services/CTemplateScreen.php:547
+#: include/classes/api/services/CTemplateScreen.php:549
 #, c-format
 msgid "Graph \"%1$s\" does not exist on template \"%2$s\"."
 msgstr "グラフ\"%1$s\"はテンプレート\"%2$s\"に存在しません。"
@@ -6135,7 +6135,7 @@ msgstr "ホストアクセス"
 msgid "Host added"
 msgstr "ホストを追加しました"
 
-#: include/classes/api/services/CHostInterface.php:823
+#: include/classes/api/services/CHostInterface.php:832
 msgid "Host cannot have more than one default interface of the same type."
 msgstr "ホストに同じタイプのデフォルトインターフェースは2つ以上設定できません。"
 
@@ -6501,7 +6501,7 @@ msgstr "IPアドレスは必須項目です。"
 msgid "IP address range cannot be empty."
 msgstr "IPアドレスの範囲は必須項目です。"
 
-#: include/classes/api/services/CHostInterface.php:268
+#: include/classes/api/services/CHostInterface.php:273
 msgid "IP and DNS cannot be empty for host interface."
 msgstr "ホストインターフェースのIPとDNSは必須項目です"
 
@@ -6898,7 +6898,7 @@ msgstr "マップ\"%2$s\"の\"private\"の値\"%1$s\"が正しくありません
 msgid "Incorrect \"private\" value \"%1$s\" for screen \"%2$s\"."
 msgstr "スクリーン\"%2$s\"の\"private\"の値\"%1$s\"が正しくありません。"
 
-#: include/classes/api/services/CService.php:1131
+#: include/classes/api/services/CService.php:1127
 #, c-format
 msgid "Incorrect \"soft\" field value for dependency for service \"%1$s\"."
 msgstr "サービス\"%1$s\"依存関係のフィールド\"soft\"の値が正しくありません。"
@@ -6946,7 +6946,7 @@ msgstr "Webシナリオ\"%1$s\"のためのSSLホスト検証の値が正しく�
 msgid "Incorrect SSL verify peer value for web scenario \"%1$s\"."
 msgstr "Webシナリオ\"%1$s\"のためのSSLピア検証の値が正しくありません。"
 
-#: include/classes/api/services/CService.php:961
+#: include/classes/api/services/CService.php:957
 #, c-format
 msgid "Incorrect acceptable SLA for service \"%1$s\"."
 msgstr "サービス\"%1$s\"のSLAの許容値が正しくありません。"
@@ -7063,7 +7063,7 @@ msgstr "実行するアクションのユーザーの値が正しくありませ
 msgid "Incorrect action operationid."
 msgstr "実行するアクションの設定が正しくありません。"
 
-#: include/classes/api/services/CService.php:924
+#: include/classes/api/services/CService.php:920
 #, c-format
 msgid "Incorrect algorithm for service \"%1$s\"."
 msgstr "サービス\"%1$s\"のアルゴリズムが正しくありません。"
@@ -7075,8 +7075,8 @@ msgstr "設定項目が間違っています"
 
 #: include/classes/api/services/CApplication.php:274
 #: include/classes/api/services/CEvent.php:434
-#: include/classes/api/services/CHostInterface.php:235
-#: include/classes/api/services/CHostInterface.php:436
+#: include/classes/api/services/CHostInterface.php:236
+#: include/classes/api/services/CHostInterface.php:445
 #: include/classes/api/services/CItemGeneral.php:204
 #: include/classes/api/services/CMap.php:465
 #: include/classes/api/services/CMap.php:539
@@ -7103,7 +7103,7 @@ msgstr "設定項目が間違っています"
 msgid "Incorrect arguments passed to function."
 msgstr "不正な引数が関数に渡されました。"
 
-#: include/classes/api/services/CHostInterface.php:263
+#: include/classes/api/services/CHostInterface.php:268
 msgid "Incorrect arguments passed to method."
 msgstr "入力項目が正しくありません。"
 
@@ -7117,11 +7117,11 @@ msgstr "ディスカバリルール\"%1$s\"の認証プロトコルが正しく�
 msgid "Incorrect authentication protocol for item \"%1$s\"."
 msgstr "アイテム\"%1$s\"の認証プロトコルが正しくありません。"
 
-#: include/classes/api/services/CHostInterface.php:666
+#: include/classes/api/services/CHostInterface.php:675
 msgid "Incorrect bulk value for interface."
 msgstr "インターフェースのbulkの値が正しくありません。"
 
-#: include/classes/api/services/CService.php:943
+#: include/classes/api/services/CService.php:939
 #, c-format
 msgid "Incorrect calculate SLA value for service \"%1$s\"."
 msgstr "サービス\"%1$s\"のSLAの値の計算が正しくありません。"
@@ -7303,16 +7303,16 @@ msgstr "イメージのインデックスが正しくありません。"
 #: include/classes/api/services/CAction.php:2012
 #: include/classes/api/services/CImage.php:498
 #: include/classes/api/services/CScreen.php:455
-#: include/classes/api/services/CTemplateScreen.php:597
+#: include/classes/api/services/CTemplateScreen.php:599
 msgid "Incorrect input parameters."
 msgstr "入力されたパラメータが正しくありません。"
 
-#: include/classes/api/services/CHostInterface.php:591
+#: include/classes/api/services/CHostInterface.php:600
 #, c-format
 msgid "Incorrect interface DNS parameter \"%s\" provided."
 msgstr "インターフェースのDNSパラメータ\"%s\"が正しくありません。"
 
-#: include/classes/api/services/CHostInterface.php:634
+#: include/classes/api/services/CHostInterface.php:643
 #, c-format
 msgid "Incorrect interface port \"%s\" provided."
 msgstr "インターフェースのポート\"%s\"が正しくありません。"
@@ -7465,12 +7465,12 @@ msgstr "メンテナンスのパラメータが正しくありません。"
 msgid "Incorrect parameters for user group."
 msgstr "ユーザーグループのパラメータが正しくありません。"
 
-#: include/classes/api/services/CService.php:1009
+#: include/classes/api/services/CService.php:1005
 #, c-format
 msgid "Incorrect parent for service \"%1$s\"."
 msgstr "サービス\"%1$s\"の親が正しくありません。"
 
-#: include/classes/api/services/CService.php:1012
+#: include/classes/api/services/CService.php:1008
 msgid "Incorrect parent service."
 msgstr "親サービスが正しくありません。"
 
@@ -7537,7 +7537,7 @@ msgstr "サービス開始時刻が正しくありません。"
 msgid "Incorrect service time type."
 msgstr "サービスタイムの種別が正しくありません。"
 
-#: include/classes/api/services/CService.php:978
+#: include/classes/api/services/CService.php:974
 #, c-format
 msgid "Incorrect sorder order for service \"%1$s\"."
 msgstr "サービス\"%1$s\"の結びつけ順が正しくありません。"
@@ -7557,7 +7557,7 @@ msgstr "ホスト\"%1$s\"のステータスが正しくありません。"
 msgid "Incorrect status for host prototype \"%1$s\"."
 msgstr "ホストのプロトタイプ\"%1$s\"のステータスが正しくありません。"
 
-#: include/classes/api/services/CService.php:1032
+#: include/classes/api/services/CService.php:1028
 #, c-format
 msgid "Incorrect status for service \"%1$s\"."
 msgstr "サービス\"%1$s\"のステータスが正しくありません。"
@@ -7570,7 +7570,7 @@ msgstr "ステータスが正しくありません。"
 msgid "Incorrect style provided for screen element."
 msgstr "スクリーンの要素のスタイルが正しくありません。"
 
-#: include/classes/api/services/CTemplateScreen.php:662
+#: include/classes/api/services/CTemplateScreen.php:664
 msgid "Incorrect template screen ID."
 msgstr "テンプレートスクリーンIDが正しくありません。"
 
@@ -7599,7 +7599,7 @@ msgstr "期間の設定\"%1$s\"が正しくありません。開始日は終了�
 msgid "Incorrect time period \"%1$s\"."
 msgstr "期間\"%1$s\"が正しくありません。"
 
-#: include/classes/api/services/CService.php:993
+#: include/classes/api/services/CService.php:989
 #, c-format
 msgid "Incorrect trigger ID for service \"%1$s\"."
 msgstr "サービス\"%1$s\"のトリガーIDが正しくありません。"
@@ -7855,7 +7855,7 @@ msgstr "インストーラ名"
 msgid "Interface"
 msgstr "インターフェース"
 
-#: include/classes/api/services/CHostInterface.php:843
+#: include/classes/api/services/CHostInterface.php:852
 #, c-format
 msgid "Interface is linked to item \"%1$s\" on \"%2$s\"."
 msgstr "インターフェースは\"%2$s\"のアイテム\"%1$s\"にリンクされています。"
@@ -7864,18 +7864,18 @@ msgstr "インターフェースは\"%2$s\"のアイテム\"%1$s\"にリンク�
 msgid "Interface is used by items that require this type of the interface."
 msgstr "インターフェースはこのタイプのインターフェースを使用するアイテムで使用されています"
 
-#: include/classes/api/services/CHostInterface.php:272
+#: include/classes/api/services/CHostInterface.php:277
 #, c-format
 msgid "Interface with DNS \"%1$s\" cannot have empty IP address."
 msgstr "DNS \"%1$s\"が設定されたインターフェースにIPアドレスを設定してください。"
 
-#: include/classes/api/services/CHostInterface.php:278
-#: include/classes/api/services/CHostInterface.php:285
+#: include/classes/api/services/CHostInterface.php:283
+#: include/classes/api/services/CHostInterface.php:290
 #, c-format
 msgid "Interface with IP \"%1$s\" cannot have empty DNS name while having \"Use DNS\" property on \"%2$s\"."
 msgstr "\"%2$s\"の\"DNSを使用\"にチェックが入っている場合、IPアドレス\"%1$s\"のインターフェースのDNS名は必須項目です。"
 
-#: include/classes/api/services/CHostInterface.php:291
+#: include/classes/api/services/CHostInterface.php:296
 #, c-format
 msgid "Interface with IP \"%1$s\" cannot have empty DNS name."
 msgstr "IPアドレス\"%1$s\"が設定されたインターフェースにDNS名を設定してください。"
@@ -7895,7 +7895,7 @@ msgctxt "user type"
 msgid "Internal"
 msgstr "Zabbixデータベース内のユーザー情報"
 
-#: include/classes/core/CJsonRpc.php:204
+#: include/classes/core/CJsonRpc.php:206
 msgid "Internal JSON-RPC error."
 msgstr "JSON-RPC内部エラー。"
 
@@ -7903,7 +7903,7 @@ msgstr "JSON-RPC内部エラー。"
 msgid "Internal data storage period (in days)"
 msgstr "内部データ保存期間 (日)"
 
-#: include/classes/core/CJsonRpc.php:203
+#: include/classes/core/CJsonRpc.php:205
 #: include/classes/import/validators/CXmlValidatorGeneral.php:147
 msgid "Internal error."
 msgstr "内部エラー。"
@@ -7953,11 +7953,11 @@ msgstr "IPアドレスの範囲\"%1$s\"が正しくありません。"
 msgid "Invalid IP address range \"%1$s\": must be a string."
 msgstr "IPアドレスの範囲\"%1$s\"が正しくありません: 文字列である必要があります。"
 
-#: include/classes/core/CJsonRpc.php:184
+#: include/classes/core/CJsonRpc.php:186
 msgid "Invalid JSON. An error occurred on the server while parsing the JSON text."
 msgstr "JSONデータが正しくありません。JSONテキストのパース中にサーバーでエラーが発生しました。"
 
-#: include/classes/core/CJsonRpc.php:188
+#: include/classes/core/CJsonRpc.php:190
 msgid "Invalid Request."
 msgstr "リクエストが正しくありません。"
 
@@ -8121,12 +8121,12 @@ msgstr "メンテナンス期間が正しくありません。"
 #: include/classes/api/services/CScript.php:427
 #: include/classes/api/services/CService.php:206
 #: include/classes/api/services/CService.php:381
-#: include/classes/api/services/CService.php:1270
+#: include/classes/api/services/CService.php:1266
 #: include/classes/api/services/CUser.php:699
 #: include/classes/api/services/CUser.php:719
 #: include/classes/api/services/CUser.php:877
 #: include/classes/api/services/CUser.php:922
-#: include/classes/core/CJsonRpc.php:199
+#: include/classes/core/CJsonRpc.php:201
 msgid "Invalid method parameters."
 msgstr "メソッドのパラメータが正しくありません。"
 
@@ -8134,7 +8134,7 @@ msgstr "メソッドのパラメータが正しくありません。"
 msgid "Invalid number of parameters."
 msgstr "パラメータの数が正しくありません。"
 
-#: include/classes/core/CJsonRpc.php:198
+#: include/classes/core/CJsonRpc.php:200
 msgid "Invalid params."
 msgstr "パラメータが正しくありません。"
 
@@ -8259,7 +8259,7 @@ msgstr "アイテム\"%1$s\"は\"%2$s\"にすでに存在します。"
 msgid "Item \"%1$s\" cannot populate a missing host inventory field number \"%2$d\". Choices are: from 0 (do not populate) to %3$d."
 msgstr "アイテム\"%1$s\"はフィールド番号が存在しないホストインベントリ\"%2$d\"を自動設定することができません。0 (自動設定しない)から%3$dの間で設定してください。"
 
-#: include/classes/api/services/CTemplateScreen.php:565
+#: include/classes/api/services/CTemplateScreen.php:567
 #, c-format
 msgid "Item \"%1$s\" does not exist on template \"%2$s\"."
 msgstr "アイテム\"%1$s\"はテンプレート\"%2$s\"に存在しません。"
@@ -8464,20 +8464,20 @@ msgstr "JMXエージェント"
 msgid "JMX interfaces"
 msgstr "JMXインターフェース"
 
-#: include/classes/core/CJsonRpc.php:156
+#: include/classes/core/CJsonRpc.php:158
 #, c-format
 msgid "JSON-rpc error generation failed. No such error \"%s\"."
 msgstr "JSON-rpcエラーの生成失敗。そのようなエラーはありません\"%s\"。"
 
-#: include/classes/core/CJsonRpc.php:113
+#: include/classes/core/CJsonRpc.php:115
 msgid "JSON-rpc method is not defined."
 msgstr "JSON-rpcメソッドがありません。"
 
-#: include/classes/core/CJsonRpc.php:118
+#: include/classes/core/CJsonRpc.php:120
 msgid "JSON-rpc params is not an Array."
 msgstr "JSON-rpcパラメータがありません。"
 
-#: include/classes/core/CJsonRpc.php:103
+#: include/classes/core/CJsonRpc.php:105
 msgid "JSON-rpc version is not specified."
 msgstr "JSON-rpcバージョンがありません。"
 
@@ -9348,7 +9348,7 @@ msgstr "メッセージ"
 msgid "Messaging"
 msgstr "アラート表示"
 
-#: include/classes/core/CJsonRpc.php:193
+#: include/classes/core/CJsonRpc.php:195
 msgid "Method not found."
 msgstr "メソッドが見つかりません。"
 
@@ -9751,7 +9751,7 @@ msgstr "メディアタイプに\"%1$s\"が定義されていません。"
 msgid "No \"%1$s\" given for screen."
 msgstr "スクリーンに\"%1$s\"が定義されていません。"
 
-#: include/classes/api/services/CTemplateScreen.php:660
+#: include/classes/api/services/CTemplateScreen.php:662
 #, c-format
 msgid "No \"%1$s\" given for template screen."
 msgstr "テンプレートスクリーンに\"%1$s\"が定義されていません。"
@@ -9874,13 +9874,13 @@ msgstr "データ収集なし"
 msgid "No data found."
 msgstr "データがありません。"
 
-#: include/classes/api/services/CHostInterface.php:819
+#: include/classes/api/services/CHostInterface.php:828
 #, c-format
 msgid "No default interface for \"%1$s\" type on \"%2$s\"."
 msgstr "\"%2$s\"上の\"%1$s\"タイプのデフォルトインターフェースが設定されていません。"
 
-#: include/classes/core/CJsonRpc.php:209 include/classes/core/CJsonRpc.php:214
-#: include/classes/core/CJsonRpc.php:219
+#: include/classes/core/CJsonRpc.php:211 include/classes/core/CJsonRpc.php:216
+#: include/classes/core/CJsonRpc.php:221
 msgid "No details"
 msgstr "詳細がありません"
 
@@ -10074,10 +10074,10 @@ msgstr "システムへのアクセス権がありません。"
 #: include/classes/api/services/CHostGroup.php:1027
 #: include/classes/api/services/CHostGroup.php:1141
 #: include/classes/api/services/CHostGroup.php:1160
-#: include/classes/api/services/CHostInterface.php:240
-#: include/classes/api/services/CHostInterface.php:256
-#: include/classes/api/services/CHostInterface.php:399
-#: include/classes/api/services/CHostInterface.php:647
+#: include/classes/api/services/CHostInterface.php:241
+#: include/classes/api/services/CHostInterface.php:261
+#: include/classes/api/services/CHostInterface.php:408
+#: include/classes/api/services/CHostInterface.php:656
 #: include/classes/api/services/CHost.php:1500
 #: include/classes/api/services/CHost.php:1684
 #: include/classes/api/services/CHost.php:1811
@@ -10123,14 +10123,14 @@ msgstr "システムへのアクセス権がありません。"
 #: include/classes/api/services/CScreen.php:1238
 #: include/classes/api/services/CScript.php:287
 #: include/classes/api/services/CScript.php:297
-#: include/classes/api/services/CService.php:1053
-#: include/classes/api/services/CService.php:1068
+#: include/classes/api/services/CService.php:1049
+#: include/classes/api/services/CService.php:1064
 #: include/classes/api/services/CTemplate.php:699
 #: include/classes/api/services/CTemplate.php:708
-#: include/classes/api/services/CTemplateScreen.php:632
-#: include/classes/api/services/CTemplateScreen.php:683
-#: include/classes/api/services/CTemplateScreen.php:746
-#: include/classes/api/services/CTemplateScreen.php:752
+#: include/classes/api/services/CTemplateScreen.php:634
+#: include/classes/api/services/CTemplateScreen.php:685
+#: include/classes/api/services/CTemplateScreen.php:748
+#: include/classes/api/services/CTemplateScreen.php:754
 #: include/classes/api/services/CTrigger.php:502
 #: include/classes/api/services/CTrigger.php:856
 #: include/classes/api/services/CTrigger.php:877
@@ -11105,7 +11105,7 @@ msgstr "親Webシナリオ"
 msgid "Parse SQL error [%1$s] in [%2$s]."
 msgstr "SQLパースエラー [%2$s]内の[%1$s]。"
 
-#: include/classes/core/CJsonRpc.php:183
+#: include/classes/core/CJsonRpc.php:185
 msgid "Parse error"
 msgstr "パースエラー"
 
@@ -11285,7 +11285,7 @@ msgstr "ホストインベントリフィールドの自動設定"
 msgid "Port"
 msgstr "ポート"
 
-#: include/classes/api/services/CHostInterface.php:631
+#: include/classes/api/services/CHostInterface.php:640
 msgid "Port cannot be empty for host interface."
 msgstr "ホストインターフェースのポートは必須項目です。"
 
@@ -12228,7 +12228,7 @@ msgstr "定期設定"
 msgid "Screen"
 msgstr "スクリーン"
 
-#: include/classes/api/services/CTemplateScreen.php:774
+#: include/classes/api/services/CTemplateScreen.php:776
 #, c-format
 msgid "Screen \"%1$s\" already exists on template \"%2$s\"."
 msgstr "スクリーン\"%1$s\"はテンプレート\"%2$s\"にすでに存在します。"
@@ -12609,27 +12609,27 @@ msgstr "サーバー時間"
 msgid "Service"
 msgstr "サービス"
 
-#: include/classes/api/services/CService.php:1099
+#: include/classes/api/services/CService.php:1095
 #, c-format
 msgid "Service \"%1$s\" cannot be deleted, because it is dependent on another service."
 msgstr "サービス\"%1$s\"は削除できません。他のサービスからの依存関係があります。"
 
-#: include/classes/api/services/CService.php:1120
+#: include/classes/api/services/CService.php:1116
 #, c-format
 msgid "Service \"%1$s\" cannot be dependent on itself."
 msgstr "サービス\"%1$s\"は自分自身に依存できません。"
 
-#: include/classes/api/services/CService.php:1199
+#: include/classes/api/services/CService.php:1195
 #, c-format
 msgid "Service \"%1$s\" cannot be linked to a trigger and have children at the same time."
 msgstr "サービス\"%1$s\"はトリガーへのリンクと子を持つことを同時にできません。"
 
-#: include/classes/api/services/CService.php:1174
+#: include/classes/api/services/CService.php:1170
 #, c-format
 msgid "Service \"%1$s\" is already hardlinked to a different service."
 msgstr "サービス\"%1$s\"は既に他のサービスにハードリンクされています。"
 
-#: include/classes/api/services/CService.php:1017
+#: include/classes/api/services/CService.php:1013
 msgid "Service cannot be parent and child at the same time."
 msgstr "サービスは同時に親と子になることはできません"
 
@@ -12665,7 +12665,7 @@ msgstr "サービスを更新しました"
 msgid "Services"
 msgstr "サービス"
 
-#: include/classes/api/services/CService.php:1250
+#: include/classes/api/services/CService.php:1246
 msgid "Services form a circular dependency."
 msgstr "サービスの依存関係が循環設定されています。"
 
@@ -13249,7 +13249,7 @@ msgstr "システムデフォルト"
 msgid "System error occurred. Please contact Zabbix administrator."
 msgstr "システムエラーが発生しました。Zabbix管理者に連絡してください。"
 
-#: include/classes/core/CJsonRpc.php:213
+#: include/classes/core/CJsonRpc.php:215
 msgid "System error."
 msgstr "システムエラー。"
 
@@ -13397,8 +13397,8 @@ msgstr "テンプレートのマクロ"
 msgid "Template name"
 msgstr "テンプレート名"
 
-#: include/classes/api/services/CTemplateScreen.php:641
-#: include/classes/api/services/CTemplateScreen.php:721
+#: include/classes/api/services/CTemplateScreen.php:643
+#: include/classes/api/services/CTemplateScreen.php:723
 #, c-format
 msgid "Template screen \"%1$s\" already exists."
 msgstr "テンプレートスクリーン\"%1$s\"がすでに存在します。"
@@ -13583,11 +13583,11 @@ msgstr "ディスカバリされたアイテムが見つかりませんでした
 msgid "The number of processes. Returns integer"
 msgstr "プロセス数。整数値を返す。"
 
-#: include/classes/core/CJsonRpc.php:189
+#: include/classes/core/CJsonRpc.php:191
 msgid "The received JSON is not a valid JSON-RPC Request."
 msgstr "受信したJSONは正しくないJSON-RPCリクエストです。"
 
-#: include/classes/core/CJsonRpc.php:194
+#: include/classes/core/CJsonRpc.php:196
 msgid "The requested remote-procedure does not exist / is not available"
 msgstr "受信したリモートプロシージャーは存在しないか利用することができません。"
 
@@ -13763,7 +13763,7 @@ msgstr "トランザクションがクローズされていません。終了し
 msgid "Transform SQL query result into a JSON object for low-level discovery."
 msgstr "変換したSQLクエリの実行結果をローレベルディスカバリのJSONオプジェクトに挿入。"
 
-#: include/classes/core/CJsonRpc.php:218
+#: include/classes/core/CJsonRpc.php:220
 msgid "Transport error."
 msgstr "転送エラー。"
 
@@ -16071,8 +16071,8 @@ msgid "forecast() - Forecast for next t seconds based on period T"
 msgstr "forecast() - 期間Tに基づく次のt秒の予測値"
 
 #: popup_trexpr.php:286
-msgid "fuzzytime() - Difference between item timestamp value and Zabbix server timestamp is over T seconds (1 - true, 0 - false)"
-msgstr "fuzzytime() - アイテムのタイムスタンプとZabbixサーバーのタイムスタンプとの差がT秒以上か (0 - T秒以上、1 - それ以外)"
+msgid "fuzzytime() - Difference between item value (as timestamp) and Zabbix server timestamp is less than or equal to T seconds (1 - true, 0 - false)"
+msgstr "fuzzytime() - アイテムの値(タイムスタンプとして)とZabbixサーバーのタイムスタンプとの差がT秒以下か (1 - T秒以下、0 - それ以外)"
 
 #: include/views/configuration.item.edit.php:331
 #: include/views/configuration.item.edit.php:336

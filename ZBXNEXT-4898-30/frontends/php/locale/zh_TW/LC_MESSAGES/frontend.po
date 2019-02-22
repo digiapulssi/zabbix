@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Zabbix 3.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-12-04 09:17+0200\n"
+"POT-Creation-Date: 2019-01-13 23:35+0200\n"
 "PO-Revision-Date: 2018-11-30 09:13+0300\n"
 "Last-Translator: Anonymous Pootle User\n"
 "Language-Team: Zabbix <info@zabbix.com>\n"
@@ -728,7 +728,7 @@ msgid "Application deleted"
 msgid_plural "Applications deleted"
 msgstr[0] "應用集已删除"
 
-#: include/classes/core/CJsonRpc.php:208
+#: include/classes/core/CJsonRpc.php:210
 msgid "Application error."
 msgstr "應用集 錯誤."
 
@@ -2119,8 +2119,8 @@ msgstr ""
 msgid "Cannot set \"%1$s\" for item \"%2$s\"."
 msgstr ""
 
-#: include/classes/api/services/CTemplateScreen.php:606
-#: include/classes/api/services/CTemplateScreen.php:704
+#: include/classes/api/services/CTemplateScreen.php:608
+#: include/classes/api/services/CTemplateScreen.php:706
 #, c-format
 msgid "Cannot set \"%1$s\" for template screen \"%2$s\"."
 msgstr ""
@@ -2157,7 +2157,7 @@ msgstr ""
 msgid "Cannot set resource ID for screen element."
 msgstr ""
 
-#: include/classes/api/services/CHostInterface.php:245
+#: include/classes/api/services/CHostInterface.php:246
 msgid "Cannot switch host for interface."
 msgstr "無法為介面切換主機."
 
@@ -2272,7 +2272,7 @@ msgstr ""
 msgid "Cannot update \"templateid\" for screen \"%1$s\"."
 msgstr "無法更新\"templateid\"給篩選\"%1$s\"."
 
-#: include/classes/api/services/CTemplateScreen.php:694
+#: include/classes/api/services/CTemplateScreen.php:696
 #, c-format
 msgid "Cannot update \"templateid\" for template screen \"%1$s\"."
 msgstr ""
@@ -2367,7 +2367,7 @@ msgstr "無法更新圖示對應"
 msgid "Cannot update image"
 msgstr "無法更新圖片"
 
-#: include/classes/api/services/CHostInterface.php:318
+#: include/classes/api/services/CHostInterface.php:327
 #, c-format
 msgid "Cannot update interface for discovered host \"%1$s\"."
 msgstr ""
@@ -4741,7 +4741,7 @@ msgstr ""
 #: include/classes/api/services/CGraphPrototype.php:542
 #: include/classes/api/services/CHostGroup.php:416
 #: include/classes/api/services/CHostGroup.php:493
-#: include/classes/api/services/CHostInterface.php:388
+#: include/classes/api/services/CHostInterface.php:397
 #: include/classes/api/services/CHost.php:1155
 #: include/classes/api/services/CHostPrototype.php:929
 #: include/classes/api/services/CIconMap.php:301
@@ -4808,7 +4808,7 @@ msgstr ""
 msgid "Empty name for script \"%1$s\"."
 msgstr ""
 
-#: include/classes/api/services/CService.php:909
+#: include/classes/api/services/CService.php:905
 msgid "Empty name."
 msgstr "空名稱."
 
@@ -4830,7 +4830,7 @@ msgstr ""
 msgid "Empty screen ID for screen."
 msgstr ""
 
-#: include/classes/api/services/CTemplateScreen.php:661
+#: include/classes/api/services/CTemplateScreen.php:663
 msgid "Empty screen ID for template screen."
 msgstr ""
 
@@ -5142,7 +5142,7 @@ msgstr "拓展巨集"
 msgid "Expand single problem"
 msgstr "展開單一問題"
 
-#: include/classes/core/CJsonRpc.php:108
+#: include/classes/core/CJsonRpc.php:110
 #, c-format
 msgid "Expecting JSON-rpc version 2.0, \"%s\" is given."
 msgstr "要求 JSON-rpc版本2.0, 得到\"%s\" ."
@@ -5669,7 +5669,7 @@ msgstr "圖形\"%1$s\"不能繼承. \"%2$s\"中並無所要的項目 (Ymin值項
 msgid "Graph \"%1$s\" cannot inherit. No required items on \"%2$s\"."
 msgstr "圖形\"%1$s\"不能繼承. \"%2$s\"中並無所要的項目."
 
-#: include/classes/api/services/CTemplateScreen.php:547
+#: include/classes/api/services/CTemplateScreen.php:549
 #, c-format
 msgid "Graph \"%1$s\" does not exist on template \"%2$s\"."
 msgstr "圖形 \"%1$s\"不存在於模板\"%2$s\"中."
@@ -6145,7 +6145,7 @@ msgstr "主機存取"
 msgid "Host added"
 msgstr "已新增主機"
 
-#: include/classes/api/services/CHostInterface.php:823
+#: include/classes/api/services/CHostInterface.php:832
 msgid "Host cannot have more than one default interface of the same type."
 msgstr "主機不能有超過一個同類型的預設介面."
 
@@ -6511,7 +6511,7 @@ msgstr ""
 msgid "IP address range cannot be empty."
 msgstr ""
 
-#: include/classes/api/services/CHostInterface.php:268
+#: include/classes/api/services/CHostInterface.php:273
 msgid "IP and DNS cannot be empty for host interface."
 msgstr "主機介面的IP和DNS不能是空白."
 
@@ -6908,7 +6908,7 @@ msgstr ""
 msgid "Incorrect \"private\" value \"%1$s\" for screen \"%2$s\"."
 msgstr ""
 
-#: include/classes/api/services/CService.php:1131
+#: include/classes/api/services/CService.php:1127
 #, c-format
 msgid "Incorrect \"soft\" field value for dependency for service \"%1$s\"."
 msgstr "不正確的相依性\"soft\"欄位值予服務\"%1$s\"."
@@ -6956,7 +6956,7 @@ msgstr "網頁檢測 \"%1$s\" 的 SSL 主機驗證不正確。"
 msgid "Incorrect SSL verify peer value for web scenario \"%1$s\"."
 msgstr "網頁檢測 \"%1$s\" 的 SSL 組織驗證不正確"
 
-#: include/classes/api/services/CService.php:961
+#: include/classes/api/services/CService.php:957
 #, c-format
 msgid "Incorrect acceptable SLA for service \"%1$s\"."
 msgstr "不正確的可接受SLA予服務\"%1$s\"."
@@ -7073,7 +7073,7 @@ msgstr "不正確的動作操作用戶. 用戶不存在或您沒有存取權."
 msgid "Incorrect action operationid."
 msgstr "不正確的動作操作ID(operationid)."
 
-#: include/classes/api/services/CService.php:924
+#: include/classes/api/services/CService.php:920
 #, c-format
 msgid "Incorrect algorithm for service \"%1$s\"."
 msgstr "不正確的服務\"%1$s\"的演算法."
@@ -7085,8 +7085,8 @@ msgstr "不正確的自變數傳入方程式"
 
 #: include/classes/api/services/CApplication.php:274
 #: include/classes/api/services/CEvent.php:434
-#: include/classes/api/services/CHostInterface.php:235
-#: include/classes/api/services/CHostInterface.php:436
+#: include/classes/api/services/CHostInterface.php:236
+#: include/classes/api/services/CHostInterface.php:445
 #: include/classes/api/services/CItemGeneral.php:204
 #: include/classes/api/services/CMap.php:465
 #: include/classes/api/services/CMap.php:539
@@ -7113,7 +7113,7 @@ msgstr "不正確的自變數傳入方程式"
 msgid "Incorrect arguments passed to function."
 msgstr "不正確的自變數傳給方程式"
 
-#: include/classes/api/services/CHostInterface.php:263
+#: include/classes/api/services/CHostInterface.php:268
 msgid "Incorrect arguments passed to method."
 msgstr "不正確的自變數傳給方法."
 
@@ -7127,11 +7127,11 @@ msgstr ""
 msgid "Incorrect authentication protocol for item \"%1$s\"."
 msgstr ""
 
-#: include/classes/api/services/CHostInterface.php:666
+#: include/classes/api/services/CHostInterface.php:675
 msgid "Incorrect bulk value for interface."
 msgstr ""
 
-#: include/classes/api/services/CService.php:943
+#: include/classes/api/services/CService.php:939
 #, c-format
 msgid "Incorrect calculate SLA value for service \"%1$s\"."
 msgstr "不正確的計算SLA值予服務\"%1$s\"."
@@ -7313,16 +7313,16 @@ msgstr "不正確的圖片索引"
 #: include/classes/api/services/CAction.php:2012
 #: include/classes/api/services/CImage.php:498
 #: include/classes/api/services/CScreen.php:455
-#: include/classes/api/services/CTemplateScreen.php:597
+#: include/classes/api/services/CTemplateScreen.php:599
 msgid "Incorrect input parameters."
 msgstr ""
 
-#: include/classes/api/services/CHostInterface.php:591
+#: include/classes/api/services/CHostInterface.php:600
 #, c-format
 msgid "Incorrect interface DNS parameter \"%s\" provided."
 msgstr "給予了不正確的介面DNS參數\"%s\"."
 
-#: include/classes/api/services/CHostInterface.php:634
+#: include/classes/api/services/CHostInterface.php:643
 #, c-format
 msgid "Incorrect interface port \"%s\" provided."
 msgstr "給予了不正確的介面埠參數\"%s\"."
@@ -7475,12 +7475,12 @@ msgstr "予維修不正確的參數."
 msgid "Incorrect parameters for user group."
 msgstr "予主機群組不正確的參數."
 
-#: include/classes/api/services/CService.php:1009
+#: include/classes/api/services/CService.php:1005
 #, c-format
 msgid "Incorrect parent for service \"%1$s\"."
 msgstr "予服務\"%1$s\"的不正確上層"
 
-#: include/classes/api/services/CService.php:1012
+#: include/classes/api/services/CService.php:1008
 msgid "Incorrect parent service."
 msgstr "不正確的上層服務."
 
@@ -7547,7 +7547,7 @@ msgstr "不正確的服務開始時間."
 msgid "Incorrect service time type."
 msgstr "不正確的服務時間類型."
 
-#: include/classes/api/services/CService.php:978
+#: include/classes/api/services/CService.php:974
 #, c-format
 msgid "Incorrect sorder order for service \"%1$s\"."
 msgstr "予服務\"%1$s\"不正確的排序次序."
@@ -7567,7 +7567,7 @@ msgstr ""
 msgid "Incorrect status for host prototype \"%1$s\"."
 msgstr ""
 
-#: include/classes/api/services/CService.php:1032
+#: include/classes/api/services/CService.php:1028
 #, c-format
 msgid "Incorrect status for service \"%1$s\"."
 msgstr "予服務\"%1$s\"不正確的狀態."
@@ -7580,7 +7580,7 @@ msgstr "不正確的狀態."
 msgid "Incorrect style provided for screen element."
 msgstr ""
 
-#: include/classes/api/services/CTemplateScreen.php:662
+#: include/classes/api/services/CTemplateScreen.php:664
 msgid "Incorrect template screen ID."
 msgstr ""
 
@@ -7609,7 +7609,7 @@ msgstr "不正確的時間期間\"%1$s\" 開始時間必須早於或等於終止
 msgid "Incorrect time period \"%1$s\"."
 msgstr "不正確的時間期間\"%1$s\"."
 
-#: include/classes/api/services/CService.php:993
+#: include/classes/api/services/CService.php:989
 #, c-format
 msgid "Incorrect trigger ID for service \"%1$s\"."
 msgstr "不正確的觸發器ID予服務\"%1$s\"."
@@ -7865,7 +7865,7 @@ msgstr "安裝名稱"
 msgid "Interface"
 msgstr "介面"
 
-#: include/classes/api/services/CHostInterface.php:843
+#: include/classes/api/services/CHostInterface.php:852
 #, c-format
 msgid "Interface is linked to item \"%1$s\" on \"%2$s\"."
 msgstr "介面是連結到\"%2$s\"上的項目\"%1$s\"."
@@ -7874,18 +7874,18 @@ msgstr "介面是連結到\"%2$s\"上的項目\"%1$s\"."
 msgid "Interface is used by items that require this type of the interface."
 msgstr "介面是用於要求這類型介面的項目."
 
-#: include/classes/api/services/CHostInterface.php:272
+#: include/classes/api/services/CHostInterface.php:277
 #, c-format
 msgid "Interface with DNS \"%1$s\" cannot have empty IP address."
 msgstr "DNS為\"%1$s\"的介面不能有空白的IP位址."
 
-#: include/classes/api/services/CHostInterface.php:278
-#: include/classes/api/services/CHostInterface.php:285
+#: include/classes/api/services/CHostInterface.php:283
+#: include/classes/api/services/CHostInterface.php:290
 #, c-format
 msgid "Interface with IP \"%1$s\" cannot have empty DNS name while having \"Use DNS\" property on \"%2$s\"."
 msgstr " 當\"%2$s\"上有 \"Use DNS\"屬性, IP為\"%1$s\"的介面不能有空白的DNS名稱."
 
-#: include/classes/api/services/CHostInterface.php:291
+#: include/classes/api/services/CHostInterface.php:296
 #, c-format
 msgid "Interface with IP \"%1$s\" cannot have empty DNS name."
 msgstr "IP為\"%1$s\"的介面不能有空白的DNS名稱."
@@ -7905,7 +7905,7 @@ msgctxt "user type"
 msgid "Internal"
 msgstr ""
 
-#: include/classes/core/CJsonRpc.php:204
+#: include/classes/core/CJsonRpc.php:206
 msgid "Internal JSON-RPC error."
 msgstr "內部的JSON-RPC錯誤."
 
@@ -7913,7 +7913,7 @@ msgstr "內部的JSON-RPC錯誤."
 msgid "Internal data storage period (in days)"
 msgstr ""
 
-#: include/classes/core/CJsonRpc.php:203
+#: include/classes/core/CJsonRpc.php:205
 #: include/classes/import/validators/CXmlValidatorGeneral.php:147
 msgid "Internal error."
 msgstr "內部的錯誤."
@@ -7963,11 +7963,11 @@ msgstr ""
 msgid "Invalid IP address range \"%1$s\": must be a string."
 msgstr ""
 
-#: include/classes/core/CJsonRpc.php:184
+#: include/classes/core/CJsonRpc.php:186
 msgid "Invalid JSON. An error occurred on the server while parsing the JSON text."
 msgstr "無效的JSON. 當解析JSON文字時, 在伺服器端發生了一個錯誤."
 
-#: include/classes/core/CJsonRpc.php:188
+#: include/classes/core/CJsonRpc.php:190
 msgid "Invalid Request."
 msgstr "無效的請求."
 
@@ -8131,12 +8131,12 @@ msgstr ""
 #: include/classes/api/services/CScript.php:427
 #: include/classes/api/services/CService.php:206
 #: include/classes/api/services/CService.php:381
-#: include/classes/api/services/CService.php:1270
+#: include/classes/api/services/CService.php:1266
 #: include/classes/api/services/CUser.php:699
 #: include/classes/api/services/CUser.php:719
 #: include/classes/api/services/CUser.php:877
 #: include/classes/api/services/CUser.php:922
-#: include/classes/core/CJsonRpc.php:199
+#: include/classes/core/CJsonRpc.php:201
 msgid "Invalid method parameters."
 msgstr "無效的方法參數."
 
@@ -8144,7 +8144,7 @@ msgstr "無效的方法參數."
 msgid "Invalid number of parameters."
 msgstr ""
 
-#: include/classes/core/CJsonRpc.php:198
+#: include/classes/core/CJsonRpc.php:200
 msgid "Invalid params."
 msgstr "無效的參數."
 
@@ -8269,7 +8269,7 @@ msgstr ""
 msgid "Item \"%1$s\" cannot populate a missing host inventory field number \"%2$d\". Choices are: from 0 (do not populate) to %3$d."
 msgstr "項目\"%1$s\"不能填入一個不存在的主機資產紀錄欄位號碼\"%2$d\". 選擇為: 從0(不填入)到%3$d."
 
-#: include/classes/api/services/CTemplateScreen.php:565
+#: include/classes/api/services/CTemplateScreen.php:567
 #, c-format
 msgid "Item \"%1$s\" does not exist on template \"%2$s\"."
 msgstr "項目\"%1$s\"不存在於模板\"%2$s\"中."
@@ -8474,20 +8474,20 @@ msgstr "JMX 端點代理程式"
 msgid "JMX interfaces"
 msgstr "JMX介面"
 
-#: include/classes/core/CJsonRpc.php:156
+#: include/classes/core/CJsonRpc.php:158
 #, c-format
 msgid "JSON-rpc error generation failed. No such error \"%s\"."
 msgstr "JSON-rpc 錯誤產生失敗. 無此錯誤 \"%s\"."
 
-#: include/classes/core/CJsonRpc.php:113
+#: include/classes/core/CJsonRpc.php:115
 msgid "JSON-rpc method is not defined."
 msgstr "JSON-rpc 方法尚未定義."
 
-#: include/classes/core/CJsonRpc.php:118
+#: include/classes/core/CJsonRpc.php:120
 msgid "JSON-rpc params is not an Array."
 msgstr "JSON-rpc 參數不是一個陣列."
 
-#: include/classes/core/CJsonRpc.php:103
+#: include/classes/core/CJsonRpc.php:105
 msgid "JSON-rpc version is not specified."
 msgstr "JSON-rpc 版本並未指定."
 
@@ -9360,7 +9360,7 @@ msgstr "訊息"
 msgid "Messaging"
 msgstr "訊息中"
 
-#: include/classes/core/CJsonRpc.php:193
+#: include/classes/core/CJsonRpc.php:195
 msgid "Method not found."
 msgstr "未發現方法."
 
@@ -9763,7 +9763,7 @@ msgstr ""
 msgid "No \"%1$s\" given for screen."
 msgstr ""
 
-#: include/classes/api/services/CTemplateScreen.php:660
+#: include/classes/api/services/CTemplateScreen.php:662
 #, c-format
 msgid "No \"%1$s\" given for template screen."
 msgstr ""
@@ -9886,13 +9886,13 @@ msgstr "沒有數據收集"
 msgid "No data found."
 msgstr ""
 
-#: include/classes/api/services/CHostInterface.php:819
+#: include/classes/api/services/CHostInterface.php:828
 #, c-format
 msgid "No default interface for \"%1$s\" type on \"%2$s\"."
 msgstr "\"%2$s\"上之\"%1$s\"類型無預設介面."
 
-#: include/classes/core/CJsonRpc.php:209 include/classes/core/CJsonRpc.php:214
-#: include/classes/core/CJsonRpc.php:219
+#: include/classes/core/CJsonRpc.php:211 include/classes/core/CJsonRpc.php:216
+#: include/classes/core/CJsonRpc.php:221
 msgid "No details"
 msgstr "沒有細節"
 
@@ -10086,10 +10086,10 @@ msgstr "沒有系統存取的許可權"
 #: include/classes/api/services/CHostGroup.php:1027
 #: include/classes/api/services/CHostGroup.php:1141
 #: include/classes/api/services/CHostGroup.php:1160
-#: include/classes/api/services/CHostInterface.php:240
-#: include/classes/api/services/CHostInterface.php:256
-#: include/classes/api/services/CHostInterface.php:399
-#: include/classes/api/services/CHostInterface.php:647
+#: include/classes/api/services/CHostInterface.php:241
+#: include/classes/api/services/CHostInterface.php:261
+#: include/classes/api/services/CHostInterface.php:408
+#: include/classes/api/services/CHostInterface.php:656
 #: include/classes/api/services/CHost.php:1500
 #: include/classes/api/services/CHost.php:1684
 #: include/classes/api/services/CHost.php:1811
@@ -10135,14 +10135,14 @@ msgstr "沒有系統存取的許可權"
 #: include/classes/api/services/CScreen.php:1238
 #: include/classes/api/services/CScript.php:287
 #: include/classes/api/services/CScript.php:297
-#: include/classes/api/services/CService.php:1053
-#: include/classes/api/services/CService.php:1068
+#: include/classes/api/services/CService.php:1049
+#: include/classes/api/services/CService.php:1064
 #: include/classes/api/services/CTemplate.php:699
 #: include/classes/api/services/CTemplate.php:708
-#: include/classes/api/services/CTemplateScreen.php:632
-#: include/classes/api/services/CTemplateScreen.php:683
-#: include/classes/api/services/CTemplateScreen.php:746
-#: include/classes/api/services/CTemplateScreen.php:752
+#: include/classes/api/services/CTemplateScreen.php:634
+#: include/classes/api/services/CTemplateScreen.php:685
+#: include/classes/api/services/CTemplateScreen.php:748
+#: include/classes/api/services/CTemplateScreen.php:754
 #: include/classes/api/services/CTrigger.php:502
 #: include/classes/api/services/CTrigger.php:856
 #: include/classes/api/services/CTrigger.php:877
@@ -11117,7 +11117,7 @@ msgstr ""
 msgid "Parse SQL error [%1$s] in [%2$s]."
 msgstr "解析SQL錯誤[%1$s]於[%2$s]之中."
 
-#: include/classes/core/CJsonRpc.php:183
+#: include/classes/core/CJsonRpc.php:185
 msgid "Parse error"
 msgstr "解析錯誤"
 
@@ -11297,7 +11297,7 @@ msgstr "填入主機資產紀錄欄位"
 msgid "Port"
 msgstr "埠"
 
-#: include/classes/api/services/CHostInterface.php:631
+#: include/classes/api/services/CHostInterface.php:640
 msgid "Port cannot be empty for host interface."
 msgstr "主機介面的埠不能是空白."
 
@@ -12240,7 +12240,7 @@ msgstr ""
 msgid "Screen"
 msgstr "篩選"
 
-#: include/classes/api/services/CTemplateScreen.php:774
+#: include/classes/api/services/CTemplateScreen.php:776
 #, c-format
 msgid "Screen \"%1$s\" already exists on template \"%2$s\"."
 msgstr ""
@@ -12621,27 +12621,27 @@ msgstr "伺服器時間"
 msgid "Service"
 msgstr "服務"
 
-#: include/classes/api/services/CService.php:1099
+#: include/classes/api/services/CService.php:1095
 #, c-format
 msgid "Service \"%1$s\" cannot be deleted, because it is dependent on another service."
 msgstr "服務\"%1$s\"不能被刪除, 因為它相依於另一個服務."
 
-#: include/classes/api/services/CService.php:1120
+#: include/classes/api/services/CService.php:1116
 #, c-format
 msgid "Service \"%1$s\" cannot be dependent on itself."
 msgstr "服務\"%1$s\"不能相依於自己."
 
-#: include/classes/api/services/CService.php:1199
+#: include/classes/api/services/CService.php:1195
 #, c-format
 msgid "Service \"%1$s\" cannot be linked to a trigger and have children at the same time."
 msgstr "服務 \"%1$s\"不能被連結到一個觸發器且同時有相依的服務."
 
-#: include/classes/api/services/CService.php:1174
+#: include/classes/api/services/CService.php:1170
 #, c-format
 msgid "Service \"%1$s\" is already hardlinked to a different service."
 msgstr "服務\"%1$s\"已經緊緊連結到一個不同的服務."
 
-#: include/classes/api/services/CService.php:1017
+#: include/classes/api/services/CService.php:1013
 msgid "Service cannot be parent and child at the same time."
 msgstr "服務不能同時為上層與下層"
 
@@ -12677,7 +12677,7 @@ msgstr "服務已更新"
 msgid "Services"
 msgstr "服務"
 
-#: include/classes/api/services/CService.php:1250
+#: include/classes/api/services/CService.php:1246
 msgid "Services form a circular dependency."
 msgstr "服務形成了一個循環式迴圈."
 
@@ -13261,7 +13261,7 @@ msgstr "系統預設"
 msgid "System error occurred. Please contact Zabbix administrator."
 msgstr ""
 
-#: include/classes/core/CJsonRpc.php:213
+#: include/classes/core/CJsonRpc.php:215
 msgid "System error."
 msgstr "系統錯誤."
 
@@ -13409,8 +13409,8 @@ msgstr ""
 msgid "Template name"
 msgstr "模版名稱"
 
-#: include/classes/api/services/CTemplateScreen.php:641
-#: include/classes/api/services/CTemplateScreen.php:721
+#: include/classes/api/services/CTemplateScreen.php:643
+#: include/classes/api/services/CTemplateScreen.php:723
 #, c-format
 msgid "Template screen \"%1$s\" already exists."
 msgstr ""
@@ -13595,11 +13595,11 @@ msgstr ""
 msgid "The number of processes. Returns integer"
 msgstr ""
 
-#: include/classes/core/CJsonRpc.php:189
+#: include/classes/core/CJsonRpc.php:191
 msgid "The received JSON is not a valid JSON-RPC Request."
 msgstr "接收到的JSON不是一個有效的JSON-RPC請求."
 
-#: include/classes/core/CJsonRpc.php:194
+#: include/classes/core/CJsonRpc.php:196
 msgid "The requested remote-procedure does not exist / is not available"
 msgstr "請求的遠程程序不存在/不可用"
 
@@ -13775,7 +13775,7 @@ msgstr "交易尚未被關閉. 放棄中..."
 msgid "Transform SQL query result into a JSON object for low-level discovery."
 msgstr ""
 
-#: include/classes/core/CJsonRpc.php:218
+#: include/classes/core/CJsonRpc.php:220
 msgid "Transport error."
 msgstr "傳輸錯誤."
 
@@ -16083,7 +16083,7 @@ msgid "forecast() - Forecast for next t seconds based on period T"
 msgstr ""
 
 #: popup_trexpr.php:286
-msgid "fuzzytime() - Difference between item timestamp value and Zabbix server timestamp is over T seconds (1 - true, 0 - false)"
+msgid "fuzzytime() - Difference between item value (as timestamp) and Zabbix server timestamp is less than or equal to T seconds (1 - true, 0 - false)"
 msgstr ""
 
 #: include/views/configuration.item.edit.php:331

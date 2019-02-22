@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Zabbix 3.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-12-04 09:17+0200\n"
+"POT-Creation-Date: 2019-01-13 23:35+0200\n"
 "PO-Revision-Date: 2017-03-23 13:49+0300\n"
 "Last-Translator: Silviu <silviubv@gmail.com>\n"
 "Language-Team: Zabbix <info@zabbix.com>\n"
@@ -752,7 +752,7 @@ msgstr[0] "Aplicație ștearsă"
 msgstr[1] "Aplicații șterse"
 msgstr[2] "Aplicații șterse"
 
-#: include/classes/core/CJsonRpc.php:208
+#: include/classes/core/CJsonRpc.php:210
 msgid "Application error."
 msgstr "Eroare aplicație."
 
@@ -2220,8 +2220,8 @@ msgstr "Nu se poate seta \"%1$s\" pentru grupul de gazde \"%2$s\"."
 msgid "Cannot set \"%1$s\" for item \"%2$s\"."
 msgstr "Nu se poate seta \"%1$s\" pentru articolul \"%2$s\"."
 
-#: include/classes/api/services/CTemplateScreen.php:606
-#: include/classes/api/services/CTemplateScreen.php:704
+#: include/classes/api/services/CTemplateScreen.php:608
+#: include/classes/api/services/CTemplateScreen.php:706
 #, c-format
 msgid "Cannot set \"%1$s\" for template screen \"%2$s\"."
 msgstr "Nu se poate seta \"%1$s\" pentru ecranul șablon \"%2$s\"."
@@ -2258,7 +2258,7 @@ msgstr "Nu se pot seta câmpurile inventarului pentru un inventar dezactivat."
 msgid "Cannot set resource ID for screen element."
 msgstr "Nu se poate seta resursa ID pentru elementul ecranului."
 
-#: include/classes/api/services/CHostInterface.php:245
+#: include/classes/api/services/CHostInterface.php:246
 msgid "Cannot switch host for interface."
 msgstr "Nu se poate schimba serverul pentru interfață."
 
@@ -2373,7 +2373,7 @@ msgstr "Nu se poate actualiza \"templateid\" pentru prototipul grafic \"%1$s\"."
 msgid "Cannot update \"templateid\" for screen \"%1$s\"."
 msgstr "Nu se poate actualiza \"templateid\" pentru ecranul \"%1$s\"."
 
-#: include/classes/api/services/CTemplateScreen.php:694
+#: include/classes/api/services/CTemplateScreen.php:696
 #, c-format
 msgid "Cannot update \"templateid\" for template screen \"%1$s\"."
 msgstr "Nu se poate actualiza \"templateid\" pentru ecranul șablon \"%1$s\"."
@@ -2468,7 +2468,7 @@ msgstr "Nu se poate actualiza maparea icon-ului"
 msgid "Cannot update image"
 msgstr "Nu se poate actualiza imaginea"
 
-#: include/classes/api/services/CHostInterface.php:318
+#: include/classes/api/services/CHostInterface.php:327
 #, c-format
 msgid "Cannot update interface for discovered host \"%1$s\"."
 msgstr "Nu se poate actualiza interfața pentru serverul detectat \"%1$s\"."
@@ -4851,7 +4851,7 @@ msgstr "Gazdă fără conținut."
 #: include/classes/api/services/CGraphPrototype.php:542
 #: include/classes/api/services/CHostGroup.php:416
 #: include/classes/api/services/CHostGroup.php:493
-#: include/classes/api/services/CHostInterface.php:388
+#: include/classes/api/services/CHostInterface.php:397
 #: include/classes/api/services/CHost.php:1155
 #: include/classes/api/services/CHostPrototype.php:929
 #: include/classes/api/services/CIconMap.php:301
@@ -4921,7 +4921,7 @@ msgstr "Golire nume pentru prototip de grup \"%1$s\"."
 msgid "Empty name for script \"%1$s\"."
 msgstr "Golire nume pentru script \"%1$s\"."
 
-#: include/classes/api/services/CService.php:909
+#: include/classes/api/services/CService.php:905
 msgid "Empty name."
 msgstr "Golire nume."
 
@@ -4943,7 +4943,7 @@ msgstr "Golire răspuns primit de la serverul Zabbix \"%1$s\"."
 msgid "Empty screen ID for screen."
 msgstr "ID ecran gol pentru ecran."
 
-#: include/classes/api/services/CTemplateScreen.php:661
+#: include/classes/api/services/CTemplateScreen.php:663
 msgid "Empty screen ID for template screen."
 msgstr "ID ecran gol pentru șablon ecran."
 
@@ -5258,7 +5258,7 @@ msgstr "Extinde macrouri"
 msgid "Expand single problem"
 msgstr "Extinde problema unică"
 
-#: include/classes/core/CJsonRpc.php:108
+#: include/classes/core/CJsonRpc.php:110
 #, c-format
 msgid "Expecting JSON-rpc version 2.0, \"%s\" is given."
 msgstr "Așteptare versiune 2.0 a JSON-rpc, \"%s\" este dată."
@@ -5785,7 +5785,7 @@ msgstr "Graficul \"%1$s\" nu poate moșteni. Articole nu sunt necesare pe \"%2$s
 msgid "Graph \"%1$s\" cannot inherit. No required items on \"%2$s\"."
 msgstr "Graficul \"%1$s\" nu poate moșteni. Articole nu sunt necesare pe \"%2$s\"."
 
-#: include/classes/api/services/CTemplateScreen.php:547
+#: include/classes/api/services/CTemplateScreen.php:549
 #, c-format
 msgid "Graph \"%1$s\" does not exist on template \"%2$s\"."
 msgstr "Graficul \"%1$s\" nu există pe șablonul \"%2$s\"."
@@ -6267,7 +6267,7 @@ msgstr "Acces server"
 msgid "Host added"
 msgstr "Server adăugat"
 
-#: include/classes/api/services/CHostInterface.php:823
+#: include/classes/api/services/CHostInterface.php:832
 msgid "Host cannot have more than one default interface of the same type."
 msgstr "Serverul nu poate avea mai mult de o interfață implicită de același tip."
 
@@ -6641,7 +6641,7 @@ msgstr ""
 msgid "IP address range cannot be empty."
 msgstr ""
 
-#: include/classes/api/services/CHostInterface.php:268
+#: include/classes/api/services/CHostInterface.php:273
 msgid "IP and DNS cannot be empty for host interface."
 msgstr "IP-ul si DNS-ul nu pot fi nule pentru interfața serverului."
 
@@ -7038,7 +7038,7 @@ msgstr ""
 msgid "Incorrect \"private\" value \"%1$s\" for screen \"%2$s\"."
 msgstr ""
 
-#: include/classes/api/services/CService.php:1131
+#: include/classes/api/services/CService.php:1127
 #, c-format
 msgid "Incorrect \"soft\" field value for dependency for service \"%1$s\"."
 msgstr "Valoare câmp \"soft\" pentru dependințe a serviciului \"%1$s\"."
@@ -7086,7 +7086,7 @@ msgstr ""
 msgid "Incorrect SSL verify peer value for web scenario \"%1$s\"."
 msgstr ""
 
-#: include/classes/api/services/CService.php:961
+#: include/classes/api/services/CService.php:957
 #, c-format
 msgid "Incorrect acceptable SLA for service \"%1$s\"."
 msgstr "SLA incorect acceptabil pentru serviciul \"%1$s\"."
@@ -7203,7 +7203,7 @@ msgstr "Utilizator acțiune incorectă a operațiunii. Utilizatorul nu există s
 msgid "Incorrect action operationid."
 msgstr "Acțiune incorectă conditionid."
 
-#: include/classes/api/services/CService.php:924
+#: include/classes/api/services/CService.php:920
 #, c-format
 msgid "Incorrect algorithm for service \"%1$s\"."
 msgstr "Algoritm incorect pentru serviciul \"%1$s\"."
@@ -7215,8 +7215,8 @@ msgstr "Argumente incorecte trimise funcției"
 
 #: include/classes/api/services/CApplication.php:274
 #: include/classes/api/services/CEvent.php:434
-#: include/classes/api/services/CHostInterface.php:235
-#: include/classes/api/services/CHostInterface.php:436
+#: include/classes/api/services/CHostInterface.php:236
+#: include/classes/api/services/CHostInterface.php:445
 #: include/classes/api/services/CItemGeneral.php:204
 #: include/classes/api/services/CMap.php:465
 #: include/classes/api/services/CMap.php:539
@@ -7243,7 +7243,7 @@ msgstr "Argumente incorecte trimise funcției"
 msgid "Incorrect arguments passed to function."
 msgstr "Argumente incorecte trimise funcției."
 
-#: include/classes/api/services/CHostInterface.php:263
+#: include/classes/api/services/CHostInterface.php:268
 msgid "Incorrect arguments passed to method."
 msgstr "Argumente incorecte trimise metodei."
 
@@ -7257,11 +7257,11 @@ msgstr "Protocol de autentificare incorect pentru regula de detecție \"%1$s\"."
 msgid "Incorrect authentication protocol for item \"%1$s\"."
 msgstr "Protocol de autentificare incorect pentru articolul \"%1$s\"."
 
-#: include/classes/api/services/CHostInterface.php:666
+#: include/classes/api/services/CHostInterface.php:675
 msgid "Incorrect bulk value for interface."
 msgstr ""
 
-#: include/classes/api/services/CService.php:943
+#: include/classes/api/services/CService.php:939
 #, c-format
 msgid "Incorrect calculate SLA value for service \"%1$s\"."
 msgstr "Valoare SLA calculată incorect pentru serviciul \"%1$s\"."
@@ -7443,16 +7443,16 @@ msgstr "Index imagine incorect."
 #: include/classes/api/services/CAction.php:2012
 #: include/classes/api/services/CImage.php:498
 #: include/classes/api/services/CScreen.php:455
-#: include/classes/api/services/CTemplateScreen.php:597
+#: include/classes/api/services/CTemplateScreen.php:599
 msgid "Incorrect input parameters."
 msgstr "Parametrii de intrare incorecți."
 
-#: include/classes/api/services/CHostInterface.php:591
+#: include/classes/api/services/CHostInterface.php:600
 #, c-format
 msgid "Incorrect interface DNS parameter \"%s\" provided."
 msgstr "Parametrul DNS de interfață incorect \"%s\" prevăzut."
 
-#: include/classes/api/services/CHostInterface.php:634
+#: include/classes/api/services/CHostInterface.php:643
 #, c-format
 msgid "Incorrect interface port \"%s\" provided."
 msgstr "Port interfață \"%s\" incorect prevăzut."
@@ -7605,12 +7605,12 @@ msgstr "Parametri incorecți pentru mentenanță."
 msgid "Incorrect parameters for user group."
 msgstr "Parametru incorect pentru grup de utilizatori."
 
-#: include/classes/api/services/CService.php:1009
+#: include/classes/api/services/CService.php:1005
 #, c-format
 msgid "Incorrect parent for service \"%1$s\"."
 msgstr "Părinte incorect pentru serviciul \"%1$s\"."
 
-#: include/classes/api/services/CService.php:1012
+#: include/classes/api/services/CService.php:1008
 msgid "Incorrect parent service."
 msgstr "Serviciu părinte incorect."
 
@@ -7677,7 +7677,7 @@ msgstr "Timp de pornire serviciu incorect."
 msgid "Incorrect service time type."
 msgstr "Tip de timp serviciu incorect."
 
-#: include/classes/api/services/CService.php:978
+#: include/classes/api/services/CService.php:974
 #, c-format
 msgid "Incorrect sorder order for service \"%1$s\"."
 msgstr "Ordine sorder incorectă pentru serviciul \"%1$s\"."
@@ -7697,7 +7697,7 @@ msgstr ""
 msgid "Incorrect status for host prototype \"%1$s\"."
 msgstr "Stare incorectă pentru prototipul server \"%1$s\"."
 
-#: include/classes/api/services/CService.php:1032
+#: include/classes/api/services/CService.php:1028
 #, c-format
 msgid "Incorrect status for service \"%1$s\"."
 msgstr "Stare incorectă pentru serviciul \"%1$s\"."
@@ -7710,7 +7710,7 @@ msgstr "Stare incorectă."
 msgid "Incorrect style provided for screen element."
 msgstr ""
 
-#: include/classes/api/services/CTemplateScreen.php:662
+#: include/classes/api/services/CTemplateScreen.php:664
 msgid "Incorrect template screen ID."
 msgstr "ID șablon ecran incorect. "
 
@@ -7739,7 +7739,7 @@ msgstr "Perioadă de timp \"%1$s\" incorectă timpul de început trebuie să fie
 msgid "Incorrect time period \"%1$s\"."
 msgstr "Perioadă de timp incorectă \"%1$s\"."
 
-#: include/classes/api/services/CService.php:993
+#: include/classes/api/services/CService.php:989
 #, c-format
 msgid "Incorrect trigger ID for service \"%1$s\"."
 msgstr "ID trigger incorect pentru serviciul \"%1$s\"."
@@ -7995,7 +7995,7 @@ msgstr "Nume de instalare"
 msgid "Interface"
 msgstr "Interfață"
 
-#: include/classes/api/services/CHostInterface.php:843
+#: include/classes/api/services/CHostInterface.php:852
 #, c-format
 msgid "Interface is linked to item \"%1$s\" on \"%2$s\"."
 msgstr "Interfața e legată de articolul \"%1$s\" pe \"%2$s\"."
@@ -8004,18 +8004,18 @@ msgstr "Interfața e legată de articolul \"%1$s\" pe \"%2$s\"."
 msgid "Interface is used by items that require this type of the interface."
 msgstr "Interfața este folosită de articole care cer acest tip de interfață."
 
-#: include/classes/api/services/CHostInterface.php:272
+#: include/classes/api/services/CHostInterface.php:277
 #, c-format
 msgid "Interface with DNS \"%1$s\" cannot have empty IP address."
 msgstr "Interfața cu DNS \"%1$s\" nu poate avea adresă IP goală."
 
-#: include/classes/api/services/CHostInterface.php:278
-#: include/classes/api/services/CHostInterface.php:285
+#: include/classes/api/services/CHostInterface.php:283
+#: include/classes/api/services/CHostInterface.php:290
 #, c-format
 msgid "Interface with IP \"%1$s\" cannot have empty DNS name while having \"Use DNS\" property on \"%2$s\"."
 msgstr "Interfața cu IP \"%1$s\" nu poate avea nume DNS gol în timp ce are \"Folosește proprietatea DNS\" la \"%2$s\"."
 
-#: include/classes/api/services/CHostInterface.php:291
+#: include/classes/api/services/CHostInterface.php:296
 #, c-format
 msgid "Interface with IP \"%1$s\" cannot have empty DNS name."
 msgstr "Interfața cu IP \"%1$s\" nu poate avea nume DNS gol."
@@ -8035,7 +8035,7 @@ msgctxt "user type"
 msgid "Internal"
 msgstr "Intern"
 
-#: include/classes/core/CJsonRpc.php:204
+#: include/classes/core/CJsonRpc.php:206
 msgid "Internal JSON-RPC error."
 msgstr "Eroare internă JSON-RPC."
 
@@ -8043,7 +8043,7 @@ msgstr "Eroare internă JSON-RPC."
 msgid "Internal data storage period (in days)"
 msgstr "Perioadă de stocare date interne (în zile)"
 
-#: include/classes/core/CJsonRpc.php:203
+#: include/classes/core/CJsonRpc.php:205
 #: include/classes/import/validators/CXmlValidatorGeneral.php:147
 msgid "Internal error."
 msgstr "Eroare internă."
@@ -8093,11 +8093,11 @@ msgstr ""
 msgid "Invalid IP address range \"%1$s\": must be a string."
 msgstr ""
 
-#: include/classes/core/CJsonRpc.php:184
+#: include/classes/core/CJsonRpc.php:186
 msgid "Invalid JSON. An error occurred on the server while parsing the JSON text."
 msgstr "JSON invalid. A apărut o eroare la server în timp ce analiza textul JSON."
 
-#: include/classes/core/CJsonRpc.php:188
+#: include/classes/core/CJsonRpc.php:190
 msgid "Invalid Request."
 msgstr "Cerere invalidă."
 
@@ -8261,12 +8261,12 @@ msgstr "Perioadă de mentenanță invalidă"
 #: include/classes/api/services/CScript.php:427
 #: include/classes/api/services/CService.php:206
 #: include/classes/api/services/CService.php:381
-#: include/classes/api/services/CService.php:1270
+#: include/classes/api/services/CService.php:1266
 #: include/classes/api/services/CUser.php:699
 #: include/classes/api/services/CUser.php:719
 #: include/classes/api/services/CUser.php:877
 #: include/classes/api/services/CUser.php:922
-#: include/classes/core/CJsonRpc.php:199
+#: include/classes/core/CJsonRpc.php:201
 msgid "Invalid method parameters."
 msgstr "Parametrii metodei invalizi. "
 
@@ -8274,7 +8274,7 @@ msgstr "Parametrii metodei invalizi. "
 msgid "Invalid number of parameters."
 msgstr "Număr invalid de parametri."
 
-#: include/classes/core/CJsonRpc.php:198
+#: include/classes/core/CJsonRpc.php:200
 msgid "Invalid params."
 msgstr "Parametri invalizi."
 
@@ -8399,7 +8399,7 @@ msgstr "Articolul \"%1$s\" există deja pe \"%2$s\"."
 msgid "Item \"%1$s\" cannot populate a missing host inventory field number \"%2$d\". Choices are: from 0 (do not populate) to %3$d."
 msgstr "Articolul \"%1$s\" nu poate popula câmp inventar \"%2$d\" de la o gazdă care lipsește. Opțiunile sunt: de la 0 (nu popula) la %3$d."
 
-#: include/classes/api/services/CTemplateScreen.php:565
+#: include/classes/api/services/CTemplateScreen.php:567
 #, c-format
 msgid "Item \"%1$s\" does not exist on template \"%2$s\"."
 msgstr "Articolul \"%1$s\" nu există pe șablonul \"%2$s\"."
@@ -8614,20 +8614,20 @@ msgstr "Agent JMX"
 msgid "JMX interfaces"
 msgstr "Interfață JMX"
 
-#: include/classes/core/CJsonRpc.php:156
+#: include/classes/core/CJsonRpc.php:158
 #, c-format
 msgid "JSON-rpc error generation failed. No such error \"%s\"."
 msgstr "Eșuare generare eroare JSON-rpc. Nu există asemenea eroare \"%s\".  "
 
-#: include/classes/core/CJsonRpc.php:113
+#: include/classes/core/CJsonRpc.php:115
 msgid "JSON-rpc method is not defined."
 msgstr "Metoda JSON-rpc nu este definită."
 
-#: include/classes/core/CJsonRpc.php:118
+#: include/classes/core/CJsonRpc.php:120
 msgid "JSON-rpc params is not an Array."
 msgstr "Parametrul JSON-rpc nu este în Matrice."
 
-#: include/classes/core/CJsonRpc.php:103
+#: include/classes/core/CJsonRpc.php:105
 msgid "JSON-rpc version is not specified."
 msgstr "Verisunea JSON-rpc nu este specificată."
 
@@ -9509,7 +9509,7 @@ msgstr "Mesaje"
 msgid "Messaging"
 msgstr "Trimitere mesaje"
 
-#: include/classes/core/CJsonRpc.php:193
+#: include/classes/core/CJsonRpc.php:195
 msgid "Method not found."
 msgstr "Metoda nu a fost găsită."
 
@@ -9914,7 +9914,7 @@ msgstr ""
 msgid "No \"%1$s\" given for screen."
 msgstr "Niciun \"%1$s\" dat pentru ecran."
 
-#: include/classes/api/services/CTemplateScreen.php:660
+#: include/classes/api/services/CTemplateScreen.php:662
 #, c-format
 msgid "No \"%1$s\" given for template screen."
 msgstr "Niciun \"%1$s\" dat pentru șablon ecran."
@@ -10037,13 +10037,13 @@ msgstr "Nicio colecție de date"
 msgid "No data found."
 msgstr ""
 
-#: include/classes/api/services/CHostInterface.php:819
+#: include/classes/api/services/CHostInterface.php:828
 #, c-format
 msgid "No default interface for \"%1$s\" type on \"%2$s\"."
 msgstr "Nicio interfață implicită pentru tipul \"%1$s\" pe \"%2$s\"."
 
-#: include/classes/core/CJsonRpc.php:209 include/classes/core/CJsonRpc.php:214
-#: include/classes/core/CJsonRpc.php:219
+#: include/classes/core/CJsonRpc.php:211 include/classes/core/CJsonRpc.php:216
+#: include/classes/core/CJsonRpc.php:221
 msgid "No details"
 msgstr "Niciun detaliu"
 
@@ -10237,10 +10237,10 @@ msgstr "Nicio permisiune de acces la sistem."
 #: include/classes/api/services/CHostGroup.php:1027
 #: include/classes/api/services/CHostGroup.php:1141
 #: include/classes/api/services/CHostGroup.php:1160
-#: include/classes/api/services/CHostInterface.php:240
-#: include/classes/api/services/CHostInterface.php:256
-#: include/classes/api/services/CHostInterface.php:399
-#: include/classes/api/services/CHostInterface.php:647
+#: include/classes/api/services/CHostInterface.php:241
+#: include/classes/api/services/CHostInterface.php:261
+#: include/classes/api/services/CHostInterface.php:408
+#: include/classes/api/services/CHostInterface.php:656
 #: include/classes/api/services/CHost.php:1500
 #: include/classes/api/services/CHost.php:1684
 #: include/classes/api/services/CHost.php:1811
@@ -10286,14 +10286,14 @@ msgstr "Nicio permisiune de acces la sistem."
 #: include/classes/api/services/CScreen.php:1238
 #: include/classes/api/services/CScript.php:287
 #: include/classes/api/services/CScript.php:297
-#: include/classes/api/services/CService.php:1053
-#: include/classes/api/services/CService.php:1068
+#: include/classes/api/services/CService.php:1049
+#: include/classes/api/services/CService.php:1064
 #: include/classes/api/services/CTemplate.php:699
 #: include/classes/api/services/CTemplate.php:708
-#: include/classes/api/services/CTemplateScreen.php:632
-#: include/classes/api/services/CTemplateScreen.php:683
-#: include/classes/api/services/CTemplateScreen.php:746
-#: include/classes/api/services/CTemplateScreen.php:752
+#: include/classes/api/services/CTemplateScreen.php:634
+#: include/classes/api/services/CTemplateScreen.php:685
+#: include/classes/api/services/CTemplateScreen.php:748
+#: include/classes/api/services/CTemplateScreen.php:754
 #: include/classes/api/services/CTrigger.php:502
 #: include/classes/api/services/CTrigger.php:856
 #: include/classes/api/services/CTrigger.php:877
@@ -11270,7 +11270,7 @@ msgstr "Scenarii web părinte"
 msgid "Parse SQL error [%1$s] in [%2$s]."
 msgstr "Analizează eroarea SQL [%1$s] în [%2$s]."
 
-#: include/classes/core/CJsonRpc.php:183
+#: include/classes/core/CJsonRpc.php:185
 msgid "Parse error"
 msgstr "Eroare de analizare"
 
@@ -11450,7 +11450,7 @@ msgstr "Populare câmp server inventar"
 msgid "Port"
 msgstr "Port"
 
-#: include/classes/api/services/CHostInterface.php:631
+#: include/classes/api/services/CHostInterface.php:640
 msgid "Port cannot be empty for host interface."
 msgstr "Portul nu pot fi nul pentru interfața serverului."
 
@@ -12398,7 +12398,7 @@ msgstr ""
 msgid "Screen"
 msgstr "Ecran"
 
-#: include/classes/api/services/CTemplateScreen.php:774
+#: include/classes/api/services/CTemplateScreen.php:776
 #, c-format
 msgid "Screen \"%1$s\" already exists on template \"%2$s\"."
 msgstr ""
@@ -12782,27 +12782,27 @@ msgstr "Timp server"
 msgid "Service"
 msgstr "Serviciu"
 
-#: include/classes/api/services/CService.php:1099
+#: include/classes/api/services/CService.php:1095
 #, c-format
 msgid "Service \"%1$s\" cannot be deleted, because it is dependent on another service."
 msgstr "Serviciul \"%1$s\" nu poate fi șters, deoarece depinde de alt serviciu."
 
-#: include/classes/api/services/CService.php:1120
+#: include/classes/api/services/CService.php:1116
 #, c-format
 msgid "Service \"%1$s\" cannot be dependent on itself."
 msgstr "Serviciul \"%1$s\" nu poate fi dependent de el însuși."
 
-#: include/classes/api/services/CService.php:1199
+#: include/classes/api/services/CService.php:1195
 #, c-format
 msgid "Service \"%1$s\" cannot be linked to a trigger and have children at the same time."
 msgstr "Serviciul \"%1$s\" nu poate fi legat de un trigger și să aiba copii în același timp."
 
-#: include/classes/api/services/CService.php:1174
+#: include/classes/api/services/CService.php:1170
 #, c-format
 msgid "Service \"%1$s\" is already hardlinked to a different service."
 msgstr "Serviciul \"%1$s\" este deja superlegat la un serviciu diferit."
 
-#: include/classes/api/services/CService.php:1017
+#: include/classes/api/services/CService.php:1013
 msgid "Service cannot be parent and child at the same time."
 msgstr "Serviciul nu poate fi părinte și copil în același timp."
 
@@ -12838,7 +12838,7 @@ msgstr "Serviciu actualizat"
 msgid "Services"
 msgstr "Servicii"
 
-#: include/classes/api/services/CService.php:1250
+#: include/classes/api/services/CService.php:1246
 msgid "Services form a circular dependency."
 msgstr "Servicii formează o dependență circulară."
 
@@ -13426,7 +13426,7 @@ msgstr "Sistem implicit"
 msgid "System error occurred. Please contact Zabbix administrator."
 msgstr ""
 
-#: include/classes/core/CJsonRpc.php:213
+#: include/classes/core/CJsonRpc.php:215
 msgid "System error."
 msgstr "Eroare de sistem."
 
@@ -13574,8 +13574,8 @@ msgstr ""
 msgid "Template name"
 msgstr "Nume șablon"
 
-#: include/classes/api/services/CTemplateScreen.php:641
-#: include/classes/api/services/CTemplateScreen.php:721
+#: include/classes/api/services/CTemplateScreen.php:643
+#: include/classes/api/services/CTemplateScreen.php:723
 #, c-format
 msgid "Template screen \"%1$s\" already exists."
 msgstr "Ecranul șablon \"%1$s\" există deja."
@@ -13764,11 +13764,11 @@ msgstr "Articolul nu mai este descoperit și va fi șters următoarea data când
 msgid "The number of processes. Returns integer"
 msgstr ""
 
-#: include/classes/core/CJsonRpc.php:189
+#: include/classes/core/CJsonRpc.php:191
 msgid "The received JSON is not a valid JSON-RPC Request."
 msgstr "JSON primit nu este o cerere validă JSON-RPC."
 
-#: include/classes/core/CJsonRpc.php:194
+#: include/classes/core/CJsonRpc.php:196
 msgid "The requested remote-procedure does not exist / is not available"
 msgstr "Procedura de la distanță cerută nu există / nu este disponibilă"
 
@@ -13946,7 +13946,7 @@ msgstr "Tranzacția nu s-a închis. Renunțare ..."
 msgid "Transform SQL query result into a JSON object for low-level discovery."
 msgstr ""
 
-#: include/classes/core/CJsonRpc.php:218
+#: include/classes/core/CJsonRpc.php:220
 msgid "Transport error."
 msgstr "Eroare de transport"
 
@@ -16275,7 +16275,7 @@ msgid "forecast() - Forecast for next t seconds based on period T"
 msgstr ""
 
 #: popup_trexpr.php:286
-msgid "fuzzytime() - Difference between item timestamp value and Zabbix server timestamp is over T seconds (1 - true, 0 - false)"
+msgid "fuzzytime() - Difference between item value (as timestamp) and Zabbix server timestamp is less than or equal to T seconds (1 - true, 0 - false)"
 msgstr ""
 
 #: include/views/configuration.item.edit.php:331

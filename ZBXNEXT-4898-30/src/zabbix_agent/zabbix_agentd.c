@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2018 Zabbix SIA
+** Copyright (C) 2001-2019 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -992,8 +992,11 @@ int	MAIN_ZABBIX_ENTRY(int flags)
 	}
 	else
 	{
-		/* wait for the service worker thread to terminate us */
-		zbx_sleep(3);
+		zbx_tcp_close(&listen_sock);
+
+		/* Wait for the service worker thread to terminate us. Listener threads may not exit up to */
+		/* CONFIG_TIMEOUT seconds if they're waiting for external processes to finish / timeout */
+		zbx_sleep(CONFIG_TIMEOUT);
 
 		THIS_SHOULD_NEVER_HAPPEN;
 	}
