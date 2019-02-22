@@ -1671,7 +1671,6 @@ sub is_service_error
 	# dnssec error
 	if (lc($service) eq 'dnssec')
 	{
-		return 1 if (ZBX_EC_DNS_NO_REPLY_FROM_NS == $rtt);
 		return 1 if (ZBX_EC_DNS_UDP_DNSSEC_FIRST >= $rtt && $rtt >= ZBX_EC_DNS_UDP_DNSSEC_LAST);
 		return 1 if (ZBX_EC_DNS_TCP_DNSSEC_FIRST >= $rtt && $rtt >= ZBX_EC_DNS_TCP_DNSSEC_LAST);
 
