@@ -1086,6 +1086,10 @@ void	zbx_on_exit(void)
 #if defined(PS_OVERWRITE_ARGV)
 	setproctitle_free_env();
 #endif
+#ifdef _WINDOWS
+	while (0 == WSACleanup())
+		;
+#endif
 
 	exit(EXIT_SUCCESS);
 }
@@ -1154,6 +1158,15 @@ int	main(int argc, char **argv)
 		case ZBX_TASK_PRINT_SUPPORTED:
 			zbx_load_config(ZBX_CFG_FILE_OPTIONAL, &t);
 #ifdef _WINDOWS
+			WSADATA sockInfo;
+
+			if (0 != (ret = WSAStartup(MAKEWORD(2, 2), &sockInfo)))
+			{
+				zabbix_log(LOG_LEVEL_CRIT, "Cannot initialize Winsock DLL: %s",
+						strerror_from_system(ret));
+				exit(EXIT_FAILURE);
+			}
+
 			init_perf_collector(0);
 			load_perf_counters(CONFIG_PERF_COUNTERS);
 #else
@@ -1175,6 +1188,9 @@ int	main(int argc, char **argv)
 				test_parameters();
 #ifdef _WINDOWS
 			free_perf_collector();	/* cpu_collector must be freed before perf_collector is freed */
+
+			while (0 == WSACleanup())
+				;
 #endif
 #ifndef _WINDOWS
 			unload_modules();
