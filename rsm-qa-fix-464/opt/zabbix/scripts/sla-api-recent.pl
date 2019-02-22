@@ -877,8 +877,17 @@ sub fill_test_data($$$$)
 			}
 			else
 			{
-				$metric->{'rtt'} = $rtt;
-				$metric->{'result'} = "ok";
+				if (($service eq 'dnssec') and ($rtt < 0))
+				{
+					# special case of non-dnssec errors being reported for dnssec
+					$metric->{'rtt'} = undef;
+					$metric->{'result'} = $rtt;
+				}
+				else
+				{
+					$metric->{'rtt'} = $rtt;
+					$metric->{'result'} = "ok";
+				}
 
 				# skip threshold check if NS is already known to be down
 				if ($hist)
