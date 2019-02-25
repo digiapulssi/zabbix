@@ -877,9 +877,10 @@ sub fill_test_data($$$$)
 			}
 			else
 			{
-				if (($service eq 'dnssec') and ($rtt < 0))
+				if ($service eq 'dnssec' && $rtt < 0)
 				{
-					# special case of non-dnssec errors being reported for dnssec
+					# DNSSEC is exceptional as it may be successful in case of negative RTT.
+					# This can happen if the DNS error code is not related to DNSSEC.
 					$metric->{'rtt'} = undef;
 					$metric->{'result'} = $rtt;
 				}
