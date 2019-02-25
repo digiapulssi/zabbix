@@ -110,7 +110,8 @@ class CControllerMediatypeEdit extends CController {
 			'eztext_limit' => EZ_TEXTING_LIMIT_USA,
 			'smtp_username' => '',
 			'passwd' => '',
-			'status' => MEDIA_TYPE_STATUS_ACTIVE
+			'status' => MEDIA_TYPE_STATUS_ACTIVE,
+			'change_passwd' => true
 		];
 
 		// get values from the dabatase
@@ -155,6 +156,8 @@ class CControllerMediatypeEdit extends CController {
 					$data['eztext_limit'] = $this->mediatype['exec_path'];
 					break;
 			}
+
+			$data['change_passwd'] = $this->hasInput('passwd');
 		}
 
 		// overwrite with input variables
