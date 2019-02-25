@@ -3215,6 +3215,34 @@ static int	DBpatch_3000301(void)
 	return SUCCEED;
 }
 
+static int	DBpatch_3000302(void)
+{
+	if (ZBX_DB_OK != DBexecute(
+			"insert into globalmacro (globalmacroid,macro,value)"
+			" values"
+				" (102,'{$RSM.SLV.RDDS.RTT}',5),"
+				" (103,'{$RSM.SLV.DNS.DOWNTIME}',0),"
+				" (104,'{$RSM.SLV.RDDS.DOWNTIME}',864)"))
+	{
+		return FAIL;
+	}
+
+	if (ZBX_DB_OK != DBexecute(
+			"update globalmacro set value=5"
+			" where macro='{$RSM.SLV.RDDS43.RTT}'"
+			" or    macro='{$RSM.SLV.RDDS80.RTT}'"
+			" or    macro='{$RSM.SLV.DNS.UDP.RTT}'"
+			" or    macro='{$RSM.SLV.DNS.TCP.RTT}'"))
+	{
+		return FAIL;
+	}
+
+	if (ZBX_DB_OK != DBexecute("update globalmacro set value=432 where macro='{$RSM.SLV.NS.AVAIL}'"))
+		return FAIL;
+
+	return SUCCEED;
+}
+
 #endif
 
 DBPATCH_START(3000)
@@ -3300,5 +3328,6 @@ DBPATCH_ADD(3000235, 0, 0)	/* add trigger for item rsm.probe.status[manual] to a
 DBPATCH_ADD(3000236, 0, 0)	/* disable "RDAP availability" items on hosts where RDAP is disabled (again) */
 DBPATCH_ADD(3000300, 0, 0)	/* Phase 3 */
 DBPATCH_ADD(3000301, 0, 0)	/* add lastvalue_str table */
+DBPATCH_ADD(3000302, 0, 1)	/* update and add new RSM.SLV.* macros */
 
 DBPATCH_END()
