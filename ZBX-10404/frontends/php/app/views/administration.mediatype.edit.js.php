@@ -112,7 +112,6 @@
 
 		$('#chPass_btn').on('click', function() {
 			$(this).hide();
-			$('#change_passwd').val(1);
 			$('#passwd')
 				.show()
 				.removeAttr('disabled')

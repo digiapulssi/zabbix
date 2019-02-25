@@ -42,7 +42,6 @@ class CControllerMediatypeCreate extends CController {
 			'eztext_username' =>		'db media_type.username',
 			'smtp_username' =>			'db media_type.username',
 			'passwd' =>					'db media_type.passwd',
-			'change_passwd' =>			'in 0,1',
 			'status' =>					'db media_type.status|in '.MEDIA_TYPE_STATUS_ACTIVE.','.MEDIA_TYPE_STATUS_DISABLED,
 		];
 
