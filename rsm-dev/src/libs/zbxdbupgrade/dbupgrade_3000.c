@@ -3217,7 +3217,7 @@ static int	DBpatch_3000301(void)
 
 static int	DBpatch_3000302(void)
 {
-	if (ZBX_DB_OK != DBexecute(
+	if (ZBX_DB_OK > DBexecute(
 			"insert into globalmacro (globalmacroid,macro,value)"
 			" values"
 				" (102,'{$RSM.SLV.RDDS.RTT}',5),"
@@ -3227,7 +3227,7 @@ static int	DBpatch_3000302(void)
 		return FAIL;
 	}
 
-	if (ZBX_DB_OK != DBexecute(
+	if (ZBX_DB_OK > DBexecute(
 			"update globalmacro set value=5"
 			" where macro='{$RSM.SLV.RDDS43.RTT}'"
 			" or    macro='{$RSM.SLV.RDDS80.RTT}'"
@@ -3237,7 +3237,7 @@ static int	DBpatch_3000302(void)
 		return FAIL;
 	}
 
-	if (ZBX_DB_OK != DBexecute("update globalmacro set value=432 where macro='{$RSM.SLV.NS.AVAIL}'"))
+	if (ZBX_DB_OK > DBexecute("update globalmacro set value=432 where macro='{$RSM.SLV.NS.AVAIL}'"))
 		return FAIL;
 
 	return SUCCEED;
