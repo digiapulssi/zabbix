@@ -1116,6 +1116,17 @@ int	main(int argc, char **argv)
 
 	import_symbols();
 
+#ifdef _WINDOWS
+	WSADATA		sockInfo;
+
+	if (ZBX_TASK_SHOW_USAGE != t.task && ZBX_TASK_SHOW_VERSION != t.task && ZBX_TASK_SHOW_HELP != t.task &&
+			0 != (ret = WSAStartup(MAKEWORD(2, 2), &sockInfo)))
+	{
+		zbx_error("Cannot initialize Winsock DLL: %s", strerror_from_system(ret));
+		exit(EXIT_FAILURE);
+	}
+#endif
+
 	/* this is needed to set default hostname in zbx_load_config() */
 	init_metrics();
 
@@ -1150,6 +1161,10 @@ int	main(int argc, char **argv)
 			zbx_free_config();
 
 			ret = zbx_exec_service_task(argv[0], &t);
+
+			while (0 == WSACleanup())
+				;
+
 			free_metrics();
 			exit(SUCCEED == ret ? EXIT_SUCCESS : EXIT_FAILURE);
 			break;
@@ -1158,15 +1173,6 @@ int	main(int argc, char **argv)
 		case ZBX_TASK_PRINT_SUPPORTED:
 			zbx_load_config(ZBX_CFG_FILE_OPTIONAL, &t);
 #ifdef _WINDOWS
-			WSADATA sockInfo;
-
-			if (0 != (ret = WSAStartup(MAKEWORD(2, 2), &sockInfo)))
-			{
-				zabbix_log(LOG_LEVEL_CRIT, "Cannot initialize Winsock DLL: %s",
-						strerror_from_system(ret));
-				exit(EXIT_FAILURE);
-			}
-
 			init_perf_collector(0);
 			load_perf_counters(CONFIG_PERF_COUNTERS);
 #else
