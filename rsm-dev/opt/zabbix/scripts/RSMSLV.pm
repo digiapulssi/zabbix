@@ -1071,11 +1071,10 @@ sub db_disconnect
 	}
 }
 
-sub db_select
+sub db_select($;$)
 {
 	$_global_sql = shift;
-
-	undef($_global_sql_bind_values);
+	$_global_sql_bind_values = shift; # optional; reference to an array
 
 	if ($get_stats)
 	{
@@ -1085,10 +1084,20 @@ sub db_select
 	my $sth = $dbh->prepare($_global_sql)
 		or fail("cannot prepare [$_global_sql]: ", $dbh->errstr);
 
-	dbg("[$_global_sql]");
+	if (defined($_global_sql_bind_values))
+	{
+		dbg("[$_global_sql] ", join(',', @{$_global_sql_bind_values}));
 
-	$sth->execute()
-		or fail("cannot execute [$_global_sql]: ", $sth->errstr);
+		$sth->execute(@{$_global_sql_bind_values})
+			or fail("cannot execute [$_global_sql]: ", $sth->errstr);
+	}
+	else
+	{
+		dbg("[$_global_sql]");
+
+		$sth->execute()
+			or fail("cannot execute [$_global_sql]: ", $sth->errstr);
+	}
 
 	if (opt('warnslow'))
 	{
