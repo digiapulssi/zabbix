@@ -1119,15 +1119,18 @@ sub has_rdds
 	return (defined($OPTS{'rdds43-servers'}) || defined($OPTS{'rdap-base-url'}));
 }
 
-sub create_slv_items {
-    my $ns_servers = shift;
-    my $hostid = shift;
-    my $host_name = shift;
+sub create_slv_items
+{
+	my $ns_servers = shift;
+	my $hostid = shift;
+	my $host_name = shift;
 
-    create_slv_ns_items($ns_servers, $hostid);
+	create_slv_ns_items($ns_servers, $hostid);
 
-    create_slv_item('DNS availability', 'rsm.slv.dns.avail', $hostid, VALUE_TYPE_AVAIL, [get_application_id(APP_SLV_PARTTEST, $hostid)]);
-    create_slv_item('DNS minutes of downtime', 'rsm.slv.dns.downtime', $hostid, VALUE_TYPE_NUM, [get_application_id(APP_SLV_CURMON, $hostid)]);
+	create_slv_item('DNS availability', 'rsm.slv.dns.avail', $hostid, VALUE_TYPE_AVAIL, [get_application_id(APP_SLV_PARTTEST, $hostid)]);
+	create_slv_item('DNS minutes of downtime', 'rsm.slv.dns.downtime', $hostid, VALUE_TYPE_NUM, [get_application_id(APP_SLV_CURMON, $hostid)]);
+	
+	create_dns_downtime_trigger($host_name, 5);
 
     my $options;
 
@@ -1141,7 +1144,8 @@ sub create_slv_items {
     foreach my $position (sort keys %{$trigger_rollweek_thresholds}) {
 	my $threshold = $trigger_rollweek_thresholds->{$position}->{'threshold'};
 	my $priority = $trigger_rollweek_thresholds->{$position}->{'priority'};
-        next if ($threshold eq 0);
+
+	next if ($threshold eq 0);
 
         my $result = create_rollweek_trigger('DNS', $host_name, $threshold, $priority, \$created);
 
@@ -1929,6 +1933,23 @@ sub create_rollweek_trigger($$$$$) {
 	};
 
 	really(create_trigger($options, $host_name, $created_ref));
+}
+
+sub create_dns_downtime_trigger()
+{
+	my $host_name = shift;
+	my $priority = shift;
+
+	my $options =
+	{
+		'description' => 'DNS downtime',
+		'expression' => '{'.$host_name.':rsm.slv.dns.downtime.last(0)}>0',
+		'priority' => $priority
+	};
+
+	my $created;
+
+	really(create_trigger($options, $host_name, \$created));
 }
 
 sub really($)
