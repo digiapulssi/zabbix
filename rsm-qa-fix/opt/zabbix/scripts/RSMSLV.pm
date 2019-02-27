@@ -480,8 +480,8 @@ sub get_oldest_clock($$$)
 
 sub get_tlds
 {
-	my $service = shift;
-	my $till = shift;
+	my $service = shift;	# optionally specify service which must be enabled
+	my $till = shift;	# used only if $service is defined
 
 	my $rows_ref = db_select(
 		"select distinct h.host".
