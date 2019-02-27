@@ -106,12 +106,12 @@ my %rtt_limits;
 
 my $max_children = opt('max-children') ? getopt('max-children') : 64;
 
-if (int($max_children) % int($server_count) != 0)
+if ($max_children % $server_count != 0)
 {
-	fail("max-children value must be divisible by the number of servers ($max_children % $server_count)");
+	fail("max-children value must be divisible by the number of servers ($server_count)");
 }
 
-$max_children = int(int($max_children) / int($server_count)); #from now on this is count per server
+my $children_per_server = int($max_children / $server_count);
 
 my $child_failed = 0;
 my $signal_sent = 0;
@@ -161,7 +161,7 @@ sub process_server($)
 	else
 	{
 		db_connect($server_key);
-		$server_tlds = get_tlds_from_db();
+		$server_tlds = get_tlds();
 		db_disconnect($server_key);
 	}
 
@@ -170,21 +170,21 @@ sub process_server($)
 	my $tlds_per_child;
 	my $tlds_remainder;
 
-	if ($max_children < $server_tld_count)
+	if ($children_per_server < $server_tld_count)
 	{
-		$tlds_per_child = int(int($server_tld_count) / int($max_children));
-		$tlds_remainder = int(int($server_tld_count) % int($max_children));
+		$tlds_per_child = int($server_tld_count / $children_per_server);
+		$tlds_remainder = ($server_tld_count % $children_per_server);
 	}
 	else
 	{
-		$max_children = $server_tld_count;
+		$children_per_server = $server_tld_count;
 		$tlds_per_child = 1;
 		$tlds_remainder = 0;
 	}
 
 	my $fm = new Parallel::ForkManager();
 	set_on_finish($fm);
-	$fm->set_max_procs($max_children - 1); # we count this process as one of the children
+	$fm->set_max_procs($children_per_server - 1);	# we count this process as one of the children
 	$fm->run_on_wait(sub() {dbg("max children reached, please wait...");});
 
 	my $tldi_begin = 0;
@@ -204,7 +204,7 @@ sub process_server($)
 
 		my %child_data;
 
-		if ($tldi_end < $server_tld_count)	
+		if ($tldi_end < $server_tld_count)
 		{
 			my $pid = $fm->start();
 
@@ -681,24 +681,6 @@ sub get_service_from_slv_key($)
 	}
 
 	return $service;
-}
-
-sub get_tlds_from_db()
-{
-	my $rows_ref = db_select(
-		"select distinct h.host ".
-		" from hosts h,hosts_groups hg".
-		" where h.hostid=hg.hostid and hg.groupid=140 and h.status=0 order by h.host"
-	);
-
-	my @tlds;
-
-	foreach my $row (@{$rows_ref})
-	{
-		push(@tlds, $row->[0]);
-	}
-
-	return \@tlds;
 }
 
 sub get_lastvalues_from_db($$$)
