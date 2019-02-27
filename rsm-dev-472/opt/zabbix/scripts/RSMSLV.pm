@@ -2013,7 +2013,7 @@ sub process_slv_downtime_cycles($$$$)
 			# skip calculation if Service Availability value is not yet there
 			next if (!opt('dry-run') && !uint_value_exists($value_ts, $itemids{$tld}{'itemid_in'}));
 
-			my $downtime = get_downtime_execute($sth, $itemids{$tld}{'itemid_in'}, $from, $till, 1);	# ignore incidents
+			my $downtime = get_downtime_execute($sth, $itemids{$tld}{'itemid_in'}, $from, $till, 0, $delay);	# ignore incidents
 
 			push_value($tld, $cfg_key_out, $value_ts, $downtime, ts_str($from), " - ", ts_str($till));
 		}
