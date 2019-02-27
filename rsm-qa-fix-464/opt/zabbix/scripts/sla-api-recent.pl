@@ -26,6 +26,8 @@ use constant MAX_PERIOD => 30 * 60;	# 30 minutes
 
 use constant SUBSTR_KEY_LEN => 20;	# for logging
 
+use constant DEFAULT_MAX_CHILDREN => 64;
+
 sub process_server($);
 sub process_tld_batch($$$$$);
 sub process_tld($$$$);
@@ -75,6 +77,8 @@ validate_service(getopt('service')) if (opt('service'));
 
 my $server_count = scalar(@server_keys);
 
+fail("no servers defined") unless ($server_count);
+
 my $real_now = time();
 my $now = (getopt('now') // $real_now);
 
@@ -104,14 +108,34 @@ my $global_lastclock;
 
 my %rtt_limits;
 
-my $max_children = opt('max-children') ? getopt('max-children') : 64;
+my $children_per_server;
 
-if ($max_children % $server_count != 0)
+if (opt('max-children'))
 {
-	fail("max-children value must be divisible by the number of servers ($server_count)");
-}
+	my $max_children = getopt('max-children');
 
-my $children_per_server = int($max_children / $server_count);
+	if ($max_children % $server_count != 0)
+	{
+		fail("max-children value must be divisible by the number of servers ($server_count)");
+	}
+
+	$children_per_server = $max_children / $server_count;
+}
+else
+{
+	my $max_children = DEFAULT_MAX_CHILDREN;
+
+	$max_children = $server_count if ($server_count > DEFAULT_MAX_CHILDREN);
+
+	while ($max_children % $server_count)
+	{
+		$max_children--;
+	}
+
+	$children_per_server = $max_children / $server_count;
+
+	fail("cannot calculate maximum number of processes to use") unless ($children_per_server);
+}
 
 my $child_failed = 0;
 my $signal_sent = 0;
@@ -165,22 +189,12 @@ sub process_server($)
 		db_disconnect($server_key);
 	}
 
+	return unless (scalar(@{$server_tlds}));
+
 	my $server_tld_count = scalar(@{$server_tlds});
 
-	my $tlds_per_child;
-	my $tlds_remainder;
-
-	if ($children_per_server < $server_tld_count)
-	{
-		$tlds_per_child = int($server_tld_count / $children_per_server);
-		$tlds_remainder = ($server_tld_count % $children_per_server);
-	}
-	else
-	{
-		$children_per_server = $server_tld_count;
-		$tlds_per_child = 1;
-		$tlds_remainder = 0;
-	}
+	my $children_per_server = $server_tld_count if ($server_tld_count < $children_per_server);
+	my $tlds_per_child = int($server_tld_count / $children_per_server);
 
 	my $fm = new Parallel::ForkManager();
 	set_on_finish($fm);
@@ -188,23 +202,20 @@ sub process_server($)
 	$fm->run_on_wait(sub() {dbg("max children reached, please wait...");});
 
 	my $tldi_begin = 0;
+	my $tldi_end;
 
-	while ($tldi_begin < $server_tld_count)
+	while ($children_per_server)
 	{
 		child_failed() if ($child_failed);
 
-		my $tldi_end = $tldi_begin + $tlds_per_child;
+		$tldi_end = $tldi_begin + $tlds_per_child;
 
-		# spread remainder equally between children
-		if ($tlds_remainder > 0)
-		{
-			$tldi_end++;
-			$tlds_remainder--;
-		}
+		# add one extra from remainder
+		$tldi_end++ if ($server_tld_count - $tldi_begin - ($children_per_server * $tlds_per_child));
 
 		my %child_data;
 
-		if ($tldi_end < $server_tld_count)
+		if ($children_per_server > 1)
 		{
 			my $pid = $fm->start();
 
@@ -214,14 +225,16 @@ sub process_server($)
 				$fm->finish(SUCCESS, \%child_data);
 				last;
 			}
+
+			$tldi_begin = $tldi_end;
 		}
-		else # don't fork for the last batch
+		else	# don't fork for the last batch
 		{
 			process_tld_batch($server_tlds, $tldi_begin, $server_tld_count, \%child_data, \%probes);
 			save_child_lastvalues_cache(\%child_data)
 		}
 
-		$tldi_begin = $tldi_end;
+		$children_per_server--;
 	}
 
 	$fm->run_on_wait(undef);
@@ -285,6 +298,8 @@ sub process_tld_batch($$$$$)
 		process_tld($tld, $probes_ref, $lastvalues_db_tld, $lastvalues_cache_tld);
 
 		$child_data_ref->{$tld} = $lastvalues_cache->{'tlds'}{$tld};
+
+		$tld = undef;	# unset global variable
 	}
 
 	db_disconnect();
@@ -550,7 +565,7 @@ sub cycles_to_calculate($$$$$$$$)
 
 				$key = sprintf("%".SUBSTR_KEY_LEN."s", $key);
 
-				dbg("[$key] last ", ($lastclock ? ts_str($lastclock) :'NULL'), ", db ", ts_str($lastclock_db), " $probe");
+				dbg("[$key] last ", ($lastclock ? ts_str($lastclock) :'NULL'), ", db ", ts_str($lastclock_db), ($probe ? $probe : ''));
 			}
 
 			add_cycles(
