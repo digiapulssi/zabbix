@@ -1310,7 +1310,10 @@ exit:
 	}
 #endif
 	zabbix_close_log();
-
+#if defined(_WINDOWS)
+	while (0 == WSACleanup())
+		;
+#endif
 	if (FAIL == ret)
 		ret = EXIT_FAILURE;
 
