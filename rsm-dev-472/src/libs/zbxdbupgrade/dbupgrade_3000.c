@@ -3243,6 +3243,57 @@ static int	DBpatch_3000302(void)
 	return SUCCEED;
 }
 
+static int	DBpatch_3000303(void)
+{
+	DB_RESULT	result_hosts, result_items;
+	DB_ROW		row;
+	zbx_uint64_t	triggerid, functionid, itemid;
+	const char*	itemkey = "rsm.slv.dns.downtime";
+
+	result_hosts = DBselect("select h.hostid, h.host from hosts h inner join hosts_groups hg on h.hostid=hg.hostid"
+				" where hg.groupid=140");
+
+	triggerid = DBget_maxid("triggers");
+	functionid = DBget_maxid("functions");
+
+	while (NULL != (row = DBfetch(result_hosts)))
+	{
+		triggerid++;
+		functionid++;
+
+		if (ZBX_DB_OK > DBexecute(
+				"insert into triggers (triggerid,expression,description,"
+					"url,status,priority,comments,templateid,type,flags)"
+				"values (" ZBX_FS_UI64 ", '{" ZBX_FS_UI64 "}>0', 'TLD {HOST.NAME} has DNS downtime',"
+					"'', '0', '4', '', NULL, '0', '0')",
+				triggerid, functionid))
+		{
+			return FAIL;
+		}
+
+		result_items = DBselect("select itemid from items where key_='%s' and hostid='%s'", itemkey, row[0]);
+
+		if (NULL == (row = DBfetch(result_items)))
+		{
+			return FAIL;
+		}
+
+		if (ZBX_DB_OK > DBexecute(
+				"insert into functions (functionid,itemid,triggerid,function,parameter) values"
+				" (" ZBX_FS_UI64 ", %s," ZBX_FS_UI64 ",'last','0')",
+				functionid, row[0], triggerid))
+		{
+			return FAIL;
+		}
+
+		DBfree_result(result_items);
+	}
+
+	DBfree_result(result_hosts);
+
+	return SUCCEED;
+}
+
 #endif
 
 DBPATCH_START(3000)
@@ -3329,5 +3380,6 @@ DBPATCH_ADD(3000236, 0, 0)	/* disable "RDAP availability" items on hosts where R
 DBPATCH_ADD(3000300, 0, 0)	/* Phase 3 */
 DBPATCH_ADD(3000301, 0, 0)	/* add lastvalue_str table */
 DBPATCH_ADD(3000302, 0, 1)	/* update and add new RSM.SLV.* macros */
+DBPATCH_ADD(3000303, 0, 0)	/* add DNS downtime trigger to existing tld hosts */
 
 DBPATCH_END()
