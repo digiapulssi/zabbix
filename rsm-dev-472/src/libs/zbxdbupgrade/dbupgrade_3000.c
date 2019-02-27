@@ -3253,13 +3253,10 @@ static int	DBpatch_3000303(void)
 	result_hosts = DBselect("select h.hostid, h.host from hosts h inner join hosts_groups hg on h.hostid=hg.hostid"
 				" where hg.groupid=140");
 
-	triggerid = DBget_maxid("triggers");
-	functionid = DBget_maxid("functions");
-
 	while (NULL != (row = DBfetch(result_hosts)))
 	{
-		triggerid++;
-		functionid++;
+		triggerid = DBget_maxid("triggers");
+		functionid = DBget_maxid("functions");
 
 		if (ZBX_DB_OK > DBexecute(
 				"insert into triggers (triggerid,expression,description,"
