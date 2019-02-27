@@ -1942,7 +1942,7 @@ sub create_dns_downtime_trigger()
 
 	my $options =
 	{
-		'description' => 'DNS downtime',
+		'description' => 'TLD {HOST.NAME} has DNS downtime',
 		'expression' => '{'.$host_name.':rsm.slv.dns.downtime.last(0)}>0',
 		'priority' => $priority
 	};
