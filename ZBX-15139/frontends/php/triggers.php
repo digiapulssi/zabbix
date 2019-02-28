@@ -161,7 +161,7 @@ if ($triggerIds) {
 		'editable' => true
 	]);
 
-	if ($count != count($triggerIds)) {
+	if ($count != count($triggerIds) && !(hasRequest('action') && getRequest('action') == 'trigger.massdelete')) {
 		access_deny();
 	}
 }
@@ -176,6 +176,7 @@ if (getRequest('hostid') && !isWritableHostTemplates([getRequest('hostid')])) {
 /*
  * Actions
  */
+$result = false;
 $expression_action = '';
 if (hasRequest('add_expression')) {
 	$_REQUEST['expression'] = getRequest('expr_temp');
@@ -371,7 +372,6 @@ elseif (hasRequest('add') || hasRequest('update')) {
 
 	if ($result) {
 		unset($_REQUEST['form']);
-		uncheckTableRows(getRequest('hostid'));
 	}
 }
 elseif (isset($_REQUEST['delete']) && isset($_REQUEST['triggerid'])) {
@@ -379,7 +379,6 @@ elseif (isset($_REQUEST['delete']) && isset($_REQUEST['triggerid'])) {
 
 	if ($result) {
 		unset($_REQUEST['form'], $_REQUEST['triggerid']);
-		uncheckTableRows(getRequest('hostid'));
 	}
 	show_messages($result, _('Trigger deleted'), _('Cannot delete trigger'));
 }
@@ -449,7 +448,6 @@ elseif (hasRequest('action') && getRequest('action') === 'trigger.massupdate'
 
 	if ($result) {
 		unset($_REQUEST['form'], $_REQUEST['g_triggerid']);
-		uncheckTableRows(getRequest('hostid'));
 	}
 	show_messages($result, _('Trigger updated'), _('Cannot update trigger'));
 }
@@ -488,7 +486,6 @@ elseif (hasRequest('action') && str_in_array(getRequest('action'), ['trigger.mas
 		: _n('Cannot disable trigger', 'Cannot disable triggers', $updated);
 
 	if ($result) {
-		uncheckTableRows(getRequest('hostid'));
 		unset($_REQUEST['g_triggerid']);
 	}
 	show_messages($result, $messageSuccess, $messageFailed);
@@ -524,7 +521,6 @@ elseif (hasRequest('action') && getRequest('action') === 'trigger.masscopyto' &&
 		$triggers_count = count(getRequest('g_triggerid'));
 
 		if ($result) {
-			uncheckTableRows(getRequest('hostid'));
 			unset($_REQUEST['g_triggerid']);
 		}
 		show_messages($result,
@@ -537,12 +533,23 @@ elseif (hasRequest('action') && getRequest('action') === 'trigger.masscopyto' &&
 	}
 }
 elseif (hasRequest('action') && getRequest('action') == 'trigger.massdelete' && hasRequest('g_triggerid')) {
-	$result = API::Trigger()->delete(getRequest('g_triggerid'));
+	$group_triggerid = getRequest('g_triggerid');
 
-	if ($result) {
-		uncheckTableRows(getRequest('hostid'));
+	$result = API::Trigger()->delete($group_triggerid);
+
+	if (!$result) {
+		$triggerids = API::Trigger()->get([
+			'output' => [],
+			'triggerids' => $group_triggerid,
+			'preservekeys' => true
+		]);
+		updateSessionStorage(getRequest('hostid'), array_column($triggerids, 'triggerid', 'triggerid'));
+
 	}
 	show_messages($result, _('Triggers deleted'), _('Cannot delete triggers'));
+}
+if ($result) {
+	clearSessionStorage(getRequest('hostid'));
 }
 
 $config = select_config();
