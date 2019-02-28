@@ -467,11 +467,11 @@ sub disable_probe($) {
 	is_not_empty($result->{'hostmacroids'}, false);
     }
 
-    ########## Move the Probe to active mode
+    ########## There's no status "disabled" so we set it to something non-passive - "active" wins
 
     print "Disabling '$probe_name' Probe: ";
 
-    $result = set_proxy_status( $probe->{'proxyid'}, HOST_STATUS_PROXY_ACTIVE);
+    $result = set_proxy_status($probe->{'proxyid'}, HOST_STATUS_PROXY_ACTIVE);
 
     is_not_empty($result->{'proxyids'}, false);
 
