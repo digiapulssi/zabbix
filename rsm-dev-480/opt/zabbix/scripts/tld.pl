@@ -78,6 +78,7 @@ sub get_services($);
 sub set_linked_items_enabled($$$);
 
 my $trigger_rollweek_thresholds = rsm_trigger_rollweek_thresholds;
+my $trigger_downtime_thresholds = rsm_trigger_downtime_thresholds;
 
 my $cfg_global_macros = cfg_global_macros;
 
@@ -1185,42 +1186,63 @@ sub create_slv_items {
 	undef($depend_down);
     }
 
-    if (has_rdds())
-    {
-	create_slv_item('RDDS availability', 'rsm.slv.rdds.avail', $hostid, VALUE_TYPE_AVAIL, [get_application_id(APP_SLV_PARTTEST, $hostid)]);
-	create_slv_item('RDDS minutes of downtime', 'rsm.slv.rdds.downtime', $hostid, VALUE_TYPE_NUM, [get_application_id(APP_SLV_CURMON, $hostid)]);
+	if (has_rdds())
+	{
+		my $depend_down;
+		my $created;
 
-	create_avail_trigger('RDDS', $host_name);
+		create_slv_item('RDDS availability', 'rsm.slv.rdds.avail', $hostid, VALUE_TYPE_AVAIL, [get_application_id(APP_SLV_PARTTEST, $hostid)]);
+		create_avail_trigger('RDDS', $host_name);
 
-	create_slv_item('RDDS weekly unavailability', 'rsm.slv.rdds.rollweek', $hostid, VALUE_TYPE_PERC, [get_application_id(APP_SLV_ROLLWEEK, $hostid)]);
+		create_slv_item('RDDS minutes of downtime', 'rsm.slv.rdds.downtime', $hostid, VALUE_TYPE_NUM, [get_application_id(APP_SLV_CURMON, $hostid)]);
+		
+		foreach my $position (sort keys %{$trigger_rollweek_thresholds})
+		{
+			my $threshold = $trigger_downtime_thresholds->{$position}->{'threshold'};
+			my $priority = $trigger_downtime_thresholds->{$position}->{'priority'};
+			next if ($threshold eq 0);
 
-        my $depend_down;
-	my $created;
+			my $result = create_downtime_trigger('RDDS', $host_name, $threshold, $priority, \$created);
 
-	foreach my $position (sort keys %{$trigger_rollweek_thresholds}) {
-    	    my $threshold = $trigger_rollweek_thresholds->{$position}->{'threshold'};
-    	    my $priority = $trigger_rollweek_thresholds->{$position}->{'priority'};
-    	    next if ($threshold eq 0);
+			my $triggerid = $result->{'triggerids'}[0];
 
-	    my $result = create_rollweek_trigger('RDDS', $host_name, $threshold, $priority, \$created);
+			if ($created && defined($depend_down))
+			{
+				add_dependency($triggerid, $depend_down);
+			}
 
-    	    my $triggerid = $result->{'triggerids'}[0];
+			$depend_down = $triggerid;
+		}
 
-	    if ($created && defined($depend_down)) {
-    	        add_dependency($triggerid, $depend_down);
-    	    }
+		undef($depend_down);
 
-    	    $depend_down = $triggerid;
-        }
+		create_slv_item('RDDS weekly unavailability', 'rsm.slv.rdds.rollweek', $hostid, VALUE_TYPE_PERC, [get_application_id(APP_SLV_ROLLWEEK, $hostid)]);
 
-	undef($depend_down);
+		foreach my $position (sort keys %{$trigger_rollweek_thresholds})
+		{
+			my $threshold = $trigger_rollweek_thresholds->{$position}->{'threshold'};
+			my $priority = $trigger_rollweek_thresholds->{$position}->{'priority'};
+			next if ($threshold eq 0);
 
+			my $result = create_rollweek_trigger('RDDS', $host_name, $threshold, $priority, \$created);
 
-# DNS NS are not currently used
-#	create_slv_item('% of successful monthly RDDS43 resolution RTT', 'rsm.slv.rdds.43.rtt.month', $hostid, VALUE_TYPE_PERC, [get_application_id(APP_SLV_MONTHLY, $hostid)]);
-#	create_slv_item('% of successful monthly RDDS80 resolution RTT', 'rsm.slv.rdds.80.rtt.month', $hostid, VALUE_TYPE_PERC, [get_application_id(APP_SLV_MONTHLY, $hostid)]);
-#	create_slv_item('% of successful monthly RDDS update time', 'rsm.slv.rdds.upd.month', $hostid, VALUE_TYPE_PERC, [get_application_id(APP_SLV_MONTHLY, $hostid)]) if (defined($OPTS{'epp-servers'}));
-    }
+			my $triggerid = $result->{'triggerids'}[0];
+
+			if ($created && defined($depend_down))
+			{
+				add_dependency($triggerid, $depend_down);
+			}
+
+			$depend_down = $triggerid;
+		}
+
+		undef($depend_down);
+
+		# DNS NS are not currently used
+		#	create_slv_item('% of successful monthly RDDS43 resolution RTT', 'rsm.slv.rdds.43.rtt.month', $hostid, VALUE_TYPE_PERC, [get_application_id(APP_SLV_MONTHLY, $hostid)]);
+		#	create_slv_item('% of successful monthly RDDS80 resolution RTT', 'rsm.slv.rdds.80.rtt.month', $hostid, VALUE_TYPE_PERC, [get_application_id(APP_SLV_MONTHLY, $hostid)]);
+		#	create_slv_item('% of successful monthly RDDS update time', 'rsm.slv.rdds.upd.month', $hostid, VALUE_TYPE_PERC, [get_application_id(APP_SLV_MONTHLY, $hostid)]) if (defined($OPTS{'epp-servers'}));
+	}
 
     if (defined($OPTS{'epp-servers'})) {
 	create_slv_item('EPP availability', 'rsm.slv.epp.avail', $hostid, VALUE_TYPE_AVAIL, [get_application_id(APP_SLV_PARTTEST, $hostid)]);
@@ -1888,7 +1910,8 @@ sub get_services($) {
     return $result;
 }
 
-sub create_avail_trigger($$) {
+sub create_avail_trigger($$)
+{
 	my $service = shift;
 	my $host_name = shift;
 
@@ -1912,7 +1935,28 @@ sub create_avail_trigger($$) {
 	really(create_trigger($options, $host_name));
 }
 
-sub create_rollweek_trigger($$$$$) {
+sub create_downtime_trigger($$$$$)
+{
+	my $service = shift;
+	my $host_name = shift;
+	my $threshold = shift;
+	my $priority = shift;
+	my $created_ref = shift;
+
+	my $service_lc = lc($service);
+
+	my $options =
+	{
+		'description' => $service.' service was unavailable for '.$threshold.'% of allowed $1 in this month',
+		'expression' => '{'.$host_name.':rsm.slv.'.$service_lc.'.downtime.last(0)}>={$RSM.SLV.RDDS.DOWNTIME}*'.($threshold * 0.01),
+		'priority' => $priority
+	};
+
+	really(create_trigger($options, $host_name, $created_ref));
+}
+
+sub create_rollweek_trigger($$$$$)
+{
 	my $service = shift;
 	my $host_name = shift;
 	my $threshold = shift;

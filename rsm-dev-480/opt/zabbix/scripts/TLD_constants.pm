@@ -102,6 +102,14 @@ use constant rsm_trigger_rollweek_thresholds => {
 	'5' => {'threshold' => '100', 'priority' => 5}
 };
 
+use constant rsm_trigger_downtime_thresholds => {
+	'1' => {'threshold' => '10', 'priority' => 2},
+	'2' => {'threshold' => '25', 'priority' => 3},
+	'3' => {'threshold' => '50', 'priority' => 3},
+	'4' => {'threshold' => '75', 'priority' => 4},
+	'5' => {'threshold' => '100', 'priority' => 5}
+};
+
 use constant cfg_global_macros => {'{$RSM.DNS.UDP.DELAY}' => '', '{$RSM.DNS.TCP.DELAY}' => '', '{$RSM.RDDS.DELAY}' => '', '{$RSM.EPP.DELAY}' => ''};
 
 use constant cfg_probe_status_delay => 60;
@@ -157,7 +165,7 @@ our @EXPORT_OK = qw(
 	rsm_value_mappings cfg_probe_status_delay
 	PROBE_KEY_ONLINE
 	CONFIGVALUE_DNS_UDP_RTT_HIGH_ITEMID
-	cfg_default_rdds_ns_string rsm_trigger_rollweek_thresholds cfg_global_macros
+	cfg_default_rdds_ns_string rsm_trigger_rollweek_thresholds rsm_trigger_downtime_thresholds cfg_global_macros
 	HOST_STATUS_MONITORED HOST_STATUS_NOT_MONITORED HOST_STATUS_PROXY_ACTIVE HOST_STATUS_PROXY_PASSIVE HOST_ENCRYPTION_PSK ITEM_STATUS_ACTIVE
 	ITEM_STATUS_DISABLED INTERFACE_TYPE_AGENT DEFAULT_MAIN_INTERFACE TRIGGER_STATUS_DISABLED TRIGGER_STATUS_ENABLED
 	ITEM_VALUE_TYPE_FLOAT ITEM_VALUE_TYPE_STR ITEM_VALUE_TYPE_LOG ITEM_VALUE_TYPE_UINT64 ITEM_VALUE_TYPE_TEXT
@@ -196,7 +204,7 @@ our %EXPORT_TAGS = (
 			ITEM_TYPE_ZABBIX ITEM_TYPE_TRAPPER ITEM_TYPE_SIMPLE ITEM_TYPE_INTERNAL ITEM_TYPE_ZABBIX_ACTIVE
 			ITEM_TYPE_AGGREGATE ITEM_TYPE_EXTERNAL ITEM_TYPE_CALCULATED
 			TRIGGER_STATUS_DISABLED TRIGGER_STATUS_ENABLED)],
-	config => [ qw(cfg_probe_status_delay cfg_default_rdds_ns_string rsm_value_mappings rsm_trigger_rollweek_thresholds
+	config => [ qw(cfg_probe_status_delay cfg_default_rdds_ns_string rsm_value_mappings rsm_trigger_rollweek_thresholds rsm_trigger_downtime_thresholds
 			cfg_global_macros TLD_TYPE_G TLD_TYPE_CC TLD_TYPE_OTHER TLD_TYPE_TEST
 			RDDS_DOWN RDDS_UP RDDS_43_ONLY RDDS_80_ONLY) ],
 	slv => [ qw(APP_SLV_MONTHLY APP_SLV_ROLLWEEK APP_SLV_PARTTEST APP_SLV_CURMON) ],
