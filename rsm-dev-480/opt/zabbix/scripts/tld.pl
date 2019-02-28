@@ -1196,7 +1196,7 @@ sub create_slv_items {
 
 		create_slv_item('RDDS minutes of downtime', 'rsm.slv.rdds.downtime', $hostid, VALUE_TYPE_NUM, [get_application_id(APP_SLV_CURMON, $hostid)]);
 		
-		foreach my $position (sort keys %{$trigger_rollweek_thresholds})
+		foreach my $position (sort keys %{$trigger_downtime_thresholds})
 		{
 			my $threshold = $trigger_downtime_thresholds->{$position}->{'threshold'};
 			my $priority = $trigger_downtime_thresholds->{$position}->{'priority'};
