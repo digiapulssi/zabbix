@@ -6,6 +6,7 @@ New features:
 ....I..PS. [476] removed obsoleted DNS errors -252, -652 (dimir)
 
 Bug fixes:
+..F....... [479] fixed undefined index error when probe is disabled; fixed broken html table (miks)
 
 --------------------------------------------------------------------------------
 Changes for rsm1.1.0
