@@ -1,6 +1,7 @@
 Changes for rsm1.1.1
 
 New features:
+....I..... [478] increased "value" field of "lastvalue" table by double(24,4) to accept bigint values (dimir)
 ....I..... [477] added options to rsm.conf to specify maximum cycles to process in one SLV script run (dimir)
 ....I..PS. [476] removed obsoleted DNS errors -252, -652 (dimir)
 
