@@ -1,5 +1,8 @@
 Changes for rsm1.1.1
 
+New features:
+....I..PS. [476] removed obsoleted DNS errors -252, -652 (dimir)
+
 Bug fixes:
 
 --------------------------------------------------------------------------------
