@@ -71,6 +71,9 @@ use constant PROBE_NORESULT_STR => 'No result';
 
 use constant DETAILED_RESULT_DELIM => ', ';
 
+use constant DEFAULT_SLV_MAX_CYCLES => 10;	# maximum cycles to process by SLV scripts in 1 run, may be overriden
+						# by rsm.conf 'max_cycles_dns' and 'max_cycles_rdds'
+
 our ($result, $dbh, $tld, $server_key);
 
 our %OPTS; # specified command-line options
@@ -92,6 +95,7 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		get_templated_nsips db_exec tld_interface_enabled
 		tld_interface_enabled_create_cache tld_interface_enabled_delete_cache
 		db_select db_select_binds set_slv_config get_cycle_bounds get_rollweek_bounds get_downtime_bounds
+		slv_max_cycles
 		max_avail_time get_probe_times probe_offline_at probes2tldhostids
 		get_probe_online_key_itemid
 		init_values push_value send_values get_nsip_from_key is_service_error get_templated_items_like
@@ -1151,6 +1155,29 @@ sub get_downtime_bounds
 	my $from = $dt->epoch;
 
 	return ($from, $till, cycle_start($till, $delay));
+}
+
+# maximum cycles to process by SLV scripts
+sub slv_max_cycles($)
+{
+	my $service = shift;
+
+	my $var;
+
+	if ($service eq 'dns' || $service eq 'dnssec')
+	{
+		$var = 'max_cycles_dns';
+	}
+	elsif ($service eq 'rdds')
+	{
+		$var = 'max_cycles_rdds';
+	}
+	else
+	{
+		return DEFAULT_SLV_MAX_CYCLES;
+	}
+
+	return (defined($config) && defined($config->{'slv'}->{$var}) ? $config->{'slv'}->{$var} : DEFAULT_SLV_MAX_CYCLES);
 }
 
 # guaranteed time when Service availabilities are calculated
