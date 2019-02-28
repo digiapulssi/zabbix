@@ -77,8 +77,7 @@ sub get_tld_list();
 sub get_services($);
 sub set_linked_items_enabled($$$);
 
-my $trigger_rollweek_thresholds = rsm_trigger_rollweek_thresholds;
-my $trigger_downtime_thresholds = rsm_trigger_downtime_thresholds;
+my $trigger_thresholds = rsm_trigger_thresholds;
 
 my $cfg_global_macros = cfg_global_macros;
 
@@ -1139,9 +1138,9 @@ sub create_slv_items {
     my $depend_down;
     my $created;
 
-    foreach my $position (sort keys %{$trigger_rollweek_thresholds}) {
-	my $threshold = $trigger_rollweek_thresholds->{$position}->{'threshold'};
-	my $priority = $trigger_rollweek_thresholds->{$position}->{'priority'};
+    foreach my $position (sort keys %{$trigger_thresholds}) {
+	my $threshold = $trigger_thresholds->{$position}->{'threshold'};
+	my $priority = $trigger_thresholds->{$position}->{'priority'};
         next if ($threshold eq 0);
 
         my $result = create_rollweek_trigger('DNS', $host_name, $threshold, $priority, \$created);
@@ -1167,9 +1166,9 @@ sub create_slv_items {
         my $depend_down;
 	my $created;
 
-	foreach my $position (sort keys %{$trigger_rollweek_thresholds}) {
-    	    my $threshold = $trigger_rollweek_thresholds->{$position}->{'threshold'};
-    	    my $priority = $trigger_rollweek_thresholds->{$position}->{'priority'};
+	foreach my $position (sort keys %{$trigger_thresholds}) {
+    	    my $threshold = $trigger_thresholds->{$position}->{'threshold'};
+    	    my $priority = $trigger_thresholds->{$position}->{'priority'};
     	    next if ($threshold eq 0);
 
 	    my $result = create_rollweek_trigger('DNSSEC', $host_name, $threshold, $priority, \$created);
@@ -1196,10 +1195,10 @@ sub create_slv_items {
 
 		create_slv_item('RDDS minutes of downtime', 'rsm.slv.rdds.downtime', $hostid, VALUE_TYPE_NUM, [get_application_id(APP_SLV_CURMON, $hostid)]);
 		
-		foreach my $position (sort keys %{$trigger_downtime_thresholds})
+		foreach my $position (sort keys %{$trigger_thresholds})
 		{
-			my $threshold = $trigger_downtime_thresholds->{$position}->{'threshold'};
-			my $priority = $trigger_downtime_thresholds->{$position}->{'priority'};
+			my $threshold = $trigger_thresholds->{$position}->{'threshold'};
+			my $priority = $trigger_thresholds->{$position}->{'priority'};
 			next if ($threshold eq 0);
 
 			my $result = create_downtime_trigger('RDDS', $host_name, $threshold, $priority, \$created);
@@ -1218,10 +1217,10 @@ sub create_slv_items {
 
 		create_slv_item('RDDS weekly unavailability', 'rsm.slv.rdds.rollweek', $hostid, VALUE_TYPE_PERC, [get_application_id(APP_SLV_ROLLWEEK, $hostid)]);
 
-		foreach my $position (sort keys %{$trigger_rollweek_thresholds})
+		foreach my $position (sort keys %{$trigger_thresholds})
 		{
-			my $threshold = $trigger_rollweek_thresholds->{$position}->{'threshold'};
-			my $priority = $trigger_rollweek_thresholds->{$position}->{'priority'};
+			my $threshold = $trigger_thresholds->{$position}->{'threshold'};
+			my $priority = $trigger_thresholds->{$position}->{'priority'};
 			next if ($threshold eq 0);
 
 			my $result = create_rollweek_trigger('RDDS', $host_name, $threshold, $priority, \$created);
@@ -1259,9 +1258,9 @@ sub create_slv_items {
         my $depend_down;
 	my $created;
 
-	foreach my $position (sort keys %{$trigger_rollweek_thresholds}) {
-    	    my $threshold = $trigger_rollweek_thresholds->{$position}->{'threshold'};
-    	    my $priority = $trigger_rollweek_thresholds->{$position}->{'priority'};
+	foreach my $position (sort keys %{$trigger_thresholds}) {
+    	    my $threshold = $trigger_thresholds->{$position}->{'threshold'};
+    	    my $priority = $trigger_thresholds->{$position}->{'priority'};
     	    next if ($threshold eq 0);
 
 	    my $result = create_rollweek_trigger('EPP', $host_name, $threshold, $priority, \$created);
