@@ -14,8 +14,6 @@ use RSM;
 use RSMSLV;
 use TLD_constants qw(:api);
 
-use constant MAX_CYCLES	=> 5;
-
 my $cfg_key_in = 'rsm.slv.dns.avail';
 my $cfg_key_out = 'rsm.slv.dns.downtime';
 
@@ -51,7 +49,7 @@ my $cycles_ref = collect_slv_cycles(
 	$cfg_key_out,
 	ITEM_VALUE_TYPE_UINT64,
 	$max_clock,
-	(opt('cycles') ? getopt('cycles') : MAX_CYCLES)
+	(opt('cycles') ? getopt('cycles') : slv_max_cycles('dns'))
 );
 
 slv_exit(SUCCESS) if (scalar(keys(%{$cycles_ref})) == 0);

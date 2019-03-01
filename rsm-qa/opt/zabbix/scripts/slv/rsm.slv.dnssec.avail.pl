@@ -14,8 +14,6 @@ use RSM;
 use RSMSLV;
 use TLD_constants qw(:ec :api);
 
-use constant MAX_CYCLES	=> 5;
-
 my $cfg_keys_in_pattern = 'rsm.dns.udp.rtt[';
 my $cfg_key_out = 'rsm.slv.dnssec.avail';
 my $cfg_value_type = ITEM_VALUE_TYPE_FLOAT;
@@ -55,7 +53,7 @@ my $cycles_ref = collect_slv_cycles(
 	$cfg_key_out,
 	ITEM_VALUE_TYPE_UINT64,
 	$max_clock,
-	(opt('cycles') ? getopt('cycles') : MAX_CYCLES)
+	(opt('cycles') ? getopt('cycles') : slv_max_cycles('dnssec'))
 );
 
 slv_exit(SUCCESS) if (scalar(keys(%{$cycles_ref})) == 0);
