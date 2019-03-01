@@ -3243,7 +3243,8 @@ static int	DBpatch_3000302(void)
 	return SUCCEED;
 }
 
-static int	create_rdds_downtime_trigger(const char* hostid, int threshold, int priority, zbx_uint64_t *triggerid)
+static int	create_rdds_downtime_trigger(const char* hostid, const char* percent, const char* coeff,
+					const char* priority, zbx_uint64_t *triggerid)
 {
 	DB_RESULT	result;
 	DB_ROW		row;
@@ -3257,10 +3258,10 @@ static int	create_rdds_downtime_trigger(const char* hostid, int threshold, int p
 	if (ZBX_DB_OK > DBexecute(
 			"insert into triggers (triggerid,expression,description,"
 				"url,status,priority,comments,templateid,type,flags)"
-			"values (" ZBX_FS_UI64 ", '{" ZBX_FS_UI64 "}>={$RSM.SLV.RDDS.DOWNTIME}*%lf',"
-				"'RDDS service was unavailable for %d%% of allowed $1 in this month',"
-				"'', '0', '%d', '', NULL, '0', '0')",
-			*triggerid, functionid, ((double)threshold) * 0.01, threshold, priority))
+			"values (" ZBX_FS_UI64 ", '{" ZBX_FS_UI64 "}>={$RSM.SLV.RDDS.DOWNTIME}%s',"
+				"'RDDS service was unavailable for %s of allowed $1 in this month',"
+				"'', '0', '%s', '', NULL, '0', '0')",
+			*triggerid, functionid, coeff, percent, priority))
 	{
 		return FAIL;
 	}
@@ -3302,15 +3303,18 @@ static int	create_dependent_trigger_chain(const char *hostid)
 	zbx_uint64_t	triggerid = 0, dependid = 0;
 	int		i;
 
-	typedef struct{ int threshold, priority; } trigger_thresholds_t;
-
-	static trigger_thresholds_t	tt[5] = {
-		{10, 2}, {25, 3}, {50, 3}, {70, 4}, {100, 5}
+	/* percent, coeff, priority */
+	const char* strs[15] = {
+		"10%",		"*0.1",		"2",
+		"25%",		"*0.25",	"3",
+		"50%",		"*0.5",		"3",
+		"75%",		"*0.75",	"4",
+		"100%",		"",		"5"
 	};
 
-	for (i = 0; i < 5; i++)
+	for (i = 0; i < 15; i+=3)
 	{
-		if (SUCCEED != create_rdds_downtime_trigger(hostid, tt[i].threshold, tt[i].priority, &triggerid))
+		if (SUCCEED != create_rdds_downtime_trigger(hostid, strs[i], strs[i+1], strs[i+2], &triggerid))
 		{
 			return FAIL;
 		}
