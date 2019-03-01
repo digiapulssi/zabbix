@@ -113,7 +113,7 @@ foreach ($data['probes'] as $probe) {
 
 	if (array_key_exists('dns_udp_nameservers', $data)) {
 		foreach ($data['dns_udp_nameservers'] as $dns_udp_ns => $ipvs) {
-			if (array_key_exists($dns_udp_ns, $probe['results_udp'])) {
+			if (array_key_exists('results_udp', $probe) && array_key_exists($dns_udp_ns, $probe['results_udp'])) {
 				if (array_key_exists('status', $probe['results_udp'][$dns_udp_ns])) {
 					$row[] = ($probe['results_udp'][$dns_udp_ns]['status'] == NAMESERVER_DOWN) ? $down : $up;
 				}
@@ -150,13 +150,19 @@ foreach ($data['probes'] as $probe) {
 							}
 						}
 					}
+					else {
+						$cell_cnt = count($ipvs[$ipv]);
+						$row[] = ($cell_cnt > 1)
+							? (new CCol('-'))->setColSpan($cell_cnt)
+							: '-';
+					}
 				}
 			}
 			else {
 				$cell_cnt = 1;
-				$cell_cnt += array_key_exists('ipv4', $ipv) ? count($ipv['ipv4']) : 0;
-				$cell_cnt += array_key_exists('ipv6', $ipv) ? count($ipv['ipv6']) : 0;
-				$row[] = (new CTag('td', true, '-'))->setAttribute('colspan', $cell_cnt);
+				$cell_cnt += array_key_exists('ipv4', $ipvs) ? count($ipvs['ipv4']) : 0;
+				$cell_cnt += array_key_exists('ipv6', $ipvs) ? count($ipvs['ipv6']) : 0;
+				$row[] = ($cell_cnt > 1) ? (new CCol('-'))->setColSpan($cell_cnt) : '-';
 			}
 		}
 	}
