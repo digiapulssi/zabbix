@@ -3288,7 +3288,7 @@ static int	create_rdds_downtime_trigger(const char* hostid, int threshold, int p
 static int	create_trigger_dependency(zbx_uint64_t triggerid, zbx_uint64_t dependid)
 {
 	if (ZBX_DB_OK > DBexecute("insert into trigger_depends (triggerdepid, triggerid_down, triggerid_up)"
-					" values (" ZBX_FS_UI64 ", %s, %s)"),
+					" values (" ZBX_FS_UI64 ", " ZBX_FS_UI64 ", " ZBX_FS_UI64 ")"),
 					DBget_maxid("trigger_depends"), triggerid, dependid)
 	{
 		return FAIL;
@@ -3321,9 +3321,9 @@ static int	create_dependent_trigger_chain(const char *hostid)
 			{
 				return FAIL;
 			}
-
-			dependid = triggerid;
 		}
+
+		dependid = triggerid;
 	}
 
 	return SUCCEED;
