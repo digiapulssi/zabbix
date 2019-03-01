@@ -3298,7 +3298,7 @@ static int	create_trigger_dependency(zbx_uint64_t triggerid, zbx_uint64_t depend
 	return SUCCEED;
 }
 
-static int	create_dependent_trigger_chain(const char *hostid)
+static int	create_dependent_rdds_trigger_chain(const char *hostid)
 {
 	zbx_uint64_t	triggerid = 0, dependid = 0;
 	int		i;
@@ -3343,7 +3343,7 @@ static int	DBpatch_3000303(void)
 
 	while (NULL != (row = DBfetch(result)))
 	{
-		if (SUCCEED != create_dependent_trigger_chain(row[0]))
+		if (SUCCEED != create_dependent_rdds_trigger_chain(row[0]))
 			return FAIL;
 	}
 
