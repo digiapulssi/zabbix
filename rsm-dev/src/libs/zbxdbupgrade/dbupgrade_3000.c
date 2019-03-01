@@ -3181,6 +3181,25 @@ static int	DBpatch_3000236(void)
 	return DBpatch_3000226();
 }
 
+static int      DBpatch_3000237(void)
+{
+	if (ZBX_DB_OK > DBexecute("update mappings set newvalue='DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got NOERROR (obsolete)' where mappingid=12019"))
+		return FAIL;
+
+	if (ZBX_DB_OK > DBexecute("update mappings set newvalue='DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got NOERROR (obsolete)' where mappingid=12073"))
+		return FAIL;
+
+	return SUCCEED;
+}
+
+static int	DBpatch_3000238(void)
+{
+	if (ZBX_DB_OK > DBexecute("alter table lastvalue modify column value double(24,4) not null default 0.0"))
+		return FAIL;
+
+	return SUCCEED;
+}
+
 static int	DBpatch_3000300(void)
 {
 	return SUCCEED;
@@ -3326,6 +3345,8 @@ DBPATCH_ADD(3000233, 0, 0)	/* change global macro value {$PROBE.INTERNAL.ERROR.I
 DBPATCH_ADD(3000234, 0, 0)	/* add constraint on lastvalue table to delete obsoleted itemids */
 DBPATCH_ADD(3000235, 0, 0)	/* add trigger for item rsm.probe.status[manual] to alert on Probe knock out */
 DBPATCH_ADD(3000236, 0, 0)	/* disable "RDAP availability" items on hosts where RDAP is disabled (again) */
+DBPATCH_ADD(3000237, 0, 0)	/* mark DNS errors -252, -652 in mappings as obsoleted */
+DBPATCH_ADD(3000238, 0, 0)	/* increase "value" field of "lastvalue" table by double(24,4) to accept bigint values */
 DBPATCH_ADD(3000300, 0, 0)	/* Phase 3 */
 DBPATCH_ADD(3000301, 0, 0)	/* add lastvalue_str table */
 DBPATCH_ADD(3000302, 0, 1)	/* update and add new RSM.SLV.* macros */

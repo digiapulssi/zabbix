@@ -868,8 +868,6 @@ static int	zbx_rcode_not_nxdomain_to_ ## __interface (ldns_pkt_rcode rcode)\
 {										\
 	switch (rcode)								\
 	{									\
-		case LDNS_RCODE_NOERROR:					\
-			return ZBX_EC_ ## __interface ## _RCODE_NOERROR;	\
 		case LDNS_RCODE_FORMERR:					\
 			return ZBX_EC_ ## __interface ## _RCODE_FORMERR;	\
 		case LDNS_RCODE_SERVFAIL:					\
@@ -1134,7 +1132,12 @@ static int	zbx_verify_denial_of_existence(const ldns_pkt *pkt, zbx_dnssec_error_
 			goto out;
 		}
 
-		status = ldns_dnssec_verify_denial(ldns_rr_list_rr(question, 0), nsecs, rrsigs);
+		if (LDNS_RCODE_NXDOMAIN == ldns_pkt_get_rcode(pkt))
+		{
+			status = ldns_dnssec_verify_denial(ldns_rr_list_rr(question, 0), nsecs, rrsigs);
+		}
+		else
+			status = LDNS_STATUS_OK;
 
 		if (LDNS_STATUS_DNSSEC_NSEC_RR_NOT_COVERED == status)
 		{
@@ -1165,8 +1168,13 @@ static int	zbx_verify_denial_of_existence(const ldns_pkt *pkt, zbx_dnssec_error_
 			goto out;
 		}
 
-		status = ldns_dnssec_verify_denial_nsec3(ldns_rr_list_rr(question, 0), nsec3s, rrsigs,
-				ldns_pkt_get_rcode(pkt), LDNS_RR_TYPE_A, 1);
+		if (LDNS_RCODE_NXDOMAIN == ldns_pkt_get_rcode(pkt))
+		{
+			status = ldns_dnssec_verify_denial_nsec3(ldns_rr_list_rr(question, 0), nsec3s, rrsigs,
+					ldns_pkt_get_rcode(pkt), LDNS_RR_TYPE_A, 1);
+		}
+		else
+			status = LDNS_STATUS_OK;
 
 		if (LDNS_STATUS_DNSSEC_NSEC_RR_NOT_COVERED == status)
 		{
@@ -1468,7 +1476,7 @@ static int	zbx_get_ns_ip_values(ldns_resolver *res, const char *ns, const char *
 	}
 
 	/* verify RCODE */
-	if (LDNS_RCODE_NXDOMAIN != (rcode = ldns_pkt_get_rcode(pkt)))
+	if (LDNS_RCODE_NOERROR != (rcode = ldns_pkt_get_rcode(pkt)) && LDNS_RCODE_NXDOMAIN != rcode)
 	{
 		char	*rcode_str;
 

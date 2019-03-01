@@ -41,7 +41,8 @@ my %c = (
 	"t_serial"	=>	"ZBX_TYPE_UINT",
 	"t_shorttext"	=>	"ZBX_TYPE_SHORTTEXT",
 	"t_time"	=>	"ZBX_TYPE_INT",
-	"t_varchar"	=>	"ZBX_TYPE_CHAR"
+	"t_varchar"	=>	"ZBX_TYPE_CHAR",
+	"t_bigdouble"	=>	"ZBX_TYPE_FLOAT",
 );
 
 $c{"before"} = "/*
@@ -102,7 +103,8 @@ my %ibm_db2 = (
 	"t_serial"	=>	"bigint",
 	"t_shorttext"	=>	"varchar(2048)",
 	"t_time"	=>	"integer",
-	"t_varchar"	=>	"varchar"
+	"t_varchar"	=>	"varchar",
+	"t_bigdouble"	=>	"decfloat(24)"
 );
 
 my %mysql = (
@@ -123,7 +125,8 @@ my %mysql = (
 	"t_serial"	=>	"bigint unsigned",
 	"t_shorttext"	=>	"text",
 	"t_time"	=>	"integer",
-	"t_varchar"	=>	"varchar"
+	"t_varchar"	=>	"varchar",
+	"t_bigdouble"	=>	"double(24,4)"
 );
 
 my %oracle = (
@@ -144,7 +147,8 @@ my %oracle = (
 	"t_serial"	=>	"number(20)",
 	"t_shorttext"	=>	"nvarchar2(2048)",
 	"t_time"	=>	"number(10)",
-	"t_varchar"	=>	"nvarchar2"
+	"t_varchar"	=>	"nvarchar2",
+	"t_bigdouble"	=>	"number(24,4)"
 );
 
 my %postgresql = (
@@ -165,7 +169,8 @@ my %postgresql = (
 	"t_serial"	=>	"bigserial",
 	"t_shorttext"	=>	"text",
 	"t_time"	=>	"integer",
-	"t_varchar"	=>	"varchar"
+	"t_varchar"	=>	"varchar",
+	"t_bigdouble"	=>	"numeric(24,4)"
 );
 
 my %sqlite3 = (
@@ -186,7 +191,8 @@ my %sqlite3 = (
 	"t_serial"	=>	"integer",
 	"t_shorttext"	=>	"text",
 	"t_time"	=>	"integer",
-	"t_varchar"	=>	"varchar"
+	"t_varchar"	=>	"varchar",
+	"t_bigdouble"	=>	"double(24,4)"
 );
 
 sub rtrim($)

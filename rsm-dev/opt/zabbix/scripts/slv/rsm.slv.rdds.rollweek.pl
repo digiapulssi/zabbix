@@ -14,8 +14,6 @@ use RSM;
 use RSMSLV;
 use TLD_constants qw(:api);
 
-use constant MAX_CYCLES	=> 2;
-
 my $cfg_key_in = 'rsm.slv.rdds.avail';
 my $cfg_key_out = 'rsm.slv.rdds.rollweek';
 
@@ -55,7 +53,7 @@ my $cycles_ref = collect_slv_cycles(
 	$cfg_key_out,
 	ITEM_VALUE_TYPE_FLOAT,
 	$max_clock,
-	(opt('cycles') ? getopt('cycles') : MAX_CYCLES)
+	(opt('cycles') ? getopt('cycles') : slv_max_cycles('rdds'))
 );
 
 slv_exit(SUCCESS) if (scalar(keys(%{$cycles_ref})) == 0);
