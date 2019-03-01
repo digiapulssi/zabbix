@@ -3258,7 +3258,7 @@ static int	create_rdds_downtime_trigger(const char* hostid, int threshold, int p
 			"insert into triggers (triggerid,expression,description,"
 				"url,status,priority,comments,templateid,type,flags)"
 			"values (" ZBX_FS_UI64 ", '{" ZBX_FS_UI64 "}>={$RSM.SLV.RDDS.DOWNTIME}*%lf',"
-				"'service rdds was unavailable for %d% of allowed $1 in this month',"
+				"'RDDS service was unavailable for %d%% of allowed $1 in this month',"
 				"'', '0', '%d', '', NULL, '0', '0')",
 			triggerid, functionid, ((double)threshold) * 0.01, threshold, priority))
 	{
