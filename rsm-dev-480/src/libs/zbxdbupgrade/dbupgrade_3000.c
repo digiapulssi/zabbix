@@ -3243,15 +3243,15 @@ static int	DBpatch_3000302(void)
 	return SUCCEED;
 }
 
-static int	create_rdds_downtime_trigger(const char* hostid, int threshold, int priority)
+static int	create_rdds_downtime_trigger(const char* hostid, int threshold, int priority, zbx_uint64_t *triggerid)
 {
 	DB_RESULT	result;
 	DB_ROW		row;
-	zbx_uint64_t	triggerid, functionid, itemid;
+	zbx_uint64_t	functionid, itemid;
 
 	static const char*	itemkey = "rsm.slv.dns.downtime";
 
-	triggerid = DBget_maxid("triggers");
+	*triggerid = DBget_maxid("triggers");
 	functionid = DBget_maxid("functions");
 
 	if (ZBX_DB_OK > DBexecute(
@@ -3260,7 +3260,7 @@ static int	create_rdds_downtime_trigger(const char* hostid, int threshold, int p
 			"values (" ZBX_FS_UI64 ", '{" ZBX_FS_UI64 "}>={$RSM.SLV.RDDS.DOWNTIME}*%lf',"
 				"'RDDS service was unavailable for %d%% of allowed $1 in this month',"
 				"'', '0', '%d', '', NULL, '0', '0')",
-			triggerid, functionid, ((double)threshold) * 0.01, threshold, priority))
+			*triggerid, functionid, ((double)threshold) * 0.01, threshold, priority))
 	{
 		return FAIL;
 	}
@@ -3275,7 +3275,7 @@ static int	create_rdds_downtime_trigger(const char* hostid, int threshold, int p
 	if (ZBX_DB_OK > DBexecute(
 			"insert into functions (functionid,itemid,triggerid,function,parameter) values"
 			" (" ZBX_FS_UI64 ", %s," ZBX_FS_UI64 ",'last','0')",
-			functionid, row[0], triggerid))
+			functionid, row[0], *triggerid))
 	{
 		return FAIL;
 	}
@@ -3285,7 +3285,7 @@ static int	create_rdds_downtime_trigger(const char* hostid, int threshold, int p
 	return SUCCEED;
 }
 
-static int	create_trigger_dependency(const char *triggerid, const char *dependid)
+static int	create_trigger_dependency(zbx_uint64_t triggerid, zbx_uint64_t dependid)
 {
 	if (ZBX_DB_OK > DBexecute("insert into trigger_depends (triggerdepid, triggerid_down, triggerid_up)"
 					" values (" ZBX_FS_UI64 ", %s, %s)"),
@@ -3299,7 +3299,7 @@ static int	create_trigger_dependency(const char *triggerid, const char *dependid
 
 static int	create_dependent_trigger_chain(const char *hostid)
 {
-	const char	*triggerid = NULL, *dependid = NULL;
+	zbx_uint64_t	triggerid = 0, dependid = 0;
 	int		i;
 
 	typedef struct{ int threshold, priority; } trigger_thresholds_t;
@@ -3310,12 +3310,12 @@ static int	create_dependent_trigger_chain(const char *hostid)
 
 	for (i = 0; i < 5; i++)
 	{
-		if (SUCCEED != create_rdds_downtime_trigger(hostid, tt[i].threshold, tt[i].priority))
+		if (SUCCEED != create_rdds_downtime_trigger(hostid, tt[i].threshold, tt[i].priority, &triggerid))
 		{
 			return FAIL;
 		}
 
-		if (NULL != triggerid && NULL != dependid)
+		if (0 != triggerid && 0 != dependid)
 		{
 			if (SUCCEED != create_trigger_dependency(triggerid, dependid))
 			{
