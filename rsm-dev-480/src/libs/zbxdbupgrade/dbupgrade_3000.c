@@ -3285,9 +3285,21 @@ static int	create_rdds_downtime_trigger(const char* hostid, int threshold, int p
 	return SUCCEED;
 }
 
-static int	create_dependent_trigger_chain(const char* hostid)
+static int	create_trigger_dependency(const char *triggerid, const char *dependid)
 {
-	zbx_uint64_t	depend_down, created;
+	if (ZBX_DB_OK > DBexecute("insert into trigger_depends (triggerdepid, triggerid_down, triggerid_up)"
+					" values (" ZBX_FS_UI64 ", %s, %s)"),
+					DBget_maxid("trigger_depends"), triggerid, dependid)
+	{
+		return FAIL;
+	}
+
+	return SUCCEED;
+}
+
+static int	create_dependent_trigger_chain(const char *hostid)
+{
+	const char	*triggerid = NULL, *dependid = NULL;
 	int		i;
 
 	typedef struct{ int threshold, priority; } trigger_thresholds_t;
@@ -3298,7 +3310,20 @@ static int	create_dependent_trigger_chain(const char* hostid)
 
 	for (i = 0; i < 5; i++)
 	{
-		create_rdds_downtime_trigger(hostid, tt[i].threshold, tt[i].priority);
+		if (SUCCEED != create_rdds_downtime_trigger(hostid, tt[i].threshold, tt[i].priority))
+		{
+			return FAIL;
+		}
+
+		if (NULL != triggerid && NULL != dependid)
+		{
+			if (SUCCEED != create_trigger_dependency(triggerid, dependid))
+			{
+				return FAIL;
+			}
+
+			dependid = triggerid;
+		}
 	}
 }
 
@@ -3311,9 +3336,7 @@ static int	DBpatch_3000303(void)
 				" where hg.groupid=140");
 
 	while (NULL != (row = DBfetch(result)))
-	{
 		create_dependent_trigger_chain(row[0]);
-	}
 
 	DBfree_result(result);
 
