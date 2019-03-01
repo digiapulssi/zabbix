@@ -3288,6 +3288,63 @@ static int	DBpatch_3000302(void)
 	return SUCCEED;
 }
 
+static int	create_dns_downtime_trigger(const char* hostid)
+{
+	DB_RESULT	result;
+	DB_ROW		row;
+	zbx_uint64_t	triggerid, functionid;
+
+	const char*	itemkey = "rsm.slv.dns.downtime";
+
+	triggerid = DBget_maxid("triggers");
+	functionid = DBget_maxid("functions");
+
+	if (ZBX_DB_OK > DBexecute(
+			"insert into triggers (triggerid,expression,description,"
+				"url,status,priority,comments,templateid,type,flags)"
+			"values (" ZBX_FS_UI64 ", '{" ZBX_FS_UI64 "}>0', 'TLD {HOST.NAME} has DNS downtime',"
+				"'', '0', '4', '', NULL, '0', '0')",
+			triggerid, functionid))
+	{
+		return FAIL;
+	}
+
+	result = DBselect("select itemid from items where key_='%s' and hostid='%s'", itemkey, hostid);
+
+	if (NULL == (row = DBfetch(result)))
+	{
+		return FAIL;
+	}
+
+	if (ZBX_DB_OK > DBexecute(
+			"insert into functions (functionid,itemid,triggerid,function,parameter) values"
+			" (" ZBX_FS_UI64 ", %s," ZBX_FS_UI64 ",'last','0')",
+			functionid, row[0], triggerid))
+	{
+		return FAIL;
+	}
+
+	DBfree_result(result);
+}
+
+static int	DBpatch_3000303(void)
+{
+	DB_RESULT	result;
+	DB_ROW		row;
+
+	result = DBselect("select h.hostid, h.host from hosts h inner join hosts_groups hg on h.hostid=hg.hostid"
+				" where hg.groupid=140");
+
+	while (NULL != (row = DBfetch(result)))
+	{
+		create_dns_downtime_trigger(row[0]);
+	}
+
+	DBfree_result(result);
+
+	return SUCCEED;
+}
+
 static int	create_rdds_downtime_trigger(const char* hostid, const char* percent, const char* coeff,
 					const char* priority, zbx_uint64_t *triggerid)
 {
@@ -3378,7 +3435,7 @@ static int	create_dependent_rdds_trigger_chain(const char *hostid)
 	return SUCCEED;
 }
 
-static int	DBpatch_3000303(void)
+static int	DBpatch_3000304(void)
 {
 	DB_RESULT	result;
 	DB_ROW		row;
@@ -3485,6 +3542,7 @@ DBPATCH_ADD(3000238, 0, 0)	/* increase "value" field of "lastvalue" table by dou
 DBPATCH_ADD(3000300, 0, 0)	/* Phase 3 */
 DBPATCH_ADD(3000301, 0, 0)	/* add lastvalue_str table */
 DBPATCH_ADD(3000302, 0, 1)	/* update and add new RSM.SLV.* macros */
-DBPATCH_ADD(3000303, 0, 0)	/* add rdds downtime triggers */
+DBPATCH_ADD(3000303, 0, 0)	/* add DNS downtime trigger to existing tld hosts */
+DBPATCH_ADD(3000304, 0, 0)	/* add rdds downtime triggers to existing tld hosts */
 
 DBPATCH_END()
