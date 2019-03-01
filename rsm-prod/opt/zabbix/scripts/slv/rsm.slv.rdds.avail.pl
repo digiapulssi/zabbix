@@ -14,8 +14,6 @@ use RSM;
 use RSMSLV;
 use TLD_constants qw(:api);
 
-use constant MAX_CYCLES	=> 2;
-
 my $cfg_keys_in_pattern = 'rsm.rdds[{$RSM.TLD}';
 my $cfg_rdap_key_in = 'rdap[';
 my $cfg_key_out = 'rsm.slv.rdds.avail';
@@ -49,7 +47,7 @@ else
 
 slv_exit(SUCCESS) if (scalar(@{$tlds_ref}) == 0);
 
-my $cycles_ref = collect_slv_cycles($tlds_ref, $delay, $cfg_key_out, $max_clock, MAX_CYCLES);
+my $cycles_ref = collect_slv_cycles($tlds_ref, $delay, $cfg_key_out, $max_clock, slv_max_cycles('rdds'));
 
 slv_exit(SUCCESS) if (scalar(keys(%{$cycles_ref})) == 0);
 

@@ -61,7 +61,6 @@
 #define ZBX_EC_DNS_UDP_NODOMAIN		-251	/* DNS UDP - Querying for a non existent domain - Domain name being queried not present in question section */
 /* Error code for every assigned, non private DNS RCODE (with the exception of RCODE/NXDOMAIN) */
 /* as per: https://www.iana.org/assignments/dns-parameters/dns-parameters.xhtml */
-#define ZBX_EC_DNS_UDP_RCODE_NOERROR	-252	/* DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got NOERROR */
 #define ZBX_EC_DNS_UDP_RCODE_FORMERR	-253	/* DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got FORMERR */
 #define ZBX_EC_DNS_UDP_RCODE_SERVFAIL	-254	/* DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got SERVFAIL */
 #define ZBX_EC_DNS_UDP_RCODE_NOTIMP	-255	/* DNS UDP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got NOTIMP */
@@ -116,7 +115,6 @@
 #define ZBX_EC_DNS_TCP_NODOMAIN		-651	/* DNS TCP - Querying for a non existent domain - Domain name being queried not present in question section */
 /* Error code for every assigned, non private DNS RCODE (with the exception of RCODE/NXDOMAIN) */
 /* as per: https://www.iana.org/assignments/dns-parameters/dns-parameters.xhtml */
-#define ZBX_EC_DNS_TCP_RCODE_NOERROR	-652	/* DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got NOERROR */
 #define ZBX_EC_DNS_TCP_RCODE_FORMERR	-653	/* DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got FORMERR */
 #define ZBX_EC_DNS_TCP_RCODE_SERVFAIL	-654	/* DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got SERVFAIL */
 #define ZBX_EC_DNS_TCP_RCODE_NOTIMP	-655	/* DNS TCP - Querying for a non existent domain - Expecting NXDOMAIN RCODE but got NOTIMP */

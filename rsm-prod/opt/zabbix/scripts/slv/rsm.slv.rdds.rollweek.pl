@@ -13,8 +13,6 @@ use warnings;
 use RSM;
 use RSMSLV;
 
-use constant MAX_CYCLES	=> 2;
-
 my $cfg_key_in = 'rsm.slv.rdds.avail';
 my $cfg_key_out = 'rsm.slv.rdds.rollweek';
 
@@ -48,7 +46,7 @@ else
 
 slv_exit(SUCCESS) if (scalar(@{$tlds_ref}) == 0);
 
-my $cycles_ref = collect_slv_cycles($tlds_ref, $delay, $cfg_key_out, $max_clock, MAX_CYCLES);
+my $cycles_ref = collect_slv_cycles($tlds_ref, $delay, $cfg_key_out, $max_clock, slv_max_cycles('rdds'));
 
 slv_exit(SUCCESS) if (scalar(keys(%{$cycles_ref})) == 0);
 
