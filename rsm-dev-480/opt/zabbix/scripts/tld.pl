@@ -1158,6 +1158,7 @@ sub create_slv_items
 	create_slv_item('DNS weekly unavailability', 'rsm.slv.dns.rollweek', $hostid, VALUE_TYPE_PERC, [get_application_id(APP_SLV_ROLLWEEK, $hostid)]);
 	
 	create_avail_trigger('DNS', $host_name);
+	create_dns_downtime_trigger($host_name, 5);
 	create_dependent_trigger_chain($host_name, 'DNS', \&create_rollweek_trigger);
 
 	if (defined($OPTS{'dnssec'}))
@@ -1174,7 +1175,7 @@ sub create_slv_items
 		create_slv_item('RDDS minutes of downtime', 'rsm.slv.rdds.downtime', $hostid, VALUE_TYPE_NUM, [get_application_id(APP_SLV_CURMON, $hostid)]);
 		create_slv_item('RDDS weekly unavailability', 'rsm.slv.rdds.rollweek', $hostid, VALUE_TYPE_PERC, [get_application_id(APP_SLV_ROLLWEEK, $hostid)]);
 
-		create_dependent_trigger_chain($host_name, 'RDDS', \&create_downtime_trigger);
+		create_dependent_trigger_chain($host_name, 'RDDS', \&create_rdds_downtime_trigger);
 		create_dependent_trigger_chain($host_name, 'RDDS', \&create_rollweek_trigger);
 	}
 
@@ -1185,7 +1186,7 @@ sub create_slv_items
 		create_slv_item('EPP weekly unavailability', 'rsm.slv.epp.rollweek', $hostid, VALUE_TYPE_PERC, [get_application_id(APP_SLV_ROLLWEEK, $hostid)]);
 
 		create_avail_trigger('EPP', $host_name);
-		create_dependent_trigger_chain($host_name, 'RDDS', \&create_downtime_trigger);
+# 		create_dependent_trigger_chain($host_name, 'RDDS', \&create_downtime_trigger);
 	}
 }
 
@@ -1845,7 +1846,24 @@ sub create_avail_trigger($$)
 	really(create_trigger($options, $host_name));
 }
 
-sub create_downtime_trigger($$$$$)
+sub create_dns_downtime_trigger()
+{
+	my $host_name = shift;
+	my $priority = shift;
+
+	my $options =
+	{
+		'description' => 'TLD {HOST.NAME} has DNS downtime',
+		'expression' => '{'.$host_name.':rsm.slv.dns.downtime.last(0)}>0',
+		'priority' => $priority
+	};
+
+	my $created;
+
+	really(create_trigger($options, $host_name, \$created));
+}
+
+sub create_rdds_downtime_trigger($$$$$)
 {
 	my $service = shift;
 	my $host_name = shift;
