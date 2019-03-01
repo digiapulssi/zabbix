@@ -3234,8 +3234,34 @@ static int	DBpatch_3000301(void)
 	return SUCCEED;
 }
 
+static int	move_ids(const char* table_name, const char* idfield, int id, int count)
+{
+	DB_RESULT	result;
+	DB_ROW		row;
+
+	result = DBselect("select %s from %s where %s>=%d order by %s desc",
+			idfield, table_name, idfield, id, idfield);
+
+	while (NULL != (row = DBfetch(result)))
+	{
+		if (ZBX_DB_OK > DBexecute("update %s set %s=%d where %s=%s",
+				table_name, idfield, atoi(row[0]) + count, idfield, row[0]))
+		{
+			return FAIL;
+		}
+	}
+
+	if (ZBX_DB_OK > DBexecute("delete from ids where table_name='%s'", table_name))
+		return FAIL;
+
+	return SUCCEED;
+}
+
 static int	DBpatch_3000302(void)
 {
+	if (SUCCEED != move_ids("globalmacro", "globalmacroid", 102, 3))
+		return FAIL;
+
 	if (ZBX_DB_OK > DBexecute(
 			"insert into globalmacro (globalmacroid,macro,value)"
 			" values"
