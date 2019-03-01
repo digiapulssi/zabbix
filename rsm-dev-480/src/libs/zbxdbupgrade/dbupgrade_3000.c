@@ -3325,6 +3325,8 @@ static int	create_dependent_trigger_chain(const char *hostid)
 			dependid = triggerid;
 		}
 	}
+
+	return SUCCEED;
 }
 
 static int	DBpatch_3000303(void)
@@ -3336,7 +3338,10 @@ static int	DBpatch_3000303(void)
 				" where hg.groupid=140");
 
 	while (NULL != (row = DBfetch(result)))
-		create_dependent_trigger_chain(row[0]);
+	{
+		if (SUCCEED != create_dependent_trigger_chain(row[0]))
+			return FAIL;
+	}
 
 	DBfree_result(result);
 
