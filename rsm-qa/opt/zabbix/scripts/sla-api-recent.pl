@@ -193,29 +193,30 @@ sub process_server($)
 
 	my $server_tld_count = scalar(@{$server_tlds});
 
-	my $children_per_server = $server_tld_count if ($server_tld_count < $children_per_server);
-	my $tlds_per_child = int($server_tld_count / $children_per_server);
+	my $children_count = ($server_tld_count < $children_per_server ? $server_tld_count : $children_per_server);
+
+	my $tlds_per_child = int($server_tld_count / $children_count);
 
 	my $fm = new Parallel::ForkManager();
 	set_on_finish($fm);
-	$fm->set_max_procs($children_per_server - 1);	# we count this process as one of the children
+	$fm->set_max_procs($children_count - 1);	# we count this process as one of the children
 	$fm->run_on_wait(sub() {dbg("max children reached, please wait...");});
 
 	my $tldi_begin = 0;
 	my $tldi_end;
 
-	while ($children_per_server)
+	while ($children_count)
 	{
 		child_failed() if ($child_failed);
 
 		$tldi_end = $tldi_begin + $tlds_per_child;
 
 		# add one extra from remainder
-		$tldi_end++ if ($server_tld_count - $tldi_begin - ($children_per_server * $tlds_per_child));
+		$tldi_end++ if ($server_tld_count - $tldi_begin - ($children_count * $tlds_per_child));
 
 		my %child_data;
 
-		if ($children_per_server > 1)
+		if ($children_count > 1)
 		{
 			my $pid = $fm->start();
 
@@ -234,7 +235,7 @@ sub process_server($)
 			save_child_lastvalues_cache(\%child_data)
 		}
 
-		$children_per_server--;
+		$children_count--;
 	}
 
 	$fm->run_on_wait(undef);
