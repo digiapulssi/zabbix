@@ -123,7 +123,9 @@ $form = (new CForm())->setName('hosts');
 $table = (new CTableInfo())
 	->setHeader([
 		(new CColHeader(
-			(new CCheckBox('all_hosts'))->onClick("checkAll('".$form->getName()."', 'all_hosts', 'hosts');")
+			(new CCheckBox('all_hosts'))
+				->onClick("checkAllRange('".$form->getName()."', 'all_hosts', 'hosts');")
+				->addClass('checkbox-range')
 		))->addClass(ZBX_STYLE_CELL_WIDTH),
 		make_sorting_header(_('Name'), 'name', $data['sortField'], $data['sortOrder'], 'hosts.php'),
 		_('Applications'),
@@ -314,7 +316,7 @@ foreach ($data['hosts'] as $host) {
 	}
 
 	$table->addRow([
-		new CCheckBox('hosts['.$host['hostid'].']', $host['hostid']),
+		(new CCheckBox('hosts['.$host['hostid'].']', $host['hostid']))->addClass('checkbox-range'),
 		(new CCol($description))->addClass(ZBX_STYLE_NOWRAP),
 		[
 			new CLink(_('Applications'), 'applications.php?groupid='.$data['groupId'].'&hostid='.$host['hostid']),
@@ -352,7 +354,7 @@ foreach ($data['hosts'] as $host) {
 $form->addItem([
 	$table,
 	$data['paging'],
-	new CActionButtonList('action', 'hosts',
+	(new CActionButtonList('action', 'hosts',
 		[
 			'host.massenable' => ['name' => _('Enable'), 'confirm' => _('Enable selected hosts?')],
 			'host.massdisable' => ['name' => _('Disable'), 'confirm' => _('Disable selected hosts?')],
@@ -360,7 +362,8 @@ $form->addItem([
 			'host.massupdateform' => ['name' => _('Mass update')],
 			'host.massdelete' => ['name' => _('Delete'), 'confirm' => _('Delete selected hosts?')]
 		]
-	)
+	))
+		->setWidgetClass('chkboxRange')
 ]);
 
 $widget->addItem($form);
