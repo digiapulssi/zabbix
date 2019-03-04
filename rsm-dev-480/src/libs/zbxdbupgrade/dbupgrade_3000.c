@@ -3265,24 +3265,26 @@ static int	DBpatch_3000302(void)
 	if (ZBX_DB_OK > DBexecute(
 			"insert into globalmacro (globalmacroid,macro,value)"
 			" values"
-				" (102,'{$RSM.SLV.RDDS.RTT}',5),"
-				" (103,'{$RSM.SLV.DNS.DOWNTIME}',0),"
-				" (104,'{$RSM.SLV.RDDS.DOWNTIME}',864)"))
+				" (102,'{$RSM.SLV.RDDS.RTT}','5'),"
+				" (103,'{$RSM.SLV.DNS.DOWNTIME}','0'),"
+				" (104,'{$RSM.SLV.RDDS.DOWNTIME}','864')"))
 	{
 		return FAIL;
 	}
 
 	if (ZBX_DB_OK > DBexecute(
-			"update globalmacro set value=5"
-			" where macro='{$RSM.SLV.RDDS43.RTT}'"
-			" or    macro='{$RSM.SLV.RDDS80.RTT}'"
-			" or    macro='{$RSM.SLV.DNS.UDP.RTT}'"
-			" or    macro='{$RSM.SLV.DNS.TCP.RTT}'"))
+			"update globalmacro"
+			" set value='5'"
+			" where macro in ("
+				"'{$RSM.SLV.RDDS43.RTT}',"
+				"'{$RSM.SLV.RDDS80.RTT}',"
+				"'{$RSM.SLV.DNS.UDP.RTT}',"
+				"'{$RSM.SLV.DNS.TCP.RTT}')"))
 	{
 		return FAIL;
 	}
 
-	if (ZBX_DB_OK > DBexecute("update globalmacro set value=432 where macro='{$RSM.SLV.NS.AVAIL}'"))
+	if (ZBX_DB_OK > DBexecute("update globalmacro set value='432' where macro='{$RSM.SLV.NS.AVAIL}'"))
 		return FAIL;
 
 	return SUCCEED;
