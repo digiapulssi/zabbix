@@ -1278,6 +1278,8 @@ define('RSM_RDDS',			2);
 define('RSM_EPP',			3);
 
 // SLA monitoring macros
+define('RSM_RDDS_RTT_LOW',			'{$RSM.RDDS.RTT.LOW}');
+define('RSM_SLV_MACRO_RDDS_RTT',	'{$RSM.SLV.RDDS.RTT}');
 define('RSM_SLV_MACRO_DNS_AVAIL',	'{$RSM.SLV.DNS.AVAIL}');
 define('RSM_SLV_MACRO_RDDS_AVAIL',	'{$RSM.SLV.RDDS.AVAIL}');
 define('RSM_SLV_MACRO_EPP_AVAIL',	'{$RSM.SLV.EPP.AVAIL}');
@@ -1320,6 +1322,8 @@ define('RSM_SLV_RDDS_ROLLWEEK',		'rsm.slv.rdds.rollweek');
 define('RSM_SLV_EPP_ROLLWEEK',		'rsm.slv.epp.rollweek');
 
 // SLA monitoring availability items keys
+define('RSM_SLV_DNS_TCP_NS_TESTS_PFAILED',	'rsm.slv.dns.tcp.ns.tests.pfailed');
+define('RSM_SLV_DNS_UDP_NS_TESTS_PFAILED',	'rsm.slv.dns.udp.ns.tests.pfailed');
 define('RSM_SLV_DNS_AVAIL',					'rsm.slv.dns.avail');
 define('RSM_SLV_DNS_DOWNTIME',				'rsm.slv.dns.downtime');
 define('RSM_SLV_DNS_NS_DOWNTIME',			'rsm.slv.dns.ns.downtime');
