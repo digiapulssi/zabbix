@@ -3303,7 +3303,7 @@ static int	create_dns_downtime_trigger(const char* hostid)
 			"insert into triggers (triggerid,expression,description,"
 				"url,status,priority,comments,templateid,type,flags)"
 			"values (" ZBX_FS_UI64 ", '{" ZBX_FS_UI64 "}>0', 'TLD {HOST.NAME} has DNS downtime',"
-				"'', '0', '4', '', NULL, '0', '0')",
+				"'', '0', '5', '', NULL, '0', '0')",
 			triggerid, functionid))
 	{
 		return FAIL;
