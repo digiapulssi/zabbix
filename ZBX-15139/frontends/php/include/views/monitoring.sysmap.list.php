@@ -53,7 +53,9 @@ $sysmapForm = (new CForm())->setName('frm_maps');
 $sysmapTable = (new CTableInfo())
 	->setHeader([
 		(new CColHeader(
-			(new CCheckBox('all_maps'))->onClick("checkAll('".$sysmapForm->getName()."', 'all_maps', 'maps');")
+			(new CCheckBox('all_maps'))
+				->onClick("checkAllRange('".$sysmapForm->getName()."', 'all_maps', 'maps');")
+				->addClass('checkbox-range')
 		))->addClass(ZBX_STYLE_CELL_WIDTH),
 		make_sorting_header(_('Name'), 'name', $this->data['sort'], $this->data['sortorder']),
 		make_sorting_header(_('Width'), 'width', $this->data['sort'], $this->data['sortorder']),
@@ -75,7 +77,7 @@ foreach ($this->data['maps'] as $map) {
 		$constructor = '';
 	}
 	$sysmapTable->addRow([
-		$checkbox,
+		$checkbox->addClass('checkbox-range'),
 		new CLink($map['name'], 'zabbix.php?action=map.view&sysmapid='.$map['sysmapid']),
 		$map['width'],
 		$map['height'],
@@ -87,10 +89,11 @@ foreach ($this->data['maps'] as $map) {
 $sysmapForm->addItem([
 	$sysmapTable,
 	$this->data['paging'],
-	new CActionButtonList('action', 'maps', [
+	(new CActionButtonList('action', 'maps', [
 		'map.export' => ['name' => _('Export')],
 		'map.massdelete' => ['name' => _('Delete'), 'confirm' => _('Delete selected maps?')]
-	])
+	]))
+		->setWidgetClass('chkboxRange')
 ]);
 
 // append form to widget

@@ -543,8 +543,13 @@ elseif (hasRequest('action') && getRequest('action') == 'trigger.massdelete' && 
 			'triggerids' => $group_triggerid,
 			'preservekeys' => true
 		]);
-		updateSessionStorage(getRequest('hostid'), array_column($triggerids, 'triggerid', 'triggerid'));
 
+		if ($triggerids) {
+			updateSessionStorage(getRequest('hostid'), array_column($triggerids, 'triggerid', 'triggerid'));
+		}
+		else {
+			clearSessionStorage(getRequest('hostid'));
+		}
 	}
 	show_messages($result, _('Triggers deleted'), _('Cannot delete triggers'));
 }

@@ -1282,7 +1282,12 @@ elseif (hasRequest('action') && getRequest('action') === 'item.massdelete' && ha
 			'preservekeys' => true
 		]);
 
-		updateSessionStorage(getRequest('hostid'), array_column($itemids, 'itemid', 'itemid'));
+		if ($itemids) {
+			updateSessionStorage(getRequest('hostid'), array_column($itemids, 'itemid', 'itemid'));
+		}
+		else {
+			clearSessionStorage(getRequest('hostid'));
+		}
 	}
 
 	show_messages($result, _('Items deleted'), _('Cannot delete items'));
