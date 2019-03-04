@@ -52,7 +52,8 @@ $hostGroupTable = (new CTableInfo())
 	->setHeader([
 		(new CColHeader(
 			(new CCheckBox('all_groups'))
-				->onClick("checkAll('".$hostGroupForm->getName()."', 'all_groups', 'groups');")
+				->onClick("checkAllRange('".$hostGroupForm->getName()."', 'all_groups', 'groups');")
+				->addClass('checkbox-range')
 		))->addClass(ZBX_STYLE_CELL_WIDTH),
 		make_sorting_header(_('Name'), 'name', $this->data['sort'], $this->data['sortorder']),
 		_('Hosts'),
@@ -132,7 +133,7 @@ foreach ($this->data['groups'] as $group) {
 	}
 
 	$hostGroupTable->addRow([
-		new CCheckBox('groups['.$group['groupid'].']', $group['groupid']),
+		(new CCheckBox('groups['.$group['groupid'].']', $group['groupid']))->addClass('checkbox-range'),
 		(new CCol($name))->addClass(ZBX_STYLE_NOWRAP),
 		[new CLink(_('Hosts'), 'hosts.php?groupid='.$group['groupid']), CViewHelper::showNum($hostCount)],
 		[
@@ -148,13 +149,14 @@ foreach ($this->data['groups'] as $group) {
 $hostGroupForm->addItem([
 	$hostGroupTable,
 	$this->data['paging'],
-	new CActionButtonList('action', 'groups', [
+	(new CActionButtonList('action', 'groups', [
 		'hostgroup.massenable' => ['name' => _('Enable hosts'), 'confirm' => _('Enable selected hosts?')],
 		'hostgroup.massdisable' => ['name' => _('Disable hosts'),
 			'confirm' => _('Disable hosts in the selected host groups?')
 		],
 		'hostgroup.massdelete' => ['name' => _('Delete'), 'confirm' => _('Delete selected host groups?')]
-	])
+	]))
+		->setWidgetClass('chkboxRange')
 ]);
 
 // append form to widget

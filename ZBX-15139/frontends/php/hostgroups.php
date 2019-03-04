@@ -61,6 +61,8 @@ check_fields($fields);
 /*
  * Form actions
  */
+$result = false;
+
 if (hasRequest('form')) {
 	if (hasRequest('clone')) {
 		unset($_REQUEST['groupid']);
@@ -120,7 +122,6 @@ if (hasRequest('form')) {
 
 		if ($result) {
 			unset($_REQUEST['form']);
-			uncheckTableRows();
 		}
 		show_messages($result, $messageSuccess, $messageFailed);
 	}
@@ -129,7 +130,6 @@ if (hasRequest('form')) {
 
 		if ($result) {
 			unset($_REQUEST['form']);
-			uncheckTableRows();
 		}
 		show_messages($result, _('Group deleted'), _('Cannot delete group'));
 
@@ -148,8 +148,18 @@ elseif (hasRequest('action')) {
 
 			$updated = count($groupIds);
 
-			if ($result) {
-				uncheckTableRows();
+			if (!$result) {
+				$groups = API::HostGroup()->get([
+					'output' => ['groupid', 'name'],
+					'groupids' => array_keys($groupIds)
+				]);
+
+				if ($groups) {
+					updateSessionStorage(null, array_column($groups, 'groupid', 'groupid'));
+				}
+				else {
+					clearSessionStorage();
+				}
 			}
 			show_messages($result,
 				_n('Group deleted', 'Groups deleted', $updated),
@@ -192,10 +202,6 @@ elseif (hasRequest('action')) {
 
 			$result = DBend($result);
 
-			if ($result) {
-				uncheckTableRows();
-			}
-
 			$updated = count($hosts);
 
 			$messageSuccess = $enable
@@ -208,6 +214,10 @@ elseif (hasRequest('action')) {
 			show_messages($result, $messageSuccess, $messageFailed);
 		}
 	}
+}
+
+if ($result) {
+	clearSessionStorage();
 }
 
 /*
