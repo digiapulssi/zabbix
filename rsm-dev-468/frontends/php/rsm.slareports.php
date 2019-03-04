@@ -55,9 +55,9 @@ if ((PAGE_TYPE_JS == $page['type']) || (PAGE_TYPE_HTML_BLOCK == $page['type'])) 
 	exit();
 }
 
+$error = '';
 $data = [
 	'tld' => [],
-	'services' => [],
 	'url' => '',
 	'sid' => CWebUser::getSessionCookie(),
 	'filter_search' => getRequest('filter_search'),
@@ -147,6 +147,7 @@ if ($data['tld']) {
 
 	// Get TLD items.
 	$items = zbx_toHash($data['tld']['items'], 'key_');
+	unset($data['tld']['items']);
 	$slv_keys = array_intersect($item_keys, array_keys($items));
 
 	if (count($slv_keys) != count($item_keys)) {
@@ -164,64 +165,87 @@ if ($data['tld']) {
 		'filter' => ['macro' => $macro_keys]
 	]);
 	$macros = zbx_toHash($macros, 'macro');
+	$macros = array_merge($macros, zbx_toHash($data['tld']['macros'], 'macro'));
+	unset($data['tld']['macros']);
 	$slv_keys = array_intersect($macro_keys, array_keys($macros));
+	$undefined_macro = array_diff($macro_keys, $slv_keys);
 
-	if (count($slv_keys) != count($macros)) {
-		show_error_message(_s('Configuration error, cannot find macros: "%1$s".', implode(', ',
-			array_diff($macros, $slv_keys)))
-		);
+	if ($undefined_macro) {
+		show_error_message(_s('Configuration error, cannot find macros: "%1$s".', implode(', ', $undefined_macro)));
 
 		require_once dirname(__FILE__).'/include/page_footer.php';
 		exit;
 	}
 
-	$macros = array_merge($macros, zbx_toHash($data['tld']['macros'], 'macro'));
 	$data['macro'] = [];
-	foreach ($macros as $macro_key => $macro) {
-		$data['macro'][$macro_key] = $macro['value'];
+	foreach ($macro_keys as $macro_key) {
+		$data['macro'][$macro_key] = $macros[$macro_key]['value'];
 	}
 
-	$ns_items = [];
+	$db_items = [];
 	foreach ($item_keys as $key_) {
-		$ns_items[$key_] = $items[$key_]['itemid'];
+		$db_items[$key_] = $items[$key_]['itemid'];
 	}
 
 	foreach ($items as $key => $item) {
 		if (strpos($key, RSM_SLV_DNS_NS_DOWNTIME) === 0) {
-			$ns_items[$key] = $item['itemid'];
+			$db_items[$key] = $item['itemid'];
 		}
 	}
 
 	$values = [];
 	$item_key_parser = new CItemKey();
-	foreach ($ns_items as $key_ => $itemid) {
+	foreach ($db_items as $key_ => $itemid) {
+		/**
+		 * CHistory request with 'output' set to ['clock', 'value'] will return only 'itemid'
+		 * therefore API_OUTPUT_EXTEND is used instead.
+		 */
 		$history = API::History()->get([
-			'output' => ['clock', 'value'],
+			'output' => API_OUTPUT_EXTEND,
 			'itemids' => $itemid,
+			'history' => ITEM_VALUE_TYPE_UINT64,
 			'time_from' => $start_time,
 			'time_to' => $end_time
 		]);
 
-		$history = $history ? CArrayHelper::sort($history, ['clock']) : [];
-		$from = reset($history);
-		$to = end($history);
+		if ($history) {
+			CArrayHelper::sort($history, ['clock']);
+			$from = reset($history);
+			$to = end($history);
+		} else {
+			$from = $to = [
+				'clock' => 0,
+				'value' => 0
+			];
+		}
+
 		$values[$key_] = [
 			'from' => $from['clock'],
 			'to' => $to['clock'],
 			'slv' => $to['value']
 		];
 
-		if (strpos($key, RSM_SLV_DNS_NS_DOWNTIME) === 0) {
+		if (strpos($key_, RSM_SLV_DNS_NS_DOWNTIME) === 0) {
 			$item_key_parser->parse($key_);
-			$values[$key_]['details'] = $item_key_parser->getParam(0)[0];
+			$values[$key_]['host'] = $item_key_parser->getParam(0);
+			$values[$key_]['ip'] = $item_key_parser->getParam(1);
 			$values[$key_]['nsitem'] = true;
 		}
 	}
 
 	$data['values'] = $values;
 
-	$DB = $master;
-	DBconnect($error);
+	if ($DB === $master) {
+		$data['rolling_week_url'] = (new CUrl('rsm.rollingweekstatus.php'))->getUrl();
+	}
+	else {
+		$DB = $master;
+
+		$data['rolling_week_url'] = (new CUrl($data['url'].'rsm.rollingweekstatus.php'))
+			->setArgument('sid', $data['sid'])
+			->setArgument('set_sid', 1)
+			->getUrl();
+	}
 }
 
 (new CView('rsm.slareports.list', $data))

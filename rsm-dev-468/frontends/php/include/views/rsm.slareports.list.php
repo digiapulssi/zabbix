@@ -28,47 +28,43 @@ $widget->addItem(
 	(new CFilter('web.rsm.slareports.filter.state'))->addColumn(
 		(new CFormList())
 			->addVar('filter_set', 1)
-			->addRow(_('TLD'), (new CTextBox('filter_search', $this->data['filter_search']))
+			->addRow(_('TLD'), (new CTextBox('filter_search', $data['filter_search']))
 				->setWidth(ZBX_TEXTAREA_FILTER_STANDARD_WIDTH)
 				->setAttribute('autocomplete', 'off')
 			)
 			->addRow(_('Period'), [
-				new CComboBox('filter_month', $this->data['filter_month'], null, array_combine($months,
+				new CComboBox('filter_month', $data['filter_month'], null, array_combine($months,
 					array_map('getMonthCaption', $months))),
 				SPACE,
-				new CComboBox('filter_year', $this->data['filter_year'], null, array_combine($years, $years))
+				new CComboBox('filter_year', $data['filter_year'], null, array_combine($years, $years))
 			])
 	)
 );
 
-if ($data['tld']) {
-	$widget->additem((new CDiv())
-		->addClass(ZBX_STYLE_TABLE_FORMS_CONTAINER)
-		->addItem([
-			bold(_s('Period: %1$s - %2$s', date('Y/m/d H:i:s', $data['start_time']),
-				date('Y/m/d H:i:s', $data['end_time'] - 1))), BR(),
-			bold(_s('Generation time: %1$s', date('dS F Y, H:i:s e', time()))), BR(),
-			bold(_s('TLD: %1$s', $data['tld']['name'])), BR(),
-			bold(_('Server: ')), new CLink($this->data['server'],
-				$this->data['url'].'rsm.rollingweekstatus.php?sid='.$this->data['sid'].'&set_sid=1'
-			)
-		])
-	);
-}
-
-$table = (new CTableInfo())
-	->setHeader([
-		_('Service'),
-		_('FQDN and IP'),
-		_('From'),
-		_('To'),
-		_('SLV'),
-		_('Monthly SLR')
+$table = (new CTableInfo())->setHeader([
+	_('Service'),
+	_('FQDN and IP'),
+	_('From'),
+	_('To'),
+	_('SLV'),
+	_('Monthly SLR')
 ]);
 
-if (!array_key_exists('values', $data)) {
+if (!$data['tld']) {
 	return $widget->addItem($table);
 }
+
+// TLD details.
+$widget->additem((new CDiv())
+	->addClass(ZBX_STYLE_TABLE_FORMS_CONTAINER)
+	->addItem([
+		bold(_s('Period: %1$s - %2$s', date('Y/m/d H:i:s', $data['start_time']),
+			date('Y/m/d H:i:s', $data['end_time'] - 1))), BR(),
+		bold(_s('Generation time: %1$s', gmdate('dS F Y, H:i:s e', time()))), BR(),
+		bold(_s('TLD: %1$s', $data['tld']['name'])), BR(),
+		bold(_('Server: ')), new CLink($data['server'], $data['rolling_week_url'])
+	])
+);
 
 // DNS Server Availability.
 $table->addRow([
@@ -88,9 +84,9 @@ foreach ($data['values'] as $item) {
 
 	$table->addRow([
 		_('DNS Name Server availability'),
-		$item['details'],
-		$item['from'],
-		$item['to'],
+		implode(', ', array_filter([$item['host'], $item['ip']], 'strlen')),
+		gmdate('Y-m-d H:i:s', $item['from']),
+		gmdate('Y-m-d H:i:s', $item['to']),
 		_s('%1$s (minutes of downtime)', $item['slv']),
 		_s('%1$s (minutes of downtime)', $data['macro'][RSM_SLV_NS_AVAIL])
 	]);
@@ -138,8 +134,8 @@ if (array_key_exists(RSM_SLV_RDDS_DOWNTIME, $data['values'])) {
 		_s('%1$s %% (queries <= %2$s ms)', $data['values'][RSM_SLV_RDDS_UPD_PFAILED]['slv'],
 			$data['macro'][RSM_RDDS_RTT_LOW]
 		),
-		_s('<= %1$s ms, for at least %2$s %% of the queries', $data['macro'][RSM_SLV_MACRO_RDDS_RTT],
-			$data['macro'][RSM_RDDS_RTT_LOW]
+		_s('<= %1$s ms, for at least %2$s %% of the queries', $data['macro'][RSM_RDDS_RTT_LOW],
+			$data['macro'][RSM_SLV_MACRO_RDDS_RTT]
 		)
 	]);
 }
