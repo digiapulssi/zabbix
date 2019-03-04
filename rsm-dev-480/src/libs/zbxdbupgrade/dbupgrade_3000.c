@@ -3543,6 +3543,6 @@ DBPATCH_ADD(3000300, 0, 0)	/* Phase 3 */
 DBPATCH_ADD(3000301, 0, 0)	/* add lastvalue_str table */
 DBPATCH_ADD(3000302, 0, 0)	/* update and add new RSM.SLV.* macros */
 DBPATCH_ADD(3000303, 0, 0)	/* add DNS downtime trigger to existing tld hosts */
-DBPATCH_ADD(3000304, 0, 0)	/* add rdds downtime triggers to existing tld hosts */
+DBPATCH_ADD(3000304, 0, 0)	/* add RDDS downtime triggers to existing tld hosts */
 
 DBPATCH_END()
