@@ -3375,6 +3375,6 @@ DBPATCH_ADD(3000237, 0, 0)	/* mark DNS errors -252, -652 in mappings as obsolete
 DBPATCH_ADD(3000238, 0, 0)	/* increase "value" field of "lastvalue" table by double(24,4) to accept bigint values */
 DBPATCH_ADD(3000300, 0, 0)	/* Phase 3 */
 DBPATCH_ADD(3000301, 0, 0)	/* add lastvalue_str table */
-DBPATCH_ADD(3000302, 0, 1)	/* update and add new RSM.SLV.* macros */
+DBPATCH_ADD(3000302, 0, 0)	/* update and add new RSM.SLV.* macros */
 
 DBPATCH_END()
