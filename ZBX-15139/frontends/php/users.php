@@ -115,23 +115,13 @@ if (hasRequest('action')) {
 	if (!hasRequest('group_userid') || !is_array(getRequest('group_userid'))) {
 		access_deny();
 	}
-	else {
-		$usersChk = API::User()->get([
-			'output' => ['userid'],
-			'userids' => getRequest('group_userid'),
-			'countOutput' => true,
-			'editable' => true
-		]);
-		if ($usersChk != count(getRequest('group_userid'))) {
-			access_deny();
-		}
-	}
 }
 
 /*
  * Actions
  */
 $config = select_config();
+$result = false;
 
 if (isset($_REQUEST['new_media'])) {
 	$_REQUEST['user_medias'] = getRequest('user_medias', []);
@@ -260,12 +250,29 @@ elseif (hasRequest('action') && getRequest('action') == 'user.massunblock' && ha
 	show_messages($result, _('Users unblocked'), _('Cannot unblock users'));
 }
 elseif (hasRequest('action') && getRequest('action') == 'user.massdelete' && hasRequest('group_userid')) {
-	$result = API::User()->delete(getRequest('group_userid'));
+	$userids = getRequest('group_userid', []);
 
-	if ($result) {
-		uncheckTableRows();
+	$result = API::User()->delete($userids);
+
+	if (!$result) {
+		$users = API::User()->get([
+			'output' => ['userid', 'alias'],
+			'editable' => true,
+			'userids' => array_keys($userids)
+		]);
+
+		if ($users) {
+			updateSessionStorage(null, array_column($users, 'userid', 'userid'));
+		}
+		else {
+			clearSessionStorage();
+		}
 	}
 	show_messages($result, _('User deleted'), _('Cannot delete user'));
+}
+
+if ($result) {
+	clearSessionStorage();
 }
 
 /*

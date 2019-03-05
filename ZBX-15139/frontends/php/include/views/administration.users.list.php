@@ -78,7 +78,9 @@ $usersForm = (new CForm())->setName('userForm');
 $usersTable = (new CTableInfo())
 	->setHeader([
 		(new CColHeader(
-			(new CCheckBox('all_users'))->onClick("checkAll('".$usersForm->getName()."', 'all_users', 'group_userid');")
+			(new CCheckBox('all_users'))
+				->onClick("checkAllRange('".$usersForm->getName()."', 'all_users', 'group_userid');")
+				->addClass('checkbox-range')
 		))->addClass(ZBX_STYLE_CELL_WIDTH),
 		make_sorting_header(_('Alias'), 'alias', $this->data['sort'], $this->data['sortorder']),
 		make_sorting_header(_x('Name', 'user first name'), 'name', $this->data['sort'], $this->data['sortorder']),
@@ -164,7 +166,7 @@ foreach ($this->data['users'] as $user) {
 
 	// append user to table
 	$usersTable->addRow([
-		new CCheckBox('group_userid['.$userId.']', $userId),
+		(new CCheckBox('group_userid['.$userId.']', $userId))->addClass('checkbox-range'),
 		(new CCol($alias))->addClass(ZBX_STYLE_NOWRAP),
 		$user['name'],
 		$user['surname'],
@@ -186,10 +188,11 @@ foreach ($this->data['users'] as $user) {
 $usersForm->addItem([
 	$usersTable,
 	$this->data['paging'],
-	new CActionButtonList('action', 'group_userid', [
+	(new CActionButtonList('action', 'group_userid', [
 		'user.massunblock' => ['name' => _('Unblock'), 'confirm' => _('Unblock selected users?')],
 		'user.massdelete' => ['name' => _('Delete'), 'confirm' => _('Delete selected users?')]
-	])
+	]))
+		->setWidgetClass('chkboxRange')
 ]);
 
 // append form to widget
