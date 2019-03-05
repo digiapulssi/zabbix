@@ -1172,9 +1172,11 @@ sub create_slv_items
 
 	if (defined($OPTS{'rdds43-servers'}) || defined($OPTS{'rdap-base-url'}))
 	{
+		create_slv_item('RDDS availability', 'rsm.slv.rdds.avail', $hostid, VALUE_TYPE_AVAIL, [get_application_id(APP_SLV_PARTTEST, $hostid)]);
 		create_slv_item('RDDS minutes of downtime', 'rsm.slv.rdds.downtime', $hostid, VALUE_TYPE_NUM, [get_application_id(APP_SLV_CURMON, $hostid)]);
 		create_slv_item('RDDS weekly unavailability', 'rsm.slv.rdds.rollweek', $hostid, VALUE_TYPE_PERC, [get_application_id(APP_SLV_ROLLWEEK, $hostid)]);
 
+		create_avail_trigger('RDDS', $host_name);
 		create_dependent_trigger_chain($host_name, 'RDDS', \&create_rdds_downtime_trigger);
 		create_dependent_trigger_chain($host_name, 'RDDS', \&create_rollweek_trigger);
 	}
@@ -1186,7 +1188,7 @@ sub create_slv_items
 		create_slv_item('EPP weekly unavailability', 'rsm.slv.epp.rollweek', $hostid, VALUE_TYPE_PERC, [get_application_id(APP_SLV_ROLLWEEK, $hostid)]);
 
 		create_avail_trigger('EPP', $host_name);
-# 		create_dependent_trigger_chain($host_name, 'RDDS', \&create_downtime_trigger);
+# 		create_dependent_trigger_chain($host_name, 'EPP', \&create_downtime_trigger);
 	}
 }
 
