@@ -3314,9 +3314,7 @@ static int	create_dns_downtime_trigger(const char* hostid)
 	result = DBselect("select itemid from items where key_='%s' and hostid='%s'", itemkey, hostid);
 
 	if (NULL == (row = DBfetch(result)))
-	{
 		return FAIL;
-	}
 
 	if (ZBX_DB_OK > DBexecute(
 			"insert into functions (functionid,itemid,triggerid,function,parameter) values"
@@ -3373,9 +3371,7 @@ static int	create_rdds_downtime_trigger(const char* hostid, const char* percent,
 	result = DBselect("select itemid from items where key_='%s' and hostid='%s'", itemkey, hostid);
 
 	if (NULL == (row = DBfetch(result)))
-	{
 		return FAIL;
-	}
 
 	if (ZBX_DB_OK > DBexecute(
 			"insert into functions (functionid,itemid,triggerid,function,parameter) values"
@@ -3392,7 +3388,7 @@ static int	create_rdds_downtime_trigger(const char* hostid, const char* percent,
 
 static int	create_trigger_dependency(zbx_uint64_t triggerid, zbx_uint64_t dependid)
 {
-	if (ZBX_DB_OK > DBexecute("insert into trigger_depends (triggerdepid, triggerid_down, triggerid_up)"
+	if (ZBX_DB_OK > DBexecute("insert into trigger_depends (triggerdepid,triggerid_down,triggerid_up)"
 					" values (" ZBX_FS_UI64 ", " ZBX_FS_UI64 ", " ZBX_FS_UI64 ")",
 					DBget_maxid("trigger_depends"), dependid, triggerid))
 	{
@@ -3416,19 +3412,15 @@ static int	create_dependent_rdds_trigger_chain(const char *hostid)
 		"100%",		"",		"5"
 	};
 
-	for (i = 0; i < 15; i+=3)
+	for (i = 0; i < 15; i += 3)
 	{
 		if (SUCCEED != create_rdds_downtime_trigger(hostid, strs[i], strs[i+1], strs[i+2], &triggerid))
-		{
 			return FAIL;
-		}
 
 		if (0 != triggerid && 0 != dependid)
 		{
 			if (SUCCEED != create_trigger_dependency(triggerid, dependid))
-			{
 				return FAIL;
-			}
 		}
 
 		dependid = triggerid;
