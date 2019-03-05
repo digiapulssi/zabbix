@@ -90,7 +90,7 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		get_macro_dns_tcp_rtt_low get_macro_rdds_rtt_low get_dns_udp_delay get_dns_tcp_delay
 		get_rdds_delay get_epp_delay get_macro_epp_probe_online get_macro_epp_rollweek_sla
 		get_macro_dns_update_time get_macro_rdds_update_time get_tld_items get_hostid
-		get_rtt_low
+		get_rtt_low get_slv_rtt
 		get_macro_epp_rtt_low get_macro_probe_avail_limit get_itemid_by_key get_itemid_by_host
 		get_itemid_by_hostid get_itemid_like_by_hostid get_itemids_by_host_and_keypart get_lastclock get_tlds
 		get_oldest_clock
@@ -128,6 +128,7 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		write_file read_file
 		cycle_start
 		cycle_end
+		cycles_till_end_of_month
 		usage);
 
 # configuration, set in set_slv_config()
@@ -300,6 +301,29 @@ sub get_rtt_low
 
 	fail("dimir was wrong, thinking the only known services are \"dns\", \"dnssec\", \"rdds\" and \"epp\",",
 		" there is also \"$service\"");
+}
+
+sub get_slv_rtt($;$)
+{
+	my $service = shift;
+	my $proto = shift;	# for DNS
+
+	if ($service eq 'dns' || $service eq 'dnssec')
+	{
+		fail("internal error: get_rtt_low() called for $service without specifying protocol")
+			unless (defined($proto));
+
+		return __get_macro('{$RSM.SLV.DNS.UDP.RTT}') if $proto == PROTO_UDP;
+		return __get_macro('{$RSM.SLV.DNS.TCP.RTT}') if $proto == PROTO_TCP;
+
+		fail("Unhandled protocol \"$proto\"");
+	}
+
+	return __get_macro('{$RSM.SLV.RDDS.RTT}')   if $service eq 'rdds';
+	return __get_macro('{$RSM.SLV.RDDS43.RTT}') if $service eq 'rdds43';
+	return __get_macro('{$RSM.SLV.RDDS80.RTT}') if $service eq 'rdds80';
+
+	fail("Unhandled service \"$service\"");
 }
 
 sub get_macro_epp_rtt_low
@@ -3269,7 +3293,7 @@ sub read_file($$$)
 	return SUCCESS;
 }
 
-sub cycle_start
+sub cycle_start($$)
 {
 	my $now = shift;
 	my $delay = shift;
@@ -3277,12 +3301,46 @@ sub cycle_start
 	return $now - ($now % $delay);
 }
 
-sub cycle_end
+sub cycle_end($$)
 {
 	my $now = shift;
 	my $delay = shift;
 
 	return cycle_start($now, $delay) + $delay - 1;
+}
+
+sub cycles_till_end_of_month($$)
+{
+	my $now = shift;
+	my $delay = shift;
+
+	require DateTime;
+
+	my $end_of_month_dt = DateTime->from_epoch('epoch' => $now);
+	$end_of_month_dt->set_day(1);
+	$end_of_month_dt->set_hour(0);
+	$end_of_month_dt->set_minute(0);
+	$end_of_month_dt->set_second(0);
+	$end_of_month_dt->set_nanosecond(0);
+	$end_of_month_dt->add('months' => 1);
+	$end_of_month_dt->subtract('seconds' => 1);
+
+	my $end_of_month = $end_of_month_dt->epoch();
+	my $this_cycle_start = cycle_start($now, $delay);
+	my $last_cycle_end = cycle_end($end_of_month, $delay);
+	my $cycle_count = ($last_cycle_end + 1 - $this_cycle_start) / $delay;
+
+	if (opt('debug'))
+	{
+		dbg('now              - ', DateTime->from_epoch('epoch' => $now));
+		dbg('this cycle start - ', DateTime->from_epoch('epoch' => $this_cycle_start));
+		dbg('end of month     - ', DateTime->from_epoch('epoch' => $end_of_month));
+		dbg('last cycle end   - ', DateTime->from_epoch('epoch' => $last_cycle_end));
+		dbg('delay            - ', $delay);
+		dbg('cycle count      - ', $cycle_count);
+	}
+
+	return $cycle_count;
 }
 
 sub usage
