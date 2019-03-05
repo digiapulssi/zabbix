@@ -54,7 +54,9 @@ $userGroupsForm = (new CForm())->setName('userGroupsForm');
 $userGroupTable = (new CTableInfo())
 	->setHeader([
 		(new CColHeader(
-			(new CCheckBox('all_groups'))->onClick("checkAll('".$userGroupsForm->getName()."','all_groups','group_groupid');")
+			(new CCheckBox('all_groups'))
+				->onClick("checkAllRange('".$userGroupsForm->getName()."','all_groups','group_groupid');")
+				->addClass('checkbox-range')
 		))->addClass(ZBX_STYLE_CELL_WIDTH),
 		make_sorting_header(_('Name'), 'name', $data['sort'], $data['sortorder'], 'usergrps.php'),
 		'#',
@@ -150,7 +152,7 @@ foreach ($this->data['usergroups'] as $usrgrp) {
 	$name = new CLink($usrgrp['name'], 'usergrps.php?form=update&usrgrpid='.$userGroupId);
 
 	$userGroupTable->addRow([
-		new CCheckBox('group_groupid['.$userGroupId.']', $userGroupId),
+		(new CCheckBox('group_groupid['.$userGroupId.']', $userGroupId))->addClass('checkbox-range'),
 		(new CCol($name))->addClass(ZBX_STYLE_NOWRAP),
 		[new CLink(_('Users'), 'users.php?filter_usrgrpid='.$userGroupId), CViewHelper::showNum(count($usrgrp['users']))],
 		$users,
@@ -164,7 +166,7 @@ foreach ($this->data['usergroups'] as $usrgrp) {
 $userGroupsForm->addItem([
 	$userGroupTable,
 	$this->data['paging'],
-	new CActionButtonList('action', 'group_groupid', [
+	(new CActionButtonList('action', 'group_groupid', [
 		'usergroup.massenable' => ['name' => _('Enable'), 'confirm' => _('Enable selected groups?')],
 		'usergroup.massdisable' => ['name' => _('Disable'), 'confirm' => _('Disable selected groups?')],
 		'usergroup.massenabledebug' => ['name' => _('Enable debug mode'),
@@ -174,7 +176,8 @@ $userGroupsForm->addItem([
 			'confirm' => _('Disable debug mode in selected groups?')
 		],
 		'usergroup.massdelete' => ['name' => _('Delete'), 'confirm' => _('Delete selected groups?')]
-	])
+	]))
+		->setWidgetClass('chkboxRange')
 ]);
 
 // append form to widget

@@ -201,7 +201,6 @@ elseif (hasRequest('add') || hasRequest('update')) {
 
 		if ($result) {
 			unset($_REQUEST['form']);
-			uncheckTableRows();
 		}
 	}
 }
@@ -218,9 +217,6 @@ elseif (isset($_REQUEST['delete']) && isset($_REQUEST['userid'])) {
 	$result = API::User()->delete([$user['userid']]);
 	unset($_REQUEST['userid'], $_REQUEST['form']);
 
-	if ($result) {
-		uncheckTableRows();
-	}
 	show_messages($result, _('User deleted'), _('Cannot delete user'));
 }
 elseif (hasRequest('action') && getRequest('action') == 'user.massunblock' && hasRequest('group_userid')) {
@@ -244,9 +240,6 @@ elseif (hasRequest('action') && getRequest('action') == 'user.massunblock' && ha
 
 	$result = DBend($result);
 
-	if ($result) {
-		uncheckTableRows();
-	}
 	show_messages($result, _('Users unblocked'), _('Cannot unblock users'));
 }
 elseif (hasRequest('action') && getRequest('action') == 'user.massdelete' && hasRequest('group_userid')) {

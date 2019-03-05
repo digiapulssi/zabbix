@@ -103,22 +103,13 @@ elseif (hasRequest('action')) {
 	if (!hasRequest('group_groupid') || !is_array(getRequest('group_groupid'))) {
 		access_deny();
 	}
-	else {
-		$dbUserGroupCount = API::UserGroup()->get([
-			'output' => ['usrgrpid'],
-			'usrgrpids' => getRequest('group_groupid'),
-			'countOutput' => true
-		]);
-
-		if ($dbUserGroupCount != count(getRequest('group_groupid'))) {
-			access_deny();
-		}
-	}
 }
 
 /*
  * Actions
  */
+$result = false;
+
 if (hasRequest('add') || hasRequest('update')) {
 	$user_group = [
 		'name' => getRequest('gname'),
@@ -155,7 +146,6 @@ if (hasRequest('add') || hasRequest('update')) {
 
 	if ($result) {
 		unset($_REQUEST['form']);
-		uncheckTableRows();
 	}
 }
 elseif (isset($_REQUEST['delete'])) {
@@ -163,15 +153,26 @@ elseif (isset($_REQUEST['delete'])) {
 
 	if ($result) {
 		unset($_REQUEST['usrgrpid'], $_REQUEST['form']);
-		uncheckTableRows();
 	}
 	show_messages($result, _('Group deleted'), _('Cannot delete group'));
 }
 elseif (hasRequest('action') && getRequest('action') === 'usergroup.massdelete' && hasRequest('group_groupid')) {
-	$result = (bool) API::UserGroup()->delete(getRequest('group_groupid'));
+	$group_userids = getRequest('group_groupid', []);
 
-	if ($result) {
-		uncheckTableRows();
+	$result = API::UserGroup()->delete($group_userids);
+
+	if (!$result) {
+		$group_users = API::UserGroup()->get([
+			'output' => ['usrgrpid'],
+			'usrgrpids' => array_keys($group_userids)
+		]);
+
+		if ($group_users) {
+			updateSessionStorage(null, array_column($group_users, 'usrgrpid', 'usrgrpid'));
+		}
+		else {
+			clearSessionStorage();
+		}
 	}
 	show_messages($result, _('Group deleted'), _('Cannot delete group'));
 }
@@ -190,9 +191,6 @@ elseif (hasRequest('action') && getRequest('action') === 'usergroup.set_gui_acce
 
 	$result = (bool) API::UserGroup()->update($usrgrps);
 
-	if ($result) {
-		uncheckTableRows();
-	}
 	show_messages($result, _('Frontend access updated'), _('Cannot update frontend access'));
 }
 elseif (hasRequest('action') && str_in_array(getRequest('action'), ['usergroup.massenabledebug', 'usergroup.massdisabledebug'])) {
@@ -214,9 +212,6 @@ elseif (hasRequest('action') && str_in_array(getRequest('action'), ['usergroup.m
 
 	$result = (bool) API::UserGroup()->update($usrgrps);
 
-	if ($result) {
-		uncheckTableRows();
-	}
 	show_messages($result, _('Debug mode updated'), _('Cannot update debug mode'));
 }
 elseif (hasRequest('action') && str_in_array(getRequest('action'), ['usergroup.massenable', 'usergroup.massdisable'])) {
@@ -245,10 +240,11 @@ elseif (hasRequest('action') && str_in_array(getRequest('action'), ['usergroup.m
 		? _n('Cannot enable user group', 'Cannot enable user groups', count($usrgrps))
 		: _n('Cannot disable user group', 'Cannot disable user groups', count($usrgrps));
 
-	if ($result) {
-		uncheckTableRows();
-	}
 	show_messages($result, $messageSuccess, $messageFailed);
+}
+
+if ($result) {
+	clearSessionStorage();
 }
 
 /*
