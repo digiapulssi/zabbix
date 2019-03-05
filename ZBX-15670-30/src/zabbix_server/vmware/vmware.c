@@ -989,27 +989,6 @@ static void	vmware_event_backup(zbx_vmware_service_t *service, zbx_vector_ptr_t 
 
 /******************************************************************************
  *                                                                            *
- * Function: vmware_event_merge                                               *
- *                                                                            *
- * Purpose: merge not pooled vmware event objects with new collected vmware   *
- *          event objects                                                     *
- *                                                                            *
- * Parameters: events     - [IN/OUT] array of new vmware event                *
- *             old_events - [IN/OUT] array of old vmware event                *
- *                                                                            *
- ******************************************************************************/
-static void	vmware_event_merge(zbx_vector_ptr_t *events, zbx_vector_ptr_t *old_events)
-{
-	int	i;
-
-	zbx_vector_ptr_reserve(events, old_events->values_num + events->values_alloc);
-
-	for (i = 0; i < old_events->values_num; i++)
-		zbx_vector_ptr_append(events, old_events->values[i]);
-}
-
-/******************************************************************************
- *                                                                            *
  * Function: vmware_datastore_shared_dup                                      *
  *                                                                            *
  * Purpose: copies vmware hypervisor datastore object into shared memory      *
@@ -4173,7 +4152,7 @@ out:
 	service->data = vmware_data_shared_dup(data);
 
 	if (0 != events.values_num)
-		vmware_event_merge(&service->data->events, &events);
+		zbx_vector_ptr_append_array(&service->data->events, events.values, events.values_num);
 
 	service->lastcheck = time(NULL);
 
