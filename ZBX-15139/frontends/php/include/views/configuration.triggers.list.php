@@ -161,8 +161,7 @@ $url = (new CUrl('triggers.php'))
 $triggers_table = (new CTableInfo())->setHeader([
 	(new CColHeader(
 		(new CCheckBox('all_triggers'))
-			->onClick("checkAllRange('".$triggers_form->getName()."', 'all_triggers', 'g_triggerid');")
-			->addClass('checkbox-range')
+			->onClick("checkAll('".$triggers_form->getName()."', 'all_triggers', 'g_triggerid');")
 	))->addClass(ZBX_STYLE_CELL_WIDTH),
 	make_sorting_header(_('Severity'), 'priority', $data['sort'], $data['sortorder'], $url),
 	$data['show_value_column'] ? _('Value') : null,
@@ -279,7 +278,7 @@ foreach ($data['triggers'] as $tnum => $trigger) {
 		: '';
 
 	$triggers_table->addRow([
-		(new CCheckBox('g_triggerid['.$triggerid.']', $triggerid))->addClass('checkbox-range'),
+		new CCheckBox('g_triggerid['.$triggerid.']', $triggerid),
 		getSeverityCell($trigger['priority'], $data['config']),
 		$data['show_value_column'] ? $trigger_value : null,
 		$hosts,
@@ -297,7 +296,7 @@ zbx_add_post_js('cookie.prefix = "'.$data['hostid'].'";');
 $triggers_form->addItem([
 	$triggers_table,
 	$data['paging'],
-	(new CActionButtonList('action', 'g_triggerid',
+	new CActionButtonList('action', 'g_triggerid',
 		[
 			'trigger.massenable' => ['name' => _('Enable'), 'confirm' => _('Enable selected triggers?')],
 			'trigger.massdisable' => ['name' => _('Disable'), 'confirm' => _('Disable selected triggers?')],
@@ -306,8 +305,7 @@ $triggers_form->addItem([
 			'trigger.massdelete' => ['name' => _('Delete'), 'confirm' => _('Delete selected triggers?')]
 		],
 		$data['hostid']
-	))
-		->setWidgetClass('chkboxRange')
+	)
 ]);
 
 // append form to widget

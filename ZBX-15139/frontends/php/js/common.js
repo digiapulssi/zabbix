@@ -176,17 +176,6 @@ function checkAll(form_name, chkMain, shkName) {
 	var frmForm = document.forms[form_name],
 		value = frmForm.elements[chkMain].checked;
 
-	chkbxRange.checkObjectAll(shkName, value);
-	chkbxRange.update(shkName);
-	chkbxRange.saveCookies(shkName);
-
-	return true;
-}
-
-function checkAllRange(form_name, chkMain, shkName) {
-	var frmForm = document.forms[form_name],
-		value = frmForm.elements[chkMain].checked;
-
 	chkboxRange.checkObjectAll(shkName, value);
 	chkboxRange.update(shkName);
 	chkboxRange.saveSessionStorage(shkName);

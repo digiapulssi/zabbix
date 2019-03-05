@@ -29,7 +29,6 @@ var chkboxRange = {
 	selectedIds:		{},		// ids of selected objects
 	footerButtons:		{},		// action buttons at the bottom of page
 	sessionStorageName:	null,
-	boxclass:			'checkbox-range[type=checkbox]:not(:disabled)',
 
 	init: function() {
 		// sessionStorage name
@@ -41,7 +40,7 @@ var chkboxRange = {
 		this.startbox = null;
 
 		// initialize checkboxes
-		var chkboxes = jQuery('.list-table tbody input.' + this.boxclass);
+		var chkboxes = jQuery('.list-table tbody input[type=checkbox]:not(:disabled)');
 
 		if (chkboxes.length == 0) {
 			return;
@@ -61,7 +60,7 @@ var chkboxRange = {
 			}
 			// no checkboxes selected from sessionStorage, check browser cache if checkboxes are still checked and update state
 			else {
-				var checkedFromCache = jQuery('main .list-table tbody input.' + this.boxclass + ':checked');
+				var checkedFromCache = jQuery('main .list-table tbody input[type=checkbox]:checked:not(:disabled)');
 				var objectIds = jQuery.map(checkedFromCache, jQuery.proxy(function(checkbox) {
 					return this.getObjectIdFromName(checkbox.name);
 				}, this));
@@ -266,15 +265,16 @@ var chkboxRange = {
 
 	// check if all checkboxes are selected and select main checkbox, else disable checkbox, select options and button
 	updateMainCheckbox: function() {
-		var mainCheckbox = jQuery('.list-table .header input.' + this.boxclass);
+		var mainCheckbox = jQuery('.list-table .header input[type=checkbox]:not(:disabled)');
+
 		if (!mainCheckbox.length) {
 			return;
 		}
 
-		var countAvailable = jQuery('.list-table tr:not(.header) input.' + this.boxclass).length;
+		var countAvailable = jQuery('.list-table tr:not(.header) input[type=checkbox]:not(:disabled)').length;
 
 		if (countAvailable > 0) {
-			var countChecked = jQuery('.list-table tr:not(.header) input.' + this.boxclass + ':checked').length;
+			var countChecked = jQuery('.list-table tr:not(.header) input[type=checkbox]:not(:disabled):checked').length;
 
 			mainCheckbox = mainCheckbox[0];
 			mainCheckbox.checked = (countChecked == countAvailable);

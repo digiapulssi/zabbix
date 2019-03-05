@@ -59,7 +59,7 @@ class CActionButtonList extends CObject {
 	 *
 	 * @var string
 	 */
-	protected $widget_class = 'chkbxRange';
+	protected $widget_class = 'chkboxRange';
 
 	/**
 	 * @param string		$actionName				name of submit buttons
