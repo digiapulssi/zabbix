@@ -3102,6 +3102,14 @@ static int	vmware_service_read_previous_events(CURL *easyhandle, const char *eve
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() soap_count: %d", __function_name, soap_count);
 
+	page.offset = 0;
+
+	if (0 >= soap_count)
+	{
+		ret = SUCCEED;
+		goto out;
+	}
+
 	event_session_esc = xml_escape_dyn(event_session);
 
 	zbx_snprintf(tmp, sizeof(tmp), ZBX_POST_VMWARE_READ_PREVIOUS_EVENTS, event_session_esc, soap_count);
@@ -3113,8 +3121,6 @@ static int	vmware_service_read_previous_events(CURL *easyhandle, const char *eve
 		*error = zbx_dsprintf(*error, "Cannot set cURL option %d: %s.", opt, curl_easy_strerror(err));
 		goto out;
 	}
-
-	page.offset = 0;
 
 	if (CURLE_OK != (err = curl_easy_perform(easyhandle)))
 	{
@@ -3266,11 +3272,12 @@ static int	vmware_service_put_event_data(zbx_vector_ptr_t *events, zbx_id_xmlnod
  * Parameters: events   - [IN/OUT] the array of parsed events                 *
  *             last_key - [IN] the key of last parsed event                   *
  *             xml      - [IN] xml string with eventlog records               *
+ *             len      - [IN] length of xml string                           *
  *                                                                            *
  * Return value: The count of events successfully parsed                      *
  *                                                                            *
  ******************************************************************************/
-int	vmware_service_parse_event_data(zbx_vector_ptr_t *events, zbx_uint64_t last_key, const char *xml)
+int	vmware_service_parse_event_data(zbx_vector_ptr_t *events, zbx_uint64_t last_key, const char *xml, size_t len)
 {
 	const char		*__function_name = "vmware_service_parse_event_data";
 
@@ -3284,7 +3291,7 @@ int	vmware_service_parse_event_data(zbx_vector_ptr_t *events, zbx_uint64_t last_
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() last_key:" ZBX_FS_UI64, __function_name, last_key);
 
-	if (NULL == (doc = xmlReadMemory(xml, strlen(xml), ZBX_VM_NONAME_XML, NULL, ZBX_XML_PARSE_OPTS)))
+	if (NULL == (doc = xmlReadMemory(xml, len, ZBX_VM_NONAME_XML, NULL, ZBX_XML_PARSE_OPTS)))
 	{
 		zabbix_log(LOG_LEVEL_DEBUG, "Cannot parse evenlog list.");
 		goto out;
@@ -3422,13 +3429,10 @@ static int	vmware_service_get_event_data(const zbx_vmware_service_t *service, CU
 					eventlog_last_key - 1;
 		}
 
-		if (0 < soap_count && SUCCEED != vmware_service_read_previous_events(easyhandle, event_session,
-				soap_count, error))
-		{
+		if (SUCCEED != vmware_service_read_previous_events(easyhandle, event_session, soap_count, error))
 			goto end_session;
-		}
 	}
-	while (0 < vmware_service_parse_event_data(events, eventlog_last_key, page.data));
+	while (0 < vmware_service_parse_event_data(events, eventlog_last_key, page.data, page.offset));
 
 	ret = SUCCEED;
 end_session:
