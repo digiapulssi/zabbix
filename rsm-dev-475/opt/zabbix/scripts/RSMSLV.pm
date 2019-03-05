@@ -535,49 +535,88 @@ sub get_tlds
 	return \@tlds;
 }
 
+# $probes_cache{$server_key}{$name}{$service} = {$host => $hostid, ...}
+my %probes_cache = ();
+
 # Returns a reference to hash of all probes (host => hostid).
-sub get_probes
+sub get_probes(;$$)
 {
-	my $service = shift;
+	my $service = shift; # "IP4", "IP6", "RDDS" or any other
 	my $name = shift;
 
-	$service = defined($service) ? uc($service) : 'DNS';
+	$service = defined($service) ? uc($service) : "ALL";
+	$name //= "";
 
-	my $name_cond = "";
-
-	$name_cond = " and h.host='$name'" if ($name);
-
-	my $rows_ref = db_select(
-		"select h.host,h.hostid".
-		" from hosts h, hosts_groups hg".
-		" where h.hostid=hg.hostid".
-			" and h.status=0".
-			$name_cond.
-			" and hg.groupid=".PROBES_GROUPID);
-
-	my $result = {};
-
-	foreach my $row_ref (@$rows_ref)
+	if ($service ne "IP4" && $service ne "IP6" && $service ne "RDDS")
 	{
-		my $host = $row_ref->[0];
-		my $hostid = $row_ref->[1];
-
-		if ($service ne 'DNS')
-		{
-			$rows_ref = db_select(
-				"select hm.value".
-				" from hosts h,hostmacro hm".
-				" where h.hostid=hm.hostid".
-					" and h.host='Template $host'".
-					" and hm.macro='{\$RSM.$service.ENABLED}'");
-
-			next if (scalar(@$rows_ref) != 0 and $rows_ref->[0]->[0] == 0);
-		}
-
-		$result->{$host} = $hostid;
+		$service = "ALL";
 	}
 
-	return $result;
+	if (!exists($probes_cache{$server_key}{$name}))
+	{
+		$probes_cache{$server_key}{$name} = __get_probes($name);
+	}
+
+	return $probes_cache{$server_key}{$name}{$service};
+}
+
+sub __get_probes($)
+{
+	my $name = shift;
+
+	my $name_condition = $name ? "name='$name' and" : "";
+
+	my $rows = db_select(
+		"select hosts.hostid,hosts.host,hostmacro.macro,hostmacro.value" .
+		" from hosts" .
+			" left join hosts_groups on hosts_groups.hostid=hosts.hostid" .
+			" left join hosts_templates as hosts_templates_1 on hosts_templates_1.hostid=hosts.hostid" .
+			" left join hosts_templates as hosts_templates_2 on hosts_templates_2.hostid=hosts_templates_1.templateid" .
+			" left join hostmacro on hostmacro.hostid=hosts_templates_2.templateid" .
+		" where $name_condition" .
+			" hosts.status=" . HOST_STATUS_MONITORED . " and" .
+			" hosts_groups.groupid=" . PROBES_GROUPID . " and" .
+			" hostmacro.macro in ('{\$RSM.IP4.ENABLED}','{\$RSM.IP6.ENABLED}','{\$RSM.RDDS.ENABLED}')");
+
+	my %result = (
+		'ALL'  => {},
+		'IP4'  => {},
+		'IP6'  => {},
+		'RDDS' => {}
+	);
+
+	foreach my $row (@{$rows})
+	{
+		my ($hostid, $host, $macro, $value) = @{$row};
+
+		if (!exists($result{'ALL'}{$host}))
+		{
+			$result{'ALL'}{$host} = $hostid;
+		}
+
+		if ($macro eq '{$RSM.IP4.ENABLED}')
+		{
+			$result{'IP4'}{$host} = $hostid if $value;
+		}
+		elsif ($macro eq '{$RSM.IP6.ENABLED}')
+		{
+			$result{'IP6'}{$host} = $hostid if $value;
+		}
+		elsif ($macro eq '{$RSM.RDDS.ENABLED}')
+		{
+			$result{'RDDS'}{$host} = $hostid if $value;
+		}
+	}
+
+	if (opt("debug"))
+	{
+		dbg("number of probes - " . scalar(keys(%{$result{'ALL'}})));
+		dbg("number of probes with IP4 support  - " . scalar(keys(%{$result{'IP4'}})));
+		dbg("number of probes with IP6 support  - " . scalar(keys(%{$result{'IP6'}})));
+		dbg("number of probes with RDDS support - " . scalar(keys(%{$result{'RDDS'}})));
+	}
+
+	return \%result;
 }
 
 # get array of key nameservers ('i.ns.se,130.239.5.114', ...)
