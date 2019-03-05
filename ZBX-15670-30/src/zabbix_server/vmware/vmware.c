@@ -989,16 +989,16 @@ static void	vmware_event_backup(zbx_vmware_service_t *service, zbx_vector_ptr_t 
 
 /******************************************************************************
  *                                                                            *
- * Function: vmware_event_merge_destroy                                       *
+ * Function: vmware_event_merge                                               *
  *                                                                            *
  * Purpose: merge not pooled vmware event objects with new collected vmware   *
- *          event objects and destroy old vector only (not data)              *
+ *          event objects                                                     *
  *                                                                            *
  * Parameters: events     - [IN/OUT] array of new vmware event                *
  *             old_events - [IN/OUT] array of old vmware event                *
  *                                                                            *
  ******************************************************************************/
-static void	vmware_event_merge_destroy(zbx_vector_ptr_t *events, zbx_vector_ptr_t *old_events)
+static void	vmware_event_merge(zbx_vector_ptr_t *events, zbx_vector_ptr_t *old_events)
 {
 	int	i;
 
@@ -1006,8 +1006,6 @@ static void	vmware_event_merge_destroy(zbx_vector_ptr_t *events, zbx_vector_ptr_
 
 	for (i = 0; i < old_events->values_num; i++)
 		zbx_vector_ptr_append(events, old_events->values[i]);
-
-	zbx_vector_ptr_destroy(old_events);
 }
 
 /******************************************************************************
@@ -4175,7 +4173,7 @@ out:
 	service->data = vmware_data_shared_dup(data);
 
 	if (0 != events.values_num)
-		vmware_event_merge_destroy(&service->data->events, &events);
+		vmware_event_merge(&service->data->events, &events);
 
 	service->lastcheck = time(NULL);
 
@@ -4184,6 +4182,7 @@ out:
 	zbx_vmware_unlock();
 
 	vmware_data_free(data);
+	zbx_vector_ptr_destroy(&events);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, zbx_result_string(ret));
 }
