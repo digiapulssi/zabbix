@@ -1858,8 +1858,8 @@ sub create_avail_trigger($$)
 
 	my $options =
 	{
-		'description' => 'DNS service was unavailable for {ITEM.VALUE1}m',
-		'expression' => '{'.$host_name.':rsm.slv.'.$service_lc.'.downtime.last(0)}>={$RSM.SLV.DNS.DOWNTIME}',
+		'description' => 'DNS service was unavailable for at least {ITEM.VALUE1}m',
+		'expression' => '{'.$host_name.':rsm.slv.'.$service_lc.'.downtime.last(0)}>{$RSM.SLV.DNS.DOWNTIME}',
 		'priority' => $priority
 	};
 

@@ -3304,7 +3304,7 @@ static int	create_dns_downtime_trigger(const char* hostid)
 	if (ZBX_DB_OK > DBexecute(
 			"insert into triggers (triggerid,expression,description,"
 				"url,status,priority,comments,templateid,type,flags)"
-			"values (" ZBX_FS_UI64 ", '{" ZBX_FS_UI64 "}>0', 'DNS service was unavailable for {ITEM.VALUE1}m',"
+			"values (" ZBX_FS_UI64 ", '{" ZBX_FS_UI64 "}>{$RSM.SLV.DNS.DOWNTIME}', 'DNS service was unavailable for at least {ITEM.VALUE1}m',"
 				"'', '0', '5', '', NULL, '0', '0')",
 			triggerid, functionid))
 	{
