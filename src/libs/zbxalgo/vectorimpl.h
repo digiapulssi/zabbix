@@ -88,6 +88,14 @@ void	zbx_vector_ ## __id ## _append_ptr(zbx_vector_ ## __id ## _t *vector, __typ
 	vector->values[vector->values_num++] = *value;								\
 }														\
 														\
+void	zbx_vector_ ## __id ## _append_array(zbx_vector_ ## __id ## _t *vector, __type const *values,		\
+									int values_num)				\
+{														\
+	zbx_vector_ ## __id ## _reserve(vector, vector->values_num + values_num);				\
+	memcpy(vector->values + vector->values_num, values, values_num * sizeof(__type));			\
+	vector->values_num = vector->values_num + values_num;							\
+}														\
+														\
 void	zbx_vector_ ## __id ## _remove_noorder(zbx_vector_ ## __id ## _t *vector, int index)			\
 {														\
 	if (!(0 <= index && index < vector->values_num))							\
