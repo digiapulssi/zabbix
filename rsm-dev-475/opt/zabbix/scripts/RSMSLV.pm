@@ -73,6 +73,9 @@ use constant DETAILED_RESULT_DELIM => ', ';
 use constant DEFAULT_SLV_MAX_CYCLES => 10;	# maximum cycles to process by SLV scripts in 1 run, may be overriden
 						# by rsm.conf 'max_cycles_dns' and 'max_cycles_rdds'
 
+use constant USE_CACHE_FALSE => 0;
+use constant USE_CACHE_TRUE  => 1;
+
 our ($result, $dbh, $tld, $server_key);
 
 our %OPTS; # specified command-line options
@@ -85,6 +88,7 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		AVAIL_SHIFT_BACK ROLLWEEK_SHIFT_BACK PROBE_ONLINE_SHIFT
 		PROBE_KEY_MANUAL
 		ONLINE OFFLINE
+		USE_CACHE_FALSE USE_CACHE_TRUE
 		get_macro_minns get_macro_dns_probe_online get_macro_rdds_probe_online get_macro_dns_rollweek_sla
 		get_macro_rdds_rollweek_sla get_macro_dns_udp_rtt_high get_macro_dns_udp_rtt_low
 		get_macro_dns_tcp_rtt_low get_macro_rdds_rtt_low get_dns_udp_delay get_dns_tcp_delay
@@ -506,10 +510,24 @@ sub get_oldest_clock($$$)
 	return $rows_ref->[0]->[0];
 }
 
-sub get_tlds
+# $tlds_cache{$server_key}{$service}{$till} = ["tld1", "tld2", ...];
+my %tlds_cache = ();
+
+sub get_tlds(;$$$)
 {
 	my $service = shift;	# optionally specify service which must be enabled
 	my $till = shift;	# used only if $service is defined
+	my $use_cache = shift // USE_CACHE_FALSE;
+
+	if ($use_cache != USE_CACHE_FALSE && $use_cache != USE_CACHE_TRUE)
+	{
+		fail("Invalid value for \$use_cache argument - '$use_cache'");
+	}
+
+	if ($use_cache == USE_CACHE_TRUE && exists($tlds_cache{$server_key}{$service // ''}{$till // 0}))
+	{
+		return $tlds_cache{$server_key}{$service // ''}{$till // 0};
+	}
 
 	my $rows_ref = db_select(
 		"select distinct h.host".
@@ -530,6 +548,11 @@ sub get_tlds
 		}
 
 		push(@tlds, $tld);
+	}
+
+	if ($use_cache == USE_CACHE_TRUE)
+	{
+		$tlds_cache{$server_key}{$service // ''}{$till // 0} = \@tlds;
 	}
 
 	return \@tlds;
