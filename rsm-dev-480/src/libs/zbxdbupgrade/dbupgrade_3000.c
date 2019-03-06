@@ -3304,7 +3304,7 @@ static int	create_dns_downtime_trigger(const char* hostid)
 	if (ZBX_DB_OK > DBexecute(
 			"insert into triggers (triggerid,expression,description,"
 				"url,status,priority,comments,templateid,type,flags)"
-			"values (" ZBX_FS_UI64 ", '{" ZBX_FS_UI64 "}>0', 'TLD {HOST.NAME} has DNS downtime',"
+			"values (" ZBX_FS_UI64 ", '{" ZBX_FS_UI64 "}>0', 'DNS service was unavailable for {ITEM.VALUE1}m',"
 				"'', '0', '5', '', NULL, '0', '0')",
 			triggerid, functionid))
 	{
@@ -3361,7 +3361,7 @@ static int	create_rdds_downtime_trigger(const char* hostid, const char* percent,
 			"insert into triggers (triggerid,expression,description,"
 				"url,status,priority,comments,templateid,type,flags)"
 			"values (" ZBX_FS_UI64 ", '{" ZBX_FS_UI64 "}>={$RSM.SLV.RDDS.DOWNTIME}%s',"
-				"'RDDS service was unavailable for %s of allowed $1 in this month',"
+				"'RDDS service was unavailable for %s of allowed $1',"
 				"'', '0', '%s', '', NULL, '0', '0')",
 			*triggerid, functionid, coeff, percent, priority))
 	{

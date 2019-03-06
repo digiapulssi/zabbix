@@ -1117,19 +1117,20 @@ sub create_slv_ns_items {
     }
 }
 
-sub create_dependent_trigger_chain($$$)
+sub create_dependent_trigger_chain($$$$)
 {
 	my $host_name = shift;
 	my $service = shift;
 	my $fun = shift;
+	my $thresholds_ref = shift;
 
 	my $depend_down;
 	my $created;
 
-	foreach my $position (sort keys %{$trigger_thresholds})
+	foreach my $k (sort keys %{$thresholds_ref})
 	{
-		my $threshold = $trigger_thresholds->{$position}->{'threshold'};
-		my $priority = $trigger_thresholds->{$position}->{'priority'};
+		my $threshold = $trigger_thresholds->{$k}->{'threshold'};
+		my $priority = $trigger_thresholds->{$k}->{'priority'};
 		next if ($threshold eq 0);
 
 		my $result = &$fun($service, $host_name, $threshold, $priority, \$created);
@@ -1159,7 +1160,7 @@ sub create_slv_items
 	
 	create_avail_trigger('DNS', $host_name);
 	create_dns_downtime_trigger($host_name, 5);
-	create_dependent_trigger_chain($host_name, 'DNS', \&create_rollweek_trigger);
+	create_dependent_trigger_chain($host_name, 'DNS', \&create_rollweek_trigger, $trigger_thresholds);
 
 	if (defined($OPTS{'dnssec'}))
 	{
@@ -1167,7 +1168,7 @@ sub create_slv_items
 		create_slv_item('DNSSEC weekly unavailability', 'rsm.slv.dnssec.rollweek', $hostid, VALUE_TYPE_PERC, [get_application_id(APP_SLV_ROLLWEEK, $hostid)]);
 
 		create_avail_trigger('DNSSEC', $host_name);
-		create_dependent_trigger_chain($host_name, 'DNSSEC', \&create_rollweek_trigger);
+		create_dependent_trigger_chain($host_name, 'DNSSEC', \&create_rollweek_trigger, $trigger_thresholds);
 	}
 
 	if (defined($OPTS{'rdds43-servers'}) || defined($OPTS{'rdap-base-url'}))
@@ -1177,8 +1178,8 @@ sub create_slv_items
 		create_slv_item('RDDS weekly unavailability', 'rsm.slv.rdds.rollweek', $hostid, VALUE_TYPE_PERC, [get_application_id(APP_SLV_ROLLWEEK, $hostid)]);
 
 		create_avail_trigger('RDDS', $host_name);
-		create_dependent_trigger_chain($host_name, 'RDDS', \&create_rdds_downtime_trigger);
-		create_dependent_trigger_chain($host_name, 'RDDS', \&create_rollweek_trigger);
+		create_dependent_trigger_chain($host_name, 'RDDS', \&create_downtime_trigger, $trigger_thresholds);
+		create_dependent_trigger_chain($host_name, 'RDDS', \&create_rollweek_trigger, $trigger_thresholds);
 	}
 
 	if (defined($OPTS{'epp-servers'}))
@@ -1188,7 +1189,7 @@ sub create_slv_items
 		create_slv_item('EPP weekly unavailability', 'rsm.slv.epp.rollweek', $hostid, VALUE_TYPE_PERC, [get_application_id(APP_SLV_ROLLWEEK, $hostid)]);
 
 		create_avail_trigger('EPP', $host_name);
-# 		create_dependent_trigger_chain($host_name, 'EPP', \&create_downtime_trigger);
+# 		create_dependent_trigger_chain($host_name, 'EPP', \&create_downtime_trigger, $trigger_thresholds);
 	}
 }
 
@@ -1774,7 +1775,7 @@ sub disable_old_ns($) {
     }
 
     if (scalar(@itemids) > 0) {
-	my $triggers = get_triggers_by_items(\@itemids);
+	 my $triggers = get_triggers_by_items(\@itemids);
 
         my @triggerids = keys %{$triggers};
 
@@ -1848,24 +1849,26 @@ sub create_avail_trigger($$)
 	really(create_trigger($options, $host_name));
 }
 
-sub create_dns_downtime_trigger()
+ sub create_dns_downtime_trigger($$)
 {
 	my $host_name = shift;
 	my $priority = shift;
 
+	my $service_lc = lc('DNS');
+
 	my $options =
 	{
-		'description' => 'TLD {HOST.NAME} has DNS downtime',
-		'expression' => '{'.$host_name.':rsm.slv.dns.downtime.last(0)}>0',
+		'description' => 'DNS service was unavailable for {ITEM.VALUE1}m',
+		'expression' => '{'.$host_name.':rsm.slv.'.$service_lc.'.downtime.last(0)}>={$RSM.SLV.DNS.DOWNTIME}',
 		'priority' => $priority
 	};
 
-	my $created;
+	my $created_ref;
 
-	really(create_trigger($options, $host_name, \$created));
+	really(create_trigger($options, $host_name, $created_ref));
 }
 
-sub create_rdds_downtime_trigger($$$$$)
+sub create_downtime_trigger($$$$$)
 {
 	my $service = shift;
 	my $host_name = shift;
@@ -1877,8 +1880,8 @@ sub create_rdds_downtime_trigger($$$$$)
 
 	my $options =
 	{
-		'description' => $service.' service was unavailable for '.$threshold.'% of allowed $1 in this month',
-		'expression' => '{'.$host_name.':rsm.slv.'.$service_lc.'.downtime.last(0)}>={$RSM.SLV.RDDS.DOWNTIME}*'.($threshold * 0.01),
+		'description' => $service.' service was unavailable for '.$threshold.'% of allowed $1 minutes',
+		'expression' => '{'.$host_name.':rsm.slv.'.$service_lc.'.downtime.last(0)}>={$RSM.SLV.'.$service.'.DOWNTIME}*'.($threshold * 0.01),
 		'priority' => $priority
 	};
 
