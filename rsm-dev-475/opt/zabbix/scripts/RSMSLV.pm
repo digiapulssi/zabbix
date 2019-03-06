@@ -119,7 +119,8 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		float_value_exists
 		sql_time_condition get_incidents get_downtime get_downtime_prepare get_downtime_execute
 		history_table
-		get_lastvalue get_itemids_by_hostids get_nsip_values get_valuemaps get_statusmaps get_detailed_result
+		get_lastvalue get_itemids_by_hostids get_itemids_by_key_pattern_and_hosts get_nsip_values
+		get_valuemaps get_statusmaps get_detailed_result
 		get_avail_valuemaps slv_stats_reset
 		get_result_string get_tld_by_trigger truncate_from truncate_till alerts_enabled
 		get_real_services_period dbg info wrn fail set_on_fail
@@ -2747,6 +2748,30 @@ sub get_itemids_by_hostids
 	}
 
 	return $result;
+}
+
+#
+# returns array of itemids: [itemid1, itemid2, ...]
+#
+sub get_itemids_by_key_pattern_and_hosts($$;$)
+{
+	my $key_pattern = shift; # pattern for 'items.key_ like ...' condition
+	my $hosts       = shift; # ref to array of hosts, e.g., ['tld1', 'tld2', ...]
+	my $item_status = shift; # optional; ITEM_STATUS_ACTIVE or ITEM_STATUS_DISABLED
+
+	my $hosts_placeholder = join(",", ("?") x scalar(@{$hosts}));
+
+	my $item_status_condition = defined($item_status) ? ("items.status=" . $item_status . " and" ) : "";
+
+	my $bind_values = [$key_pattern, @{$hosts}];
+	my $rows = db_select(
+		"select items.itemid" .
+		" from items left join hosts on hosts.hostid = items.hostid" .
+		" where $item_status_condition" .
+			" items.key_ like ? and" .
+			" hosts.host in ($hosts_placeholder)", $bind_values);
+
+	return [map($_->[0], @{$rows})];
 }
 
 # organize values from all probes grouped by nsip and return "nsip"->values hash
