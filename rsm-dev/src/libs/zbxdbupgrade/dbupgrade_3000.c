@@ -3251,6 +3251,8 @@ static int	move_ids(const char* table_name, const char* idfield, int id, int cou
 		}
 	}
 
+	DBfree_result(result);
+
 	if (ZBX_DB_OK > DBexecute("delete from ids where table_name='%s'", table_name))
 		return FAIL;
 
