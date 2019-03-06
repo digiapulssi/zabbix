@@ -3259,6 +3259,9 @@ static int	move_ids(const char* table_name, const char* idfield, int id, int cou
 
 static int	DBpatch_3000302(void)
 {
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
 	if (SUCCEED != move_ids("globalmacro", "globalmacroid", 102, 3))
 		return FAIL;
 
@@ -3331,6 +3334,9 @@ static int	DBpatch_3000303(void)
 {
 	DB_RESULT	result;
 	DB_ROW		row;
+
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
 
 	result = DBselect("select h.hostid, h.host from hosts h inner join hosts_groups hg on h.hostid=hg.hostid"
 				" where hg.groupid=140");
@@ -3433,6 +3439,9 @@ static int	DBpatch_3000304(void)
 {
 	DB_RESULT	result;
 	DB_ROW		row;
+
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
 
 	result = DBselect("select h.hostid from hosts h inner join hosts_groups hg on h.hostid=hg.hostid"
 				" where hg.groupid=140");
