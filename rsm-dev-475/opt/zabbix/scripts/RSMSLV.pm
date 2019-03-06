@@ -310,7 +310,7 @@ sub get_slv_rtt($;$)
 
 	if ($service eq 'dns' || $service eq 'dnssec')
 	{
-		fail("internal error: get_rtt_low() called for $service without specifying protocol")
+		fail("internal error: get_slv_rtt() called for $service without specifying protocol")
 			unless (defined($proto));
 
 		return __get_macro('{$RSM.SLV.DNS.UDP.RTT}') if $proto == PROTO_UDP;
