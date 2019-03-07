@@ -3459,6 +3459,193 @@ static int	DBpatch_3000304(void)
 	return SUCCEED;
 }
 
+static int	create_item_in_app(zbx_uint64_t hostid, zbx_uint64_t itemid, int item_type, const char* item_name,
+		const char* item_key, zbx_uint64_t itemappid, zbx_uint64_t applicationid)
+{
+	if (ZBX_DB_OK > DBexecute(
+			"insert into items (itemid,type,hostid,name,key_,params,description)"
+			" values (" ZBX_FS_UI64 ",%d," ZBX_FS_UI64 ",'%s','%s','','')",
+			itemid, item_type, hostid, item_name, item_key))
+	{
+		return ZBX_DB_FAIL;
+	}
+
+	if (ZBX_DB_OK > DBexecute(
+			"insert into items_applications (itemappid,applicationid,itemid) values (" ZBX_FS_UI64 ","
+			ZBX_FS_UI64 "," ZBX_FS_UI64 ")", itemappid, applicationid, itemid))
+	{
+		return ZBX_DB_FAIL;
+	}
+
+	return ZBX_DB_OK;
+}
+
+static int	DBpatch_3000305(void)
+{
+	int		ret = FAIL;
+	DB_RESULT	hosts_result;
+	DB_ROW		hosts_row;
+
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	/* get hostid of all hosts that have status = HOST_STATUS_MONITORED and are in "TLDs" group */
+	hosts_result = DBselect(
+			"select h.hostid"
+			" from hosts h,hosts_groups hg"
+			" where h.status=0 and hg.hostid=h.hostid and hg.groupid=140");
+
+	while (NULL != (hosts_row = DBfetch(hosts_result)))
+	{
+		DB_RESULT	result;
+		DB_ROW		row;
+		zbx_uint64_t	hostid;		/* ID of current host */
+		zbx_uint64_t	applicationid;	/* ID of "SLV current month" application on current host */
+		zbx_uint64_t	next_itemid;	/* ID of next row in items table */
+		zbx_uint64_t	next_itemappid;	/* ID of next row in items_applications table */
+
+		ZBX_STR2UINT64(hostid, hosts_row[0]);
+
+		/* get ID of "SLV current month" application on current host */
+
+		result = DBselect("select applicationid from applications where hostid=" ZBX_FS_UI64 " and"
+				" name='SLV current month'", hostid);
+
+		if (NULL == (row = DBfetch(result)))
+		{
+			DBfree_result(result);
+			goto out;
+		}
+
+		ZBX_STR2UINT64(applicationid, row[0]);
+
+		DBfree_result(result);
+
+		/* reserve 6 IDs in "items" and "items_applications" tables */
+
+		next_itemid = DBget_maxid_num("items", 6);
+		next_itemappid = DBget_maxid_num("items_applications", 6);
+
+		/* create items and link them to "SLV current month" application */
+
+		if (ZBX_DB_OK > create_item_in_app(hostid, next_itemid++, 2, "UDP DNS Resolution RTT (performed)",
+				"rsm.slv.dns.udp.rtt.performed", next_itemappid++, applicationid))
+		{
+			goto out;
+		}
+		if (ZBX_DB_OK > create_item_in_app(hostid, next_itemid++, 2, "UDP DNS Resolution RTT (failed)",
+				"rsm.slv.dns.udp.rtt.failed", next_itemappid++, applicationid))
+		{
+			goto out;
+		}
+		if (ZBX_DB_OK > create_item_in_app(hostid, next_itemid++, 2, "UDP DNS Resolution RTT (pfailed)",
+				"rsm.slv.dns.udp.rtt.pfailed", next_itemappid++, applicationid))
+		{
+			goto out;
+		}
+		if (ZBX_DB_OK > create_item_in_app(hostid, next_itemid++, 2, "TCP DNS Resolution RTT (performed)",
+				"rsm.slv.dns.tcp.rtt.performed", next_itemappid++, applicationid))
+		{
+			goto out;
+		}
+		if (ZBX_DB_OK > create_item_in_app(hostid, next_itemid++, 2, "TCP DNS Resolution RTT (failed)",
+				"rsm.slv.dns.tcp.rtt.failed", next_itemappid++, applicationid))
+		{
+			goto out;
+		}
+		if (ZBX_DB_OK > create_item_in_app(hostid, next_itemid++, 2, "TCP DNS Resolution RTT (pfailed)",
+				"rsm.slv.dns.tcp.rtt.pfailed", next_itemappid++, applicationid))
+		{
+			goto out;
+		}
+	}
+
+	ret = SUCCEED;
+out:
+	DBfree_result(hosts_result);
+
+	return ret;
+}
+
+static int	DBpatch_3000306(void)
+{
+	int		ret = FAIL;
+	DB_RESULT	hosts_result;
+	DB_ROW		hosts_row;
+
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	/* get hostid of all hosts that have status = HOST_STATUS_MONITORED,*/
+	/* are in "TLDs" group and have either RDDS or RDAP enabled */
+	hosts_result = DBselect(
+			"select distinct hosts.hostid"
+			" from hosts"
+				" left join hosts_groups on hosts_groups.hostid=hosts.hostid"
+				" left join hosts as templates on templates.host=concat('Template ',hosts.host)"
+				" left join hostmacro on hostmacro.hostid=templates.hostid"
+			" where hosts.status=0 and"
+				" hosts_groups.groupid=140 and"
+				" hostmacro.macro in ('{$RSM.TLD.RDDS.ENABLED}','{$RDAP.TLD.ENABLED}') and"
+				" hostmacro.value='1'");
+
+	while (NULL != (hosts_row = DBfetch(hosts_result)))
+	{
+		DB_RESULT	result;
+		DB_ROW		row;
+		zbx_uint64_t	hostid;		/* ID of current host */
+		zbx_uint64_t	applicationid;	/* ID of "SLV current month" application on current host */
+		zbx_uint64_t	next_itemid;	/* ID of next row in items table */
+		zbx_uint64_t	next_itemappid;	/* ID of next row in items_applications table */
+
+		ZBX_STR2UINT64(hostid, hosts_row[0]);
+
+		/* get ID of "SLV current month" application on current host */
+
+		result = DBselect("select applicationid from applications where hostid=" ZBX_FS_UI64 " and"
+				" name='SLV current month'", hostid);
+
+		if (NULL == (row = DBfetch(result)))
+		{
+			DBfree_result(result);
+			goto out;
+		}
+
+		ZBX_STR2UINT64(applicationid, row[0]);
+
+		DBfree_result(result);
+
+		/* reserve 3 IDs in "items" and "items_applications" tables */
+
+		next_itemid = DBget_maxid_num("items", 3);
+		next_itemappid = DBget_maxid_num("items_applications", 3);
+
+		/* create items and link them to "SLV current month" application */
+
+		if (ZBX_DB_OK > create_item_in_app(hostid, next_itemid++, 2, "RDDS query RTT (performed)",
+				"rsm.slv.rdds.rtt.performed", next_itemappid++, applicationid))
+		{
+			goto out;
+		}
+		if (ZBX_DB_OK > create_item_in_app(hostid, next_itemid++, 2, "RDDS query RTT (failed)",
+				"rsm.slv.rdds.rtt.failed", next_itemappid++, applicationid))
+		{
+			goto out;
+		}
+		if (ZBX_DB_OK > create_item_in_app(hostid, next_itemid++, 2, "RDDS query RTT (pfailed)",
+				"rsm.slv.rdds.rtt.pfailed", next_itemappid++, applicationid))
+		{
+			goto out;
+		}
+	}
+
+	ret = SUCCEED;
+out:
+	DBfree_result(hosts_result);
+
+	return ret;
+}
+
 #endif
 
 DBPATCH_START(3000)
@@ -3549,5 +3736,7 @@ DBPATCH_ADD(3000301, 0, 0)	/* add lastvalue_str table */
 DBPATCH_ADD(3000302, 0, 0)	/* update and add new RSM.SLV.* macros */
 DBPATCH_ADD(3000303, 0, 0)	/* add DNS downtime trigger to existing tld hosts */
 DBPATCH_ADD(3000304, 0, 0)	/* add RDDS downtime triggers to existing tld hosts */
+DBPATCH_ADD(3000305, 0, 0)	/* add "DNS Resolution RTT (performed/failed/pfailed)" items to existing tld hosts */
+DBPATCH_ADD(3000306, 0, 0)	/* add "RDDS Resolution RTT (performed/failed/pfailed)" items to existing tld hosts */
 
 DBPATCH_END()
