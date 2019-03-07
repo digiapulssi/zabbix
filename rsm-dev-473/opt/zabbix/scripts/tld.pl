@@ -1575,48 +1575,54 @@ sub compare_arrays($$) {
     return @result;
 }
 
-sub get_tld_list() {
-    my $tlds = get_host_group('TLDs', true, false);
+sub get_tld_list()
+{
+	my $tlds = get_host_group('TLDs', true, false);
 
-    my @result;
+	my @result;
 
-    foreach my $tld (@{$tlds->{'hosts'}}) {
-	push @result, $tld->{'name'};
-    }
+	foreach my $tld (@{$tlds->{'hosts'}})
+	{
+		push @result, $tld->{'name'};
+	}
 
-    return @result;
+	return @result;
 }
 
-sub get_nsservers_list($) {
-    my $TLD = shift;
-    my $result;
+sub get_nsservers_list($)
+{
+	my $TLD = shift;
+	my $result;
 
-    my $templateid = get_template('Template '.$TLD, false, false);
+	my $templateid = get_template('Template '.$TLD, false, false);
 
-    pfail("TLD \"$TLD\" does not exist on \"$server_key\"") unless ($templateid->{'templateid'});
+	pfail("TLD \"$TLD\" does not exist on \"$server_key\"") unless ($templateid->{'templateid'});
 
-    $templateid = $templateid->{'templateid'};
+	$templateid = $templateid->{'templateid'};
 
-    my $items = get_items_like($templateid, 'rsm.dns.tcp.rtt', true);
+	my $items = get_items_like($templateid, 'rsm.dns.tcp.rtt', true);
 
-    foreach my $itemid (keys %{$items}) {
-	next if $items->{$itemid}->{'status'} == ITEM_STATUS_DISABLED;
+	foreach my $itemid (keys %{$items})
+	{
+		next if $items->{$itemid}->{'status'} == ITEM_STATUS_DISABLED;
 
-	my $name = $items->{$itemid}->{'key_'};
-	my $ip = $items->{$itemid}->{'key_'};
+		my $name = $items->{$itemid}->{'key_'};
+		my $ip = $items->{$itemid}->{'key_'};
 
-	$ip =~s/.+\,.+\,(.+)\]$/$1/;
-	$name =~s/.+\,(.+)\,.+\]$/$1/;
+		$ip =~ s/.+\,.+\,(.+)\]$/$1/;
+		$name =~ s/.+\,(.+)\,.+\]$/$1/;
 
-	if ($ip=~/\d*\.\d*\.\d*\.\d+/) {
-	    push @{$result->{'v4'}->{$name}}, $ip;
+		if ($ip=~/\d*\.\d*\.\d*\.\d+/)
+		{
+			push @{$result->{'v4'}->{$name}}, $ip;
+		}
+		else
+		{
+			push @{$result->{'v6'}->{$name}}, $ip;
+		}
 	}
-	else {
-	    push @{$result->{'v6'}->{$name}}, $ip;
-	}
-    }
 
-    return $result;
+	return $result;
 }
 
 sub update_nsservers($$) {
