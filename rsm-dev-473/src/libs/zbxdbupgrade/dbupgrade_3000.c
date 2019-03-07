@@ -3535,10 +3535,8 @@ static int	create_slv_dns_ns_downtime_item(const char *tld, const char *hostid, 
 			"'0','30','0','0','','0')",
 			DBget_maxid("items"), hostid, ns, ip, ns, ip))
 	{
-		printf("A\n");
 		goto _out;
 	}
-	printf("B\n");
 
 	result = SUCCEED;
 _out:
