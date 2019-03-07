@@ -3459,6 +3459,137 @@ static int	DBpatch_3000304(void)
 	return SUCCEED;
 }
 
+static int	create_slv_dns_ns_downtime_item(const char *tld, const char *hostid, const char* probe_item_key)
+{
+	int		i, probe_item_key_len, result = FAIL;
+	char		*probe_item_key_copy;
+	const char 	*ns, *ip;
+
+	if (NULL == tld || 0 == tld[0] || NULL == probe_item_key || 0 == probe_item_key[0])
+		return FAIL;
+
+	/* extract ns & ip from probe_item_key */
+
+	probe_item_key_len = strlen(probe_item_key);
+
+	i = strlen("rsm.dns.udp.rtt[{$RSM.TLD},");
+
+	if (i >= probe_item_key_len)
+		return FAIL;
+
+	probe_item_key_copy = zbx_strdup(NULL, probe_item_key);
+
+	ns = probe_item_key_copy + i;
+
+	for (;;)
+	{
+		if (i >= probe_item_key_len)
+			goto _out;
+
+		if (probe_item_key_copy[i] == ',')
+			break;
+
+		i++;
+	}
+
+	probe_item_key_copy[i] = 0;
+
+	i++;
+
+	if (i >= probe_item_key_len)
+		goto _out;
+
+	ip = probe_item_key_copy + i;
+
+	for (;;)
+	{
+		if (i >= probe_item_key_len)
+			goto _out;
+
+		if (probe_item_key_copy[i] == ']')
+			break;
+
+		i++;
+	}
+
+	probe_item_key_copy[i] = 0;
+
+	/* add item */
+
+	printf("H: %s, %s, %s\n", hostid, ns, ip);
+
+	if (ZBX_DB_OK > DBexecute(
+		"insert into items (itemid,type,snmp_community,snmp_oid,hostid,"
+			"name,key_,delay,history,trends,"
+			"status,value_type,trapper_hosts,units,multiplier,delta,"
+			"snmpv3_securityname,snmpv3_securitylevel,snmpv3_authpassphrase,snmpv3_privpassphrase,"
+			"formula,logtimefmt,templateid,valuemapid,delay_flex,params,ipmi_sensor,data_type,"
+			"authtype,username,password,publickey,privatekey,flags,interfaceid,port,description,"
+			"inventory_link,lifetime,snmpv3_authprotocol,snmpv3_privprotocol,snmpv3_contextname,evaltype)"
+		" values ('" ZBX_FS_UI64 "','2','','','%s',"
+			"'DNS minutes of %s (%s) downtime','rsm.slv.dns.ns.downtime[%s,%s]','','90','365',"
+			"'0','0','','','0','0',"
+			"'','0','','',"
+			"'1','',NULL,NULL,'','','','0',"
+			"'0','','','','','0',NULL,'','',"
+			"'0','30','0','0','','0')",
+			DBget_maxid("items"), hostid, ns, ip, ns, ip))
+	{
+		printf("A\n");
+		goto _out;
+	}
+	printf("B\n");
+
+	result = SUCCEED;
+_out:
+	zbx_free(probe_item_key_copy);
+
+	return result;
+}
+
+static int	process_probe_nsip_pairs(const char *tld, const char *hostid)
+{
+	DB_RESULT	result;
+	DB_ROW		row;
+
+	result = DBselect("select distinct key_ from items i"
+				" left join hosts h on i.hostid=h.hostid"
+				" where i.key_ like 'rsm.dns.udp.rtt%%'"
+				" and h.name='Template %s'", tld);
+
+	while (NULL != (row = DBfetch(result)))
+	{
+		if (SUCCEED != create_slv_dns_ns_downtime_item(tld, hostid, row[0]))
+			return FAIL;
+	}
+
+	DBfree_result(result);
+
+	return SUCCEED;
+}
+
+static int	DBpatch_3000307(void)
+{
+	DB_RESULT	result;
+	DB_ROW		row;
+
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	result = DBselect("select h.host,h.hostid from hosts h inner join hosts_groups hg on h.hostid=hg.hostid"
+				" where hg.groupid=140");
+
+	while (NULL != (row = DBfetch(result)))
+	{
+		if (SUCCEED != process_probe_nsip_pairs(row[0], row[1]))
+			return FAIL;
+	}
+
+	DBfree_result(result);
+
+	return SUCCEED;
+}
+
 #endif
 
 DBPATCH_START(3000)
@@ -3549,5 +3680,6 @@ DBPATCH_ADD(3000301, 0, 0)	/* add lastvalue_str table */
 DBPATCH_ADD(3000302, 0, 0)	/* update and add new RSM.SLV.* macros */
 DBPATCH_ADD(3000303, 0, 0)	/* add DNS downtime trigger to existing tld hosts */
 DBPATCH_ADD(3000304, 0, 0)	/* add RDDS downtime triggers to existing tld hosts */
+DBPATCH_ADD(3000307, 0, 0)	/* add rsm.slv.dns.ns.downtime to tld hosts */
 
 DBPATCH_END()
