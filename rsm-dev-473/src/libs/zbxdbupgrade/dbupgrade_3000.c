@@ -3464,6 +3464,7 @@ static int	create_slv_dns_ns_downtime_item(const char *tld, const char *hostid, 
 	int		i, probe_item_key_len, result = FAIL;
 	char		*probe_item_key_copy;
 	const char 	*ns, *ip;
+	zbx_uint64_t	itemid;
 
 	if (NULL == tld || 0 == tld[0] || NULL == probe_item_key || 0 == probe_item_key[0])
 		return FAIL;
@@ -3516,6 +3517,8 @@ static int	create_slv_dns_ns_downtime_item(const char *tld, const char *hostid, 
 
 	/* add item */
 
+	itemid = DBget_maxid("items");
+
 	if (ZBX_DB_OK > DBexecute(
 		"insert into items (itemid,type,snmp_community,snmp_oid,hostid,"
 			"name,key_,delay,history,trends,"
@@ -3531,7 +3534,15 @@ static int	create_slv_dns_ns_downtime_item(const char *tld, const char *hostid, 
 			"'1','',NULL,NULL,'','','','0',"
 			"'0','','','','','0',NULL,'','',"
 			"'0','30','0','0','','0')",
-			DBget_maxid("items"), hostid, ns, ip, ns, ip))
+			itemid, hostid, ns, ip, ns, ip))
+	{
+		goto _out;
+	}
+
+	if (ZBX_DB_OK > DBexecute(
+		"insert into items_applications (itemappid,applicationid,itemid) VALUES ('" ZBX_FS_UI64 "',"
+			"(SELECT applicationid FROM applications WHERE hostid='%s' AND name='SLV current month'),"
+			ZBX_FS_UI64")", DBget_maxid("items_applications"), hostid, itemid))
 	{
 		goto _out;
 	}
