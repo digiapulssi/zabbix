@@ -38,6 +38,38 @@ else {
 	$exportData = false;
 }
 
+$error_message = false;
+
+if (hasRequest('action')) {
+	if (!hasRequest('hosts') || !is_array(getRequest('hosts'))) {
+		access_deny();
+	}
+	else {
+		$hostids = API::Host()->get([
+			'hostids' => array_keys(getRequest('hosts')),
+			'output' => [],
+			'editable' => true
+		]);
+
+		if (count($hostids) != count(getRequest('hosts'))) {
+			unset($_REQUEST['action']);
+			$exportData = false;
+			$page['type'] = PAGE_TYPE_HTML;
+			$page['title'] = _('Configuration of hosts');
+			$page['file'] = 'hosts.php';
+			$page['scripts'] = ['multiselect.js'];
+			$error_message = _('No permissions to referred object or it does not exist!');
+
+			if ($hostids) {
+				updateTableRowsChecks(null, array_column($hostids, 'hostid', 'hostid'));
+			}
+			else {
+				uncheckTableRows();
+			}
+		}
+	}
+}
+
 require_once dirname(__FILE__).'/include/page_header.php';
 
 // VAR	TYPE	OPTIONAL	FLAGS	VALIDATION	EXCEPTION
@@ -181,6 +213,10 @@ if ($exportData) {
 	exit;
 }
 
+if ($error_message) {
+	show_error_message($error_message);
+}
+
 /*
  * Filter
  */
@@ -228,8 +264,6 @@ foreach ($macros as $idx => $macro) {
 /*
  * Actions
  */
-$result = false;
-
 if (isset($_REQUEST['add_template']) && isset($_REQUEST['add_templates'])) {
 	$_REQUEST['templates'] = getRequest('templates', []);
 	$_REQUEST['templates'] = array_merge($_REQUEST['templates'], $_REQUEST['add_templates']);
@@ -516,6 +550,7 @@ elseif (hasRequest('action') && getRequest('action') == 'host.massupdate' && has
 
 		DBend(true);
 
+		uncheckTableRows();
 		show_message(_('Hosts updated'));
 
 		unset($_REQUEST['masssave'], $_REQUEST['form'], $_REQUEST['hosts']);
@@ -774,6 +809,9 @@ elseif (hasRequest('add') || hasRequest('update')) {
 
 		$result = DBend(true);
 
+		if ($result) {
+			uncheckTableRows();
+		}
 		show_messages($result, $msgOk, $msgFail);
 
 		unset($_REQUEST['form'], $_REQUEST['hostid']);
@@ -791,6 +829,7 @@ elseif (hasRequest('delete') && hasRequest('hostid')) {
 
 	if ($result) {
 		unset($_REQUEST['form'], $_REQUEST['hostid']);
+		uncheckTableRows();
 	}
 	show_messages($result, _('Host deleted'), _('Cannot delete host'));
 
@@ -799,24 +838,12 @@ elseif (hasRequest('delete') && hasRequest('hostid')) {
 elseif (hasRequest('action') && getRequest('action') == 'host.massdelete' && hasRequest('hosts')) {
 	DBstart();
 
-	$hostids = API::Host()->get([
-		'hostids' => array_keys(getRequest('hosts')),
-		'output' => ['hostid', 'host'],
-		'editable' => true
-	]);
-	$result = API::Host()->delete(array_keys(getRequest('hosts')));
-
-	if (!$result) {
-		if ($hostids) {
-			updateSessionStorage(null, array_column($hostids, 'hostid', 'hostid'));
-		}
-		else {
-			clearSessionStorage();
-		}
-	}
-
+	$result = API::Host()->delete(getRequest('hosts'));
 	$result = DBend($result);
 
+	if ($result) {
+		uncheckTableRows();
+	}
 	show_messages($result, _('Host deleted'), _('Cannot delete host'));
 }
 elseif (hasRequest('action') && str_in_array(getRequest('action'), ['host.massenable', 'host.massdisable']) && hasRequest('hosts')) {
@@ -837,6 +864,10 @@ elseif (hasRequest('action') && str_in_array(getRequest('action'), ['host.massen
 		$result = updateHostStatus($actHosts, $status);
 		$result = DBend($result);
 
+		if ($result) {
+			uncheckTableRows();
+		}
+
 		$updated = count($actHosts);
 
 		$messageSuccess = $enable
@@ -848,10 +879,6 @@ elseif (hasRequest('action') && str_in_array(getRequest('action'), ['host.massen
 
 		show_messages($result, $messageSuccess, $messageFailed);
 	}
-}
-
-if ($result) {
-	clearSessionStorage();
 }
 
 /*

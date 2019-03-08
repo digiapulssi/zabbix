@@ -58,11 +58,33 @@ $fields = [
 ];
 check_fields($fields);
 
+if (hasRequest('action')) {
+	if (!hasRequest('groups') || !is_array(getRequest('groups'))) {
+		access_deny();
+	}
+	else {
+		$groups = API::HostGroup()->get([
+			'groupids' => array_keys(getRequest('groups')),
+			'output' => []
+		]);
+
+		if (count($groups) != count(getRequest('groups'))) {
+			show_error_message(_('No permissions to referred object or it does not exist!'));
+			unset($_REQUEST['action']);
+
+			if ($groups) {
+				updateTableRowsChecks(null, array_column($groups, 'groupid', 'groupid'));
+			}
+			else {
+				uncheckTableRows();
+			}
+		}
+	}
+}
+
 /*
  * Form actions
  */
-$result = false;
-
 if (hasRequest('form')) {
 	if (hasRequest('clone')) {
 		unset($_REQUEST['groupid']);
@@ -122,6 +144,7 @@ if (hasRequest('form')) {
 
 		if ($result) {
 			unset($_REQUEST['form']);
+			uncheckTableRows();
 		}
 		show_messages($result, $messageSuccess, $messageFailed);
 	}
@@ -130,6 +153,7 @@ if (hasRequest('form')) {
 
 		if ($result) {
 			unset($_REQUEST['form']);
+			uncheckTableRows();
 		}
 		show_messages($result, _('Group deleted'), _('Cannot delete group'));
 
@@ -148,18 +172,8 @@ elseif (hasRequest('action')) {
 
 			$updated = count($groupIds);
 
-			if (!$result) {
-				$groups = API::HostGroup()->get([
-					'output' => ['groupid', 'name'],
-					'groupids' => array_keys($groupIds)
-				]);
-
-				if ($groups) {
-					updateSessionStorage(null, array_column($groups, 'groupid', 'groupid'));
-				}
-				else {
-					clearSessionStorage();
-				}
+			if ($result) {
+				uncheckTableRows();
 			}
 			show_messages($result,
 				_n('Group deleted', 'Groups deleted', $updated),
@@ -202,6 +216,10 @@ elseif (hasRequest('action')) {
 
 			$result = DBend($result);
 
+			if ($result) {
+				uncheckTableRows();
+			}
+
 			$updated = count($hosts);
 
 			$messageSuccess = $enable
@@ -214,10 +232,6 @@ elseif (hasRequest('action')) {
 			show_messages($result, $messageSuccess, $messageFailed);
 		}
 	}
-}
-
-if ($result) {
-	clearSessionStorage();
 }
 
 /*

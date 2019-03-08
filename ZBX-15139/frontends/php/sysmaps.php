@@ -39,6 +39,38 @@ else {
 	$isExportData = false;
 }
 
+$error_message = false;
+
+if (hasRequest('action')) {
+	if (!hasRequest('maps') || !is_array(getRequest('maps'))) {
+		access_deny();
+	}
+	else {
+		$maps = API::Map()->get([
+			'sysmapids' => array_keys(getRequest('maps')),
+			'output' => [],
+			'editable' => true
+		]);
+
+		if (count($maps) != count(getRequest('maps'))) {
+			unset($_REQUEST['action']);
+			$isExportData = false;
+			$page['type'] = PAGE_TYPE_HTML;
+			$page['title'] = _('Configuration of network maps');
+			$page['file'] = 'sysmaps.php';
+			$page['scripts'] = ['multiselect.js'];
+			$error_message = _('No permissions to referred object or it does not exist!');
+
+			if ($maps) {
+				updateTableRowsChecks(null, array_column($maps, 'sysmapid', 'sysmapid'));
+			}
+			else {
+				uncheckTableRows();
+			}
+		}
+	}
+}
+
 require_once dirname(__FILE__).'/include/page_header.php';
 
 // VAR	TYPE	OPTIONAL	FLAGS	VALIDATION	EXCEPTION
@@ -136,11 +168,13 @@ if ($isExportData) {
 	exit;
 }
 
+if ($error_message) {
+	show_error_message($error_message);
+}
+
 /*
  * Actions
  */
-$result = false;
-
 if (hasRequest('add') || hasRequest('update')) {
 	$map = [
 		'name' => getRequest('name'),
@@ -247,6 +281,9 @@ if (hasRequest('add') || hasRequest('update')) {
 
 	$result = DBend($result);
 
+	if ($result) {
+		uncheckTableRows();
+	}
 	show_messages($result, $messageSuccess, $messageFailed);
 }
 elseif ((hasRequest('delete') && hasRequest('sysmapid')) || (hasRequest('action') && getRequest('action') == 'map.massdelete')) {
@@ -272,23 +309,15 @@ elseif ((hasRequest('delete') && hasRequest('sysmapid')) || (hasRequest('action'
 			add_audit_ext(AUDIT_ACTION_DELETE, AUDIT_RESOURCE_MAP, $map['sysmapid'], $map['name'], null, null, null);
 		}
 	}
-	else {
-		if ($maps) {
-			updateSessionStorage(null, array_column($maps, 'sysmapid', 'sysmapid'));
-		}
-		else {
-			clearSessionStorage();
-		}
-	}
 
 	$result = DBend($result);
 
+	if ($result) {
+		uncheckTableRows();
+	}
 	show_messages($result, _('Network map deleted'), _('Cannot delete network map'));
 }
 
-if ($result) {
-	clearSessionStorage();
-}
 /*
  * Display
  */

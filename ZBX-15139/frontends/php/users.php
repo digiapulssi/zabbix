@@ -115,13 +115,31 @@ if (hasRequest('action')) {
 	if (!hasRequest('group_userid') || !is_array(getRequest('group_userid'))) {
 		access_deny();
 	}
+	else {
+		$users = API::User()->get([
+			'output' => [],
+			'userids' => array_keys(getRequest('group_userid')),
+			'editable' => true
+		]);
+
+		if (count($users) != count(getRequest('group_userid'))) {
+			show_error_message(_('No permissions to referred object or it does not exist!'));
+			unset($_REQUEST['action']);
+
+			if ($users) {
+				updateTableRowsChecks(null, array_column($users, 'userid', 'userid'));
+			}
+			else {
+				uncheckTableRows();
+			}
+		}
+	}
 }
 
 /*
  * Actions
  */
 $config = select_config();
-$result = false;
 
 if (isset($_REQUEST['new_media'])) {
 	$_REQUEST['user_medias'] = getRequest('user_medias', []);
@@ -201,6 +219,7 @@ elseif (hasRequest('add') || hasRequest('update')) {
 
 		if ($result) {
 			unset($_REQUEST['form']);
+			uncheckTableRows();
 		}
 	}
 }
@@ -217,6 +236,9 @@ elseif (isset($_REQUEST['delete']) && isset($_REQUEST['userid'])) {
 	$result = API::User()->delete([$user['userid']]);
 	unset($_REQUEST['userid'], $_REQUEST['form']);
 
+	if ($result) {
+		uncheckTableRows();
+	}
 	show_messages($result, _('User deleted'), _('Cannot delete user'));
 }
 elseif (hasRequest('action') && getRequest('action') == 'user.massunblock' && hasRequest('group_userid')) {
@@ -240,32 +262,18 @@ elseif (hasRequest('action') && getRequest('action') == 'user.massunblock' && ha
 
 	$result = DBend($result);
 
+	if ($result) {
+		uncheckTableRows();
+	}
 	show_messages($result, _('Users unblocked'), _('Cannot unblock users'));
 }
 elseif (hasRequest('action') && getRequest('action') == 'user.massdelete' && hasRequest('group_userid')) {
-	$userids = getRequest('group_userid', []);
+	$result = API::User()->delete(getRequest('group_userid'));
 
-	$result = API::User()->delete($userids);
-
-	if (!$result) {
-		$users = API::User()->get([
-			'output' => ['userid', 'alias'],
-			'editable' => true,
-			'userids' => array_keys($userids)
-		]);
-
-		if ($users) {
-			updateSessionStorage(null, array_column($users, 'userid', 'userid'));
-		}
-		else {
-			clearSessionStorage();
-		}
+	if ($result) {
+		uncheckTableRows();
 	}
 	show_messages($result, _('User deleted'), _('Cannot delete user'));
-}
-
-if ($result) {
-	clearSessionStorage();
 }
 
 /*

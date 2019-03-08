@@ -2409,22 +2409,11 @@ function hasErrorMesssages() {
 }
 
 /**
- * Clears table rows selection's cookies.
- *
- * @param string $cookieId		parent ID, is used as cookie suffix
- */
-function uncheckTableRows($cookieId = null) {
-	insert_js('cookie.eraseArray("cb_'.basename($_SERVER['SCRIPT_NAME'], '.php').
-		($cookieId === null ? '' : '_'.$cookieId).'")'
-	);
-}
-
-/**
  * Clears table rows selection's in sessionStorage.
  *
  * @param string $parentid    parent ID, is used as sessionStorage suffix.
  */
-function clearSessionStorage($parentid = null) {
+function uncheckTableRows($parentid = null) {
 	insert_js('sessionStorage.removeItem("cb_'.basename($_SERVER['SCRIPT_NAME'], '.php')
 		.($parentid === null ? '' : '_'.$parentid).'")'
 	);
@@ -2436,7 +2425,7 @@ function clearSessionStorage($parentid = null) {
  * @param string $parentid     parent ID, is used as sessionStorage suffix
  * @param array  $itemids      checked rows ids [id1 => id1, id2 => id2, ...]
  */
-function updateSessionStorage($parentid = null, array $itemids = []) {
+function updateTableRowsChecks($parentid = null, array $itemids = []) {
 	insert_js('sessionStorage.setItem("cb_'.basename($_SERVER['SCRIPT_NAME'], '.php').
 		($parentid === null ? '' : '_'.$parentid).'", JSON.stringify('.json_encode($itemids).'))'
 	);

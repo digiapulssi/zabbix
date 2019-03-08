@@ -346,6 +346,31 @@ if ($filter_groupids) {
 	}
 }
 
+if (hasRequest('action')) {
+	if (!hasRequest('group_itemid') || !is_array(getRequest('group_itemid'))) {
+		access_deny();
+	}
+	else {
+		$items = API::Item()->get([
+			'itemids' => array_keys(getRequest('group_itemid')),
+			'output' => [],
+			'editable' => true
+		]);
+
+		if (count($items) != count(getRequest('group_itemid'))) {
+			show_error_message(_('No permissions to referred object or it does not exist!'));
+			unset($_REQUEST['action']);
+
+			if ($items) {
+				updateTableRowsChecks(getRequest('hostid'), array_column($items, 'itemid', 'itemid'));
+			}
+			else {
+				uncheckTableRows(getRequest('hostid'));
+			}
+		}
+	}
+}
+
 if (getRequest('filter_hostid') && !isWritableHostTemplates([getRequest('filter_hostid')])) {
 	access_deny();
 }
@@ -478,6 +503,9 @@ if (isset($_REQUEST['delete']) && isset($_REQUEST['itemid'])) {
 		$result = API::Item()->delete([getRequest('itemid')]);
 	}
 
+	if ($result) {
+		uncheckTableRows(getRequest('hostid'));
+	}
 	unset($_REQUEST['itemid'], $_REQUEST['form']);
 	show_messages($result, _('Item deleted'), _('Cannot delete item'));
 }
@@ -860,6 +888,7 @@ elseif (hasRequest('add') || hasRequest('update')) {
 
 	if ($result) {
 		unset($_REQUEST['itemid'], $_REQUEST['form']);
+		uncheckTableRows(getRequest('hostid'));
 	}
 }
 elseif (hasRequest('check_now') && hasRequest('itemid')) {
@@ -1169,6 +1198,7 @@ elseif ($valid_input && hasRequest('massupdate') && hasRequest('group_itemid')) 
 
 	if ($result) {
 		unset($_REQUEST['group_itemid'], $_REQUEST['massupdate'], $_REQUEST['form']);
+		uncheckTableRows(getRequest('hostid'));
 	}
 	show_messages($result, _('Items updated'), _('Cannot update items'));
 }
@@ -1182,6 +1212,11 @@ elseif (hasRequest('action') && str_in_array(getRequest('action'), ['item.massen
 	}
 
 	$result = (bool) API::Item()->update($items);
+
+	if ($result) {
+		uncheckTableRows(getRequest('hostid'));
+	}
+
 	$updated = count($itemids);
 
 	$messageSuccess = ($status == ITEM_STATUS_ACTIVE)
@@ -1224,6 +1259,7 @@ elseif (hasRequest('action') && getRequest('action') === 'item.masscopyto' && ha
 		$items_count = count(getRequest('group_itemid'));
 
 		if ($result) {
+			uncheckTableRows(getRequest('hostid'));
 			unset($_REQUEST['group_itemid']);
 		}
 		show_messages($result,
@@ -1266,30 +1302,42 @@ elseif (hasRequest('action') && getRequest('action') === 'item.massclearhistory'
 		}
 
 		$result = DBend($result);
+
+		if ($result) {
+			uncheckTableRows(getRequest('hostid'));
+		}
 	}
 
 	show_messages($result, _('History cleared'), _('Cannot clear history'));
 }
 elseif (hasRequest('action') && getRequest('action') === 'item.massdelete' && hasRequest('group_itemid')) {
+	DBstart();
+
 	$group_itemid = getRequest('group_itemid');
 
-	$result = API::Item()->delete($group_itemid);
-
-	if (!$result) {
-		$itemids = API::Item()->get([
-			'output' => [],
+	$itemsToDelete = API::Item()->get([
+		'output' => ['key_', 'itemid'],
+		'selectHosts' => ['name'],
 			'itemids' => $group_itemid,
 			'preservekeys' => true
 		]);
 
-		if ($itemids) {
-			updateSessionStorage(getRequest('hostid'), array_column($itemids, 'itemid', 'itemid'));
-		}
-		else {
-			clearSessionStorage(getRequest('hostid'));
+	$result = API::Item()->delete($group_itemid);
+
+	if ($result) {
+		foreach ($itemsToDelete as $item) {
+			$host = reset($item['hosts']);
+			add_audit(AUDIT_ACTION_DELETE, AUDIT_RESOURCE_ITEM,
+				_('Item').' ['.$item['key_'].'] ['.$item['itemid'].'] '._('Host').' ['.$host['name'].']'
+			);
 		}
 	}
 
+	$result = DBend($result);
+
+	if ($result) {
+		uncheckTableRows(getRequest('hostid'));
+	}
 	show_messages($result, _('Items deleted'), _('Cannot delete items'));
 }
 elseif (hasRequest('action') && getRequest('action') === 'item.masscheck_now' && hasRequest('group_itemid')) {
@@ -1303,7 +1351,7 @@ elseif (hasRequest('action') && getRequest('action') === 'item.masscheck_now' &&
 
 // If any of item action succeeded, remove processed ids from browser session storage.
 if ($result) {
-	clearSessionStorage(getRequest('hostid'));
+	uncheckTableRows(getRequest('hostid'));
 }
 
 /*

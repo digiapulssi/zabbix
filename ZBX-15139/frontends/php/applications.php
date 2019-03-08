@@ -53,6 +53,13 @@ $fields = [
 ];
 check_fields($fields);
 
+$pageFilter = new CPageFilter([
+	'groups' => ['editable' => true, 'with_hosts_and_templates' => true],
+	'hosts' => ['editable' => true, 'templated_hosts' => true],
+	'hostid' => getRequest('hostid'),
+	'groupid' => getRequest('groupid')
+]);
+
 /*
  * Permissions
  */
@@ -70,12 +77,20 @@ if (hasRequest('action')) {
 		access_deny();
 	}
 	else {
-		$dbApplications = API::Application()->get([
-			'applicationids' => getRequest('applications'),
-			'countOutput' => true
+		$applications = API::Application()->get([
+			'applicationids' => array_keys(getRequest('applications')),
+			'output' => []
 		]);
-		if ($dbApplications != count(getRequest('applications'))) {
-			access_deny();
+		if (count($applications) != count(getRequest('applications'))) {
+			show_error_message(_('No permissions to referred object or it does not exist!'));
+			unset($_REQUEST['action']);
+
+			if ($applications) {
+				updateTableRowsChecks($pageFilter->hostid, array_column($applications, 'applicationid', 'applicationid'));
+			}
+			else {
+				uncheckTableRows($pageFilter->hostid);
+			}
 		}
 	}
 }
@@ -85,13 +100,6 @@ if (getRequest('groupid') && !isWritableHostGroups([getRequest('groupid')])) {
 if (getRequest('hostid') && !isWritableHostTemplates([getRequest('hostid')])) {
 	access_deny();
 }
-
-$pageFilter = new CPageFilter([
-	'groups' => ['editable' => true, 'with_hosts_and_templates' => true],
-	'hosts' => ['editable' => true, 'templated_hosts' => true],
-	'hostid' => getRequest('hostid'),
-	'groupid' => getRequest('groupid')
-]);
 
 /*
  * Actions

@@ -128,6 +128,31 @@ if (isset($_REQUEST['actionid'])) {
 	}
 }
 
+if (hasRequest('action')) {
+	if (!hasRequest('g_actionid') || !is_array(getRequest('g_actionid'))) {
+		access_deny();
+	}
+	else {
+		$actions = API::Action()->get([
+			'actionids' => array_keys(getRequest('g_actionid')),
+			'output' => [],
+			'editable' => true
+		]);
+
+		if (count($actions) != count(getRequest('g_actionid'))) {
+			show_error_message(_('No permissions to referred object or it does not exist!'));
+			unset($_REQUEST['action']);
+
+			if ($actions) {
+				updateTableRowsChecks(null, array_column($actions, 'actionid', 'actionid'));
+			}
+			else {
+				uncheckTableRows();
+			}
+		}
+	}
+}
+
 /*
  * Actions
  */

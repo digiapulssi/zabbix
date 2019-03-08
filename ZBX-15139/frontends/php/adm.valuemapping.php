@@ -34,6 +34,38 @@ else {
 	$export = false;
 }
 
+$error_message = false;
+
+if (hasRequest('action')) {
+	if (!hasRequest('valuemapids') || !is_array(getRequest('valuemapids'))) {
+		access_deny();
+	}
+	else {
+
+		$valuemaps = API::ValueMap()->get([
+			'valuemapids' => array_keys(getRequest('valuemapids')),
+			'output' => []
+		]);
+
+		if (count($valuemaps) != count(getRequest('valuemapids'))) {
+
+			unset($_REQUEST['action']);
+			$export = false;
+			$page['type'] = PAGE_TYPE_HTML;
+			$page['title'] = _('Configuration of value mapping');
+			$page['file'] = 'adm.valuemapping.php';
+			$error_message = _('No permissions to referred object or it does not exist!');
+
+			if ($valuemaps) {
+				updateTableRowsChecks(null, array_column($valuemaps, 'valuemapid', 'valuemapid'));
+			}
+			else {
+				uncheckTableRows();
+			}
+		}
+	}
+}
+
 require_once dirname(__FILE__).'/include/page_header.php';
 
 // VAR	TYPE	OPTIONAL	FLAGS	VALIDATION	EXCEPTION
@@ -86,6 +118,10 @@ if ($export) {
 	}
 
 	exit;
+}
+
+if ($error_message) {
+	show_error_message($error_message);
 }
 
 /*

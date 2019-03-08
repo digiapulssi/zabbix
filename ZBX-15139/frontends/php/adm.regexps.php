@@ -105,14 +105,6 @@ if (hasRequest('action') && !hasRequest('regexpid')) {
 	if (!hasRequest('regexpids') || !is_array(getRequest('regexpids'))) {
 		access_deny();
 	}
-	else {
-		$regExpChk = DBfetch(DBSelect(
-			'SELECT COUNT(*) AS cnt FROM regexps re WHERE '.dbConditionInt('re.regexpid', getRequest('regexpids'))
-		));
-		if ($regExpChk['cnt'] != count(getRequest('regexpids'))) {
-			access_deny();
-		}
-	}
 }
 
 /*
@@ -168,31 +160,51 @@ elseif (hasRequest('action') && getRequest('action') == 'regexp.massdelete') {
 	zbx_value2array($regExpIds);
 
 	$regExps = [];
+	$result = true;
+
 	foreach ($regExpIds as $regExpId) {
 		$regExps[$regExpId] = getRegexp($regExpId);
+		if (!$regExps[$regExpId]) {
+			if ($result) {
+				show_error_message(_('No permissions to referred object or it does not exist!'));
+			}
+			unset($regExps[$regExpId]);
+			$result = false;
+		}
 	}
 
-	DBstart();
-
-	$result = DBexecute('DELETE FROM regexps WHERE '.dbConditionInt('regexpid', $regExpIds));
-
-	$regExpCount = count($regExpIds);
-
 	if ($result) {
-		foreach ($regExps as $regExpId => $regExp) {
-			add_audit(AUDIT_ACTION_DELETE, AUDIT_RESOURCE_REGEXP,
-				'Id ['.$regExpId.'] '._('Name').' ['.$regExp['name'].']'
-			);
+		DBstart();
+
+		$result = DBexecute('DELETE FROM regexps WHERE '.dbConditionInt('regexpid', $regExpIds));
+
+		$regExpCount = count($regExpIds);
+
+		if ($result) {
+			foreach ($regExps as $regExpId => $regExp) {
+				add_audit(AUDIT_ACTION_DELETE, AUDIT_RESOURCE_REGEXP,
+					'Id ['.$regExpId.'] '._('Name').' ['.$regExp['name'].']'
+				);
+			}
+
+			unset($_REQUEST['form'], $_REQUEST['regexpid']);
 		}
 
-		unset($_REQUEST['form'], $_REQUEST['regexpid']);
-	}
+		$result = DBend($result);
 
-	$result = DBend($result);
-
-	if ($result) {
 		uncheckTableRows();
 	}
+	else {
+		$regExpCount = count($regExps);
+
+		if ($regExps) {
+			updateTableRowsChecks(null, array_column($regExps, 'regexpid', 'regexpid'));
+		}
+		else {
+			uncheckTableRows();
+		}
+	}
+
 	show_messages($result,
 		_n('Regular expression deleted', 'Regular expressions deleted', $regExpCount),
 		_n('Cannot delete regular expression', 'Cannot delete regular expressions', $regExpCount)
