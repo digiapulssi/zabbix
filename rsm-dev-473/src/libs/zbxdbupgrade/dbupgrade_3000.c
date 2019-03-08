@@ -3566,7 +3566,7 @@ static int	process_probe_nsip_pairs(const char *tld, const char *hostid)
 	return SUCCEED;
 }
 
-static int	DBpatch_3000307(void)
+static int	DBpatch_3000305(void)
 {
 	DB_RESULT	result;
 	DB_ROW		row;
@@ -3678,6 +3678,6 @@ DBPATCH_ADD(3000301, 0, 0)	/* add lastvalue_str table */
 DBPATCH_ADD(3000302, 0, 0)	/* update and add new RSM.SLV.* macros */
 DBPATCH_ADD(3000303, 0, 0)	/* add DNS downtime trigger to existing tld hosts */
 DBPATCH_ADD(3000304, 0, 0)	/* add RDDS downtime triggers to existing tld hosts */
-DBPATCH_ADD(3000307, 0, 0)	/* add rsm.slv.dns.ns.downtime to tld hosts */
+DBPATCH_ADD(3000305, 0, 0)	/* add rsm.slv.dns.ns.downtime to tld hosts */
 
 DBPATCH_END()
