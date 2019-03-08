@@ -3516,8 +3516,6 @@ static int	create_slv_dns_ns_downtime_item(const char *tld, const char *hostid, 
 
 	/* add item */
 
-	printf("H: %s, %s, %s\n", hostid, ns, ip);
-
 	if (ZBX_DB_OK > DBexecute(
 		"insert into items (itemid,type,snmp_community,snmp_oid,hostid,"
 			"name,key_,delay,history,trends,"
