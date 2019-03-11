@@ -151,6 +151,87 @@ var MMenu = {
 };
 
 /*
+ * Audio control system - singleton and fluent API.
+ */
+function ZBX_Audio() {
+	if (ZBX_Audio.instance) {
+		return ZBX_Audio.instance;
+	}
+	else {
+		ZBX_Audio.instance = this;
+	}
+
+	this.player = new Audio();
+	this.timeout = 0;
+	this.audioFile = '';
+	this.listen();
+}
+
+ZBX_Audio.prototype.playLoop = function(audio, timeout) {
+}
+
+ZBX_Audio.prototype.playOnce = function(audio) {
+}
+
+/**
+ * Will play in loop implicitly during the seconds given.
+ * Will play once if no seconds given upon this call.
+ * If "play once" is invoked during a loop, the loop is destroyed.
+ */
+ZBX_Audio.prototype.play = function(seconds) {
+	if (seconds === undefined) {
+	}
+	seconds = parseInt(seconds);
+	if (seconds < 0) {
+		throw 'Must be positive number.';
+	}
+	this.timeout = seconds;
+}
+
+/**
+ * Eather case if player is playong once or in loop, a call to this method
+ * will stop audio and unset "internal timeout" or "promise to play once".
+ */
+ZBX_Audio.prototype.halt = function() {
+	this.timeout = seconds;
+	return this;
+}
+
+/**
+ * @return Promise
+ */
+ZBX_Audio.prototype.loadAudioFile = function(filename) {
+	this.audioFile = filename;
+}
+
+/**
+ * Set player volume.
+ *
+ * @param percentage  integer 1 to 100;
+ * @param fadeMS integer  Optional abount to fade transition across, in miliseconds.
+ */
+ZBX_Audio.prototype.volume = function(percentage, fadeMS) {
+	fadeMS = fadeMS || 0;
+	this.player.volume = percentage / 100;
+}
+
+ZBX_Audio.prototype.tick = function() {
+	if (!this.loop) {
+		return;
+	}
+	if (this.timeout > 0) {
+		this.timeout --;
+		this.volume(100);
+	}
+	else {
+		this.volume(0);
+	}
+}
+ZBX_Audio.prototype.listen = function() {
+	setInterval(this.tick.bind(this), 1000);
+}
+
+/*
  * Audio control system
  */
 var AudioControl = {
@@ -158,125 +239,125 @@ var AudioControl = {
 	timeoutHandler: null,
 
 	loop: function(timeout) {
-		AudioControl.timeoutHandler = setTimeout(
-			function() {
-				if (new Date().getTime() >= timeout) {
-					AudioControl.stop();
-				}
-				else {
-					AudioControl.loop(timeout);
-				}
-			},
-			1000
-		);
+		// AudioControl.timeoutHandler = setTimeout(
+		// 	function() {
+		// 		if (new Date().getTime() >= timeout) {
+		// 			AudioControl.stop();
+		// 		}
+		// 		else {
+		// 			AudioControl.loop(timeout);
+		// 		}
+		// 	},
+		// 	1000
+		// );
 	},
 
 	playOnce: function(name) {
-		this.stop();
+		// this.stop();
 
-		if (IE) {
-			this.create(name, false);
-		}
-		else {
-			var obj = jQuery('#audio');
+		// if (IE) {
+		// 	this.create(name, false);
+		// }
+		// else {
+		// 	var obj = jQuery('#audio');
 
-			if (obj.length > 0 && obj.data('name') === name) {
-				obj.trigger('play');
-			}
-			else {
-				this.create(name, false);
-			}
-		}
+		// 	if (obj.length > 0 && obj.data('name') === name) {
+		// 		obj.trigger('play');
+		// 	}
+		// 	else {
+		// 		this.create(name, false);
+		// 	}
+		// }
 	},
 
 	playLoop: function(name, delay) {
-		this.stop();
+		// this.stop();
 
-		if (IE) {
-			this.create(name, true);
-		}
-		else {
-			var obj = jQuery('#audio');
+		// if (IE) {
+		// 	this.create(name, true);
+		// }
+		// else {
+		// 	var obj = jQuery('#audio');
 
-			if (obj.length > 0 && obj.data('name') === name) {
-				obj.trigger('play');
-			}
-			else {
-				this.create(name, true);
-			}
-		}
+		// 	if (obj.length > 0 && obj.data('name') === name) {
+		// 		obj.trigger('play');
+		// 	}
+		// 	else {
+		// 		this.create(name, true);
+		// 	}
+		// }
 
-		AudioControl.loop(new Date().getTime() + delay * 1000);
+		// AudioControl.loop(new Date().getTime() + delay * 1000);
 	},
 
 	stop: function() {
-		var obj = document.getElementById('audio');
+		// var obj = document.getElementById('audio');
 
-		if (obj !== null) {
-			clearTimeout(AudioControl.timeoutHandler);
+		// if (obj !== null) {
+		// 	clearTimeout(AudioControl.timeoutHandler);
 
-			if (IE) {
-				obj.setAttribute('loop', false);
-				obj.setAttribute('playcount', 0);
+		// 	if (IE) {
+		// 		obj.setAttribute('loop', false);
+		// 		obj.setAttribute('playcount', 0);
 
-				try {
-					obj.stop();
-				}
-				catch (e) {
-					setTimeout(
-						function() {
-							try {
-								document.getElementById('audio').stop();
-							}
-							catch (e) {
-							}
-						},
-						100
-					);
-				}
-			}
-			else {
-				jQuery(obj).trigger('pause');
-			}
-		}
+		// 		try {
+		// 			obj.stop();
+		// 		}
+		// 		catch (e) {
+		// 			setTimeout(
+		// 				function() {
+		// 					try {
+		// 						document.getElementById('audio').stop();
+		// 					}
+		// 					catch (e) {
+		// 					}
+		// 				},
+		// 				100
+		// 			);
+		// 		}
+		// 	}
+		// 	else {
+		// 		jQuery(obj).trigger('pause');
+		// 	}
+		// }
 	},
 
 	create: function(name, loop) {
-		if (IE) {
-			jQuery('#audio').remove();
+		// if (IE) {
+		// 	jQuery('#audio').remove();
 
-			jQuery('body').append(jQuery('<embed>', {
-				id: 'audio',
-				'data-name': name,
-				src: 'audio/' + name,
-				enablejavascript: true,
-				autostart: true,
-				loop: true,
-				playcount: loop ? 9999999 : 1,
-				height: 0
-			}));
-		}
-		else {
-			var obj = jQuery('#audio');
+		// 	jQuery('body').append(jQuery('<embed>', {
+		// 		id: 'audio',
+		// 		'data-name': name,
+		// 		src: 'audio/' + name,
+		// 		enablejavascript: true,
+		// 		autostart: true,
+		// 		loop: true,
+		// 		playcount: loop ? 9999999 : 1,
+		// 		height: 0
+		// 	}));
+		// }
+		// else {
+		// 	var obj = jQuery('#audio');
 
-			if (obj.length == 0 || obj.data('name') !== name) {
-				obj.remove();
+		// 	if (obj.length == 0 || obj.data('name') !== name) {
+		// 		obj.remove();
 
-				var audioOptions = {
-					id: 'audio',
-					'data-name': name,
-					src: 'audio/' + name,
-					preload: 'auto',
-					autoplay: true
-				};
+		// 		var audioOptions = {
+		// 			id: 'audio',
+		// 			'data-name': name,
+		// 			src: 'audio/' + name,
+		// 			preload: 'auto',
+		// 			autoplay: true
+		// 		};
 
-				if (loop) {
-					audioOptions.loop = true;
-				}
+		// 		if (loop) {
+		// 			audioOptions.loop = true;
+		// 		}
 
-				jQuery('body').append(jQuery('<audio>', audioOptions));
-			}
-		}
+		// 		jQuery('body').append(jQuery('<audio>', audioOptions));
+		// 	}
+		// }
 	}
 };
 

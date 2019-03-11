@@ -70,6 +70,12 @@ $availableJScripts = [
 	'class.cdebug.js' => '',
 	'class.cmap.js' => '',
 	'class.cmessages.js' => '',
+	'class.localstorage.js' => '',
+	'class.notifications.js' => '',
+	'class.notification.js' => '',
+	'class.notification.collection.js' => '',
+	'class.notifications.audio.js' => '',
+	'class.browsertab.js' => '',
 	'class.cookie.js' => '',
 	'class.cscreen.js' => '',
 	'class.csuggest.js' => '',
@@ -250,17 +256,32 @@ if (empty($_GET['files'])) {
 	// load frontend messaging only for some pages
 	if (isset($_GET['showGuiMessaging']) && $_GET['showGuiMessaging']) {
 		$files[] = 'class.cmessages.js';
+
+		$files[] = 'class.localstorage.js';
+		$files[] = 'class.browsertab.js';
+		$files[] = 'class.notification.collection.js';
+		$files[] = 'class.notifications.audio.js';
+		$files[] = 'class.notification.js';
+		$files[] = 'class.notifications.js';
 	}
 }
 else {
 	$files = $_GET['files'];
 }
 
-$js = 'if (typeof(locale) == "undefined") { var locale = {}; }'."\n";
+// TODO is this heavy require?
+require './include/defines.inc.php';
+$js = 'if (typeof(window.env) == "undefined") { window.env = {}; }'."\n";
+$env = ['ZABBIX_VERSION' => ZABBIX_VERSION];
+foreach ($env as $name => $value) {
+	$js .= 'env[\''.$name.'\'] = '.zbx_jsvalue($value).';';
+}
+
+$js .= 'if (typeof(locale) == "undefined") { var locale = {}; }'."\n";
 foreach ($files as $file) {
 	if (isset($tranStrings[$file])) {
 		foreach ($tranStrings[$file] as $origStr => $str) {
-			$js .= "locale['".$origStr."'] = ".zbx_jsvalue($str).";";
+			$js .= 'locale[\''.$origStr.'\'] = '.zbx_jsvalue($str).';';
 		}
 	}
 }
