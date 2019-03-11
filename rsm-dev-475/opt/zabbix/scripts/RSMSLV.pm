@@ -134,6 +134,9 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		cycle_start
 		cycle_end
 		cycles_till_end_of_month
+		get_end_of_month get_end_of_prev_month
+		get_slv_rtt_cycle_stats get_slv_rtt_cycle_stats_aggregated
+		get_slv_rtt_monthly_items update_slv_rtt_monthly_stats
 		usage);
 
 # configuration, set in set_slv_config()
@@ -3401,18 +3404,7 @@ sub cycles_till_end_of_month($$)
 	my $now = shift;
 	my $delay = shift;
 
-	require DateTime;
-
-	my $end_of_month_dt = DateTime->from_epoch('epoch' => $now);
-	$end_of_month_dt->set_day(1);
-	$end_of_month_dt->set_hour(0);
-	$end_of_month_dt->set_minute(0);
-	$end_of_month_dt->set_second(0);
-	$end_of_month_dt->set_nanosecond(0);
-	$end_of_month_dt->add('months' => 1);
-	$end_of_month_dt->subtract('seconds' => 1);
-
-	my $end_of_month = $end_of_month_dt->epoch();
+	my $end_of_month = get_end_of_month($now);
 	my $this_cycle_start = cycle_start($now, $delay);
 	my $last_cycle_end = cycle_end($end_of_month, $delay);
 	my $cycle_count = ($last_cycle_end + 1 - $this_cycle_start) / $delay;
@@ -3428,6 +3420,307 @@ sub cycles_till_end_of_month($$)
 	}
 
 	return $cycle_count;
+}
+
+sub get_end_of_month($)
+{
+	my $now = shift;
+
+	require DateTime;
+
+	my $dt = DateTime->from_epoch('epoch' => $now);
+	$dt->truncate('to' => 'month');
+	$dt->add('months' => 1);
+	$dt->subtract('seconds' => 1);
+	return $dt->epoch();
+}
+
+sub get_end_of_prev_month($)
+{
+	my $now = shift;
+
+	require DateTime;
+
+	my $dt = DateTime->from_epoch('epoch' => $now);
+	$dt->truncate('to' => 'month');
+	$dt->subtract('seconds' => 1);
+	return $dt->epoch();
+}
+
+sub get_slv_rtt_cycle_stats($$$$)
+{
+	my $tld         = shift;
+	my $rtt_params  = shift;
+	my $cycle_start = shift;
+	my $cycle_end   = shift;
+
+	my $probes                  = $rtt_params->{'probes'};
+	my $rtt_item_key_pattern    = $rtt_params->{'rtt_item_key_pattern'};
+	my $timeout_error_value     = $rtt_params->{'timeout_error_value'};
+	my $timeout_threshold_value = $rtt_params->{'timeout_threshold_value'};
+
+	if (scalar(keys(%{$probes})) == 0)
+	{
+		dbg("there are no probes that would be able to collect RTT stats for TLD '$tld', item '$rtt_item_key_pattern'");
+		return {
+			'expected'   => 0,
+			'total'      => 0,
+			'performed'  => 0,
+			'failed'     => 0,
+			'successful' => 0
+		};
+	}
+
+	my $tld_hosts = [map("$tld $_", keys(%{$probes}))];
+	my $tld_itemids = get_itemids_by_key_pattern_and_hosts($rtt_item_key_pattern, $tld_hosts, ITEM_STATUS_ACTIVE);
+	my $tld_itemids_str = join(",", @{$tld_itemids});
+
+	fail("Items '$rtt_item_key_pattern' not found") if scalar(@{$tld_itemids}) == 0;
+
+	my $rows = db_select("
+		select
+			count(*) as total,
+			count(if(value = $timeout_error_value || value > $timeout_threshold_value, 1, null)) as failed,
+			count(if(value between 0 and $timeout_threshold_value, 1, null)) as successful
+		from
+			history
+		where
+			itemid in ($tld_itemids_str) and
+			clock between $cycle_start and $cycle_end
+	");
+
+	return {
+		'expected'   => scalar(@{$tld_itemids}),        # number of expected tests, based on number of items and cycles and whatnots
+		'total'      => $rows->[0][0],                  # number of received values, including errors
+		'performed'  => $rows->[0][1] + $rows->[0][2],  # number of received values, excluding errors (timeout errors are valid values)
+		'failed'     => $rows->[0][1],                  # number of failed tests - timeout errors and successful queries over the time limit
+		'successful' => $rows->[0][2]                   # number of successful tests
+	};
+}
+
+sub get_slv_rtt_cycle_stats_aggregated($$$$)
+{
+	my $rtt_params_list = shift; # array of hashes
+	my $cycle_start     = shift;
+	my $cycle_end       = shift;
+	my $tld             = shift;
+
+	my %aggregated_stats = (
+		'expected'   => 0,
+		'total'      => 0,
+		'performed'  => 0,
+		'failed'     => 0,
+		'successful' => 0
+	);
+
+	foreach my $rtt_params (@{$rtt_params_list})
+	{
+		if (!tld_service_enabled($tld, $rtt_params->{'tlds_service'}, $cycle_end))
+		{
+			next;
+		}
+
+		my $service_stats = get_slv_rtt_cycle_stats($tld, $rtt_params, $cycle_start, $cycle_end);
+
+		$aggregated_stats{'expected'}   += $service_stats->{'expected'};
+		$aggregated_stats{'total'}      += $service_stats->{'total'};
+		$aggregated_stats{'performed'}  += $service_stats->{'performed'};
+		$aggregated_stats{'failed'}     += $service_stats->{'failed'};
+		$aggregated_stats{'successful'} += $service_stats->{'successful'};
+	}
+
+	return \%aggregated_stats;
+}
+
+sub get_slv_rtt_monthly_items($$$$)
+{
+	my $single_tld             = shift; # undef or name of TLD
+	my $slv_item_key_performed = shift;
+	my $slv_item_key_failed    = shift;
+	my $slv_item_key_pfailed   = shift;
+
+	my $host_condition = "";
+
+	my @bind_values = (
+		$slv_item_key_performed,
+		$slv_item_key_failed,
+		$slv_item_key_pfailed
+	);
+
+	if (defined($single_tld))
+	{
+		$host_condition = "hosts.host = ? and";
+		push(@bind_values, $single_tld);
+	}
+
+	my $slv_items = db_select("
+		select
+			hosts.host,
+			items.key_,
+			lastvalue.clock,
+			lastvalue.value
+		from
+			items
+			left join hosts on hosts.hostid = items.hostid
+			left join hosts_groups on hosts_groups.hostid = hosts.hostid
+			left join lastvalue on lastvalue.itemid = items.itemid
+		where
+			items.status = " . ITEM_STATUS_ACTIVE . " and
+			items.key_ in (?, ?, ?) and
+			$host_condition
+			hosts.status = " . HOST_STATUS_MONITORED . " and
+			hosts_groups.groupid = " . TLDS_GROUPID
+		, \@bind_values
+	);
+
+	# contents: $slv_items_by_tld{$tld}{$item_key} = [$last_clock, $last_value];
+	my %slv_items_by_tld = ();
+
+	foreach my $slv_item (@{$slv_items})
+	{
+		my ($tld, $item_key, $last_clock, $last_value) = @{$slv_item};
+		$slv_items_by_tld{$tld}{$item_key} = [$last_clock, $last_value];
+	}
+
+	foreach my $tld (keys(%slv_items_by_tld))
+	{
+		my %tld_items = %{$slv_items_by_tld{$tld}};
+
+		# if any item was found on TLD, then all items must exist
+		fail("Item '$slv_item_key_performed' not found for TLD '$tld'")
+				unless exists($tld_items{$slv_item_key_performed});
+		fail("Item '$slv_item_key_failed' not found for TLD '$tld'")
+				unless exists($tld_items{$slv_item_key_failed});
+		fail("Item '$slv_item_key_pfailed' not found for TLD '$tld'")
+				unless exists($tld_items{$slv_item_key_pfailed});
+
+		if (!defined($tld_items{$slv_item_key_performed}[0]) ||
+				!defined($tld_items{$slv_item_key_failed}[0]) ||
+				!defined($tld_items{$slv_item_key_pfailed}[0]))
+		{
+			# if any lastvalue on TLD is undefined, then all lastvalues must be undefined
+
+			fail("Item '$slv_item_key_performed' on TLD '$tld' has lastvalue while other related items don't")
+					if defined($tld_items{$slv_item_key_performed}[0]);
+			fail("Item '$slv_item_key_failed' on TLD '$tld' has lastvalue while other related items don't")
+					if defined($tld_items{$slv_item_key_failed}[0]);
+			fail("Item '$slv_item_key_pfailed' on TLD '$tld' has lastvalue while other related items don't")
+					if defined($tld_items{$slv_item_key_pfailed}[0]);
+		}
+		else
+		{
+			# if all lastvalues on TLD are defined, their clock must be the same
+
+			if ($tld_items{$slv_item_key_performed}[0] != $tld_items{$slv_item_key_failed}[0] ||
+					$tld_items{$slv_item_key_performed}[0] != $tld_items{$slv_item_key_pfailed}[0])
+			{
+				fail("Items '$slv_item_key_performed', '$slv_item_key_failed' and '$slv_item_key_pfailed' have different lastvalue clocks on TLD '$tld'");
+			}
+		}
+	}
+
+	return \%slv_items_by_tld;
+}
+
+sub update_slv_rtt_monthly_stats($$$$$$$$)
+{
+	my $now                    = shift;
+	my $max_cycles             = shift;
+	my $single_tld             = shift; # undef or name of TLD
+	my $slv_item_key_performed = shift;
+	my $slv_item_key_failed    = shift;
+	my $slv_item_key_pfailed   = shift;
+	my $cycle_delay            = shift;
+	my $rtt_params_list        = shift;
+
+	# how long to wait for data after $cycle_end if number of performed checks is smaller than expected checks
+	# TODO: $max_nodata_time = $cycle_delay * x?
+	# TODO: move to rsm.conf?
+	my $max_nodata_time = 300;
+
+	# contents: $slv_items->{$tld}{$item_key} = [$last_clock, $last_value];
+	my $slv_items = get_slv_rtt_monthly_items($single_tld, $slv_item_key_performed, $slv_item_key_failed, $slv_item_key_pfailed);
+
+	# starting time of the last cycle of the previous month
+	my $end_of_prev_month = cycle_start(get_end_of_prev_month($now), $cycle_delay);
+
+	init_values();
+
+	foreach my $tld (keys(%{$slv_items}))
+	{
+		my $last_clock           = $slv_items->{$tld}{$slv_item_key_performed}[0];
+		my $last_performed_value = $slv_items->{$tld}{$slv_item_key_performed}[1];
+		my $last_failed_value    = $slv_items->{$tld}{$slv_item_key_failed}[1];
+		my $last_pfailed_value   = $slv_items->{$tld}{$slv_item_key_pfailed}[1];
+
+		# if there's no lastvalue, start collecting stats from the begining of the current month
+		if (!defined($last_clock))
+		{
+			$last_clock = $end_of_prev_month;
+		}
+
+		my $cycles_till_end_of_month = cycles_till_end_of_month($last_clock + $cycle_delay, $cycle_delay);
+
+		for (my $i = 0; $i < $max_cycles; $i++)
+		{
+			# if new month starts, reset the counters
+			if ($last_clock == $end_of_prev_month)
+			{
+				$cycles_till_end_of_month = cycles_till_end_of_month($last_clock + $cycle_delay, $cycle_delay);
+				$last_performed_value = 0;
+				$last_failed_value    = 0;
+				$last_pfailed_value   = 0;
+			}
+
+			my $cycle_start = cycle_start($last_clock + $cycle_delay, $cycle_delay);
+			my $cycle_end   = cycle_end($last_clock + $cycle_delay, $cycle_delay);
+
+			if ($cycle_start > $now)
+			{
+				last;
+			}
+
+			my $rtt_stats = get_slv_rtt_cycle_stats_aggregated($rtt_params_list, $cycle_start, $cycle_end, $tld);
+
+			if ($rtt_stats->{'total'} < $rtt_stats->{'expected'} && $cycle_end > $now - $max_nodata_time)
+			{
+				if (opt('debug'))
+				{
+					dbg("stopping updatig TLD '$tld' because of missing data, cycle from $cycle_start till $cycle_end");
+				}
+				last;
+			}
+
+			$cycles_till_end_of_month--;
+
+			if ($cycles_till_end_of_month < 0)
+			{
+				if (opt('debug'))
+				{
+					dbg("\$i                        = $i");
+					dbg("\$cycles_till_end_of_month = $cycles_till_end_of_month");
+					dbg("\$end_of_prev_month        = $end_of_prev_month");
+					dbg("\$last_clock               = $last_clock");
+					dbg("\$cycle_delay              = $cycle_delay");
+					dbg("\$cycle_start              = $cycle_start");
+					dbg("\$cycle_end                = $cycle_end");
+				}
+				fail("\$cycles_till_end_of_month must not be less than 0");
+			}
+
+			$last_performed_value += $rtt_stats->{'performed'};
+			$last_failed_value    += $rtt_stats->{'failed'};
+			$last_pfailed_value    = $last_failed_value / ($last_performed_value + $cycles_till_end_of_month * $rtt_stats->{'expected'});
+
+			push_value($tld, $slv_item_key_performed, $cycle_start, $last_performed_value);
+			push_value($tld, $slv_item_key_failed   , $cycle_start, $last_failed_value);
+			push_value($tld, $slv_item_key_pfailed  , $cycle_start, $last_pfailed_value);
+
+			$last_clock = $cycle_start;
+		}
+	}
+
+	send_values();
 }
 
 sub usage
