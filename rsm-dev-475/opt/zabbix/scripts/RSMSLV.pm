@@ -3477,17 +3477,12 @@ sub get_slv_rtt_cycle_stats($$$$)
 
 	fail("Items '$rtt_item_key_pattern' not found") if scalar(@{$tld_itemids}) == 0;
 
-	my $rows = db_select("
-		select
-			count(*) as total,
-			count(if(value = $timeout_error_value || value > $timeout_threshold_value, 1, null)) as failed,
-			count(if(value between 0 and $timeout_threshold_value, 1, null)) as successful
-		from
-			history
-		where
-			itemid in ($tld_itemids_str) and
-			clock between $cycle_start and $cycle_end
-	");
+	my $rows = db_select(
+			"select count(*)," .
+				" count(if(value=$timeout_error_value || value>$timeout_threshold_value,1,null))," .
+				" count(if(value between 0 and $timeout_threshold_value,1,null))" .
+			" from history" .
+			" where itemid in ($tld_itemids_str) and clock between $cycle_start and $cycle_end");
 
 	return {
 		'expected'   => scalar(@{$tld_itemids}),        # number of expected tests, based on number of items and cycles and whatnots
@@ -3549,29 +3544,21 @@ sub get_slv_rtt_monthly_items($$$$)
 
 	if (defined($single_tld))
 	{
-		$host_condition = "hosts.host = ? and";
+		$host_condition = "hosts.host=? and";
 		push(@bind_values, $single_tld);
 	}
 
-	my $slv_items = db_select("
-		select
-			hosts.host,
-			items.key_,
-			lastvalue.clock,
-			lastvalue.value
-		from
-			items
-			left join hosts on hosts.hostid = items.hostid
-			left join hosts_groups on hosts_groups.hostid = hosts.hostid
-			left join lastvalue on lastvalue.itemid = items.itemid
-		where
-			items.status = " . ITEM_STATUS_ACTIVE . " and
-			items.key_ in (?, ?, ?) and
-			$host_condition
-			hosts.status = " . HOST_STATUS_MONITORED . " and
-			hosts_groups.groupid = " . TLDS_GROUPID
-		, \@bind_values
-	);
+	my $slv_items = db_select(
+			"select hosts.host,items.key_,lastvalue.clock,lastvalue.value" .
+			" from items" .
+				" left join hosts on hosts.hostid=items.hostid" .
+				" left join hosts_groups on hosts_groups.hostid=hosts.hostid" .
+				" left join lastvalue on lastvalue.itemid=items.itemid" .
+			" where items.status=" . ITEM_STATUS_ACTIVE . " and" .
+				" items.key_ in (?,?,?) and" .
+				" $host_condition" .
+				" hosts.status=" . HOST_STATUS_MONITORED . " and" .
+				" hosts_groups.groupid=" . TLDS_GROUPID, \@bind_values);
 
 	# contents: $slv_items_by_tld{$tld}{$item_key} = [$last_clock, $last_value];
 	my %slv_items_by_tld = ();
