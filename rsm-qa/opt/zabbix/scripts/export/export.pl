@@ -311,9 +311,9 @@ foreach my $tld_for_a_child_to_process (@{$tlds_ref})
 			next;
 		}
 
-		$tld = $tld_for_a_child_to_process;
+		init_process();
 
-		slv_stats_reset();
+		$tld = $tld_for_a_child_to_process;
 
 		db_connect($server_key);
 
@@ -335,7 +335,7 @@ foreach my $tld_for_a_child_to_process (@{$tlds_ref})
 				format_stats_time($time_process_records - $time_load_ids),
 				format_stats_time($time_write_csv - $time_process_records))) if (opt('stats'));
 
-		slv_finalize();
+		finalize_process();
 
 		# When we fork for real it makes no difference for Parallel::ForkManager whether child calls exit() or
 		# calls $fm->finish(), therefore we do not need to introduce $fm->finish() in all our low-level error

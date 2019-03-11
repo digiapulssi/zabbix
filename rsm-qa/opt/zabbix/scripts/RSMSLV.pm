@@ -116,10 +116,12 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		sql_time_condition get_incidents get_downtime get_downtime_prepare get_downtime_execute
 		history_table
 		get_lastvalue get_itemids_by_hostids get_nsip_values get_valuemaps get_statusmaps get_detailed_result
-		get_avail_valuemaps slv_stats_reset
+		get_avail_valuemaps
 		get_result_string get_tld_by_trigger truncate_from truncate_till alerts_enabled
 		get_real_services_period dbg info wrn fail set_on_fail
-		format_stats_time slv_finalize slv_exit
+		format_stats_time
+		init_process finalize_process
+		slv_exit
 		fail_if_running
 		exit_if_running
 		trim
@@ -150,6 +152,8 @@ my $sql_end;
 my $sql_send;
 my $sql_time = 0.0;
 my $sql_count = 0;
+
+my $log_open = 0;
 
 sub get_macro_minns
 {
@@ -2984,7 +2988,14 @@ sub format_stats_time
 	return sprintf("%.3lfs", $s);
 }
 
-sub slv_finalize
+# Call this function from child, to open separate log file handler and reset stats.
+sub init_process
+{
+	$log_open = 0;
+	__reset_stats();
+}
+
+sub finalize_process
 {
 	my $rv = shift // SUCCESS;
 
@@ -2998,10 +3009,9 @@ sub slv_finalize
 
 		$sql_str .= " ($sql_count queries)";
 
-		my $total_str = format_stats_time(time() - $start_time);
+		my $total_str = format_stats_time(Time::HiRes::time() - $start_time);
 
-		print($prefix, "total     : $total_str\n");
-		print($prefix, "sql       : $sql_str\n");
+		info($prefix, "PID ($$), total: $total_str, sql: $sql_str");
 	}
 
 	closelog();
@@ -3011,16 +3021,9 @@ sub slv_exit
 {
 	my $rv = shift;
 
-	slv_finalize($rv);
+	finalize_process($rv);
 
 	exit($rv);
-}
-
-sub slv_stats_reset
-{
-	$start_time = time();
-	$sql_time = 0.0;
-	$sql_count = 0;
 }
 
 sub __is_already_running()
@@ -3135,7 +3138,7 @@ sub parse_opts
 
 	setopt('nolog') if (opt('dry-run') || opt('debug'));
 
-	$start_time = time() if (opt('stats'));
+	$start_time = Time::HiRes::time() if (opt('stats'));
 
 	$get_stats = 1 if (opt('stats') || opt('warnslow'));
 
@@ -3289,7 +3292,6 @@ my $program = $0; $program =~ s,.*/,,g;
 my $logopt = 'pid';
 my $facility = 'user';
 my $prev_tld = "";
-my $log_open = 0;
 
 sub __func
 {
@@ -3408,6 +3410,13 @@ sub __script
 sub __get_pidfile
 {
 	return PID_DIR . '/' . __script() . '.pid';
+}
+
+sub __reset_stats
+{
+	$start_time = Time::HiRes::time();
+	$sql_time = 0.0;
+	$sql_count = 0;
 }
 
 # Times when probe "lastaccess" within $probe_avail_limit.
