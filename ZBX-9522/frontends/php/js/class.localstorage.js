@@ -208,7 +208,7 @@ ZBX_LocalStorage.prototype.onWrite = function(callback) {
 ZBX_LocalStorage.prototype.onUpdate = function(callback) {
 	window.addEventListener('storage', function(event) {
 		// This means, storage has been truncated.
-		if (event.key === null) {
+		if (event.key === null || event.key === '') {
 			this.mapCallback(callback);
 		}
 		else {
