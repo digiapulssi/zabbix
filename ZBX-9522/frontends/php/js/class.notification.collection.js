@@ -100,12 +100,12 @@ ZBX_NotificationCollection.prototype.renderFromStorable = function(listObj) {
 
 	this.list = {};
 
-	for (var id in listObj) {
+	Object.keys(listObj).reverse().forEach(function(id) {
 		this.list[id] = new ZBX_Notification(listObj[id]);
 		this.list[id].renderSnoozed(listObj[id].snoozed);
 		this.list[id].onTimedout = this.onTimedout;
-		frag.prepend(this.list[id].node);
-	}
+		frag.appendChild(this.list[id].node);
+	}.bind(this));
 	this.listNode.innerHTML = '';
 
 	if (frag.childElementCount) {

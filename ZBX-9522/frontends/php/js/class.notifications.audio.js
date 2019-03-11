@@ -91,7 +91,9 @@ ZBX_NotificationsAudio.prototype.file = function(file) {
  * There are no safety checks, if one decides to seek out of bounds - no audio.
  */
 ZBX_NotificationsAudio.prototype.seek = function(seconds) {
-	this.audio.currentTime = seconds;
+	if (this.readyState > 0) {
+		this.audio.currentTime = seconds;
+	}
 	return this;
 }
 
@@ -161,7 +163,13 @@ ZBX_NotificationsAudio.prototype.handleOnloadeddata = function() {
 	}
 	this.onloadeddata && this.onloadeddata(this);
 
-	this.audio.play().catch(function (error) {
+	var promise = this.audio.play();
+
+	if (typeof promise === 'undefined') {
+		return; // Internet explorer does not return promise.
+	}
+
+	promise.catch(function (error) {
 		if (error.name == 'NotAllowedError' && this.audio.paused) {
 			console.warn(error.message);
 			console.warn('Zabbix was not able to play audio due to "Autoplay policy". Please see manual for more information.');
