@@ -3463,9 +3463,19 @@ static int	create_item_in_app(zbx_uint64_t hostid, zbx_uint64_t itemid, int item
 		const char* item_key, zbx_uint64_t itemappid, zbx_uint64_t applicationid)
 {
 	if (ZBX_DB_OK > DBexecute(
-			"insert into items (itemid,type,hostid,name,key_,params,description)"
-			" values (" ZBX_FS_UI64 ",%d," ZBX_FS_UI64 ",'%s','%s','','')",
-			itemid, item_type, hostid, item_name, item_key))
+
+			"insert into items (itemid,type,snmp_community,snmp_oid,hostid,name,key_,delay,history,trends,"
+				"status,value_type,trapper_hosts,units,multiplier,delta,"
+				"snmpv3_securityname,snmpv3_securitylevel,snmpv3_authpassphrase,snmpv3_privpassphrase,"
+				"formula,logtimefmt,templateid,valuemapid,delay_flex,params,ipmi_sensor,data_type,"
+				"authtype,username,password,publickey,privatekey,flags,interfaceid,port,description,"
+				"inventory_link,lifetime,snmpv3_authprotocol,snmpv3_privprotocol,snmpv3_contextname,evaltype)"
+			" values (" ZBX_FS_UI64 ",%d,'',''," ZBX_FS_UI64 ",'%s','%s','60','90','365',"
+				"'0','0','','','0','1',"
+				"'','0','','',"
+				"'1','',NULL,NULL,'','','','0',"
+				"'0','','','','','0',NULL,'','',"
+				"'0','30','0','0','','0')"))
 	{
 		return ZBX_DB_FAIL;
 	}
