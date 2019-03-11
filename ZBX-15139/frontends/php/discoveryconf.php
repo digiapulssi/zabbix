@@ -89,6 +89,31 @@ if (isset($_REQUEST['druleid'])) {
 	}
 }
 
+if (hasRequest('action')) {
+	if (!hasRequest('g_druleid') || !is_array(getRequest('g_druleid'))) {
+		access_deny();
+	}
+	else {
+		$drules = API::DRule()->get([
+			'druleids' => array_keys(getRequest('g_druleid')),
+			'output' => [],
+			'editable' => true
+		]);
+
+		if (count($drules) != count(getRequest('g_druleid'))) {
+			show_error_message(_('No permissions to referred object or it does not exist!'));
+			unset($_REQUEST['action']);
+
+			if ($drules) {
+				updateTableRowsChecks(null, array_column($drules, 'druleid', 'druleid'));
+			}
+			else {
+				uncheckTableRows();
+			}
+		}
+	}
+}
+
 // ajax
 if (isset($_REQUEST['output']) && $_REQUEST['output'] == 'ajax') {
 	$ajaxResponse = new CAjaxResponse;

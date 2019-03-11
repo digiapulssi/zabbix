@@ -95,14 +95,27 @@ if ($correlationid !== null) {
 }
 
 if (hasRequest('action')) {
-	$correlations = API::Correlation()->get([
-		'countOutput' => true,
-		'correlationids' => getRequest('g_correlationid'),
-		'editable' => true
-	]);
-
-	if ($correlations != count(getRequest('g_correlationid'))) {
+	if (!hasRequest('g_correlationid') || !is_array(getRequest('g_correlationid'))) {
 		access_deny();
+	}
+	else {
+		$correlations = API::Correlation()->get([
+			'correlationids' => array_keys(getRequest('g_correlationid')),
+			'output' => [],
+			'editable' => true
+		]);
+
+		if (count($correlations) != count(getRequest('g_correlationid'))) {
+			show_error_message(_('No permissions to referred object or it does not exist!'));
+			unset($_REQUEST['action']);
+
+			if ($correlations) {
+				updateTableRowsChecks(null, array_column($correlations, 'correlationid', 'correlationid'));
+			}
+			else {
+				uncheckTableRows();
+			}
+		}
 	}
 }
 

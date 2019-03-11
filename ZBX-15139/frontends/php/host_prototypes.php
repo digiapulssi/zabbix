@@ -100,6 +100,31 @@ else {
 	access_deny();
 }
 
+if (hasRequest('action')) {
+	if (!hasRequest('group_hostid') || !is_array(getRequest('group_hostid'))) {
+		access_deny();
+	}
+	else {
+		$host_prototypes = API::HostPrototype()->get([
+			'hostids' => array_keys(getRequest('group_hostid')),
+			'output' => [],
+			'editable' => true
+		]);
+
+		if (count($host_prototypes) != count(getRequest('group_hostid'))) {
+			show_error_message(_('No permissions to referred object or it does not exist!'));
+			unset($_REQUEST['action']);
+
+			if ($host_prototypes) {
+				updateTableRowsChecks($discoveryRule['itemid'], array_column($host_prototypes, 'hostid', 'hostid'));
+			}
+			else {
+				uncheckTableRows($discoveryRule['itemid']);
+			}
+		}
+	}
+}
+
 /*
  * Actions
  */

@@ -84,12 +84,20 @@ if (hasRequest('action')) {
 		access_deny();
 	}
 	else {
-		$dbSlideshowCount = DBfetch(DBselect(
-			'SELECT COUNT(*) AS cnt FROM slideshows s WHERE '.dbConditionInt('s.slideshowid', getRequest('shows'))
+		$slideshows = DBfetchArray(DBselect(
+			'SELECT slideshowid FROM slideshows s WHERE '.dbConditionInt('s.slideshowid', getRequest('shows'))
 		));
 
-		if ($dbSlideshowCount['cnt'] != count(getRequest('shows'))) {
-			access_deny();
+		if (count($slideshows) != count(getRequest('shows'))) {
+			show_error_message(_('No permissions to referred object or it does not exist!'));
+			unset($_REQUEST['action']);
+
+			if ($slideshows) {
+				updateTableRowsChecks(null, array_column($slideshows, 'slideshowid', 'slideshowid'));
+			}
+			else {
+				uncheckTableRows();
+			}
 		}
 	}
 }

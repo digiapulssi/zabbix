@@ -116,10 +116,7 @@ if (!$discoveryRule) {
 	access_deny();
 }
 
-$triggerPrototypeIds = getRequest('g_triggerid', []);
-if (!is_array($triggerPrototypeIds)) {
-	$triggerPrototypeIds = zbx_toArray($triggerPrototypeIds);
-}
+$triggerPrototypeIds = [];
 
 $triggerPrototypeId = getRequest('triggerid');
 if ($triggerPrototypeId !== null) {
@@ -137,6 +134,34 @@ if ($triggerPrototypeIds) {
 	foreach ($triggerPrototypeIds as $triggerPrototypeId) {
 		if (!array_key_exists($triggerPrototypeId, $triggerPrototypes)) {
 			access_deny();
+		}
+	}
+}
+
+if (hasRequest('action')) {
+	if (!hasRequest('g_triggerid') || !is_array(getRequest('g_triggerid'))) {
+		access_deny();
+	}
+	else {
+		$triggers = API::TriggerPrototype()->get([
+			'triggerids' => array_keys(getRequest('g_triggerid')),
+			'output' => [],
+			'editable' => true
+		]);
+
+		if (count($triggers) != count(getRequest('g_triggerid'))) {
+			show_error_message(_('No permissions to referred object or it does not exist!'));
+			unset($_REQUEST['action']);
+
+			if ($triggers) {
+				updateTableRowsChecks(
+					getRequest('parent_discoveryid'),
+					array_column($triggers, 'triggerid', 'triggerid')
+				);
+			}
+			else {
+				uncheckTableRows(getRequest('parent_discoveryid'));
+			}
 		}
 	}
 }

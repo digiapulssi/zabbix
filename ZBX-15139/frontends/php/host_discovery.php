@@ -262,6 +262,31 @@ else {
 	}
 }
 
+if (hasRequest('action')) {
+	if (!hasRequest('g_hostdruleid') || !is_array(getRequest('g_hostdruleid'))) {
+		access_deny();
+	}
+	else {
+		$hostdrules = API::DiscoveryRule()->get([
+			'itemids' => array_keys(getRequest('g_hostdruleid')),
+			'output' => [],
+			'editable' => true
+		]);
+
+		if (count($hostdrules) != count(getRequest('g_hostdruleid'))) {
+			show_error_message(_('No permissions to referred object or it does not exist!'));
+			unset($_REQUEST['action']);
+
+			if ($hostdrules) {
+				updateTableRowsChecks(getRequest('hostid'), array_column($hostdrules, 'itemid', 'itemid'));
+			}
+			else {
+				uncheckTableRows(getRequest('hostid'));
+			}
+		}
+	}
+}
+
 /*
  * Actions
  */

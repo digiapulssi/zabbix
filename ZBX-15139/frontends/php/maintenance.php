@@ -102,8 +102,30 @@ if (isset($_REQUEST['maintenanceid'])) {
 		access_deny();
 	}
 }
-if (hasRequest('action') && (!hasRequest('maintenanceids') || !is_array(getRequest('maintenanceids')))) {
-	access_deny();
+
+if (hasRequest('action')) {
+	if (!hasRequest('maintenanceids') || !is_array(getRequest('maintenanceids'))) {
+		access_deny();
+	}
+	else {
+		$maintenances = API::Maintenance()->get([
+			'maintenanceids' => array_keys(getRequest('maintenanceids')),
+			'output' => [],
+			'editable' => true
+		]);
+
+		if (count($maintenances) != count(getRequest('maintenanceids'))) {
+			show_error_message(_('No permissions to referred object or it does not exist!'));
+			unset($_REQUEST['action']);
+
+			if ($maintenances) {
+				updateTableRowsChecks(null, array_column($maintenances, 'maintenanceid', 'maintenanceid'));
+			}
+			else {
+				uncheckTableRows();
+			}
+		}
+	}
 }
 
 /*

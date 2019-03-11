@@ -41,6 +41,38 @@ else {
 	$page['scripts'] = ['multiselect.js'];
 }
 
+$error_message = false;
+
+if (hasRequest('action')) {
+	if (!hasRequest('templates') || !is_array(getRequest('templates'))) {
+		access_deny();
+	}
+	else {
+		$templates = API::Template()->get([
+			'output' => [],
+			'templateids' => array_keys(getRequest('templates')),
+			'editable' => true
+		]);
+
+		if (count($templates) != count(getRequest('templates'))) {
+			unset($_REQUEST['action']);
+			$exportData = false;
+			$page['type'] = PAGE_TYPE_HTML;
+			$page['title'] = _('Configuration of templates');
+			$page['file'] = 'templates.php';
+			$page['scripts'] = ['multiselect.js'];
+			$error_message = _('No permissions to referred object or it does not exist!');
+
+			if ($templates) {
+				updateTableRowsChecks(null, array_column($templates, 'templateid', 'templateid'));
+			}
+			else {
+				uncheckTableRows();
+			}
+		}
+	}
+}
+
 require_once dirname(__FILE__).'/include/page_header.php';
 
 //		VAR						TYPE		OPTIONAL FLAGS			VALIDATION	EXCEPTION
@@ -118,6 +150,10 @@ if ($exportData) {
 	}
 
 	exit;
+}
+
+if ($error_message) {
+	show_error_message($error_message);
 }
 
 // remove inherited macros data (actions: 'add', 'update' and 'form')

@@ -101,14 +101,12 @@ if (!empty($_REQUEST['steps'])) {
  * Permissions
  */
 //*
-if (isset($_REQUEST['httptestid']) || !empty($_REQUEST['group_httptestid'])) {
+if (isset($_REQUEST['httptestid'])) {
 	$testIds = [];
 	if (isset($_REQUEST['httptestid'])) {
 		$testIds[] = $_REQUEST['httptestid'];
 	}
-	if (!empty($_REQUEST['group_httptestid'])) {
-		$testIds = array_merge($testIds, $_REQUEST['group_httptestid']);
-	}
+
 	if ($testIds) {
 		$testIds = array_unique($testIds);
 
@@ -130,6 +128,31 @@ if (getRequest('hostid') && !isWritableHostTemplates([getRequest('hostid')])) {
 $groupId = getRequest('groupid');
 if ($groupId && !API::HostGroup()->get(['groupids' => $groupId])) {
 	access_deny();
+}
+
+if (hasRequest('action')) {
+	if (!hasRequest('group_httptestid') || !is_array(getRequest('group_httptestid'))) {
+		access_deny();
+	}
+	else {
+		$httptests = API::HttpTest()->get([
+			'httptestids' => array_keys(getRequest('group_httptestid')),
+			'output' => [],
+			'editable' => true
+		]);
+
+		if (count($httptests) != count(getRequest('group_httptestid'))) {
+			show_error_message(_('No permissions to referred object or it does not exist!'));
+			unset($_REQUEST['action']);
+
+			if ($httptests) {
+				updateTableRowsChecks(getRequest('hostid'), array_column($httptests, 'httptestid', 'httptestid'));
+			}
+			else {
+				uncheckTableRows(getRequest('hostid'));
+			}
+		}
+	}
 }
 
 /*

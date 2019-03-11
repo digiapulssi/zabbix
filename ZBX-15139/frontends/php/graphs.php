@@ -144,6 +144,44 @@ elseif ($hostId && !isWritableHostTemplates([$hostId])) {
 	access_deny();
 }
 
+if (hasRequest('action')) {
+	if (!hasRequest('group_graphid') || !is_array(getRequest('group_graphid'))) {
+		access_deny();
+	}
+	else {
+		if (hasRequest('parent_discoveryid')) {
+			$graphs = API::GraphPrototype()->get([
+				'graphids' => array_keys(getRequest('group_graphid')),
+				'output' => [],
+				'editable' => true
+			]);
+
+			$parent_id = getRequest('parent_discoveryid');
+		}
+		else {
+			$graphs = API::Graph()->get([
+				'graphids' => array_keys(getRequest('group_graphid')),
+				'output' => [],
+				'editable' => true
+			]);
+
+			$parent_id = $hostId;
+		}
+
+		if (count($graphs) != count(getRequest('group_graphid'))) {
+			show_error_message(_('No permissions to referred object or it does not exist!'));
+			unset($_REQUEST['action']);
+
+			if ($graphs) {
+				updateTableRowsChecks($parent_id, array_column($graphs, 'graphid', 'graphid'));
+			}
+			else {
+				uncheckTableRows($parent_id);
+			}
+		}
+	}
+}
+
 /*
  * Actions
  */

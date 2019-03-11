@@ -40,6 +40,49 @@ else {
 	$page['scripts'] = ['multiselect.js'];
 }
 
+$error_message = false;
+
+if (hasRequest('action')) {
+	if (!hasRequest('screens') || !is_array(getRequest('screens'))) {
+		access_deny();
+	}
+	else {
+		if (hasRequest('templateid')) {
+			$screens = API::TemplateScreen()->get([
+				'screenids' => array_keys(getRequest('screens')),
+				'output' => [],
+				'editable' => true
+			]);
+			$parent_id = getRequest('templateid');
+		}
+		else {
+			$screens = API::Screen()->get([
+				'screenids' => array_keys(getRequest('screens')),
+				'output' => [],
+				'editable' => true
+			]);
+			$parent_id = null;
+		}
+
+		if (count($screens) != count(getRequest('screens'))) {
+			unset($_REQUEST['action']);
+			$exportData = false;
+			$page['type'] = PAGE_TYPE_HTML;
+			$page['title'] = _('Configuration of screens');
+			$page['file'] = 'screenconf.php';
+			$page['scripts'] = ['multiselect.js'];
+			$error_message = _('No permissions to referred object or it does not exist!');
+
+			if ($screens) {
+				updateTableRowsChecks($parent_id, array_column($screens, 'screenid', 'screenid'));
+			}
+			else {
+				uncheckTableRows($parent_id);
+			}
+		}
+	}
+}
+
 require_once dirname(__FILE__).'/include/page_header.php';
 
 // VAR	TYPE	OPTIONAL	FLAGS	VALIDATION	EXCEPTION
@@ -130,6 +173,10 @@ if ($isExportData) {
 	}
 
 	exit;
+}
+
+if ($error_message) {
+	show_error_message($error_message);
 }
 
 /*
@@ -265,7 +312,7 @@ if (hasRequest('add') || hasRequest('update')) {
 
 	if ($result) {
 		unset($_REQUEST['form'], $_REQUEST['screenid']);
-		uncheckTableRows();
+		uncheckTableRows(hasRequest('templateid') ? getRequest('templateid') : null);
 	}
 	show_messages($result, $messageSuccess, $messageFailed);
 }
@@ -313,7 +360,7 @@ elseif ((hasRequest('delete') && hasRequest('screenid'))
 
 	if ($result) {
 		unset($_REQUEST['screenid'], $_REQUEST['form']);
-		uncheckTableRows();
+		uncheckTableRows(hasRequest('templateid') ? getRequest('templateid') : null);
 	}
 	show_messages($result, _('Screen deleted'), _('Cannot delete screen'));
 }

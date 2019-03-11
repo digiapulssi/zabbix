@@ -271,6 +271,33 @@ if ($itemPrototypeId) {
 	}
 }
 
+if (hasRequest('action')) {
+	if (!hasRequest('group_itemid') || !is_array(getRequest('group_itemid'))) {
+		access_deny();
+	}
+	else {
+		$item_prototypes = API::ItemPrototype()->get([
+			'itemids' => array_keys(getRequest('group_itemid')),
+			'output' => [],
+			'editable' => true
+		]);
+
+		if (count($item_prototypes) != count(getRequest('group_itemid'))) {
+			show_error_message(_('No permissions to referred object or it does not exist!'));
+			unset($_REQUEST['action']);
+
+			if ($item_prototypes) {
+				updateTableRowsChecks(
+					getRequest('parent_discoveryid'), array_column($item_prototypes, 'itemid', 'itemid')
+				);
+			}
+			else {
+				uncheckTableRows(getRequest('parent_discoveryid'));
+			}
+		}
+	}
+}
+
 /*
  * Actions
  */
