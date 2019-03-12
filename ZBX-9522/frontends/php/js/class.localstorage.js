@@ -46,7 +46,7 @@ function ZBX_LocalStorage(version) {
 
 	this.keys = {
 		// Store versioning.
-		'version': JSON.stringify(version),
+		'version': this.wrap(version),
 		// {(string) tabId: (int) lastSeen}
 		// An object where every tab updates timestamp at key of it's id, in order to assume if there are crashed tabs.
 		'tabs.lastseen': {},
@@ -145,7 +145,7 @@ ZBX_LocalStorage.prototype.writeKey = function(key, value) {
 	}
 	this.ensureKey(key);
 
-	localStorage.setItem(key, JSON.stringify(value));
+	localStorage.setItem(key, this.wrap(value));
 	this.onWriteCb && this.onWriteCb(key, value, ZBX_LocalStorage.defines.EVT_WRITE);
 }
 
@@ -169,12 +169,32 @@ ZBX_LocalStorage.prototype.readKey = function(key) {
 	this.ensureKey(key);
 
 	try {
-		return JSON.parse(localStorage.getItem(key));
+		return this.unwrap(localStorage.getItem(key));
 	} catch (e) {
 		console.warn('failed to parse storage item "'+key+'"');
 		this.truncate();
 		return null;
 	}
+}
+
+/**
+ * @param value mixed
+ *
+ * @return string
+ */
+ZBX_LocalStorage.prototype.wrap = function(value) {
+	return JSON.stringify(value);
+}
+
+/**
+ * @param value string
+ *
+ * @throws Error
+ *
+ * @return mixed
+ */
+ZBX_LocalStorage.prototype.unwrap = function(value) {
+	return JSON.parse(value);
 }
 
 /**
@@ -212,7 +232,7 @@ ZBX_LocalStorage.prototype.onUpdate = function(callback) {
 			this.mapCallback(callback);
 		}
 		else {
-			callback(event.key, this.readKey(event.key), ZBX_LocalStorage.defines.EVT_CHANGE);
+			callback(event.key, this.unwrap(event.newValue), ZBX_LocalStorage.defines.EVT_CHANGE);
 		}
 	}.bind(this));
 }
