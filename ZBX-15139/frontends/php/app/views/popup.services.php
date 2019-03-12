@@ -110,7 +110,6 @@ elseif (array_key_exists('db_cservices', $data)) {
 			'});'.
 
 			'cookie.init();'.
-			'chkbxRange.init();'.
 		'});'.
 
 		'var addSelectedServices = function() {'.

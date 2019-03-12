@@ -657,7 +657,6 @@ if (array_key_exists('table_records', $data) && (in_array($data['popup_type'], $
 $output['script_inline'] .= '
 jQuery(document).ready(function() {
 	cookie.init();
-	chkbxRange.init();
 });';
 
 if ($form) {

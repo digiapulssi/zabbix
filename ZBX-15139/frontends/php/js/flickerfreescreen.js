@@ -278,7 +278,7 @@
 							$('#flickerfreescreen_' + id).remove();
 						}
 
-						chkbxRange.init();
+
 					},
 					error: function() {
 						window.flickerfreeScreen.calculateReRefresh(id);

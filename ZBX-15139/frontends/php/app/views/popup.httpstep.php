@@ -178,7 +178,6 @@ $output['script_inline'] .=
 		'setPostType("'.$http_popup_form->getId().'",' .
 			CJs::encodeJson($options['post_type']) . ');'."\n".
 		'cookie.init();'."\n".
-		'chkbxRange.init();'."\n".
 	'});';
 
 if ($data['user']['debug_mode'] == GROUP_DEBUG_MODE_ENABLED) {
