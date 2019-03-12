@@ -1958,9 +1958,20 @@ sub create_ratio_of_failed_tests_trigger($$$$$)
 		fail("Unknown service '$service'");
 	}
 
+	my $expression;
+
+	if ($threshold == 100)
+	{
+		$expression = "{$host_name:$item_key.last()}>$macro"
+	}
+	else
+	{
+		$expression = "{$host_name:$item_key.last()}>$macro/100*$threshold"
+	}
+
 	my $options = {
 		'description' => "Ratio of failed $service tests exceeded $threshold% of allowed $macro%",
-		'expression' => "{$host_name:$item_key.last()}>$macro/100*$threshold",
+		'expression' => $expression,
 		'priority' => $priority
 	};
 
