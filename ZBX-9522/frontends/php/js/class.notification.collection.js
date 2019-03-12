@@ -108,7 +108,7 @@ ZBX_NotificationCollection.prototype.renderFromStorable = function(listObj) {
 	}.bind(this));
 	this.listNode.innerHTML = '';
 
-	if (frag.childElementCount) {
+	if (frag.childNodes.length) {
 		this.listNode.appendChild(frag);
 	}
 
