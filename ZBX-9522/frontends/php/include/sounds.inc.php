@@ -20,16 +20,19 @@
 
 
 function getSounds() {
-	$fileList = [];
+	$file_list = [];
 	$dir = scandir('./audio');
+
 	foreach ($dir as $file) {
-		if (!preg_match('/^([\w\d_]+)\.(wav|ogg)$/i', $file)) {
+		if ('audio/' !== substr(mime_content_type('./audio/'.$file), 0, 6)) {
 			continue;
 		}
-		list($filename, $type) = explode('.', $file);
-		$fileList[$filename] = $file;
+
+		$filename = explode('.', $file)[0];
+		$file_list[$filename] = $file;
 	}
-	return $fileList;
+
+	return $file_list;
 }
 
 function getMessageSettings() {
