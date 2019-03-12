@@ -206,7 +206,7 @@ class CFilter extends CDiv {
 				->addClass(ZBX_STYLE_FILTER_FORMS)
 				->addItem(
 					(new CSubmitButton(_('Apply'), 'filter_set', 1))
-						->onClick('javascript: chkbxRange.clearSelectedOnFilterChange();')
+						->onClick('javascript: chkboxRange.clearSelectedOnFilterChange();')
 				)
 				->addItem(
 					(new CRedirectButton(_('Reset'),
@@ -215,7 +215,7 @@ class CFilter extends CDiv {
 							->getUrl()
 					))
 						->addClass(ZBX_STYLE_BTN_ALT)
-						->onClick('javascript: chkbxRange.clearSelectedOnFilterChange();')
+						->onClick('javascript: chkboxRange.clearSelectedOnFilterChange();')
 				);
 		}
 
