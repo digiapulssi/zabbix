@@ -203,7 +203,7 @@ if (defined($OPTS{'set-type'})) {
 #### Manage NS + IP server pairs ####
 if (defined($OPTS{'get-nsservers-list'}))
 {
-	# all fiels in a CSV must be double-quoted, even if empty
+	# all fields in a CSV must be double-quoted, even if empty
 	my $csv = Text::CSV_XS->new({binary => 1, auto_diag => 1, always_quote => 1, eol => "\n"});
 
 	my @tlds = ($OPTS{'tld'} // get_tld_list());
@@ -250,7 +250,7 @@ if (defined($OPTS{'list-services'}))
 
 	my @rows = ();
 
-	# all fiels in a CSV must be double-quoted, even if empty
+	# all fields in a CSV must be double-quoted, even if empty
 	my $csv = Text::CSV_XS->new({binary => 1, auto_diag => 1, always_quote => 1, eol => "\n"});
 
 	foreach my $tld (sort(@tlds))
@@ -1157,7 +1157,7 @@ sub create_slv_items
 	create_slv_item('DNS availability', 'rsm.slv.dns.avail', $hostid, VALUE_TYPE_AVAIL, [get_application_id(APP_SLV_PARTTEST, $hostid)]);
 	create_slv_item('DNS minutes of downtime', 'rsm.slv.dns.downtime', $hostid, VALUE_TYPE_NUM, [get_application_id(APP_SLV_CURMON, $hostid)]);
 	create_slv_item('DNS weekly unavailability', 'rsm.slv.dns.rollweek', $hostid, VALUE_TYPE_PERC, [get_application_id(APP_SLV_ROLLWEEK, $hostid)]);
-	
+
 	create_avail_trigger('DNS', $host_name);
 	create_dns_downtime_trigger($host_name, 5);
 	create_dependent_trigger_chain($host_name, 'DNS', \&create_rollweek_trigger, $trigger_thresholds);
@@ -1190,6 +1190,21 @@ sub create_slv_items
 
 		create_avail_trigger('EPP', $host_name);
 # 		create_dependent_trigger_chain($host_name, 'EPP', \&create_downtime_trigger, $trigger_thresholds);
+	}
+
+	create_slv_item('UDP DNS Resolution RTT (performed)', 'rsm.slv.dns.udp.rtt.performed', $hostid, VALUE_TYPE_NUM , [get_application_id(APP_SLV_CURMON, $hostid)]);
+	create_slv_item('UDP DNS Resolution RTT (failed)'   , 'rsm.slv.dns.udp.rtt.failed'   , $hostid, VALUE_TYPE_NUM , [get_application_id(APP_SLV_CURMON, $hostid)]);
+	create_slv_item('UDP DNS Resolution RTT (pfailed)'  , 'rsm.slv.dns.udp.rtt.pfailed'  , $hostid, VALUE_TYPE_PERC, [get_application_id(APP_SLV_CURMON, $hostid)]);
+
+	create_slv_item('TCP DNS Resolution RTT (performed)', 'rsm.slv.dns.tcp.rtt.performed', $hostid, VALUE_TYPE_NUM , [get_application_id(APP_SLV_CURMON, $hostid)]);
+	create_slv_item('TCP DNS Resolution RTT (failed)'   , 'rsm.slv.dns.tcp.rtt.failed'   , $hostid, VALUE_TYPE_NUM , [get_application_id(APP_SLV_CURMON, $hostid)]);
+	create_slv_item('TCP DNS Resolution RTT (pfailed)'  , 'rsm.slv.dns.tcp.rtt.pfailed'  , $hostid, VALUE_TYPE_PERC, [get_application_id(APP_SLV_CURMON, $hostid)]);
+
+	if (defined($OPTS{'rdds43-servers'}) || defined($OPTS{'rdds80-servers'}) || defined($OPTS{'rdap-base-url'}))
+	{
+		create_slv_item('RDDS query RTT (performed)', 'rsm.slv.rdds.rtt.performed', $hostid, VALUE_TYPE_NUM , [get_application_id(APP_SLV_CURMON, $hostid)]);
+		create_slv_item('RDDS query RTT (failed)'   , 'rsm.slv.rdds.rtt.failed'   , $hostid, VALUE_TYPE_NUM , [get_application_id(APP_SLV_CURMON, $hostid)]);
+		create_slv_item('RDDS query RTT (pfailed)'  , 'rsm.slv.rdds.rtt.pfailed'  , $hostid, VALUE_TYPE_PERC, [get_application_id(APP_SLV_CURMON, $hostid)]);
 	}
 }
 
