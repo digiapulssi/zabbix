@@ -111,7 +111,6 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		process_slv_avail
 		process_slv_rollweek_cycles
 		process_slv_downtime_cycles
-		process_slv_ns_downtime_cycles
 		uint_value_exists
 		float_value_exists
 		sql_time_condition get_incidents get_downtime get_downtime_prepare get_downtime_execute
@@ -2051,10 +2050,6 @@ sub process_slv_downtime_cycles($$$$)
 	}
 
 	send_values();
-}
-
-sub process_slv_ns_downtime_cycles()
-{
 }
 
 # organize values grouped by hosts:
