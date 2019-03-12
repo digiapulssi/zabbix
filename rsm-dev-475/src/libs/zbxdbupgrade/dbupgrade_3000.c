@@ -3459,8 +3459,9 @@ static int	DBpatch_3000304(void)
 	return SUCCEED;
 }
 
-static int	create_item_in_app(zbx_uint64_t hostid, zbx_uint64_t itemid, int item_type, const char* item_name,
-		const char* item_key, zbx_uint64_t itemappid, zbx_uint64_t applicationid)
+static int	create_item_in_app(zbx_uint64_t hostid, zbx_uint64_t itemid, int item_type, int item_value_type,
+		const char *item_name, const char *item_key, const char *item_units, zbx_uint64_t itemappid,
+		zbx_uint64_t applicationid)
 {
 	if (ZBX_DB_OK > DBexecute(
 
@@ -3471,11 +3472,12 @@ static int	create_item_in_app(zbx_uint64_t hostid, zbx_uint64_t itemid, int item
 				"authtype,username,password,publickey,privatekey,flags,interfaceid,port,description,"
 				"inventory_link,lifetime,snmpv3_authprotocol,snmpv3_privprotocol,snmpv3_contextname,evaltype)"
 			" values (" ZBX_FS_UI64 ",%d,'',''," ZBX_FS_UI64 ",'%s','%s','60','90','365',"
-				"'0','0','','','0','1',"
+				"'0',%d,'','%s','0','1',"
 				"'','0','','',"
 				"'1','',NULL,NULL,'','','','0',"
 				"'0','','','','','0',NULL,'','',"
-				"'0','30','0','0','','0')"))
+				"'0','30','0','0','','0')",
+			itemid, item_type, hostid, item_name, item_key, item_value_type, item_units))
 	{
 		return ZBX_DB_FAIL;
 	}
@@ -3538,33 +3540,33 @@ static int	DBpatch_3000305(void)
 
 		/* create items and link them to "SLV current month" application */
 
-		if (ZBX_DB_OK > create_item_in_app(hostid, next_itemid++, 2, "UDP DNS Resolution RTT (performed)",
-				"rsm.slv.dns.udp.rtt.performed", next_itemappid++, applicationid))
+		if (ZBX_DB_OK > create_item_in_app(hostid, next_itemid++, 2, 3, "UDP DNS Resolution RTT (performed)",
+				"rsm.slv.dns.udp.rtt.performed", "", next_itemappid++, applicationid))
 		{
 			goto out;
 		}
-		if (ZBX_DB_OK > create_item_in_app(hostid, next_itemid++, 2, "UDP DNS Resolution RTT (failed)",
-				"rsm.slv.dns.udp.rtt.failed", next_itemappid++, applicationid))
+		if (ZBX_DB_OK > create_item_in_app(hostid, next_itemid++, 2, 3, "UDP DNS Resolution RTT (failed)",
+				"rsm.slv.dns.udp.rtt.failed", "", next_itemappid++, applicationid))
 		{
 			goto out;
 		}
-		if (ZBX_DB_OK > create_item_in_app(hostid, next_itemid++, 2, "UDP DNS Resolution RTT (pfailed)",
-				"rsm.slv.dns.udp.rtt.pfailed", next_itemappid++, applicationid))
+		if (ZBX_DB_OK > create_item_in_app(hostid, next_itemid++, 2, 0, "UDP DNS Resolution RTT (pfailed)",
+				"rsm.slv.dns.udp.rtt.pfailed", "%", next_itemappid++, applicationid))
 		{
 			goto out;
 		}
-		if (ZBX_DB_OK > create_item_in_app(hostid, next_itemid++, 2, "TCP DNS Resolution RTT (performed)",
-				"rsm.slv.dns.tcp.rtt.performed", next_itemappid++, applicationid))
+		if (ZBX_DB_OK > create_item_in_app(hostid, next_itemid++, 2, 3, "TCP DNS Resolution RTT (performed)",
+				"rsm.slv.dns.tcp.rtt.performed", "", next_itemappid++, applicationid))
 		{
 			goto out;
 		}
-		if (ZBX_DB_OK > create_item_in_app(hostid, next_itemid++, 2, "TCP DNS Resolution RTT (failed)",
-				"rsm.slv.dns.tcp.rtt.failed", next_itemappid++, applicationid))
+		if (ZBX_DB_OK > create_item_in_app(hostid, next_itemid++, 2, 3, "TCP DNS Resolution RTT (failed)",
+				"rsm.slv.dns.tcp.rtt.failed", "", next_itemappid++, applicationid))
 		{
 			goto out;
 		}
-		if (ZBX_DB_OK > create_item_in_app(hostid, next_itemid++, 2, "TCP DNS Resolution RTT (pfailed)",
-				"rsm.slv.dns.tcp.rtt.pfailed", next_itemappid++, applicationid))
+		if (ZBX_DB_OK > create_item_in_app(hostid, next_itemid++, 2, 0, "TCP DNS Resolution RTT (pfailed)",
+				"rsm.slv.dns.tcp.rtt.pfailed", "%", next_itemappid++, applicationid))
 		{
 			goto out;
 		}
@@ -3632,18 +3634,18 @@ static int	DBpatch_3000306(void)
 
 		/* create items and link them to "SLV current month" application */
 
-		if (ZBX_DB_OK > create_item_in_app(hostid, next_itemid++, 2, "RDDS query RTT (performed)",
-				"rsm.slv.rdds.rtt.performed", next_itemappid++, applicationid))
+		if (ZBX_DB_OK > create_item_in_app(hostid, next_itemid++, 2, 3, "RDDS query RTT (performed)",
+				"rsm.slv.rdds.rtt.performed", "", next_itemappid++, applicationid))
 		{
 			goto out;
 		}
-		if (ZBX_DB_OK > create_item_in_app(hostid, next_itemid++, 2, "RDDS query RTT (failed)",
-				"rsm.slv.rdds.rtt.failed", next_itemappid++, applicationid))
+		if (ZBX_DB_OK > create_item_in_app(hostid, next_itemid++, 2, 3, "RDDS query RTT (failed)",
+				"rsm.slv.rdds.rtt.failed", "", next_itemappid++, applicationid))
 		{
 			goto out;
 		}
-		if (ZBX_DB_OK > create_item_in_app(hostid, next_itemid++, 2, "RDDS query RTT (pfailed)",
-				"rsm.slv.rdds.rtt.pfailed", next_itemappid++, applicationid))
+		if (ZBX_DB_OK > create_item_in_app(hostid, next_itemid++, 2, 0, "RDDS query RTT (pfailed)",
+				"rsm.slv.rdds.rtt.pfailed", "%", next_itemappid++, applicationid))
 		{
 			goto out;
 		}
