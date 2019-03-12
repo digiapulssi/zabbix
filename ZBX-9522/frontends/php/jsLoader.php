@@ -23,6 +23,7 @@
 require_once dirname(__FILE__).'/include/gettextwrapper.inc.php';
 require_once dirname(__FILE__).'/include/js.inc.php';
 require_once dirname(__FILE__).'/include/locales.inc.php';
+require_once dirname(__FILE__).'/include/defines.inc.php';
 
 // if we must provide language constants on language different from English
 if (isset($_GET['lang'])) {
@@ -70,6 +71,7 @@ $availableJScripts = [
 	'class.cdebug.js' => '',
 	'class.cmap.js' => '',
 	'class.cmessages.js' => '',
+	'class.promise.js' => '',
 	'class.localstorage.js' => '',
 	'class.notifications.js' => '',
 	'class.notification.js' => '',
@@ -257,6 +259,7 @@ if (empty($_GET['files'])) {
 	if (isset($_GET['showGuiMessaging']) && $_GET['showGuiMessaging']) {
 		$files[] = 'class.cmessages.js';
 
+		$files[] = 'class.promise.js';
 		$files[] = 'class.localstorage.js';
 		$files[] = 'class.browsertab.js';
 		$files[] = 'class.notification.collection.js';
@@ -269,10 +272,9 @@ else {
 	$files = $_GET['files'];
 }
 
-// TODO is this heavy require?
-require './include/defines.inc.php';
-$js = 'if (typeof(window.env) == "undefined") { window.env = {}; }'."\n";
 $env = ['ZABBIX_VERSION' => ZABBIX_VERSION];
+
+$js = 'if (typeof(window.env) == "undefined") { window.env = {}; }'."\n";
 foreach ($env as $name => $value) {
 	$js .= 'env[\''.$name.'\'] = '.zbx_jsvalue($value).';';
 }

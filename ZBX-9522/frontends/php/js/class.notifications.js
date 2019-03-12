@@ -19,7 +19,6 @@
 
 
 ZBX_Notifications.POLL_INTERVAL = 30000;
-// ZBX_Notifications.POLL_INTERVAL = 1000;
 
 /**
  * @param store ZBX_LocalStorage
@@ -310,6 +309,7 @@ ZBX_Notifications.prototype.btnMuteClicked = function() {
 }
 
 ZBX_Notifications.prototype.renderPlayer = function(source) {
+
 	if (!this.doPollServer) {
 		return this.player.stop();
 	}
@@ -377,9 +377,5 @@ var NN = new ZBX_Notifications(LS, BT);
 
 jQuery(function() {
 	document.body.appendChild(NN.dom.node);
-	jQuery(NN.dom.node).draggable({
-		// stop: function( event, ui ) {
-		// 	LS.writeKey('notifications.position', ui.position)
-		// }
-	});
+	jQuery(NN.dom.node).draggable();
 });
