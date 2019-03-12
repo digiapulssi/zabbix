@@ -3697,7 +3697,7 @@ sub update_slv_rtt_monthly_stats($$$$$$$$)
 
 			$last_performed_value += $rtt_stats->{'performed'};
 			$last_failed_value    += $rtt_stats->{'failed'};
-			$last_pfailed_value    = $last_failed_value / ($last_performed_value + $cycles_till_end_of_month * $rtt_stats->{'expected'});
+			$last_pfailed_value    = 100 * $last_failed_value / ($last_performed_value + $cycles_till_end_of_month * $rtt_stats->{'expected'});
 
 			push_value($tld, $slv_item_key_performed, $cycle_start, $last_performed_value);
 			push_value($tld, $slv_item_key_failed   , $cycle_start, $last_failed_value);
