@@ -3540,32 +3540,32 @@ static int	DBpatch_3000305(void)
 
 		/* create items and link them to "SLV current month" application */
 
-		if (ZBX_DB_OK > create_item_in_app(hostid, next_itemid++, 2, 3, "UDP DNS Resolution RTT (performed)",
+		if (ZBX_DB_OK > create_item_in_app(hostid, next_itemid++, 2, 3, "Number of performed monthly DNS UDP tests",
 				"rsm.slv.dns.udp.rtt.performed", "", next_itemappid++, applicationid))
 		{
 			goto out;
 		}
-		if (ZBX_DB_OK > create_item_in_app(hostid, next_itemid++, 2, 3, "UDP DNS Resolution RTT (failed)",
+		if (ZBX_DB_OK > create_item_in_app(hostid, next_itemid++, 2, 3, "Number of failed monthly DNS UDP tests",
 				"rsm.slv.dns.udp.rtt.failed", "", next_itemappid++, applicationid))
 		{
 			goto out;
 		}
-		if (ZBX_DB_OK > create_item_in_app(hostid, next_itemid++, 2, 0, "UDP DNS Resolution RTT (pfailed)",
+		if (ZBX_DB_OK > create_item_in_app(hostid, next_itemid++, 2, 0, "Ratio of failed monthly DNS UDP tests",
 				"rsm.slv.dns.udp.rtt.pfailed", "%", next_itemappid++, applicationid))
 		{
 			goto out;
 		}
-		if (ZBX_DB_OK > create_item_in_app(hostid, next_itemid++, 2, 3, "TCP DNS Resolution RTT (performed)",
+		if (ZBX_DB_OK > create_item_in_app(hostid, next_itemid++, 2, 3, "Number of performed monthly DNS TCP tests",
 				"rsm.slv.dns.tcp.rtt.performed", "", next_itemappid++, applicationid))
 		{
 			goto out;
 		}
-		if (ZBX_DB_OK > create_item_in_app(hostid, next_itemid++, 2, 3, "TCP DNS Resolution RTT (failed)",
+		if (ZBX_DB_OK > create_item_in_app(hostid, next_itemid++, 2, 3, "Number of failed monthly DNS TCP tests",
 				"rsm.slv.dns.tcp.rtt.failed", "", next_itemappid++, applicationid))
 		{
 			goto out;
 		}
-		if (ZBX_DB_OK > create_item_in_app(hostid, next_itemid++, 2, 0, "TCP DNS Resolution RTT (pfailed)",
+		if (ZBX_DB_OK > create_item_in_app(hostid, next_itemid++, 2, 0, "Ratio of failed monthly DNS TCP tests",
 				"rsm.slv.dns.tcp.rtt.pfailed", "%", next_itemappid++, applicationid))
 		{
 			goto out;
@@ -3634,17 +3634,17 @@ static int	DBpatch_3000306(void)
 
 		/* create items and link them to "SLV current month" application */
 
-		if (ZBX_DB_OK > create_item_in_app(hostid, next_itemid++, 2, 3, "RDDS query RTT (performed)",
+		if (ZBX_DB_OK > create_item_in_app(hostid, next_itemid++, 2, 3, "Number of performed monthly RDDS queries",
 				"rsm.slv.rdds.rtt.performed", "", next_itemappid++, applicationid))
 		{
 			goto out;
 		}
-		if (ZBX_DB_OK > create_item_in_app(hostid, next_itemid++, 2, 3, "RDDS query RTT (failed)",
+		if (ZBX_DB_OK > create_item_in_app(hostid, next_itemid++, 2, 3, "Number of failed monthly RDDS queries",
 				"rsm.slv.rdds.rtt.failed", "", next_itemappid++, applicationid))
 		{
 			goto out;
 		}
-		if (ZBX_DB_OK > create_item_in_app(hostid, next_itemid++, 2, 0, "RDDS query RTT (pfailed)",
+		if (ZBX_DB_OK > create_item_in_app(hostid, next_itemid++, 2, 0, "Ratio of failed monthly RDDS queries",
 				"rsm.slv.rdds.rtt.pfailed", "%", next_itemappid++, applicationid))
 		{
 			goto out;
