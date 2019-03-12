@@ -1129,8 +1129,8 @@ sub create_dependent_trigger_chain($$$$)
 
 	foreach my $k (sort keys %{$thresholds_ref})
 	{
-		my $threshold = $trigger_thresholds->{$k}->{'threshold'};
-		my $priority = $trigger_thresholds->{$k}->{'priority'};
+		my $threshold = $thresholds_ref->{$k}->{'threshold'};
+		my $priority = $thresholds_ref->{$k}->{'priority'};
 		next if ($threshold eq 0);
 
 		my $result = &$fun($service, $host_name, $threshold, $priority, \$created);
