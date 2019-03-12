@@ -3,6 +3,12 @@ Changes for rsm1.3.0alpha1
 New features:
 
 --------------------------------------------------------------------------------
+Changes for rsm1.2.0rc9
+
+Bug fixes:
+....I..... [sub-464] fixed issues of updating the cache file in recent measurements script (dimir)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.2.0rc8
 
 Bug fixes:

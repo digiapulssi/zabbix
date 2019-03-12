@@ -851,7 +851,7 @@ foreach (@server_keys)
 			}
 		}
 
-		slv_finalize();
+		finalize_process();
 
 		# When we fork for real it makes no difference for Parallel::ForkManager whether child calls exit() or
 		# calls $fm->finish(), therefore we do not need to introduce $fm->finish() in all our low-level error
