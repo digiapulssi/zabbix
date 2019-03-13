@@ -36,12 +36,12 @@ function ZBX_NotificationsAudio() {
 	this.audio.autoplay = true;
 	this.audio.loop = true;
 	this.audio.onloadeddata = this.handleOnloadeddata.bind(this)
-	this.onloadeddata = null;
-	this.ontimedout = null;
+	this.onTimeout = null;
 	this.audio.load();
 
 	this.wave = '';
 	this.msTimeout = 0;
+	this.muted = false;
 	this.listen();
 }
 
@@ -51,19 +51,21 @@ function ZBX_NotificationsAudio() {
  * @return int  Interval id.
  */
 ZBX_NotificationsAudio.prototype.listen = function() {
-	var msStep = 100;
-	var msStep = 10; // TODO test if finer resolution is needed. It seems it is needed as it breaks less between tab switches.
+	var msStep = 10;
 
 	return setInterval(function(){
 
 		if (this.msTimeout < 1) {
 			this.msTimeout = 0;
-			this.audio.volume && this.ontimedout && this.ontimedout();
+			this.audio.volume && this.onTimeout && this.onTimeout();
 			// TODO cross fade audio a bit.
 			return this.audio.volume = 0;
 		}
 
-		this.audio.volume = 1;
+		if (!this.muted) {
+			this.audio.volume = 1;
+		}
+
 		this.msTimeout -= msStep;
 
 	}.bind(this), msStep);
@@ -82,7 +84,13 @@ ZBX_NotificationsAudio.prototype.file = function(file) {
 	}
 
 	this.wave = file;
-	this.audio.src = 'audio/' + this.wave;
+
+	if (!this.wave) {
+		this.audio.removeAttribute('src');
+	}
+	else {
+		this.audio.src = 'audio/' + this.wave;
+	}
 
 	return this;
 }
@@ -100,14 +108,22 @@ ZBX_NotificationsAudio.prototype.seek = function(seconds) {
 /**
  * Sets timeout the same as length of file. Or postones the timeout to be set once file is loded.
  */
-ZBX_NotificationsAudio.prototype.once = function(onDone) {
-	if (this.audio.readyState === 4) {
+ZBX_NotificationsAudio.prototype.once = function() {
+	if (this.audio.readyState >= 3) {
 		return this.timeout(this.audio.duration);
 	}
 
 	this.playOnceOnReady = true;
 
 	return this;
+}
+
+/**
+ * @param mute bool
+ */
+ZBX_NotificationsAudio.prototype.mute = function(bool) {
+	this.muted = bool;
+	return this.audio.volume = bool ? 0 : 1;
 }
 
 /**
@@ -123,6 +139,7 @@ ZBX_NotificationsAudio.prototype.stop = function() {
  */
 ZBX_NotificationsAudio.prototype.timeout = function(seconds) {
 	if (seconds == -1) {
+		this.seek(0);
 		return this.once();
 	}
 
@@ -146,9 +163,6 @@ ZBX_NotificationsAudio.prototype.getSeek = function() {
  * @return float
  */
 ZBX_NotificationsAudio.prototype.getTimeout = function() {
-	// if (!this.audio.volume) {
-	// 	return 0;
-	// }
 	return this.msTimeout / 1000;
 }
 
@@ -161,7 +175,6 @@ ZBX_NotificationsAudio.prototype.handleOnloadeddata = function() {
 		this.once();
 		this.playOnceOnReady = false;
 	}
-	this.onloadeddata && this.onloadeddata(this);
 
 	var promise = this.audio.play();
 
@@ -176,4 +189,3 @@ ZBX_NotificationsAudio.prototype.handleOnloadeddata = function() {
 		}
 	}.bind(this));
 }
-

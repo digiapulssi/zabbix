@@ -28,40 +28,66 @@ function ZBX_Notifications(store, tab) {
 	if (!(store instanceof ZBX_LocalStorage) || !(tab instanceof ZBX_BrowserTab)) {
 		throw 'Unmatched signature!';
 	}
+
+	this.player = new ZBX_NotificationsAudio();
+
 	this.store = store;
+
 	this.tab = tab;
 	this.tab.onFocus(this.onTabFocus.bind(this));
-	this.tab.onBlur(this.onTabBlur.bind(this));
+	this.tab.onUnload(this.onTabUnload.bind(this));
+
 	this.dom = new ZBX_NotificationCollection();
 	this.dom.onTimedout = this.onNotifTimedout.bind(this);
+
 	this.doPollServer = false;
 
 	// We must not rely on notifications list from store if this is first created instace across tabs.
 	// So we truncate that list. The polling will begin as usual.
 	if (tab.isSingleSession()) {
+		this.store.resetKey('notifications.timestamp');
 		this.store.resetKey('notifications.list');
 	}
-
-	this.player = new ZBX_NotificationsAudio();
-
-	this.store.onUpdate(this.onStoreUpdate.bind(this));
-	this.onStoreUpdate(ZBX_LocalStorage.defines.ANY_KEY);
 
 	this.dom.btnClose.onclick = this.btnCloseClicked.bind(this);
 	this.dom.btnSnooze.onclick = this.btnSnoozeClicked.bind(this);
 	this.dom.btnMute.onclick = this.btnMuteClicked.bind(this);
 
+	this.store.onUpdate(this.onStoreUpdate.bind(this));
+
+	this.onSnoozeChange(this.store.readKey('notifications.alarm.snoozed'));
+	this.onMuteChange(this.store.readKey('notifications.alarm.muted'));
+	this.onNotificationsList(this.store.readKey('notifications.list'));
+	this.onTabFocusChanged(this.store.readKey('tabs.lastfocused'));
+
+	this.player.seek(this.store.readKey('notifications.alarm.seek'));
+	this.player.file(this.store.readKey('notifications.alarm.wave'));
+
 	setInterval(this.mainLoop.bind(this), ZBX_Notifications.POLL_INTERVAL);
-	this.mainLoop();
+
+	// Upon object creation we invoke tab.onFocus hook if tab was not opened in background.
+	// Restack exists because of IE11.
+	setTimeout(function(){
+		document.hasFocus() && this.onTabFocus(this.tab);
+		this.mainLoop();
+	}.bind(this), 0);
+
 }
 
 ZBX_Notifications.prototype.onStoreUpdate = function(key, value, source) {
 	switch (key) {
 		case 'notifications.alarm.end':
 		case 'notifications.alarm.start':
+			this.renderPlayer();
+			break;
+		case 'notifications.alarm.wave':
+			this.player.file(value);
+			break;
 		case 'notifications.alarm.seek':
+			this.player.seek(value);
+			break;
 		case 'notifications.alarm.timeout':
-			this.renderPlayer(source);
+			this.doPollServer && this.player.timeout(value);
 			break;
 		case 'notifications.alarm.muted':
 			this.onMuteChange(value);
@@ -75,13 +101,6 @@ ZBX_Notifications.prototype.onStoreUpdate = function(key, value, source) {
 		case 'tabs.lastfocused':
 			this.onTabFocusChanged(value);
 			break;
-		case ZBX_LocalStorage.defines.ANY_KEY:
-			this.renderPlayer(ZBX_LocalStorage.defines.EVT_WRITE);
-			this.onSnoozeChange(this.store.readKey('notifications.alarm.snoozed'));
-			this.onMuteChange(this.store.readKey('notifications.alarm.muted'));
-			this.onNotificationsList(this.store.readKey('notifications.list'));
-			this.onTabFocusChanged(this.store.readKey('tabs.lastfocused'));
-			break;
 	}
 }
 
@@ -93,7 +112,7 @@ ZBX_Notifications.prototype.onPollerReceive = function(resp) {
 
 	this.writeSettings(resp.settings);
 	if (this.store.readKey('notifications.timestamp') == resp.timestamp) {
-		return console.warn('the same got from server no updates to list');
+		return;
 	}
 
 	this.store.writeKey('notifications.timestamp', resp.timestamp);
@@ -119,7 +138,6 @@ ZBX_Notifications.prototype.onNotifTimedout = function(notif) {
 
 		if (this.store.readKey('notifications.alarm.start') == notif.uid) {
 			this.store.writeKey('notifications.alarm.end', notif.uid);
-			// this.store.resetKey('notifications.alarm.seek');
 			this.renderPlayer();
 		}
 
@@ -162,31 +180,30 @@ ZBX_Notifications.prototype.onSnoozeChange = function(bool) {
 
 ZBX_Notifications.prototype.onMuteChange = function(bool) {
 	this.dom.btnMute.renderState(bool);
-	this.renderPlayer();
+	this.player.mute(bool);
+}
+
+ZBX_Notifications.prototype.onTabUnload = function(tab) {
+	if (this.doPollServer) {
+		this.store.writeKey('notifications.alarm.seek', this.player.getSeek());
+		this.store.writeKey('notifications.alarm.timeout', this.player.getTimeout());
+	}
 }
 
 ZBX_Notifications.prototype.onTabFocusChanged = function(tabId) {
 	var activeBlured = this.doPollServer && this.tab.uid != tabId;
-	var regainedFocus = this.tab.uid == tabId && this.doPollServer;
 
 	if (activeBlured) {
-		this.store.writeKey('notifications.alarm.timeout', this.player.getTimeout());
 		this.store.writeKey('notifications.alarm.seek', this.player.getSeek());
+		this.store.writeKey('notifications.alarm.timeout', this.player.getTimeout());
+		this.player.stop();
 	}
 
-	if (!regainedFocus || activeBlured) {
-		this.renderPlayer();
-	}
-
-	// This doPollServer switch must change as last.
 	this.doPollServer = this.tab.uid == tabId;
 }
 
 ZBX_Notifications.prototype.onTabFocus = function(tab) {
-	this.onTabFocusChanged(this.tab.uid);
-}
-
-ZBX_Notifications.prototype.onTabBlur = function(tab) {
+	this.onTabFocusChanged(tab.uid);
 }
 
 ZBX_Notifications.prototype.writeAlarm = function(notif, opts) {
@@ -309,13 +326,13 @@ ZBX_Notifications.prototype.btnMuteClicked = function() {
 }
 
 ZBX_Notifications.prototype.renderPlayer = function(source) {
-
 	if (!this.doPollServer) {
 		return this.player.stop();
 	}
 
 	var start = this.store.readKey('notifications.alarm.start');
 	var end = this.store.readKey('notifications.alarm.end');
+
 	if (!start || start && start == end) {
 		return this.player.stop();
 	}
@@ -329,28 +346,25 @@ ZBX_Notifications.prototype.renderPlayer = function(source) {
 	}
 
 	var wave = this.store.readKey('notifications.alarm.wave');
+
 	if (wave) {
 		this.player.file(wave);
 	}
 
-	// Self srore update should not seek, because we use this seek key only for other tabs
-	// that has just gained focus. Seek is passed from previous player instance.
-	// A refresh also is previous tab, so seek is passed then too.
-	if (source === ZBX_LocalStorage.defines.EVT_CHANGE) {
-		this.player.seek(this.store.readKey('notifications.alarm.seek'))
-	}
+	this.player.seek(this.store.readKey('notifications.alarm.seek'))
 	this.player.timeout(this.store.readKey('notifications.alarm.timeout'));
 
-	this.player.ontimedout = function() {
+	this.player.onTimeout = function() {
 		if (this.doPollServer) {
 			this.store.writeKey('notifications.alarm.end', this.store.readKey('notifications.alarm.start'));
 		}
 	}.bind(this)
+
+	return this.player;
 }
 
 ZBX_Notifications.prototype.fetch = function(method, params) {
 	return new Promise(function(resolve, reject) {
-		// TODO in case of network failure I expected 'onFailure' to be called!!!!!!!!!!!!!!!!!!!!!!!
 		new RPC.Call({
 			'method': method,
 			'onSuccess': resolve,
@@ -366,7 +380,7 @@ ZBX_Notifications.prototype.mainLoop = function() {
 	}
 
 	this.fetch('notifications.get')
-		.catch(console.error) // TODO create user friendly modal window with invitation to look into console for errors.
+		.catch(console.error)
 		.then(this.onPollerReceive.bind(this))
 }
 

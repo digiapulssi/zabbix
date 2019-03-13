@@ -42,6 +42,7 @@ function ZBX_BrowserTab(store) {
 
 	this.onFocusCbs = [];
 	this.onBlurCbs = [];
+	this.onUnloadCbs = [];
 
 	this.register();
 }
@@ -56,7 +57,7 @@ ZBX_BrowserTab.prototype.getAllTabIds = function() {
 }
 
 /**
- * Determines crashed tabs and reports them.
+ * Looks for crashed tabs.
  */
 ZBX_BrowserTab.prototype.checkAlive = function() {
 	var now = Math.floor(+new Date / 1000) - 60;
@@ -73,14 +74,15 @@ ZBX_BrowserTab.prototype.checkAlive = function() {
  * @param string tabId  The crashed tab id.
  */
 ZBX_BrowserTab.prototype.handleCrashed = function(tabId) {
-	// TODO perform the logic
-	console.warn('crashed tab: ' + tabId);
-
-	// TODO perform the logic
 	this.store.mutateObject('tabs.lastseen', function(tabs) {
 		delete tabs[tabId];
-		console.warn('Unregistered crashed tab: ' + tabId);
 	}.bind(this));
+
+	if (this.store.readKey('tabs.lastfocused') == tabId) {
+		this.store.writeKey('tabs.lastfocused', this.uid);
+		console.info('Recovered a crashed tab '+tabId+'. Now tab ' + this.uid + ' is polling for notifications.');
+		this.handleFocus();
+	}
 }
 
 /**
@@ -98,6 +100,13 @@ ZBX_BrowserTab.prototype.onFocus = function(callback) {
 }
 
 /**
+ * Bind cb
+ */
+ZBX_BrowserTab.prototype.onUnload = function(callback) {
+	this.onUnloadCbs.push(callback);
+}
+
+/**
  * Rewrite focused tab id.
  */
 ZBX_BrowserTab.prototype.handleBlur = function(event) {
@@ -109,7 +118,7 @@ ZBX_BrowserTab.prototype.handleBlur = function(event) {
  * Rewrite focused tab id.
  */
 ZBX_BrowserTab.prototype.handleFocus = function(event) {
-	this.onFocusCbs.forEach(function(c) {c(this)});
+	this.onFocusCbs.forEach(function(c) {c(this)}.bind(this));
 	this.store.writeKey('tabs.lastfocused', this.uid);
 }
 
@@ -128,6 +137,8 @@ ZBX_BrowserTab.prototype.handleBeforeUnload = function(event) {
 	// This prop needs to be freed earlier, because it seems scripts do continue execution after this call.
 	// Without this line it seems that focus event fired, thus it writes this tab id again back into store.
 	delete this.store;
+
+	this.onUnloadCbs.forEach(function(c) {c(this)}.bind(this));
 }
 
 /**

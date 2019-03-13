@@ -18,9 +18,6 @@
 **/
 
 
-// TODO remove debug.
-ZBX_LocalStorage.debug = !true;
-
 ZBX_LocalStorage.defines = {
 	EVT_WRITE: 0,
 	EVT_CHANGE: 1,
@@ -69,19 +66,14 @@ function ZBX_LocalStorage(version) {
 		'notifications.alarm.wave': '',
 		// Optional seek position, it will always be read on focus, if playing.
 		'notifications.alarm.seek': 0,
-		// If this notification setting is 1, then it is assumed to play once till end of current wave,
-		// Else current alert is played for the amount of seconds given.
-		// This store value is read on focus gain to be applied to player.
-		// This store value is written on tab blur because if timeout is 60 and 30 seconds has passed,
-		// other tab must play it's audio only for the remaining time.
-		// This store value is written only when we receive new messages, that are not seen before.
+		// Set notifications audio player timeout.
+		// Current timeout is written when playing tab lost focus or unloads.
+		// Zero value is written along with notifications.alarm.start if (newValue != oldValue).
 		'notifications.alarm.timeout': 0,
-		// Notification start id is written when notification is played one.
+		// Notification start id is written when we receive a notification that should be played.
 		'notifications.alarm.start': '',
 		// Notification end id is written when notification has completed it's alert.
-		// It is then cheched if these keys are equal to know that we do not play notification again
-		// if page is refreshed. Once different notification id falls though criteria to be played now,
-		// 'start' key is written, and process just works out from there on.
+		// It is then checked if these keys are equal to know that we do not play notification again.
 		'notifications.alarm.end': '',
 	}
 
@@ -139,7 +131,6 @@ ZBX_LocalStorage.prototype.ensureKey = function(key) {
  * @param string value
  */
 ZBX_LocalStorage.prototype.writeKey = function(key, value) {
-	ZBX_LocalStorage.debug && console.info('LS:write:' + key);
 	if (value instanceof Array) {
 		throw 'Arrays are not supported. Unsuccessful key: ' + key;
 	}
@@ -165,7 +156,6 @@ ZBX_LocalStorage.prototype.resetKey = function(key) {
  * @return mixed
  */
 ZBX_LocalStorage.prototype.readKey = function(key) {
-	ZBX_LocalStorage.debug && console.info('LS:read:' + key);
 	this.ensureKey(key);
 
 	try {
