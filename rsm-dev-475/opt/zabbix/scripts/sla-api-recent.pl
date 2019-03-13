@@ -37,7 +37,7 @@ sub calculate_cycle($$$$$$$$);
 sub get_interfaces($$$);
 sub probe_online_at_init();
 sub get_history_by_itemid($$$);
-sub check_child_errors($$$$$$);
+sub child_error($$$$$$);
 sub save_child_lastvalues_cache($);
 sub set_on_finish($);
 
@@ -137,11 +137,14 @@ else
 	fail("cannot calculate maximum number of processes to use") unless ($children_per_server);
 }
 
+info("servers             : $server_count") if (opt('stats'));
+info("max children/server : $children_per_server") if (opt('stats'));
+
 my $child_failed = 0;
 my $signal_sent = 0;
 my $lastvalues_cache = {};
 
-my $fm = new Parallel::ForkManager(4);
+my $fm = new Parallel::ForkManager($server_count);
 
 foreach (@server_keys)
 {
@@ -149,7 +152,12 @@ foreach (@server_keys)
 
 	if ($pid == 0)
 	{
+		init_process();
+
 		process_server($_);
+
+		finalize_process();
+
 		$fm->finish(SUCCESS);
 		last;
 	}
@@ -197,9 +205,11 @@ sub process_server($)
 
 	my $tlds_per_child = int($server_tld_count / $children_count);
 
+	info("children/$server_key : $children_count") if (opt('stats'));
+
 	my $fm = new Parallel::ForkManager();
 	set_on_finish($fm);
-	$fm->set_max_procs($children_count - 1);	# we count this process as one of the children
+	$fm->set_max_procs($children_count);
 	$fm->run_on_wait(sub() {dbg("max children reached, please wait...");});
 
 	my $tldi_begin = 0;
@@ -216,24 +226,21 @@ sub process_server($)
 
 		my %child_data;
 
-		if ($children_count > 1)
-		{
-			my $pid = $fm->start();
+		my $pid = $fm->start();
 
-			if ($pid == 0)
-			{
-				process_tld_batch($server_tlds, $tldi_begin, $tldi_end, \%child_data, \%probes);
-				$fm->finish(SUCCESS, \%child_data);
-				last;
-			}
-
-			$tldi_begin = $tldi_end;
-		}
-		else	# don't fork for the last batch
+		if ($pid == 0)
 		{
-			process_tld_batch($server_tlds, $tldi_begin, $server_tld_count, \%child_data, \%probes);
-			save_child_lastvalues_cache(\%child_data)
+			init_process();
+
+			process_tld_batch($server_tlds, $tldi_begin, $tldi_end, \%child_data, \%probes);
+
+			finalize_process();
+
+			$fm->finish(SUCCESS, \%child_data);
+			last;
 		}
+
+		$tldi_begin = $tldi_end;
 
 		$children_count--;
 	}
@@ -293,10 +300,9 @@ sub process_tld_batch($$$$$)
 		my $lastvalues_db = {'tlds' => {}};
 		get_lastvalues_from_db($lastvalues_db, $tld, \%delays);
 
-		my $lastvalues_db_tld = $lastvalues_db->{'tlds'}{$tld};
-		my $lastvalues_cache_tld = $lastvalues_cache->{'tlds'}{$tld} = {};
+		$lastvalues_cache->{'tlds'}{$tld} //= {};
 
-		process_tld($tld, $probes_ref, $lastvalues_db_tld, $lastvalues_cache_tld);
+		process_tld($tld, $probes_ref, $lastvalues_db->{'tlds'}{$tld}, $lastvalues_cache->{'tlds'}{$tld});
 
 		$child_data_ref->{$tld} = $lastvalues_cache->{'tlds'}{$tld};
 
@@ -537,6 +543,8 @@ sub cycles_to_calculate($$$$$$$$)
 			}
 			elsif (!defined($lastvalues_cache_tld->{$service}{'probes'}{$probe}{$itemid}))
 			{
+				dbg("$service: itemid $itemid from probe \"$probe\" not in cache yet");
+
 				# this partilular item is not in cache yet, get the time starting point for it
 				$global_lastclock //= get_global_lastclock($tld, $service_key, $delay);
 
@@ -552,6 +560,8 @@ sub cycles_to_calculate($$$$$$$$)
 			else
 			{
 				$lastclock = $lastvalues_cache_tld->{$service}{'probes'}{$probe}{$itemid}{'clock'};
+
+				dbg("$service: using last clock from cache: ", ts_full($lastclock));
 
 				if ($lastclock > $lastclock_db)
 				{
@@ -843,6 +853,13 @@ sub fill_test_data($$$$)
 
 		foreach my $src_metric_ref (@{$src->{$target}})
 		{
+			# "rtt" and "ip" values represent the same test but they are stored in different items with
+			# different value types. This means they can appear in history tables at different times.
+			# In this case we must skip that test with partial metrics, it will be added on the next run
+			# when we have all the needed data.
+
+			next if (!defined($src_metric_ref->{'rtt'}) || !defined($src_metric_ref->{'ip'}));
+
 			my $metric = {
 				'testDateTime'	=> int($src_metric_ref->{'clock'}),
 				'targetIP'	=> $src_metric_ref->{'ip'}
@@ -975,7 +992,7 @@ sub probe_online_at($$)
 
 sub calculate_cycle($$$$$$$$)
 {
-	my $tld = shift;
+	$tld = shift;		# set globally
 	my $service = shift;
 	my $probes_data = shift;
 	my $cycle_clock = shift;
@@ -1326,6 +1343,7 @@ sub calculate_cycle($$$$$$$$)
 
 				# For non-DNS we have only 1 metric, thus we refer to the first element of array.
 				# "clock" and "rtt" of this metric were already collected above.
+
 				$tested_interfaces{$interface}{$probe}{'testData'}{$target}->[0]->{'ip'} = $value_ref->{'value'};
 			}
 		}
@@ -1497,7 +1515,7 @@ sub child_failed
 	slv_exit(E_FAIL) if ($child_failed);
 }
 
-sub check_child_errors($$$$$$)
+sub child_error($$$$$$)
 {
 	my $pid = shift;
 	my $exit_code = shift;
@@ -1537,7 +1555,7 @@ sub set_on_finish($)
 	my $fm = shift;
 
 	$fm->run_on_finish(
-		sub ($$$$$)
+		sub ($$$$$$)
 		{
 			my $pid = shift;
 			my $exit_code = shift;
@@ -1546,7 +1564,7 @@ sub set_on_finish($)
 			my $core_dump = shift;
 			my $child_data = shift;
 
-			if (check_child_errors($pid, $exit_code, $id, $exit_signal, $core_dump, $child_data))
+			if (child_error($pid, $exit_code, $id, $exit_signal, $core_dump, $child_data))
 			{
 				$child_failed = 1;
 			}

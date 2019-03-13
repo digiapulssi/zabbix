@@ -17,7 +17,7 @@ usage()
 	echo "    -s Service (default: $d_service)"
 	echo "    -d DATE (default: $d_date)"
 	echo "    -l LAST measurements (default: $d_last)"
-	echo "    -m MOVE back from the latest measurements (default: $d_move)"
+	echo "    -m CYCLES to go back from the LAST  measurements (default: $d_move)"
 	exit 1
 }
 
