@@ -1966,11 +1966,12 @@ sub create_ratio_of_failed_tests_trigger($$$$$)
 	}
 	else
 	{
-		$expression = "{$host_name:$item_key.last()}>$macro/100*$threshold"
+		my $threshold_perc = $threshold / 100;
+		$expression = "{$host_name:$item_key.last()}>$macro*$threshold_perc"
 	}
 
 	my $options = {
-		'description' => "Ratio of failed $service tests exceeded $threshold% of allowed $macro%",
+		'description' => "Ratio of failed $service tests exceeded $threshold% of allowed \$1%",
 		'expression' => $expression,
 		'priority' => $priority
 	};
