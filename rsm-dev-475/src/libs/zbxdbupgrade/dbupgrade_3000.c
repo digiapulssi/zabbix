@@ -3330,6 +3330,8 @@ static int	create_dns_downtime_trigger(const char* hostid)
 	}
 
 	DBfree_result(result);
+
+	return SUCCEED;
 }
 
 static int	DBpatch_3000303(void)
@@ -3358,7 +3360,7 @@ static int	create_rdds_downtime_trigger(const char* hostid, const char* percent,
 {
 	DB_RESULT	result;
 	DB_ROW		row;
-	zbx_uint64_t	functionid, itemid;
+	zbx_uint64_t	functionid;
 
 	static const char*	itemkey = "rsm.slv.dns.downtime";
 
@@ -3459,7 +3461,7 @@ static int	DBpatch_3000304(void)
 	return SUCCEED;
 }
 
-static int	create_item_in_app(zbx_uint64_t hostid, zbx_uint64_t itemid, int item_type, int item_value_type,
+static int	create_slv_rtt_item(zbx_uint64_t hostid, zbx_uint64_t itemid, int item_type, int item_value_type,
 		const char *item_name, const char *item_key, const char *item_units, zbx_uint64_t itemappid,
 		zbx_uint64_t applicationid)
 {
@@ -3479,17 +3481,70 @@ static int	create_item_in_app(zbx_uint64_t hostid, zbx_uint64_t itemid, int item
 				"'0','30','0','0','','0')",
 			itemid, item_type, hostid, item_name, item_key, item_value_type, item_units))
 	{
-		return ZBX_DB_FAIL;
+		return FAIL;
 	}
 
 	if (ZBX_DB_OK > DBexecute(
 			"insert into items_applications (itemappid,applicationid,itemid) values (" ZBX_FS_UI64 ","
 			ZBX_FS_UI64 "," ZBX_FS_UI64 ")", itemappid, applicationid, itemid))
 	{
-		return ZBX_DB_FAIL;
+		return FAIL;
 	}
 
-	return ZBX_DB_OK;
+	return SUCCEED;
+}
+
+static int	create_ratio_of_failed_tests_triggers(zbx_uint64_t itemid, const char *service, const char *macro)
+{
+	size_t		i;
+	zbx_uint64_t	prev_triggerid = 0;
+
+	/* percent, coeff, priority */
+	const char* trigger_params[5][3] = {
+		{"10%",		"*0.1",		"2"},
+		{"25%",		"*0.25",	"3"},
+		{"50%",		"*0.5",		"3"},
+		{"75%",		"*0.75",	"4"},
+		{"100%",	"",		"5"}
+	};
+
+	for (i = 0; i < sizeof(trigger_params) / sizeof(*trigger_params); i++)
+	{
+		const char	*percents    = trigger_params[i][0];
+		const char	*coefficient = trigger_params[i][1];
+		const char	*severity    = trigger_params[i][2];
+
+		zbx_uint64_t	functionid = DBget_maxid_num("functions", 1);
+		zbx_uint64_t	triggerid  = DBget_maxid_num("triggers", 1);
+
+		if (ZBX_DB_OK > DBexecute("insert into triggers (triggerid,expression,description,url,status,value,"
+				"priority,lastchange,comments,error,templateid,type,state,flags) values"
+				" (" ZBX_FS_UI64 ",'{" ZBX_FS_UI64 "}>%s%s',"
+				"'Ratio of failed %s tests exceeded %s of allowed $1%%','',0,0,%s,0,'','',NULL,0,0,0)",
+				triggerid, functionid, macro, coefficient, service, percents, severity))
+		{
+			return FAIL;
+		}
+
+		if (ZBX_DB_OK > DBexecute("insert into functions (functionid,itemid,triggerid,function,parameter) "
+				" values (" ZBX_FS_UI64 "," ZBX_FS_UI64 "," ZBX_FS_UI64 ",'last','')",
+				functionid, itemid, triggerid))
+		{
+			return FAIL;
+		}
+
+		if (0 != prev_triggerid)
+		{
+			if (SUCCEED != create_trigger_dependency(triggerid, prev_triggerid))
+			{
+				return FAIL;
+			}
+		}
+
+		prev_triggerid = triggerid;
+	}
+
+	return SUCCEED;
 }
 
 static int	DBpatch_3000305(void)
@@ -3515,6 +3570,12 @@ static int	DBpatch_3000305(void)
 		zbx_uint64_t	applicationid;	/* ID of "SLV current month" application on current host */
 		zbx_uint64_t	next_itemid;	/* ID of next row in items table */
 		zbx_uint64_t	next_itemappid;	/* ID of next row in items_applications table */
+		zbx_uint64_t	itemid_udp_performed;
+		zbx_uint64_t	itemid_udp_failed;
+		zbx_uint64_t	itemid_udp_pfailed;
+		zbx_uint64_t	itemid_tcp_performed;
+		zbx_uint64_t	itemid_tcp_failed;
+		zbx_uint64_t	itemid_tcp_pfailed;
 
 		ZBX_STR2UINT64(hostid, hosts_row[0]);
 
@@ -3538,35 +3599,51 @@ static int	DBpatch_3000305(void)
 		next_itemid = DBget_maxid_num("items", 6);
 		next_itemappid = DBget_maxid_num("items_applications", 6);
 
+		itemid_udp_performed = next_itemid++;
+		itemid_udp_failed    = next_itemid++;
+		itemid_udp_pfailed   = next_itemid++;
+		itemid_tcp_performed = next_itemid++;
+		itemid_tcp_failed    = next_itemid++;
+		itemid_tcp_pfailed   = next_itemid++;
+
 		/* create items and link them to "SLV current month" application */
 
-		if (ZBX_DB_OK > create_item_in_app(hostid, next_itemid++, 2, 3, "Number of performed monthly DNS UDP tests",
+		if (SUCCEED != create_slv_rtt_item(hostid, itemid_udp_performed, 2, 3, "Number of performed monthly DNS UDP tests",
 				"rsm.slv.dns.udp.rtt.performed", "", next_itemappid++, applicationid))
 		{
 			goto out;
 		}
-		if (ZBX_DB_OK > create_item_in_app(hostid, next_itemid++, 2, 3, "Number of failed monthly DNS UDP tests",
+		if (SUCCEED != create_slv_rtt_item(hostid, itemid_udp_failed, 2, 3, "Number of failed monthly DNS UDP tests",
 				"rsm.slv.dns.udp.rtt.failed", "", next_itemappid++, applicationid))
 		{
 			goto out;
 		}
-		if (ZBX_DB_OK > create_item_in_app(hostid, next_itemid++, 2, 0, "Ratio of failed monthly DNS UDP tests",
+		if (SUCCEED != create_slv_rtt_item(hostid, itemid_udp_pfailed, 2, 0, "Ratio of failed monthly DNS UDP tests",
 				"rsm.slv.dns.udp.rtt.pfailed", "%", next_itemappid++, applicationid))
 		{
 			goto out;
 		}
-		if (ZBX_DB_OK > create_item_in_app(hostid, next_itemid++, 2, 3, "Number of performed monthly DNS TCP tests",
+		if (SUCCEED != create_slv_rtt_item(hostid, itemid_tcp_performed, 2, 3, "Number of performed monthly DNS TCP tests",
 				"rsm.slv.dns.tcp.rtt.performed", "", next_itemappid++, applicationid))
 		{
 			goto out;
 		}
-		if (ZBX_DB_OK > create_item_in_app(hostid, next_itemid++, 2, 3, "Number of failed monthly DNS TCP tests",
+		if (SUCCEED != create_slv_rtt_item(hostid, itemid_tcp_failed, 2, 3, "Number of failed monthly DNS TCP tests",
 				"rsm.slv.dns.tcp.rtt.failed", "", next_itemappid++, applicationid))
 		{
 			goto out;
 		}
-		if (ZBX_DB_OK > create_item_in_app(hostid, next_itemid++, 2, 0, "Ratio of failed monthly DNS TCP tests",
+		if (SUCCEED != create_slv_rtt_item(hostid, itemid_tcp_pfailed, 2, 0, "Ratio of failed monthly DNS TCP tests",
 				"rsm.slv.dns.tcp.rtt.pfailed", "%", next_itemappid++, applicationid))
+		{
+			goto out;
+		}
+
+		if (SUCCEED != create_ratio_of_failed_tests_triggers(itemid_udp_pfailed, "DNS UDP", "{$RSM.SLV.DNS.UDP.RTT}"))
+		{
+			goto out;
+		}
+		if (SUCCEED != create_ratio_of_failed_tests_triggers(itemid_tcp_pfailed, "DNS TCP", "{$RSM.SLV.DNS.TCP.RTT}"))
 		{
 			goto out;
 		}
@@ -3609,6 +3686,9 @@ static int	DBpatch_3000306(void)
 		zbx_uint64_t	applicationid;	/* ID of "SLV current month" application on current host */
 		zbx_uint64_t	next_itemid;	/* ID of next row in items table */
 		zbx_uint64_t	next_itemappid;	/* ID of next row in items_applications table */
+		zbx_uint64_t	itemid_performed;
+		zbx_uint64_t	itemid_failed;
+		zbx_uint64_t	itemid_pfailed;
 
 		ZBX_STR2UINT64(hostid, hosts_row[0]);
 
@@ -3632,20 +3712,29 @@ static int	DBpatch_3000306(void)
 		next_itemid = DBget_maxid_num("items", 3);
 		next_itemappid = DBget_maxid_num("items_applications", 3);
 
+		itemid_performed = next_itemid++;
+		itemid_failed    = next_itemid++;
+		itemid_pfailed   = next_itemid++;
+
 		/* create items and link them to "SLV current month" application */
 
-		if (ZBX_DB_OK > create_item_in_app(hostid, next_itemid++, 2, 3, "Number of performed monthly RDDS queries",
+		if (SUCCEED != create_slv_rtt_item(hostid, itemid_performed, 2, 3, "Number of performed monthly RDDS queries",
 				"rsm.slv.rdds.rtt.performed", "", next_itemappid++, applicationid))
 		{
 			goto out;
 		}
-		if (ZBX_DB_OK > create_item_in_app(hostid, next_itemid++, 2, 3, "Number of failed monthly RDDS queries",
+		if (SUCCEED != create_slv_rtt_item(hostid, itemid_failed, 2, 3, "Number of failed monthly RDDS queries",
 				"rsm.slv.rdds.rtt.failed", "", next_itemappid++, applicationid))
 		{
 			goto out;
 		}
-		if (ZBX_DB_OK > create_item_in_app(hostid, next_itemid++, 2, 0, "Ratio of failed monthly RDDS queries",
+		if (SUCCEED != create_slv_rtt_item(hostid, itemid_pfailed, 2, 0, "Ratio of failed monthly RDDS queries",
 				"rsm.slv.rdds.rtt.pfailed", "%", next_itemappid++, applicationid))
+		{
+			goto out;
+		}
+
+		if (SUCCEED != create_ratio_of_failed_tests_triggers(itemid_pfailed, "RDDS", "{$RSM.SLV.RDDS.RTT}"))
 		{
 			goto out;
 		}
