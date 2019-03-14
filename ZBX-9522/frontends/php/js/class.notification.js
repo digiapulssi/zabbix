@@ -68,14 +68,9 @@ ZBX_Notification.prototype.makeNode = function(htmlString, uid) {
 	parse.innerHTML = htmlString;
 	var node = parse.firstChild;
 
-	node.snooze_icon = document.createElement('i');
-
+	node.snooze_icon = document.createElement('div');
+	node.snooze_icon.className = 'notif-indic-snooze';
 	node.snooze_icon.style.opacity = 0;
-	node.snooze_icon.style.height = '14px';
-	node.snooze_icon.style.width = '14px';
-	node.snooze_icon.style.marginTop = '20px';
-	node.snooze_icon.style.float = 'left';
-	node.snooze_icon.style.background = 'transparent url("./img/icon-sprite.svg") no-repeat -11px -551px';
 
 	node.querySelector('.notif-indic').appendChild(node.snooze_icon)
 
