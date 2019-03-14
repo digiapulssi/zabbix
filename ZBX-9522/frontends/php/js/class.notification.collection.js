@@ -19,12 +19,12 @@
 
 
 function ZBX_NotificationCollection() {
-	this.list = {}; // ZBX_Notification[uid]
+	this.list = {};
 	this.makeNodes()
 	this.onTimedout = function() {}
 
-	/*DEV*/
-	this.node.setStyle('postition:fixed;left:10px;top:10px;');
+	this.node.style.right = '0px';
+	this.node.style.top = '126px';
 }
 
 ZBX_NotificationCollection.prototype.makeNodes = function() {

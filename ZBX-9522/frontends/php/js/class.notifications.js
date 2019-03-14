@@ -71,7 +71,6 @@ function ZBX_Notifications(store, tab) {
 		document.hasFocus() && this.onTabFocus(this.tab);
 		this.mainLoop();
 	}.bind(this), 0);
-
 }
 
 ZBX_Notifications.prototype.onStoreUpdate = function(key, value, source) {
