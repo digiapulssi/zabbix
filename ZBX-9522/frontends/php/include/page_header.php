@@ -260,10 +260,6 @@ if ($page['type'] == PAGE_TYPE_HTML) {
 // unset multiple variables
 unset($table, $top_page_row, $menu_table, $main_menu_row, $sub_menu_table, $sub_menu_rows);
 
-if ($page['type'] == PAGE_TYPE_HTML && $showGuiMessaging) {
-	zbx_add_post_js('initMessages({});');
-}
-
 // if a user logs in after several unsuccessful attempts, display a warning
 if ($failedAttempts = CProfile::get('web.login.attempt.failed', 0)) {
 	$attempip = CProfile::get('web.login.attempt.ip', '');
