@@ -145,6 +145,7 @@ ZBX_Notification.srvToStore = function(obj) {
 		priority: obj.priority,
 		ttl: obj.ttl,
 		uid: obj.uid,
+		id: obj.id,
 		file: obj.file,
 		snoozed: obj.snoozed
 	};

@@ -57,7 +57,7 @@ function ZBX_LocalStorage(version) {
 		// we must merge this property into list upon receive new / old notifications from server.
 		'notifications.snoozedids': {},
 		// When we receive list of messages, this signifies the time of latest message. This way we know if list is updated.
-		'notifications.timestamp': 0,
+		'notifications.listid': '',
 		// This setting will disable it self upon 'notifications.timestamp' update.
 		'notifications.alarm.snoozed': '',
 		// If this is true - notifications are still received, but no audio related things are ever performed.

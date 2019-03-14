@@ -45,7 +45,7 @@ function ZBX_Notifications(store, tab) {
 	// We must not rely on notifications list from store if this is first created instace across tabs.
 	// So we truncate that list. The polling will begin as usual.
 	if (tab.isSingleSession()) {
-		this.store.resetKey('notifications.timestamp');
+		this.store.resetKey('notifications.listid');
 		this.store.resetKey('notifications.list');
 	}
 
@@ -111,11 +111,11 @@ ZBX_Notifications.prototype.onPollerReceive = function(resp) {
 	}
 
 	this.writeSettings(resp.settings);
-	if (this.store.readKey('notifications.timestamp') == resp.timestamp) {
+	if (this.store.readKey('notifications.listid') == resp.listid) {
 		return;
 	}
 
-	this.store.writeKey('notifications.timestamp', resp.timestamp);
+	this.store.writeKey('notifications.listid', resp.listid);
 	this.applySnoozeProp(resp.notifications);
 
 	var listObj = this.toStorableList(resp.notifications);
@@ -296,11 +296,15 @@ ZBX_Notifications.prototype.findNotificationToPlay = function(list) {
 }
 
 ZBX_Notifications.prototype.btnCloseClicked = function() {
-	var params = {caption: 'events', time: this.store.readKey('notifications.timestamp')};
+	var params = {ids: []};
+	var list = this.store.readKey('notifications.list');
+	for (var uid in list) {
+		params.ids.push(list[uid].id);
+	}
 
-	this.fetch('notifications.close_all', params)
+	this.fetch('notifications.read', params)
 		.catch(console.error)
-		.then(function() {
+		.then(function(resp) {
 			this.store.resetKey('notifications.list');
 			this.onNotificationsList({});
 		}.bind(this));
@@ -315,13 +319,12 @@ ZBX_Notifications.prototype.btnSnoozeClicked = function() {
 }
 
 ZBX_Notifications.prototype.btnMuteClicked = function() {
-	var isMute = this.store.readKey('notifications.alarm.muted');
-	var method = isMute ? 'notifications.unmute' : 'notifications.mute';
-	this.fetch(method)
+	var newValue = this.store.readKey('notifications.alarm.muted') ? 0 : 1;
+	this.fetch('notifications.mute', {mute: newValue})
 		.catch(console.error)
 		.then(function() {
-			this.store.writeKey('notifications.alarm.muted', !isMute);
-			this.onMuteChange(!isMute);
+			this.store.writeKey('notifications.alarm.muted', newValue);
+			this.onMuteChange(newValue);
 		}.bind(this));
 }
 
@@ -363,13 +366,12 @@ ZBX_Notifications.prototype.renderPlayer = function(source) {
 	return this.player;
 }
 
-ZBX_Notifications.prototype.fetch = function(method, params) {
+ZBX_Notifications.prototype.fetch = function(resource, params) {
 	return new Promise(function(resolve, reject) {
-		new RPC.Call({
-			'method': method,
-			'onSuccess': resolve,
-			'params': params || {},
-			'onFailure': reject
+		sendAjaxData('zabbix.php?action=' + resource, {
+			data: params || {},
+			success: resolve,
+			error: reject
 		});
 	});
 }
