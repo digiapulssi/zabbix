@@ -32,16 +32,19 @@
  */
 function ZBX_NotificationsAudio() {
 	this.audio = new Audio();
-	this.audio.volume = 0;
+
+	this.audio.volume = 1;
+	this.audio.muted = true;
 	this.audio.autoplay = true;
 	this.audio.loop = true;
+
 	this.audio.onloadeddata = this.handleOnloadeddata.bind(this)
-	this.onTimeout = null;
+	this.onTimeout = function() {};
+
 	this.audio.load();
 
 	this.wave = '';
 	this.msTimeout = 0;
-	this.muted = false;
 	this.listen();
 }
 
@@ -57,17 +60,20 @@ ZBX_NotificationsAudio.prototype.listen = function() {
 
 		if (this.msTimeout < 1) {
 			this.msTimeout = 0;
-			this.audio.volume && this.onTimeout && this.onTimeout();
-			// TODO cross fade audio a bit.
-			return this.audio.volume = 0;
+
+			if (!this.audio.muted) {
+				this.onTimeout();
+			}
+
+			this.audio.muted = true;
+			this.audio.volume = 0;
+
+			return;
 		}
 
-		if (!this.muted) {
-			this.audio.volume = 1;
-		}
-
+		this.audio.muted = false;
+		this.audio.volume = 1;
 		this.msTimeout -= msStep;
-
 	}.bind(this), msStep);
 }
 
@@ -122,8 +128,7 @@ ZBX_NotificationsAudio.prototype.once = function() {
  * @param mute bool
  */
 ZBX_NotificationsAudio.prototype.mute = function(bool) {
-	this.muted = bool;
-	return this.audio.volume = bool ? 0 : 1;
+	return this.audio.muted = bool;
 }
 
 /**
@@ -140,6 +145,7 @@ ZBX_NotificationsAudio.prototype.stop = function() {
 ZBX_NotificationsAudio.prototype.timeout = function(seconds) {
 	if (seconds == -1) {
 		this.seek(0);
+		this.stop();
 		return this.once();
 	}
 

@@ -110,7 +110,7 @@ class CControllerNotificationsGet extends CController {
 			$url_events = 'events.php?filter_set=1&triggerid='.$event['objectid'].'&source='.EVENT_SOURCE_TRIGGERS;
 			$url_tr_events = 'tr_events.php?eventid='.$event['eventid'].'&triggerid='.$event['objectid'];
 
-			$notifications[] = [
+			$result['notifications'][] = [
 				'uid' => $uid,
 				'id' => $event['eventid'],
 				'ttl' => $event['clock'] + $msgsettings['timeout'] - time(),
@@ -131,8 +131,7 @@ class CControllerNotificationsGet extends CController {
 			$used_triggers[$event['objectid']] = true;
 		}
 
-		array_multisort($sort_clock, SORT_ASC, $sort_event, SORT_ASC, $notifications);
-		$result['notifications'] = $notifications;
+		array_multisort($sort_clock, SORT_ASC, $sort_event, SORT_ASC, $result['notifications']);
 		$result['listid'] = sprintf('%u', crc32($result['listid']));
 
 		$this->setResponse(new CControllerResponseData(['main_block' => json_encode($result)]));

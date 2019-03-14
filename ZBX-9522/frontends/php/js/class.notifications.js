@@ -19,6 +19,7 @@
 
 
 ZBX_Notifications.POLL_INTERVAL = 30000;
+ZBX_Notifications.POLL_INTERVAL = 5000;
 
 /**
  * @param store ZBX_LocalStorage
@@ -215,7 +216,10 @@ ZBX_Notifications.prototype.writeAlarm = function(notif, opts) {
 		return;
 	}
 
-	if (!this.store.readKey('notifications.alarm.start')) {
+	var start = this.store.readKey('notifications.alarm.start');
+	var end = this.store.readKey('notifications.alarm.end');
+	if (start == end) {
+		this.player.seek(0);
 		this.store.resetKey('notifications.alarm.seek');
 	}
 
@@ -232,7 +236,7 @@ ZBX_Notifications.prototype.writeAlarm = function(notif, opts) {
 	this.store.writeKey('notifications.alarm.wave', opts.files[notif.file]);
 	// This write event is an action trigger for other tabs.
 	this.store.writeKey('notifications.alarm.start', notif.uid);
-	this.renderPlayer();
+	// this.renderPlayer();
 }
 
 ZBX_Notifications.prototype.writeSettings = function(settings) {
@@ -254,7 +258,7 @@ ZBX_Notifications.prototype.toStorableList = function(list) {
 }
 
 ZBX_Notifications.prototype.applySnoozeProp = function(list) {
-	if (list && list.constructor != Array) {
+	if (!(list instanceof Array)) {
 		throw 'Expected array in ZBX_Notifications.prototype.mergeSnoozed';
 	}
 	var snoozes = this.store.readKey('notifications.snoozedids');
@@ -268,14 +272,19 @@ ZBX_Notifications.prototype.applySnoozeProp = function(list) {
 	});
 }
 
+
+/**
+ * Finds most severe, most recent unsnoozed notification.
+ *
+ * A list we got from server reflects current notifications within timeout.
+ * To find a notification to play we must filter out any snoozed notifications
+ * we sort by severity first, then by timeout.
+ *
+ * @param list array  Notification objects in server provided format.
+ *
+ * @return string|null  Notification uid if it is found.
+ */
 ZBX_Notifications.prototype.findNotificationToPlay = function(list) {
-	/**
-	 * A list we got from server reflects current notifications within timeout.
-	 * To find a notification to play we must filter out any snoozed notifications
-	 * sort by severity first, then by timeout.
-	 *
-	 * @return string|null  Notification id if it is found.
-	 */
 	if (!list.length) {
 		return null;
 	}
