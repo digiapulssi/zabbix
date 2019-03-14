@@ -66,18 +66,29 @@ ZBX_Notification.prototype.setTimeout = function(seconds) {
 ZBX_Notification.prototype.makeNode = function(htmlString, uid) {
 	var parse = document.createElement('div');
 	parse.innerHTML = htmlString;
+	var node = parse.firstChild;
 
-	return parse.firstChild;
+	node.snooze_icon = document.createElement('i');
+
+	node.snooze_icon.style.opacity = 0;
+	node.snooze_icon.style.height = '14px';
+	node.snooze_icon.style.width = '14px';
+	node.snooze_icon.style.marginTop = '20px';
+	node.snooze_icon.style.float = 'left';
+	node.snooze_icon.style.background = 'transparent url("./img/icon-sprite.svg") no-repeat -11px -551px';
+
+	node.querySelector('.notif-indic').appendChild(node.snooze_icon)
+
+	return node;
 }
 
 ZBX_Notification.prototype.renderSnoozed = function(bool) {
-	// TODO figure out design - extra icon or left marging ?
 	this.snoozed = bool;
 	if (bool) {
-		this.node.style.opacity = 0.6;
+		this.node.snooze_icon.style.opacity = 0.5;
 	}
 	else {
-		this.node.style.opacity = 1;
+		this.node.snooze_icon.style.opacity = 0;
 	}
 }
 
