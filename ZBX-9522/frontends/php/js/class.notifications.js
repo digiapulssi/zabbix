@@ -39,7 +39,7 @@ function ZBX_Notifications(store, tab) {
 	this.tab.onUnload(this.onTabUnload.bind(this));
 
 	this.dom = new ZBX_NotificationCollection();
-	this.dom.onTimedout = this.onNotifTimedout.bind(this);
+	this.dom.onTimeout = this.onNotifTimeout.bind(this);
 
 	this.doPollServer = false;
 
@@ -63,6 +63,7 @@ function ZBX_Notifications(store, tab) {
 
 	this.player.seek(this.store.readKey('notifications.alarm.seek'));
 	this.player.file(this.store.readKey('notifications.alarm.wave'));
+	this.player.onTimeout = this.onPlayerTimeout.bind(this);
 
 	setInterval(this.mainLoop.bind(this), ZBX_Notifications.POLL_INTERVAL);
 
@@ -105,11 +106,6 @@ ZBX_Notifications.prototype.onStoreUpdate = function(key, value, source) {
 }
 
 ZBX_Notifications.prototype.onPollerReceive = function(resp) {
-	if (typeof resp.settings === 'undefined') {
-		// This means messaging is disabled at the time.
-		return;
-	}
-
 	this.writeSettings(resp.settings);
 	if (this.store.readKey('notifications.listid') == resp.listid) {
 		return;
@@ -118,8 +114,8 @@ ZBX_Notifications.prototype.onPollerReceive = function(resp) {
 	this.store.writeKey('notifications.listid', resp.listid);
 	this.applySnoozeProp(resp.notifications);
 
-	var listObj = this.toStorableList(resp.notifications);
-	var notifId = this.findNotificationToPlay(resp.notifications);
+	var listObj = ZBX_Notifications.toStorableList(resp.notifications);
+	var notifId = ZBX_Notifications.findNotificationToPlay(resp.notifications);
 	this.writeAlarm(listObj[notifId], resp.settings);
 
 	this.store.writeKey('notifications.list', listObj);
@@ -129,16 +125,15 @@ ZBX_Notifications.prototype.onPollerReceive = function(resp) {
 	this.onSnoozeChange(false);
 }
 
-ZBX_Notifications.prototype.onNotifTimedout = function(notif) {
+ZBX_Notifications.prototype.onNotifTimeout = function(notif) {
 	notif.remove(ZBX_Notification.ease, function() {
 		if (!this.dom.listNode.children.length) {
 			this.dom.hide();
 		}
 
-
 		if (this.store.readKey('notifications.alarm.start') == notif.uid) {
 			this.store.writeKey('notifications.alarm.end', notif.uid);
-			this.renderPlayer();
+			this.player.stop();
 		}
 
 		// This may be unneeded overkill TODO ?
@@ -147,6 +142,12 @@ ZBX_Notifications.prototype.onNotifTimedout = function(notif) {
 		});
 
 	}.bind(this));
+}
+
+ZBX_Notifications.prototype.onPlayerTimeout = function() {
+	if (this.doPollServer) {
+		this.store.writeKey('notifications.alarm.end', this.store.readKey('notifications.alarm.start'));
+	}
 }
 
 ZBX_Notifications.prototype.onNotificationsList = function(listObj) {
@@ -172,15 +173,15 @@ ZBX_Notifications.prototype.onSnoozeChange = function(bool) {
 		listObj[id].snoozed = bool;
 	}
 
+	this.player.stop();
 	this.store.writeKey('notifications.snoozedids', snoozedids);
 	this.store.writeKey('notifications.list', listObj);
 	this.onNotificationsList(listObj);
-	this.renderPlayer();
 }
 
 ZBX_Notifications.prototype.onMuteChange = function(bool) {
 	this.dom.btnMute.renderState(bool);
-	this.player.mute(bool);
+	bool && this.player.stop();
 }
 
 ZBX_Notifications.prototype.onTabUnload = function(tab) {
@@ -216,9 +217,7 @@ ZBX_Notifications.prototype.writeAlarm = function(notif, opts) {
 		return;
 	}
 
-	var start = this.store.readKey('notifications.alarm.start');
-	var end = this.store.readKey('notifications.alarm.end');
-	if (start == end) {
+	if (this.store.readKey('notifications.alarm.start') != notif.uid) {
 		this.player.seek(0);
 		this.store.resetKey('notifications.alarm.seek');
 	}
@@ -234,27 +233,14 @@ ZBX_Notifications.prototype.writeAlarm = function(notif, opts) {
 	}
 
 	this.store.writeKey('notifications.alarm.wave', opts.files[notif.file]);
-	// This write event is an action trigger for other tabs.
+	// This write event is an action trigger to play.
 	this.store.writeKey('notifications.alarm.start', notif.uid);
-	// this.renderPlayer();
+	this.renderPlayer();
 }
 
 ZBX_Notifications.prototype.writeSettings = function(settings) {
 	this.store.writeKey('notifications.alarm.muted', settings.muted);
 	this.onMuteChange(settings.muted);
-}
-
-ZBX_Notifications.prototype.toStorableList = function(list) {
-	if (list && list.constructor != Array) {
-		throw 'Expected array in ZBX_Notifications.prototype.toStorableList';
-	}
-
-	var listObj = {};
-	list.forEach(function(rawNotif) {
-		listObj[rawNotif.uid] = ZBX_Notification.srvToStore(rawNotif);
-	});
-
-	return listObj;
 }
 
 ZBX_Notifications.prototype.applySnoozeProp = function(list) {
@@ -270,37 +256,6 @@ ZBX_Notifications.prototype.applySnoozeProp = function(list) {
 			rawNotif.snoozed = false;
 		}
 	});
-}
-
-
-/**
- * Finds most severe, most recent unsnoozed notification.
- *
- * A list we got from server reflects current notifications within timeout.
- * To find a notification to play we must filter out any snoozed notifications
- * we sort by severity first, then by timeout.
- *
- * @param list array  Notification objects in server provided format.
- *
- * @return string|null  Notification uid if it is found.
- */
-ZBX_Notifications.prototype.findNotificationToPlay = function(list) {
-	if (!list.length) {
-		return null;
-	}
-
-	return list.reduce(function(acc, cur) {
-		if (cur.snoozed) {
-			return acc;
-		}
-		if (cur.priority > acc.priority) {
-			return cur;
-		}
-		if (cur.priority == acc.priority && cur.ttl > acc.ttl) {
-			return cur;
-		}
-		return acc;
-	}).uid;
 }
 
 ZBX_Notifications.prototype.btnCloseClicked = function() {
@@ -344,7 +299,10 @@ ZBX_Notifications.prototype.renderPlayer = function(source) {
 	var start = this.store.readKey('notifications.alarm.start');
 	var end = this.store.readKey('notifications.alarm.end');
 
-	if (!start || start && start == end) {
+	if (!start) {
+		return this.player.stop();
+	}
+	else if (start == end) {
 		return this.player.stop();
 	}
 
@@ -362,14 +320,7 @@ ZBX_Notifications.prototype.renderPlayer = function(source) {
 		this.player.file(wave);
 	}
 
-	this.player.seek(this.store.readKey('notifications.alarm.seek'))
 	this.player.timeout(this.store.readKey('notifications.alarm.timeout'));
-
-	this.player.onTimeout = function() {
-		if (this.doPollServer) {
-			this.store.writeKey('notifications.alarm.end', this.store.readKey('notifications.alarm.start'));
-		}
-	}.bind(this)
 
 	return this.player;
 }
@@ -392,6 +343,49 @@ ZBX_Notifications.prototype.mainLoop = function() {
 	this.fetch('notifications.get')
 		.catch(console.error)
 		.then(this.onPollerReceive.bind(this))
+}
+
+/**
+ * Finds most severe, most recent unsnoozed notification.
+ *
+ * A list we got from server reflects current notifications within timeout.
+ * To find a notification to play we must filter out any snoozed notifications
+ * we sort by severity first, then by timeout.
+ *
+ * @param list array  Notification objects in server provided format.
+ *
+ * @return string|null  Notification uid if it is found.
+ */
+ZBX_Notifications.findNotificationToPlay = function(list) {
+	if (!list.length) {
+		return null;
+	}
+
+	return list.reduce(function(acc, cur) {
+		if (cur.snoozed) {
+			return acc;
+		}
+		if (cur.priority > acc.priority) {
+			return cur;
+		}
+		if (cur.priority == acc.priority && cur.ttl > acc.ttl) {
+			return cur;
+		}
+		return acc;
+	}).uid;
+}
+
+ZBX_Notifications.toStorableList = function(list) {
+	if (list && list.constructor != Array) {
+		throw 'Expected array in ZBX_Notifications.prototype.toStorableList';
+	}
+
+	var listObj = {};
+	list.forEach(function(rawNotif) {
+		listObj[rawNotif.uid] = ZBX_Notification.srvToStore(rawNotif);
+	});
+
+	return listObj;
 }
 
 // DEV INIT PART

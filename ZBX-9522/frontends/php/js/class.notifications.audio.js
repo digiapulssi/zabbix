@@ -57,23 +57,24 @@ ZBX_NotificationsAudio.prototype.listen = function() {
 	var msStep = 10;
 
 	return setInterval(function(){
+		if (this.playOnceOnReady) {
+			this.once();
+			this.playOnceOnReady = false;
+		}
+
+		this.msTimeout -= msStep;
 
 		if (this.msTimeout < 1) {
-			this.msTimeout = 0;
-
-			if (!this.audio.muted) {
-				this.onTimeout();
-			}
-
+			!this.audio.muted && this.onTimeout();
 			this.audio.muted = true;
 			this.audio.volume = 0;
-
+			this.msTimeout = 0;
 			return;
 		}
 
 		this.audio.muted = false;
 		this.audio.volume = 1;
-		this.msTimeout -= msStep;
+
 	}.bind(this), msStep);
 }
 
@@ -105,7 +106,7 @@ ZBX_NotificationsAudio.prototype.file = function(file) {
  * There are no safety checks, if one decides to seek out of bounds - no audio.
  */
 ZBX_NotificationsAudio.prototype.seek = function(seconds) {
-	if (this.readyState > 0) {
+	if (this.audio.readyState > 0) {
 		this.audio.currentTime = seconds;
 	}
 	return this;
@@ -116,19 +117,12 @@ ZBX_NotificationsAudio.prototype.seek = function(seconds) {
  */
 ZBX_NotificationsAudio.prototype.once = function() {
 	if (this.audio.readyState >= 3) {
-		return this.timeout(this.audio.duration);
+		return this.seek(0).timeout(this.audio.duration);
 	}
 
 	this.playOnceOnReady = true;
 
 	return this;
-}
-
-/**
- * @param mute bool
- */
-ZBX_NotificationsAudio.prototype.mute = function(bool) {
-	return this.audio.muted = bool;
 }
 
 /**
@@ -144,8 +138,6 @@ ZBX_NotificationsAudio.prototype.stop = function() {
  */
 ZBX_NotificationsAudio.prototype.timeout = function(seconds) {
 	if (seconds == -1) {
-		this.seek(0);
-		this.stop();
 		return this.once();
 	}
 

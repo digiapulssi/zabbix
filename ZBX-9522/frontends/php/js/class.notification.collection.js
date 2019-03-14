@@ -21,7 +21,7 @@
 function ZBX_NotificationCollection() {
 	this.list = {};
 	this.makeNodes()
-	this.onTimedout = function() {}
+	this.onTimeout = function() {}
 
 	this.node.style.right = '0px';
 	this.node.style.top = '126px';
@@ -103,7 +103,7 @@ ZBX_NotificationCollection.prototype.renderFromStorable = function(listObj) {
 	Object.keys(listObj).reverse().forEach(function(id) {
 		this.list[id] = new ZBX_Notification(listObj[id]);
 		this.list[id].renderSnoozed(listObj[id].snoozed);
-		this.list[id].onTimedout = this.onTimedout;
+		this.list[id].onTimeout = this.onTimeout;
 		frag.appendChild(this.list[id].node);
 	}.bind(this));
 	this.listNode.innerHTML = '';

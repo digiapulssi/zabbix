@@ -36,7 +36,7 @@ function ZBX_Notification(options) {
 	this.node = this.makeNode(options.html, options.uid);
 	this.ttl = options.ttl;
 	this.timeoutid = this.setTimeout(options.ttl);
-	this.onTimedout = function() {};
+	this.onTimeout = function() {};
 	this.snoozed = options.snoozed;
 }
 
@@ -54,7 +54,7 @@ ZBX_Notification.prototype.setTimeout = function(seconds) {
 	}
 
 	return setTimeout(function() {
-		this.onTimedout(this);
+		this.onTimeout(this);
 	}.bind(this), seconds * 1000);
 }
 
