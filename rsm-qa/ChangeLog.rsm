@@ -1,3 +1,12 @@
+Changes for rsm1.2.0rc10
+
+New features:
+....I..PS. [476] removed obsoleted DNS errors -252, -652 (dimir)
+
+Bug fixes:
+....I..... [478] increased "value" field of "lastvalue" table by double(24,4) to accept bigint values (dimir)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.2.0rc9
 
 Bug fixes:
