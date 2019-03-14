@@ -815,7 +815,7 @@ void	zbx_tls_validate_config(void)
 		else if (0 == strcmp(CONFIG_TLS_CONNECT, ZBX_TCP_SEC_TLS_CERT_TXT))
 			configured_tls_connect_mode = ZBX_TCP_SEC_TLS_CERT;
 		else if (0 == strcmp(CONFIG_TLS_CONNECT, ZBX_TCP_SEC_TLS_PSK_TXT))
-#if defined(HAVE_OPENSSL) && defined(HAVE_OPENSSL_WITH_PSK)
+#if defined(HAVE_POLARSSL) || defined(HAVE_GNUTLS) || (defined(HAVE_OPENSSL) && defined(HAVE_OPENSSL_WITH_PSK))
 			configured_tls_connect_mode = ZBX_TCP_SEC_TLS_PSK;
 #else
 			zbx_tls_validation_error(ZBX_TLS_VALIDATION_NO_PSK, &CONFIG_TLS_CONNECT, NULL);
@@ -848,7 +848,7 @@ void	zbx_tls_validate_config(void)
 			else if (0 == strcmp(p, ZBX_TCP_SEC_TLS_CERT_TXT))
 				accept_modes_tmp |= ZBX_TCP_SEC_TLS_CERT;
 			else if (0 == strcmp(p, ZBX_TCP_SEC_TLS_PSK_TXT))
-#if defined(HAVE_OPENSSL) && defined(HAVE_OPENSSL_WITH_PSK)
+#if defined(HAVE_POLARSSL) || defined(HAVE_GNUTLS) || (defined(HAVE_OPENSSL) && defined(HAVE_OPENSSL_WITH_PSK))
 				accept_modes_tmp |= ZBX_TCP_SEC_TLS_PSK;
 #else
 				zbx_tls_validation_error(ZBX_TLS_VALIDATION_NO_PSK, &CONFIG_TLS_ACCEPT, NULL);
