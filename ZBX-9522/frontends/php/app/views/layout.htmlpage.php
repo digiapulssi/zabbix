@@ -95,9 +95,6 @@ function local_generateHeader($data) {
 
 	echo '<div class="'.ZBX_STYLE_ARTICLE.'">';
 
-	// should be replaced with addPostJS() at some point
-	zbx_add_post_js('initMessages({});');
-
 	// if a user logs in after several unsuccessful attempts, display a warning
 	if ($failedAttempts = CProfile::get('web.login.attempt.failed', 0)) {
 		$attempt_ip = CProfile::get('web.login.attempt.ip', '');
