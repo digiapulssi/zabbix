@@ -137,10 +137,6 @@ AC_HELP_STRING([--with-openssl@<:@=DIR@:>@],[use OpenSSL package @<:@default=no@
     found_openssl="no"
     LIBOPENSSL_TRY_LINK([no])
 
-    CFLAGS="$am_save_cflags"
-    LDFLAGS="$am_save_ldflags"
-    LIBS="$am_save_libs"
-
     if test "x$found_openssl" = "xyes"; then
       AC_DEFINE([HAVE_OPENSSL], 1, [Define to 1 if you have 'libssl' and 'libcrypto' libraries (-lssl -libcrypto)])
       AC_MSG_RESULT(yes)
@@ -163,6 +159,10 @@ AC_HELP_STRING([--with-openssl@<:@=DIR@:>@],[use OpenSSL package @<:@default=no@
       OPENSSL_LDFLAGS=""
       OPENSSL_LIBS=""
     fi
+
+    CFLAGS="$am_save_cflags"
+    LDFLAGS="$am_save_ldflags"
+    LIBS="$am_save_libs"
   fi
 
   AC_SUBST(OPENSSL_CFLAGS)
