@@ -47,7 +47,8 @@ class CControllerNotificationsRead extends CController {
 			'output'    => ['clock'],
 			'eventids'  => $this->input['ids'],
 			'sortfield' => ['clock', 'eventid'],
-			'sortorder' => 'DESC'
+			'sortorder' => 'DESC',
+			'preservekeys' => true
 		]);
 
 		$last_event = reset($events);
