@@ -33,7 +33,7 @@
 function ZBX_NotificationsAudio() {
 	this.audio = new Audio();
 
-	this.audio.volume = 1;
+	this.audio.volume = 0;
 	this.audio.muted = true;
 	this.audio.autoplay = true;
 	this.audio.loop = true;
