@@ -3234,6 +3234,16 @@ static int	DBpatch_3000301(void)
 	return SUCCEED;
 }
 
+static int	DBpatch_3000302(void)
+{
+	return DBpatch_3000237();
+}
+
+static int	DBpatch_3000303(void)
+{
+	return DBpatch_3000238();
+}
+
 static int	move_ids(const char* table_name, const char* idfield, int id, int count)
 {
 	DB_RESULT	result;
@@ -3259,7 +3269,7 @@ static int	move_ids(const char* table_name, const char* idfield, int id, int cou
 	return SUCCEED;
 }
 
-static int	DBpatch_3000302(void)
+static int	DBpatch_3000304(void)
 {
 	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
 		return SUCCEED;
@@ -3332,7 +3342,7 @@ static int	create_dns_downtime_trigger(const char* hostid)
 	DBfree_result(result);
 }
 
-static int	DBpatch_3000303(void)
+static int	DBpatch_3000305(void)
 {
 	DB_RESULT	result;
 	DB_ROW		row;
@@ -3437,7 +3447,7 @@ static int	create_dependent_rdds_trigger_chain(const char *hostid)
 	return SUCCEED;
 }
 
-static int	DBpatch_3000304(void)
+static int	DBpatch_3000306(void)
 {
 	DB_RESULT	result;
 	DB_ROW		row;
@@ -3546,8 +3556,10 @@ DBPATCH_ADD(3000237, 0, 0)	/* mark DNS errors -252, -652 in mappings as obsolete
 DBPATCH_ADD(3000238, 0, 0)	/* increase "value" field of "lastvalue" table by double(24,4) to accept bigint values */
 DBPATCH_ADD(3000300, 0, 0)	/* Phase 3 */
 DBPATCH_ADD(3000301, 0, 0)	/* add lastvalue_str table */
-DBPATCH_ADD(3000302, 0, 0)	/* update and add new RSM.SLV.* macros */
-DBPATCH_ADD(3000303, 0, 0)	/* add DNS downtime trigger to existing tld hosts */
-DBPATCH_ADD(3000304, 0, 0)	/* add RDDS downtime triggers to existing tld hosts */
+DBPATCH_ADD(3000302, 0, 0)	/* mark DNS errors -252, -652 in mappings as obsoleted (again, for those started from Phase 3) */
+DBPATCH_ADD(3000303, 0, 0)	/* increase "value" field of "lastvalue" table by double(24,4) to accept bigint values (again, for those started from Phase 3) */
+DBPATCH_ADD(3000304, 0, 0)	/* update and add new RSM.SLV.* macros */
+DBPATCH_ADD(3000305, 0, 0)	/* add DNS downtime trigger to existing tld hosts */
+DBPATCH_ADD(3000306, 0, 0)	/* add RDDS downtime triggers to existing tld hosts */
 
 DBPATCH_END()
