@@ -40,6 +40,7 @@ function ZBX_LocalStorage(version) {
 		return ZBX_LocalStorage.intsance;
 	}
 	ZBX_LocalStorage.intsance = this;
+	ZBX_LocalStorage.signature = (Math.random() % 9e6).toString(36).substr(2);
 
 	this.keys = {
 		// Store versioning.
@@ -159,7 +160,7 @@ ZBX_LocalStorage.prototype.readKey = function(key) {
 	this.ensureKey(key);
 
 	try {
-		return this.unwrap(localStorage.getItem(key));
+		return this.unwrap(localStorage.getItem(key)).payload;
 	} catch (e) {
 		console.warn('failed to parse storage item "'+key+'"');
 		this.truncate();
@@ -173,7 +174,10 @@ ZBX_LocalStorage.prototype.readKey = function(key) {
  * @return string
  */
 ZBX_LocalStorage.prototype.wrap = function(value) {
-	return JSON.stringify(value);
+	return JSON.stringify({
+		payload: value,
+		signature: ZBX_LocalStorage.signature
+	});
 }
 
 /**
@@ -219,10 +223,15 @@ ZBX_LocalStorage.prototype.onUpdate = function(callback) {
 	window.addEventListener('storage', function(event) {
 		// This means, storage has been truncated.
 		if (event.key === null || event.key === '') {
-			this.mapCallback(callback);
+			return this.mapCallback(callback);
 		}
-		else {
-			callback(event.key, this.unwrap(event.newValue), ZBX_LocalStorage.defines.EVT_CHANGE);
+
+		// Not only IE dispatches this event onwrite instead of onchange,
+		// but event is also dispatched in window that is the modifier.
+		// So we need to sign all payloads.
+		var value = this.unwrap(event.newValue);
+		if (value.signature !== ZBX_LocalStorage.signature) {
+			callback(event.key, value.payload, ZBX_LocalStorage.defines.EVT_CHANGE);
 		}
 	}.bind(this));
 }
