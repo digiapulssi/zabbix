@@ -58,8 +58,7 @@ ZBX_NotificationsAudio.prototype.listen = function() {
 
 	return setInterval(function(){
 		if (this.playOnceOnReady) {
-			this.once();
-			this.playOnceOnReady = false;
+			return this.once();
 		}
 
 		this.msTimeout -= msStep;
@@ -116,7 +115,8 @@ ZBX_NotificationsAudio.prototype.seek = function(seconds) {
  * Sets timeout the same as length of file. Or postones the timeout to be set once file is loded.
  */
 ZBX_NotificationsAudio.prototype.once = function() {
-	if (this.audio.readyState >= 3) {
+	if (this.playOnceOnReady && this.audio.readyState >= 3) {
+		this.playOnceOnReady = false;
 		return this.seek(0).timeout(this.audio.duration);
 	}
 
@@ -169,11 +169,6 @@ ZBX_NotificationsAudio.prototype.getTimeout = function() {
  * We attempt to autoplay and see if we have policy error.
  */
 ZBX_NotificationsAudio.prototype.handleOnloadeddata = function() {
-	if (this.playOnceOnReady) {
-		this.once();
-		this.playOnceOnReady = false;
-	}
-
 	var promise = this.audio.play();
 
 	if (typeof promise === 'undefined') {

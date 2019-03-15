@@ -291,7 +291,7 @@ ZBX_Notifications.prototype.btnMuteClicked = function() {
 		}.bind(this));
 }
 
-ZBX_Notifications.prototype.renderPlayer = function(source) {
+ZBX_Notifications.prototype.renderPlayer = function() {
 	if (!this.doPollServer) {
 		return this.player.stop();
 	}
