@@ -75,6 +75,8 @@ function ZBX_LocalStorage(version) {
 		// Notification end id is written when notification has completed it's alert.
 		// It is then checked if these keys are equal to know that we do not play notification again.
 		'notifications.alarm.end': '',
+		// Event object
+		'notifications.event': {},
 	}
 
 	if (this.readKey('version') != this.keys.version) {
