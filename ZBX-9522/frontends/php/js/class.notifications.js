@@ -30,7 +30,6 @@ function ZBX_Notifications(store, tab) {
 		throw 'Unmatched signature!';
 	}
 
-	this.notifierid = (Math.random() % 9e6).toString(36).substr(2);
 	this.player = new ZBX_NotificationsAudio();
 
 	this.store = store;
@@ -76,79 +75,34 @@ function ZBX_Notifications(store, tab) {
 	}.bind(this), 0);
 }
 
-ZBX_Notifications.prototype.dispatch = function(action, payload) {
-	this.store.writeKey('notifications.event', {
-		notifierid: this.notifierid,
-		action: action,
-		payload: payload
-	});
-}
-
 ZBX_Notifications.prototype.onStoreUpdate = function(key, value, source) {
-	if (key !== 'notifications.event') {
-		return;
-	}
-
-	if (value.notifierid === this.notifierid) {
-		return;
-	}
-
-	switch (value.action) {
+	switch (key) {
+		case 'notifications.alarm.end':
 		case 'notifications.alarm.start':
 			this.renderPlayer();
 			break;
 		case 'notifications.alarm.wave':
-			this.player.file(value.payload);
+			this.player.file(value);
 			break;
 		case 'notifications.alarm.seek':
-			this.player.seek(value.payload);
+			this.player.seek(value);
 			break;
 		case 'notifications.alarm.timeout':
-			this.doPollServer && this.player.timeout(value.payload);
+			this.doPollServer && this.player.timeout(value);
 			break;
 		case 'notifications.alarm.muted':
-			this.onMuteChange(value.payload);
+			this.onMuteChange(value);
 			break;
 		case 'notifications.alarm.snoozed':
-			this.onSnoozeChange(value.payload);
+			this.onSnoozeChange(value);
 			break;
 		case 'notifications.list':
-			this.onNotificationsList(value.payload);
+			this.onNotificationsList(value);
 			break;
 		case 'tabs.lastfocused':
-			this.onTabFocusChanged(value.payload);
+			this.onTabFocusChanged(value);
 			break;
 	}
-
-	return;
-
-	// switch (key) {
-	// 	case 'notifications.alarm.end':
-	// 	case 'notifications.alarm.start':
-	// 		this.renderPlayer();
-	// 		break;
-	// 	case 'notifications.alarm.wave':
-	// 		this.player.file(value);
-	// 		break;
-	// 	case 'notifications.alarm.seek':
-	// 		this.player.seek(value);
-	// 		break;
-	// 	case 'notifications.alarm.timeout':
-	// 		this.doPollServer && this.player.timeout(value);
-	// 		break;
-	// 	case 'notifications.alarm.muted':
-	// 		this.onMuteChange(value);
-	// 		break;
-	// 	case 'notifications.alarm.snoozed':
-	// 		this.onSnoozeChange(value);
-	// 		break;
-	// 	case 'notifications.list':
-	// 		this.onNotificationsList(value);
-	// 		break;
-	// 	case 'tabs.lastfocused':
-	// 		this.onTabFocusChanged(value);
-	// 		break;
-	// }
 }
 
 ZBX_Notifications.prototype.onPollerReceive = function(resp) {
@@ -165,11 +119,9 @@ ZBX_Notifications.prototype.onPollerReceive = function(resp) {
 	this.writeAlarm(listObj[notifId], resp.settings);
 
 	this.store.writeKey('notifications.list', listObj);
-	this.dispatch('notifications.list', listObj);
 	this.onNotificationsList(listObj);
 
 	this.store.writeKey('notifications.alarm.snoozed', false);
-	this.dispatch('notifications.alarm.snoozed', false);
 	this.onSnoozeChange(false);
 }
 
@@ -181,7 +133,6 @@ ZBX_Notifications.prototype.onNotifTimeout = function(notif) {
 
 		if (this.store.readKey('notifications.alarm.start') == notif.uid) {
 			this.store.writeKey('notifications.alarm.end', notif.uid);
-			this.dispatch('notifications.alarm.end', notif.uid);
 			this.player.stop();
 		}
 
@@ -189,7 +140,6 @@ ZBX_Notifications.prototype.onNotifTimeout = function(notif) {
 		this.store.mutateObject('notifications.list', function(listObj) {
 			delete listObj[notif.uid];
 		});
-		this.dispatch('notifications.list');
 
 	}.bind(this));
 }
@@ -197,7 +147,6 @@ ZBX_Notifications.prototype.onNotifTimeout = function(notif) {
 ZBX_Notifications.prototype.onPlayerTimeout = function() {
 	if (this.doPollServer) {
 		this.store.writeKey('notifications.alarm.end', this.store.readKey('notifications.alarm.start'));
-		this.dispatch('notifications.alarm.end', this.store.readKey('notifications.alarm.start'));
 	}
 }
 
@@ -227,7 +176,6 @@ ZBX_Notifications.prototype.onSnoozeChange = function(bool) {
 	this.player.stop();
 	this.store.writeKey('notifications.snoozedids', snoozedids);
 	this.store.writeKey('notifications.list', listObj);
-	this.dispatch('notifications.list', listObj);
 	this.onNotificationsList(listObj);
 }
 
@@ -239,9 +187,7 @@ ZBX_Notifications.prototype.onMuteChange = function(bool) {
 ZBX_Notifications.prototype.onTabUnload = function(tab) {
 	if (this.doPollServer) {
 		this.store.writeKey('notifications.alarm.seek', this.player.getSeek());
-		this.dispatch('notifications.alarm.seek', this.player.getSeek());
 		this.store.writeKey('notifications.alarm.timeout', this.player.getTimeout());
-		this.dispatch('notifications.alarm.timeout', this.player.getTimeout());
 	}
 }
 
@@ -250,9 +196,7 @@ ZBX_Notifications.prototype.onTabFocusChanged = function(tabId) {
 
 	if (activeBlured) {
 		this.store.writeKey('notifications.alarm.seek', this.player.getSeek());
-		this.dispatch('notifications.alarm.seek', this.player.getSeek());
 		this.store.writeKey('notifications.alarm.timeout', this.player.getTimeout());
-		this.dispatch('notifications.alarm.timeout', this.player.getTimeout());
 		this.player.stop();
 	}
 
@@ -280,21 +224,17 @@ ZBX_Notifications.prototype.writeAlarm = function(notif, opts) {
 
 	if (opts.timeout === -1) { // Play in loop till end of notification timeout.
 		this.store.writeKey('notifications.alarm.timeout', notif.ttl);
-		this.dispatch('notifications.alarm.timeout', notif.ttl);
 	}
 	else if (opts.timeout === 1) { // Play once till end of audio file.
 		this.store.writeKey('notifications.alarm.timeout', -1);
-		this.dispatch('notifications.alarm.timeout', -1);
 	}
 	else { // Play in loop till end of arbitraty timeout.
 		this.store.writeKey('notifications.alarm.timeout', opts.timeout);
-		this.dispatch('notifications.alarm.timeout', opts.timeout);
 	}
 
 	this.store.writeKey('notifications.alarm.wave', opts.files[notif.file]);
 	// This write event is an action trigger to play.
 	this.store.writeKey('notifications.alarm.start', notif.uid);
-	this.dispatch('notifications.alarm.start', notif.uid);
 	// restack because in chrome the alarm.start key sometimes missbehaves, maybe
 	// because the next call reads this key soon after the write call above.
 	setTimeout(this.renderPlayer.bind(this), 0);
@@ -302,7 +242,6 @@ ZBX_Notifications.prototype.writeAlarm = function(notif, opts) {
 
 ZBX_Notifications.prototype.writeSettings = function(settings) {
 	this.store.writeKey('notifications.alarm.muted', settings.muted);
-	this.dispatch('notifications.alarm.muted', settings.muted);
 	this.onMuteChange(settings.muted);
 }
 
@@ -341,7 +280,6 @@ ZBX_Notifications.prototype.btnSnoozeClicked = function() {
 		return;
 	}
 	this.store.writeKey('notifications.alarm.snoozed', true);
-	this.dispatch('notifications.alarm.snoozed', true);
 	this.onSnoozeChange(true);
 }
 
@@ -351,7 +289,6 @@ ZBX_Notifications.prototype.btnMuteClicked = function() {
 		.catch(console.error)
 		.then(function() {
 			this.store.writeKey('notifications.alarm.muted', newValue);
-			this.dispatch('notifications.alarm.muted', newValue);
 			this.onMuteChange(newValue);
 		}.bind(this));
 }
