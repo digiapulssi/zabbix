@@ -74,7 +74,7 @@ $start_time = mktime(
 	1,
 	$data['filter_year']
 );
-$end_time = strtotime('+1 month', $start_time);
+$end_time = strtotime('+1 month', $start_time) - 1;
 $data['start_time'] = $start_time;
 $data['end_time'] = $end_time;
 
@@ -84,7 +84,7 @@ $data['end_time'] = $end_time;
 if (hasRequest('filter_set') && $start_time > time()) {
 	show_error_message(_('Incorrect report period.'));
 }
-else if ($data['filter_search']) {
+elseif ($data['filter_search']) {
 	$master = $DB;
 
 	foreach ($DB['SERVERS'] as $server) {
@@ -200,18 +200,30 @@ if ($data['tld']) {
 		 * CHistory request with 'output' set to ['clock', 'value'] will return only 'itemid'
 		 * therefore API_OUTPUT_EXTEND is used instead.
 		 */
-		$history = API::History()->get([
+		$history_from = API::History()->get([
 			'output' => API_OUTPUT_EXTEND,
 			'itemids' => $itemid,
 			'history' => ITEM_VALUE_TYPE_UINT64,
 			'time_from' => $start_time,
-			'time_to' => $end_time
+			'time_till' => $end_time,
+			'sortfield' => 'clock',
+			'limit' => 1
 		]);
 
-		if ($history) {
-			CArrayHelper::sort($history, ['clock']);
-			$from = reset($history);
-			$to = end($history);
+		$history_to = API::History()->get([
+			'output' => API_OUTPUT_EXTEND,
+			'itemids' => $itemid,
+			'history' => ITEM_VALUE_TYPE_UINT64,
+			'time_from' => $start_time,
+			'time_till' => $end_time,
+			'sortfield' => 'clock',
+			'sortorder' => 'DESC',
+			'limit' => 1
+		]);
+
+		if ($history_from && $history_to) {
+			$from = $history_from[0];
+			$to = $history_to[0];
 		} else {
 			$from = $to = [
 				'clock' => 0,
