@@ -235,7 +235,9 @@ ZBX_Notifications.prototype.writeAlarm = function(notif, opts) {
 	this.store.writeKey('notifications.alarm.wave', opts.files[notif.file]);
 	// This write event is an action trigger to play.
 	this.store.writeKey('notifications.alarm.start', notif.uid);
-	this.renderPlayer();
+	// restack because in chrome the alarm.start key sometimes missbehaves, maybe
+	// because the next call reads this key soon after the write call above.
+	setTimeout(this.renderPlayer.bind(this), 0);
 }
 
 ZBX_Notifications.prototype.writeSettings = function(settings) {
@@ -372,6 +374,11 @@ ZBX_Notifications.findNotificationToPlay = function(list) {
 			return cur;
 		}
 		return acc;
+	}, {
+		uid: '',
+		snoozed: true,
+		priority: -1,
+		ttl: -1
 	}).uid;
 }
 
