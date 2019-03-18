@@ -30,9 +30,9 @@ my ($month_start, $till, $cycle_start) = get_downtime_bounds($delay, getopt('now
 
 init_values();
 
-foreach (@{get_tlds_and_hostids()})
+foreach (@{get_tlds_and_hostids(opt('tld') ? getopt('tld') : undef)})
 {
-	process(@$_);
+	process_tld(@$_);
 }
 
 send_values();
@@ -40,7 +40,26 @@ send_values();
 print "\n\n";
 slv_exit(SUCCESS);
 
-sub process
+sub get_tlds_and_hostids
+{
+	my $tld = shift;
+	my $tld_cond = '';
+	if (defined($tld))
+	{
+		$tld_cond = " and h.host='$tld'"
+	}
+
+	return db_select(
+		"select distinct h.host,h.hostid".
+		" from hosts h,hosts_groups hg".
+		" where h.hostid=hg.hostid".
+			" and hg.groupid=".TLDS_GROUPID.
+			" and h.status=0".
+			$tld_cond.
+		" order by h.host");
+}
+
+sub process_tld
 {
 	my $tld = shift;
 	my $hostid = shift;
@@ -51,28 +70,42 @@ sub process
 	}
 }
 
+sub get_slv_dns_ns_downtime_items_by_hostid
+{
+	return db_select("select itemid,key_ from items".
+		" where hostid=".(shift)." and key_ like '$slv_item_key_pattern\[%'");
+}
+
 sub process_slv_item
 {
 	my $tld = shift;
-	my $itemid = shift;
-	my $itemkey = shift;
+	my $slv_itemid = shift;
+	my $slv_itemkey = shift;
 
-	print "$itemid, $itemkey\n";
+	print "$slv_itemid, $slv_itemkey\n";
 
-	if ($itemkey =~ /\[(.+,.+)\]$/)
+	if ($slv_itemkey =~ /\[(.+,.+)\]$/)
 	{
-		foreach (@{get_dns_udp_rtt_items_by_nsip_pair($1)})
+		foreach (@{get_dns_udp_rtt_items_by_nsip_pairs($1)})
 		{
-			process_rtt_item($tld, $itemid, $itemkey, @$_);
+			process_rtt_items($tld, $slv_itemid, $slv_itemkey, @$_);
 		}
 	}
 	else
 	{
-		fail("missing ns,ip pair in item key '$itemkey'");
+		fail("missing ns,ip pair in item key '$slv_itemkey'");
 	}
+
+	print "\n";
 }
 
-sub process_rtt_item
+sub get_dns_udp_rtt_items_by_nsip_pairs
+{
+	return db_select("select itemid,key_,hostid from items".
+		" where key_ like '$rtt_item_key_pattern\[\%".(shift)."]' and templateid is not null");
+}
+
+sub process_rtt_items # for a particular slv item
 {
 	my $tld = shift;
 	my $slv_itemid = shift;
@@ -83,6 +116,8 @@ sub process_rtt_item
 	my $slv_clock;
 	my $rtt_value;
 	my $rtt_clock;
+	
+	print ">>> $slv_itemid, $slv_itemkey\n";
 
 	if (SUCCESS != get_lastvalue($rtt_itemid, ITEM_VALUE_TYPE_FLOAT, \$rtt_value, \$rtt_clock))
 	{
@@ -111,29 +146,6 @@ sub process_rtt_item
 	{
 		print "else\n";
 	}
-}
-
-sub get_tlds_and_hostids
-{
-	return db_select(
-		"select distinct h.host,h.hostid".
-		" from hosts h,hosts_groups hg".
-		" where h.hostid=hg.hostid".
-			" and hg.groupid=".TLDS_GROUPID.
-			" and h.status=0".
-		" order by h.host");
-}
-
-sub get_slv_dns_ns_downtime_items_by_hostid
-{
-	return db_select("select itemid,key_ from items".
-		" where hostid=".(shift)." and key_ like '$slv_item_key_pattern\[%'");
-}
-
-sub get_dns_udp_rtt_items_by_nsip_pair
-{
-	return db_select("select itemid,key_ from items".
-		" where key_ like '$rtt_item_key_pattern\[\%".(shift)."]' and templateid is not null");
 }
 
 sub get_failed_cycle_count
