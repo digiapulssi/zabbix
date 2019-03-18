@@ -3326,8 +3326,7 @@ static int	create_dns_downtime_trigger(const char* hostid)
 	DB_RESULT	result;
 	DB_ROW		row;
 	zbx_uint64_t	triggerid, functionid;
-
-	const char*	itemkey = "rsm.slv.dns.downtime";
+	const char	*itemkey = "rsm.slv.dns.downtime";
 
 	triggerid = DBget_maxid("triggers");
 	functionid = DBget_maxid("functions");
@@ -3356,6 +3355,8 @@ static int	create_dns_downtime_trigger(const char* hostid)
 	}
 
 	DBfree_result(result);
+
+	return SUCCEED;
 }
 
 static int	DBpatch_3000305(void)
@@ -3380,13 +3381,12 @@ static int	DBpatch_3000305(void)
 }
 
 static int	create_rdds_downtime_trigger(const char* hostid, const char* percent, const char* coeff,
-					const char* priority, zbx_uint64_t *triggerid)
+		const char* priority, zbx_uint64_t *triggerid)
 {
 	DB_RESULT	result;
 	DB_ROW		row;
 	zbx_uint64_t	functionid, itemid;
-
-	static const char*	itemkey = "rsm.slv.rdds.downtime";
+	const char	*itemkey = "rsm.slv.rdds.downtime";
 
 	*triggerid = DBget_maxid("triggers");
 	functionid = DBget_maxid("functions");
@@ -3422,9 +3422,10 @@ static int	create_rdds_downtime_trigger(const char* hostid, const char* percent,
 
 static int	create_trigger_dependency(zbx_uint64_t triggerid, zbx_uint64_t dependid)
 {
-	if (ZBX_DB_OK > DBexecute("insert into trigger_depends (triggerdepid,triggerid_down,triggerid_up)"
-					" values (" ZBX_FS_UI64 ", " ZBX_FS_UI64 ", " ZBX_FS_UI64 ")",
-					DBget_maxid("trigger_depends"), dependid, triggerid))
+	if (ZBX_DB_OK > DBexecute(
+			"insert into trigger_depends (triggerdepid,triggerid_down,triggerid_up)"
+			" values (" ZBX_FS_UI64 ", " ZBX_FS_UI64 ", " ZBX_FS_UI64 ")",
+			DBget_maxid("trigger_depends"), dependid, triggerid))
 	{
 		return FAIL;
 	}
@@ -3436,9 +3437,8 @@ static int	create_dependent_rdds_trigger_chain(const char *hostid)
 {
 	zbx_uint64_t	triggerid = 0, dependid = 0;
 	int		i;
-
-	/* percent, coeff, priority */
-	const char* strs[15] = {
+	const char	*strs[15] = {
+		/* percent, coeff, priority */
 		"10%",		"*0.1",		"2",
 		"25%",		"*0.25",	"3",
 		"50%",		"*0.5",		"3",
