@@ -19,17 +19,19 @@
 
 
 /**
- * In miliseconds, slide animation duration upon remove.
+ * In milliseconds, slide animation duration upon remove.
  */
 ZBX_Notification.ease = 500;
 
 /**
- * Detatched node is created upon construction.
- * Closing time is scheduled upon construction.
+ * Detached DOM node is created.
+ * Closing time is scheduled.
  *
- * @param options
- * @param options[ttl] integer  The timeout for this message is determined server side.
- * @param options[html] string  Already parsed as string @see srvToStore
+ * @see srvToStore
+ *
+ * @param {object} options
+ *        {number} options.ttl  The timeout for this message is determined server side.
+ *        {string} options.html
  */
 function ZBX_Notification(options) {
 	this.uid = options.uid;
@@ -44,7 +46,7 @@ function ZBX_Notification(options) {
  * Removes previous timeout if it is scheduled, then
  * schedule timeout to close this message.
  *
- * @param seconds integer  Timeout in seconds for close call.
+ * @param {integer} seconds  Timeout in seconds for 'close' to be called.
  *
  * @return integer  Timeout ID.
  */
@@ -61,7 +63,7 @@ ZBX_Notification.prototype.setTimeout = function(seconds) {
 /**
  * Renders this message object.
  *
- * @return HTMLElement  Detatched DOM node.
+ * @return {HTMLElement}  Detached DOM node.
  */
 ZBX_Notification.prototype.makeNode = function(htmlString, uid) {
 	var parse = document.createElement('div');
@@ -88,9 +90,10 @@ ZBX_Notification.prototype.renderSnoozed = function(bool) {
 }
 
 /**
- * Remove this notification from dom. TODO rather animate using css
+ * Remove this notification from DOM.
  *
- * @param ease int  Amount for slide animation or disable.
+ * @param {number} ease  Amount for slide animation or disable.
+ * @param {callable} cb  Closer to be called after remove.
  */
 ZBX_Notification.prototype.remove = function(ease, cb) {
 	var rate = 10;
@@ -101,8 +104,8 @@ ZBX_Notification.prototype.remove = function(ease, cb) {
 		var step = this.node.offsetHeight / t;
 		var id = setInterval(function() {
 			if (t < rate) {
-				// Since there is loaded prototype.js and it extends DOM's native remove method,
-				// we have to check explicitly if node is connected (it may not be, because we have page reloads).
+				// Since there is loaded prototype.js and it extends DOM's native 'remove' method,
+				// we have to check explicitly if node is connected.
 				if (this.node.isConnected) {
 					this.node.remove();
 					cb && cb()
@@ -125,9 +128,9 @@ ZBX_Notification.prototype.remove = function(ease, cb) {
  * Method that transforms notification object received from server
  * into format that is used for for notification instance.
  *
- * @depends BBCode
+ * @depends {BBCode}
  *
- * @return Object
+ * @return {object}
  */
 ZBX_Notification.srvToStore = function(obj) {
 	var node = document.createElement('li');
