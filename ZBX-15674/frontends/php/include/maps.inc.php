@@ -736,7 +736,7 @@ function getMapsInfo($selement, $i, $show_unack) {
 		];
 		$hasStatus = true;
 	}
-	elseif ($i['disabled']) {
+	elseif ($i['disabled'] == count($selement['hosts'])) {
 		if (!$hasProblem) {
 			$info['icon_type'] = SYSMAP_ELEMENT_ICON_DISABLED;
 			$info['iconid'] = $selement['iconid_disabled'];
@@ -775,7 +775,7 @@ function getImagesInfo($selement) {
  * recent change markers.
  *
  * @param array $sysmap
- * @param int   $options
+ * @param array $options
  * @param int   $options['severity_min'] Minimum trigger severity, default value is maximal (Disaster)
  *
  * @return array
