@@ -483,6 +483,11 @@ function mem2str($size) {
 		$prefix = 'K';
 	}
 
+	if (strpos($size, '.') !== false) {
+		$size = rtrim($size, '0');
+		$size = rtrim($size, '.');
+	}
+
 	return $size.$prefix;
 }
 
