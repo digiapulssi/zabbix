@@ -19,11 +19,10 @@
 
 
 ZBX_Notifications.POLL_INTERVAL = 30000;
-ZBX_Notifications.POLL_INTERVAL = 5000;
 
 /**
- * @param store ZBX_LocalStorage
- * @param tab ZBX_BrowserTab
+ * @param {ZBX_LocalStorage} store
+ * @param {ZBX_BrowserTab} tab
  */
 function ZBX_Notifications(store, tab) {
 	if (!(store instanceof ZBX_LocalStorage) || !(tab instanceof ZBX_BrowserTab)) {
@@ -68,14 +67,20 @@ function ZBX_Notifications(store, tab) {
 	setInterval(this.mainLoop.bind(this), ZBX_Notifications.POLL_INTERVAL);
 
 	// Upon object creation we invoke tab.onFocus hook if tab was not opened in background.
-	// Restack exists because of IE11.
+	// Re-stack exists because of IE11.
 	setTimeout(function(){
 		document.hasFocus() && this.onTabFocus(this.tab);
 		this.mainLoop();
 	}.bind(this), 0);
 }
 
-ZBX_Notifications.prototype.onStoreUpdate = function(key, value, source) {
+/**
+ * Proxies an store update event to various handlers.
+ *
+ * @param {string} key  The local storage key.
+ * @param {mixed} value  That the key holds.
+ */
+ZBX_Notifications.prototype.onStoreUpdate = function(key, value) {
 	switch (key) {
 		case 'notifications.alarm.end':
 		case 'notifications.alarm.start':
@@ -105,6 +110,11 @@ ZBX_Notifications.prototype.onStoreUpdate = function(key, value, source) {
 	}
 }
 
+/**
+ * Handles server response.
+ *
+ * @param {object} resp  Server response object.
+ */
 ZBX_Notifications.prototype.onPollerReceive = function(resp) {
 	this.writeSettings(resp.settings);
 	if (this.store.readKey('notifications.listid') == resp.listid) {
@@ -125,6 +135,13 @@ ZBX_Notifications.prototype.onPollerReceive = function(resp) {
 	this.onSnoozeChange(false);
 }
 
+/**
+ * This is a callback that is bound into notification and called by notification object
+ * when it has timed out.
+ * Here we check if the last notification did close and update local storage.
+ *
+ * @param {ZBX_Notification} notif
+ */
 ZBX_Notifications.prototype.onNotifTimeout = function(notif) {
 	notif.remove(ZBX_Notification.ease, function() {
 		if (!this.dom.listNode.children.length) {
@@ -136,7 +153,6 @@ ZBX_Notifications.prototype.onNotifTimeout = function(notif) {
 			this.player.stop();
 		}
 
-		// This may be unneeded overkill TODO ?
 		this.store.mutateObject('notifications.list', function(listObj) {
 			delete listObj[notif.uid];
 		});
@@ -144,12 +160,22 @@ ZBX_Notifications.prototype.onNotifTimeout = function(notif) {
 	}.bind(this));
 }
 
+/**
+ * This is a callback that is bound into player instance.
+ * Once player has reached timeout local storage is updated.
+ * This must only happen if this is playing/focused tab.
+ */
 ZBX_Notifications.prototype.onPlayerTimeout = function() {
 	if (this.doPollServer) {
 		this.store.writeKey('notifications.alarm.end', this.store.readKey('notifications.alarm.start'));
 	}
 }
 
+/**
+ * This updates dom on local storage change.
+ *
+ * @param {object} listObj  Notification id keyed hashmap of storable notification objects.
+ */
 ZBX_Notifications.prototype.onNotificationsList = function(listObj) {
 	var length = this.dom.renderFromStorable(listObj);
 	if (length) {
@@ -160,6 +186,12 @@ ZBX_Notifications.prototype.onNotificationsList = function(listObj) {
 	}
 }
 
+/**
+ * Sets snooze state, either snoozed on not.
+ * It is not allowed to unsnooze whole list.
+ *
+ * @param {bool} bool
+ */
 ZBX_Notifications.prototype.onSnoozeChange = function(bool) {
 	this.dom.btnSnooze.renderState(bool);
 	if (!bool) {
@@ -179,11 +211,22 @@ ZBX_Notifications.prototype.onSnoozeChange = function(bool) {
 	this.onNotificationsList(listObj);
 }
 
+
+/**
+ * Sets mute state, either muted on not.
+ *
+ * @param {bool} bool
+ */
 ZBX_Notifications.prototype.onMuteChange = function(bool) {
 	this.dom.btnMute.renderState(bool);
 	bool && this.player.stop();
 }
 
+/**
+ * On tab or window close we update local storage.
+ *
+ * @param {ZBX_BrowserTab} tab.
+ */
 ZBX_Notifications.prototype.onTabUnload = function(tab) {
 	if (this.doPollServer) {
 		this.store.writeKey('notifications.alarm.seek', this.player.getSeek());
@@ -191,6 +234,11 @@ ZBX_Notifications.prototype.onTabUnload = function(tab) {
 	}
 }
 
+/**
+ * Here we determine if this is the instance that will poll server.
+ *
+ * @param {string} tabId.
+ */
 ZBX_Notifications.prototype.onTabFocusChanged = function(tabId) {
 	var activeBlured = this.doPollServer && this.tab.uid != tabId;
 
@@ -203,10 +251,22 @@ ZBX_Notifications.prototype.onTabFocusChanged = function(tabId) {
 	this.doPollServer = this.tab.uid == tabId;
 }
 
+/**
+ * This is bound as callback in ZBX_BrowserTab, and it just passes tab id into
+ * storage key change handler.
+ *
+ * @param {ZBX_BrowserTab} tab.
+ */
 ZBX_Notifications.prototype.onTabFocus = function(tab) {
 	this.onTabFocusChanged(tab.uid);
 }
 
+/**
+ * Adjust alarm settings and update local storage to play a notification.
+ *
+ * @param {object|null} notif  Notification object in the format it was received from server.
+ * @param {object} opts  Notification settings object.
+ */
 ZBX_Notifications.prototype.writeAlarm = function(notif, opts) {
 	if (!notif) {
 		this.store.resetKey('notifications.alarm.start');
@@ -228,23 +288,31 @@ ZBX_Notifications.prototype.writeAlarm = function(notif, opts) {
 	else if (opts.timeout === 1) { // Play once till end of audio file.
 		this.store.writeKey('notifications.alarm.timeout', -1);
 	}
-	else { // Play in loop till end of arbitraty timeout.
+	else { // Play in loop till end of arbitrary timeout.
 		this.store.writeKey('notifications.alarm.timeout', opts.timeout);
 	}
 
 	this.store.writeKey('notifications.alarm.wave', opts.files[notif.file]);
 	// This write event is an action trigger to play.
 	this.store.writeKey('notifications.alarm.start', notif.uid);
-	// restack because in chrome the alarm.start key sometimes missbehaves, maybe
+	// re-stack because in chrome the alarm.start key sometimes misbehaves, maybe
 	// because the next call reads this key soon after the write call above.
 	setTimeout(this.renderPlayer.bind(this), 0);
 }
 
+/**
+ * @param {object} settings  Settings object received from server.
+ */
 ZBX_Notifications.prototype.writeSettings = function(settings) {
 	this.store.writeKey('notifications.alarm.muted', settings.muted);
 	this.onMuteChange(settings.muted);
 }
 
+/**
+ * Mutates list objects by setting aditional 'snoozed' property.
+ *
+ * @param {array} list  List of notifications received from server.
+ */
 ZBX_Notifications.prototype.applySnoozeProp = function(list) {
 	if (!(list instanceof Array)) {
 		throw 'Expected array in ZBX_Notifications.prototype.mergeSnoozed';
@@ -260,6 +328,9 @@ ZBX_Notifications.prototype.applySnoozeProp = function(list) {
 	});
 }
 
+/**
+ * On close ckicked we send request to server that marks current notifications as read.
+ */
 ZBX_Notifications.prototype.btnCloseClicked = function() {
 	var params = {ids: []};
 	var list = this.store.readKey('notifications.list');
@@ -275,6 +346,9 @@ ZBX_Notifications.prototype.btnCloseClicked = function() {
 		}.bind(this));
 }
 
+/**
+ * Mark list as snoozed. Update local storage.
+ */
 ZBX_Notifications.prototype.btnSnoozeClicked = function() {
 	if (this.store.readKey('notifications.alarm.snoozed')) {
 		return;
@@ -283,6 +357,9 @@ ZBX_Notifications.prototype.btnSnoozeClicked = function() {
 	this.onSnoozeChange(true);
 }
 
+/**
+ * Toggle muted state on server. If successful, set new muted value for all tabs.
+ */
 ZBX_Notifications.prototype.btnMuteClicked = function() {
 	var newValue = this.store.readKey('notifications.alarm.muted') ? 0 : 1;
 	this.fetch('notifications.mute', {mute: newValue})
@@ -293,6 +370,9 @@ ZBX_Notifications.prototype.btnMuteClicked = function() {
 		}.bind(this));
 }
 
+/**
+ * Updates player instance to match with local storage.
+ */
 ZBX_Notifications.prototype.renderPlayer = function() {
 	if (!this.doPollServer) {
 		return this.player.stop();
@@ -327,6 +407,12 @@ ZBX_Notifications.prototype.renderPlayer = function() {
 	return this.player;
 }
 
+/**
+ * @param {object} params  Form data to be send.
+ * @param {string} resource  A value for 'action' parameter.
+ *
+ * @return {Promise}  For IE11 ZBX_Promise polyfill is returned.
+ */
 ZBX_Notifications.prototype.fetch = function(resource, params) {
 	return new Promise(function(resolve, reject) {
 		sendAjaxData('zabbix.php?action=' + resource, {
@@ -337,6 +423,10 @@ ZBX_Notifications.prototype.fetch = function(resource, params) {
 	});
 }
 
+/**
+ * This is scheduled to be called at some interval.
+ * If instance is 'active' then notifications are fetched and rendered.
+ */
 ZBX_Notifications.prototype.mainLoop = function() {
 	if (!this.doPollServer) {
 		return;
@@ -348,7 +438,7 @@ ZBX_Notifications.prototype.mainLoop = function() {
 }
 
 /**
- * Finds most severe, most recent unsnoozed notification.
+ * Finds most severe, most recent not-snoozed notification.
  *
  * A list we got from server reflects current notifications within timeout.
  * To find a notification to play we must filter out any snoozed notifications
@@ -382,6 +472,11 @@ ZBX_Notifications.findNotificationToPlay = function(list) {
 	}).uid;
 }
 
+/**
+ * Converts server responce notifications into notification list-object.
+ *
+ * @param {array} list
+ */
 ZBX_Notifications.toStorableList = function(list) {
 	if (list && list.constructor != Array) {
 		throw 'Expected array in ZBX_Notifications.prototype.toStorableList';
