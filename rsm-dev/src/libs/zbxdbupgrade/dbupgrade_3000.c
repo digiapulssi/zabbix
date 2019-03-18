@@ -3244,7 +3244,7 @@ static int	DBpatch_3000303(void)
 	return DBpatch_3000238();
 }
 
-static int	move_ids(const char* table_name, const char* idfield, int id, int count)
+static int	move_ids(const char *table_name, const char *idfield, int id, int count)
 {
 	DB_RESULT	result;
 	DB_ROW		row;
@@ -3321,7 +3321,7 @@ static int	DBpatch_3000304(void)
 	return SUCCEED;
 }
 
-static int	create_dns_downtime_trigger(const char* hostid)
+static int	create_dns_downtime_trigger(const char *hostid)
 {
 	DB_RESULT	result;
 	DB_ROW		row;
@@ -3344,7 +3344,10 @@ static int	create_dns_downtime_trigger(const char* hostid)
 	result = DBselect("select itemid from items where key_='%s' and hostid='%s'", itemkey, hostid);
 
 	if (NULL == (row = DBfetch(result)))
+	{
+		zabbix_log(LOG_LEVEL_CRIT, "item key \"%s\" not found at TLD host " ZBX_FS_UI64, itemkey, hostid);
 		return FAIL;
+	}
 
 	if (ZBX_DB_OK > DBexecute(
 			"insert into functions (functionid,itemid,triggerid,function,parameter) values"
@@ -3380,8 +3383,8 @@ static int	DBpatch_3000305(void)
 	return SUCCEED;
 }
 
-static int	create_rdds_downtime_trigger(const char* hostid, const char* percent, const char* coeff,
-		const char* priority, zbx_uint64_t *triggerid)
+static int	create_rdds_downtime_trigger(const char *hostid, const char *percent, const char *coeff,
+		const char *priority, zbx_uint64_t *triggerid)
 {
 	DB_RESULT	result;
 	DB_ROW		row;
@@ -3405,7 +3408,10 @@ static int	create_rdds_downtime_trigger(const char* hostid, const char* percent,
 	result = DBselect("select itemid from items where key_='%s' and hostid='%s'", itemkey, hostid);
 
 	if (NULL == (row = DBfetch(result)))
+	{
+		zabbix_log(LOG_LEVEL_CRIT, "item key \"%s\" not found at TLD host " ZBX_FS_UI64, itemkey, hostid);
 		return FAIL;
+	}
 
 	if (ZBX_DB_OK > DBexecute(
 			"insert into functions (functionid,itemid,triggerid,function,parameter) values"
@@ -3448,7 +3454,7 @@ static int	create_dependent_rdds_trigger_chain(const char *hostid)
 
 	for (i = 0; i < 15; i += 3)
 	{
-		if (SUCCEED != create_rdds_downtime_trigger(hostid, strs[i], strs[i+1], strs[i+2], &triggerid))
+		if (SUCCEED != create_rdds_downtime_trigger(hostid, strs[i], strs[i + 1], strs[i + 2], &triggerid))
 			return FAIL;
 
 		if (0 != triggerid && 0 != dependid)
@@ -3463,6 +3469,32 @@ static int	create_dependent_rdds_trigger_chain(const char *hostid)
 	return SUCCEED;
 }
 
+static int	tld_rdds_enabled(const char *tld, int *rdds_enabled)
+{
+	DB_RESULT	result;
+	DB_ROW		row;
+
+	result = DBselect(
+			"select max(value)"
+			" from hostmacro hm,hosts h"
+			" where hm.hostid=h.hostid"
+				" and h.host='Template %s'"
+				" and (hm.macro='{$RSM.TLD.RDDS.ENABLED}' or hm.macro='{$RDAP.TLD.ENABLED}')",
+			tld);
+
+	if (NULL == (row = DBfetch(result)))
+	{
+		zabbix_log(LOG_LEVEL_CRIT, "cannot determine if RDDS is enabled on TLD %s", row[1]);
+		return FAIL;
+	}
+
+	*rdds_enabled = atoi(row[0]);
+
+	DBfree_result(result);
+
+	return SUCCEED;
+}
+
 static int	DBpatch_3000306(void)
 {
 	DB_RESULT	result;
@@ -3471,11 +3503,19 @@ static int	DBpatch_3000306(void)
 	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
 		return SUCCEED;
 
-	result = DBselect("select h.hostid from hosts h inner join hosts_groups hg on h.hostid=hg.hostid"
+	result = DBselect("select h.hostid,h.host from hosts h inner join hosts_groups hg on h.hostid=hg.hostid"
 				" where hg.groupid=140");
 
 	while (NULL != (row = DBfetch(result)))
 	{
+		int	rdds_enabled;
+
+		if (SUCCEED != tld_rdds_enabled(row[1], &rdds_enabled))
+			return FAIL;
+
+		if (0 == rdds_enabled)
+			continue;
+
 		if (SUCCEED != create_dependent_rdds_trigger_chain(row[0]))
 			return FAIL;
 	}
