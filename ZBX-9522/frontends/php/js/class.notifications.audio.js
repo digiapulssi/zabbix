@@ -21,11 +21,11 @@
  * Timeout controlled player.
  *
  * It plays, meanwhile decrementing timeout.
- * Pausing and playing is done by 'volume' adjust only.
- * It hold infinite loop to adjust timeout/duration/audiofile/mute at it's 'runetime'.
+ * Pausing and playing is done by 'volume', 'muted' media properties adjust only.
+ * It hold infinite loop so it allows us easily adjust timeout while player is running.
  *
- * If one needs to play an audio file "once" he then must explicitly set an timeout equal to current audiofile length.
- * If "seek" audio has to be done before initial play, then just subtract it from timeout you set.
+ * Fluent setters may be used in any order,
+ * still it is suggested to use 'timeout' as last one.
  *
  * Since it is very specific player which has to share timeout and audio across tabs,
  * it is not global, but notifications specific.
@@ -49,7 +49,7 @@ function ZBX_NotificationsAudio() {
 }
 
 /**
- * Creates interval.
+ * Starts main loop.
  *
  * @return int  Interval id.
  */
@@ -78,11 +78,12 @@ ZBX_NotificationsAudio.prototype.listen = function() {
 }
 
 /**
- * Fluent setters may be used in any order,
- * still it is suggested to use 'timeout' as last one.
- *
- * File is applied only if it is different than on instace, so this method
+ * File is applied only if it is different than on instate, so this method
  * may be called repeatedly, and will not interrupt playback.
+ *
+ * @param {string} file  Audio file path relative to DOCUMENT_ROOT/audio/ directory.
+ *
+ * @return {ZBX_NotificationsAudio}
  */
 ZBX_NotificationsAudio.prototype.file = function(file) {
 	if (this.wave == file) {
@@ -102,7 +103,13 @@ ZBX_NotificationsAudio.prototype.file = function(file) {
 }
 
 /**
+ * Set player seek position.
+ *
  * There are no safety checks, if one decides to seek out of bounds - no audio.
+ *
+ * @param {float} seconds
+ *
+ * @return {ZBX_NotificationsAudio}
  */
 ZBX_NotificationsAudio.prototype.seek = function(seconds) {
 	if (this.audio.readyState > 0) {
@@ -112,7 +119,10 @@ ZBX_NotificationsAudio.prototype.seek = function(seconds) {
 }
 
 /**
- * Sets timeout the same as length of file. Or postones the timeout to be set once file is loded.
+ * Once file duration is known, this method seeks player to beginning
+ * and sets timeout equal to file duration.
+ *
+ * @return {ZBX_NotificationsAudio}
  */
 ZBX_NotificationsAudio.prototype.once = function() {
 	if (this.playOnceOnReady && this.audio.readyState >= 3) {
@@ -126,7 +136,9 @@ ZBX_NotificationsAudio.prototype.once = function() {
 }
 
 /**
- * An alias method.
+ * An alias method. Player is stopped by truncating timeout.
+ *
+ * @return {ZBX_NotificationsAudio}
  */
 ZBX_NotificationsAudio.prototype.stop = function() {
 	return this.timeout(0);
@@ -135,6 +147,8 @@ ZBX_NotificationsAudio.prototype.stop = function() {
 /**
  * Will play for seconds given, since this call.
  * If "0" given - will just not play.
+ *
+ * @return {ZBX_NotificationsAudio}
  */
 ZBX_NotificationsAudio.prototype.timeout = function(seconds) {
 	if (seconds == -1) {
@@ -147,26 +161,26 @@ ZBX_NotificationsAudio.prototype.timeout = function(seconds) {
 }
 
 /**
- * Get remaining time for current play in seconds.
+ * Get current player seek position.
  *
- * @return float
+ * @return {float}  Amount of seconds.
  */
 ZBX_NotificationsAudio.prototype.getSeek = function() {
 	return this.audio.currentTime;
 }
 
 /**
- * Get remaining time for current play in seconds.
+ * Get the time player will play for.
  *
- * @return float
+ * @return {float}  Amount of seconds.
  */
 ZBX_NotificationsAudio.prototype.getTimeout = function() {
 	return this.msTimeout / 1000;
 }
 
 /**
- * This handler will be invoked once audio file has succesfully per-loaded.
- * We attempt to autoplay and see if we have policy error.
+ * This handler will be invoked once audio file has successfully per-loaded.
+ * We attempt to auto play and see if we have policy error.
  */
 ZBX_NotificationsAudio.prototype.handleOnloadeddata = function() {
 	var promise = this.audio.play();
