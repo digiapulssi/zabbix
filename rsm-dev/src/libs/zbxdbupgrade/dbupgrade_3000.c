@@ -3386,7 +3386,7 @@ static int	create_rdds_downtime_trigger(const char* hostid, const char* percent,
 	DB_ROW		row;
 	zbx_uint64_t	functionid, itemid;
 
-	static const char*	itemkey = "rsm.slv.dns.downtime";
+	static const char*	itemkey = "rsm.slv.rdds.downtime";
 
 	*triggerid = DBget_maxid("triggers");
 	functionid = DBget_maxid("functions");
