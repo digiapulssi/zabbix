@@ -18,15 +18,22 @@
 **/
 
 
+/**
+ * Stores the list of notification objects.
+ * Creates and maintains DOM node for notification list.
+ */
 function ZBX_NotificationCollection() {
 	this.list = {};
-	this.makeNodes()
-	this.onTimeout = function() {}
+	this.makeNodes();
+	this.onTimeout = function() {};
 
 	this.node.style.right = '0px';
 	this.node.style.top = '126px';
 }
 
+/**
+ * Creates DOM nodes.
+ */
 ZBX_NotificationCollection.prototype.makeNodes = function() {
 	this.node = document.createElement('div');
 	this.node.hidden = true;
@@ -59,6 +66,12 @@ ZBX_NotificationCollection.prototype.makeNodes = function() {
 	this.node.appendChild(this.listNode);
 }
 
+/**
+ * Creates <button> node with method 'renderState(bool)'.
+ *
+ * @param {string} classInactive
+ * @param {string} classActive
+ */
 ZBX_NotificationCollection.prototype.makeToggleBtn = function(classInactive, classActive) {
 	var button = document.createElement('button');
 	button.renderState = function(isActive) {
@@ -67,6 +80,9 @@ ZBX_NotificationCollection.prototype.makeToggleBtn = function(classInactive, cla
 	return button;
 }
 
+/**
+ * Shows list of notifications.
+ */
 ZBX_NotificationCollection.prototype.show = function() {
 	this.node.style.opacity = 0;
 	this.node.hidden = false;
@@ -81,6 +97,9 @@ ZBX_NotificationCollection.prototype.show = function() {
 	}.bind(this.node), 50);
 }
 
+/**
+ * Hides list of notifications.
+ */
 ZBX_NotificationCollection.prototype.hide = function() {
 	this.node.style.opacity = 1;
 
@@ -95,6 +114,11 @@ ZBX_NotificationCollection.prototype.hide = function() {
 	}.bind(this.node), 50);
 }
 
+/**
+ * Replaces current list node contents with new one.
+ *
+ * @param {object} listObj  Notifications list object in format it is stored in local storage.
+ */
 ZBX_NotificationCollection.prototype.renderFromStorable = function(listObj) {
 	var frag = document.createDocumentFragment();
 
