@@ -23,7 +23,7 @@
  * It ensures there are only non-crashed tabs in store.
  * It maintains currently focused tab and last focused tab in store.
  *
- * @param store ZBX_LocalStorage  A localStorage wrapper.
+ * @param {ZBX_LocalStorage} store  A localStorage wrapper.
  */
 function ZBX_BrowserTab(store) {
 	if (!(store instanceof ZBX_LocalStorage)) {
@@ -50,7 +50,7 @@ function ZBX_BrowserTab(store) {
 /**
  * Gives all tab ids.
  *
- * @return array
+ * @return {array}
  */
 ZBX_BrowserTab.prototype.getAllTabIds = function() {
 	return Object.keys(this.store.readKey('tabs.lastseen'));
@@ -71,7 +71,7 @@ ZBX_BrowserTab.prototype.checkAlive = function() {
 }
 
 /**
- * @param string tabId  The crashed tab id.
+ * @param {string} tabId  The crashed tab id.
  */
 ZBX_BrowserTab.prototype.handleCrashed = function(tabId) {
 	this.store.mutateObject('tabs.lastseen', function(tabs) {
@@ -86,21 +86,21 @@ ZBX_BrowserTab.prototype.handleCrashed = function(tabId) {
 }
 
 /**
- * Bind cb
+ * @param {callable} callback
  */
 ZBX_BrowserTab.prototype.onBlur = function(callback) {
 	this.onBlurCbs.push(callback);
 }
 
 /**
- * Bind cb
+ * @param {callable} callback
  */
 ZBX_BrowserTab.prototype.onFocus = function(callback) {
 	this.onFocusCbs.push(callback);
 }
 
 /**
- * Bind cb
+ * @param {callable} callback
  */
 ZBX_BrowserTab.prototype.onUnload = function(callback) {
 	this.onUnloadCbs.push(callback);
@@ -109,7 +109,7 @@ ZBX_BrowserTab.prototype.onUnload = function(callback) {
 /**
  * Rewrite focused tab id.
  */
-ZBX_BrowserTab.prototype.handleBlur = function(event) {
+ZBX_BrowserTab.prototype.handleBlur = function() {
 	this.onBlurCbs.forEach(function(c) {c(this)});
 	this.store.writeKey('tabs.lastblured', this.uid);
 }
@@ -117,7 +117,7 @@ ZBX_BrowserTab.prototype.handleBlur = function(event) {
 /**
  * Rewrite focused tab id.
  */
-ZBX_BrowserTab.prototype.handleFocus = function(event) {
+ZBX_BrowserTab.prototype.handleFocus = function() {
 	this.onFocusCbs.forEach(function(c) {c(this)}.bind(this));
 	this.store.writeKey('tabs.lastfocused', this.uid);
 }
@@ -125,7 +125,7 @@ ZBX_BrowserTab.prototype.handleFocus = function(event) {
 /**
  * Delegate active tab to any alive tab and clean up localStorage.
  */
-ZBX_BrowserTab.prototype.handleBeforeUnload = function(event) {
+ZBX_BrowserTab.prototype.handleBeforeUnload = function() {
 	var uid = this.uid;
 	this.checkAlive();
 	this.store.mutateObject('tabs.lastseen', function(tabs) {
@@ -144,7 +144,7 @@ ZBX_BrowserTab.prototype.handleBeforeUnload = function(event) {
 /**
  * Compares instance with active ref from localStorage.
  *
- * @return bool
+ * @return {bool}
  */
 ZBX_BrowserTab.prototype.isFocused = function() {
 	return this.store.readKey('tabs.lastfocused') === this.uid;
@@ -153,7 +153,7 @@ ZBX_BrowserTab.prototype.isFocused = function() {
 /**
  * Determines if there are more sibling tabs.
  *
- * @return bool
+ * @return {bool}
  */
 ZBX_BrowserTab.prototype.isSingleSession = function() {
 	return this.getAllTabIds().length < 2;
@@ -174,15 +174,11 @@ ZBX_BrowserTab.prototype.keepAlive = function() {
  * Registers beforeunload event to remove own ID from `store.tabs`.
  * Registers focus and blur events to maintain `store.tabs.lastfocused`.
  * Begins a loop to see if any tab of tabs has crashed.
- * Ensures that in case if tab chashed, unload event call is deligated.
- *
- * TODO fix caveat when focus event is not fired if a link to SINGLE-FIRST zabbix session is opened in background.
  */
 ZBX_BrowserTab.prototype.register = function() {
 	this.keepAlive();
 	this.checkAlive();
 
-	// every 30 seconds write client time for this tabId
 	setInterval(function() {
 		this.keepAlive();
 		this.checkAlive();
