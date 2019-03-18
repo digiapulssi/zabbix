@@ -43,7 +43,7 @@ function ZBX_LocalStorage(version) {
 
 	this.keys = {
 		// Store versioning.
-		'version': this.wrap(version),
+		'version': version,
 		// {(string) tabId: (int) lastSeen}
 		// An object where every tab updates timestamp at key of it's id, in order to assume if there are crashed tabs.
 		'tabs.lastseen': {},
