@@ -106,7 +106,8 @@ ZBX_Notification.prototype.remove = function(ease, cb) {
 			if (t < rate) {
 				// Since there is loaded prototype.js and it extends DOM's native 'remove' method,
 				// we have to check explicitly if node is connected.
-				if (this.node.isConnected) {
+				// In case of IE11 there is no 'isConnected' method.
+				if (this.node.isConnected || this.node.parentNode) {
 					this.node.remove();
 					cb && cb()
 				}
