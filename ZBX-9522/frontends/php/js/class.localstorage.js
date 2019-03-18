@@ -26,14 +26,13 @@ ZBX_LocalStorage.defines = {
 }
 
 /**
- * Ref: https://www.w3.org/TR/webstorage/#the-storage-event
- * Local storage wraper. Implements singleton.
+ * Local storage wrapper. Implements singleton.
  *
- * @param version string  Mandatory parameter - zabbix version.
+ * @param {string} version  Mandatory parameter - zabbix version.
  */
 function ZBX_LocalStorage(version) {
 	if (!version) {
-		throw 'Unversioned local storage instantiation.';
+		throw 'Local storage instantiation must be versioned.';
 	}
 
 	if (ZBX_LocalStorage.intsance) {
@@ -87,8 +86,8 @@ function ZBX_LocalStorage(version) {
  * Callback gets passed a reference of object under this key.
  * The reference then is written back into local storage.
  *
- * @param string key
- * @param closure callback
+ * @param {string} key
+ * @param {callable} callback
  */
 ZBX_LocalStorage.prototype.mutateObject = function(key, callback) {
 	var obj = this.readKey(key);
@@ -99,9 +98,9 @@ ZBX_LocalStorage.prototype.mutateObject = function(key, callback) {
 /**
  * Validates if key is used by this version of localStorage.
  *
- * @param string key  Key to test.
+ * @param {string} key  Key to test.
  *
- * @return boolean
+ * @return {bool}
  */
 ZBX_LocalStorage.prototype.hasKey = function(key) {
 	return typeof this.keys[key] !== 'undefined';
@@ -110,7 +109,7 @@ ZBX_LocalStorage.prototype.hasKey = function(key) {
 /**
  * Alias to throw error on invalid key access.
  *
- * @param string key  Key to test.
+ * @param {string} key  Key to test.
  */
 ZBX_LocalStorage.prototype.ensureKey = function(key) {
 	if (typeof key !== 'string') {
@@ -128,13 +127,18 @@ ZBX_LocalStorage.prototype.ensureKey = function(key) {
 /**
  * Writes an underlaying value.
  *
- * @param string key
- * @param string value
+ * @param {string} key
+ * @param {string} value
  */
 ZBX_LocalStorage.prototype.writeKey = function(key, value) {
 	if (value instanceof Array) {
 		throw 'Arrays are not supported. Unsuccessful key: ' + key;
 	}
+
+	if (typeof value === 'undefined') {
+		throw 'Value may not be undefined, use null instead';
+	}
+
 	this.ensureKey(key);
 
 	localStorage.setItem(key, this.wrap(value));
@@ -143,6 +147,8 @@ ZBX_LocalStorage.prototype.writeKey = function(key, value) {
 
 /**
  * Writes default value.
+ *
+ * @param {string} key  Key to reset.
  */
 ZBX_LocalStorage.prototype.resetKey = function(key) {
 	this.ensureKey(key);
@@ -152,9 +158,9 @@ ZBX_LocalStorage.prototype.resetKey = function(key) {
 /**
  * Fetches underlaying value.
  *
- * @param string key  Key to test.
+ * @param {string} key  Key to test.
  *
- * @return mixed
+ * @return {mixed}
  */
 ZBX_LocalStorage.prototype.readKey = function(key) {
 	this.ensureKey(key);
@@ -169,9 +175,9 @@ ZBX_LocalStorage.prototype.readKey = function(key) {
 }
 
 /**
- * @param value mixed
+ * @param {mixed} value
  *
- * @return string
+ * @return {string}
  */
 ZBX_LocalStorage.prototype.wrap = function(value) {
 	return JSON.stringify({
@@ -181,11 +187,9 @@ ZBX_LocalStorage.prototype.wrap = function(value) {
 }
 
 /**
- * @param value string
+ * @param {value} string
  *
- * @throws Error
- *
- * @return mixed
+ * @return {mixed}
  */
 ZBX_LocalStorage.prototype.unwrap = function(value) {
 	return JSON.parse(value);
@@ -204,9 +208,9 @@ ZBX_LocalStorage.prototype.truncate = function() {
 
 /**
  * Since storage event is not fired for current session.
- * This binding can be used to explicitly proxy updates events for current session as well.
+ * This binding can be used to explicitly proxy update events for current session as well.
  *
- * @param callable callback
+ * @param {callable} callback
  */
 ZBX_LocalStorage.prototype.onWrite = function(callback) {
 	this.onWriteCb = callback;
@@ -217,7 +221,7 @@ ZBX_LocalStorage.prototype.onWrite = function(callback) {
  * A callback will get passed key that were modified and the new value it now holds.
  * Note: handle is fired only when there was a change (not in case of any writeKey).
  *
- * @param callable callback
+ * @param {callable} callback
  */
 ZBX_LocalStorage.prototype.onUpdate = function(callback) {
 	window.addEventListener('storage', function(event) {
@@ -226,7 +230,7 @@ ZBX_LocalStorage.prototype.onUpdate = function(callback) {
 			return this.mapCallback(callback);
 		}
 
-		// Not only IE dispatches this event onwrite instead of onchange,
+		// Not only IE dispatches this event 'onwrite' instead of 'onchange',
 		// but event is also dispatched in window that is the modifier.
 		// So we need to sign all payloads.
 		var value = this.unwrap(event.newValue);
@@ -239,11 +243,13 @@ ZBX_LocalStorage.prototype.onUpdate = function(callback) {
 /**
  * Apply every callback for each localStorage entry.
  *
- * @param callable callback
+ * @param {callable} callback
  */
 ZBX_LocalStorage.prototype.mapCallback = function(callback) {
 	for (var i = 0; i < localStorage.length; i++) {
 		var key = localStorage.key(i);
-		callback(key, this.readKey(key), ZBX_LocalStorage.defines.EVT_MAP);
+		if (this.hasKey(key)) {
+			callback(key, this.readKey(key), ZBX_LocalStorage.defines.EVT_MAP);
+		}
 	}
 }
