@@ -21,6 +21,14 @@ ZBX_Promise.PENDIG = 0;
 ZBX_Promise.RESOLVED = 1;
 ZBX_Promise.REJECTED = 2;
 
+/**
+ * Promise API polyfill. This polyfill contains only things that we use.
+ * Please update this once richer Promises API needs to be used.
+ *
+ * Warning: method chaining is not implemented.
+ *
+ * @param {callable} resolver
+ */
 function ZBX_Promise(resolver) {
 	this.state = ZBX_Promise.PENDIG;
 	this.onResolve = function() {};
