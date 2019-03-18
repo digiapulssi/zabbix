@@ -3271,20 +3271,36 @@ static int	move_ids(const char* table_name, const char* idfield, int id, int cou
 
 static int	DBpatch_3000304(void)
 {
+	int		i;
+	zbx_uint64_t	globalmacroid = 102;	/* use 102, 103 and 104 */
+	const char	*macros[][2] = {
+		{"{$RSM.SLV.RDDS.RTT}", "5"},
+		{"{$RSM.SLV.DNS.DOWNTIME}", "0"},
+		{"{$RSM.SLV.RDDS.DOWNTIME}", "864"},
+		{NULL, NULL}
+	};
+
 	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
 		return SUCCEED;
 
-	if (SUCCEED != move_ids("globalmacro", "globalmacroid", 102, 3))
+	for (i = 0; macros[i][0] != NULL; i++)
+	{
+		if (ZBX_DB_OK > DBexecute("delete from globalmacro where macro='%s'", macros[i][0]))
+			return FAIL;
+	}
+
+	if (SUCCEED != move_ids("globalmacro", "globalmacroid", globalmacroid, 3))
 		return FAIL;
 
-	if (ZBX_DB_OK > DBexecute(
-			"insert into globalmacro (globalmacroid,macro,value)"
-			" values"
-				" (102,'{$RSM.SLV.RDDS.RTT}','5'),"
-				" (103,'{$RSM.SLV.DNS.DOWNTIME}','0'),"
-				" (104,'{$RSM.SLV.RDDS.DOWNTIME}','864')"))
+	for (i = 0; macros[i][0] != NULL; i++)
 	{
-		return FAIL;
+		if (ZBX_DB_OK > DBexecute(
+				"insert into globalmacro (globalmacroid,macro,value)"
+				" values"
+				" (" ZBX_FS_UI64 ",'%s','%s')", globalmacroid++, macros[i][0], macros[i][1]))
+		{
+			return FAIL;
+		}
 	}
 
 	if (ZBX_DB_OK > DBexecute(
