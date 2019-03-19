@@ -3383,7 +3383,7 @@ static int	DBpatch_3000305(void)
 	return SUCCEED;
 }
 
-static int	create_rdds_downtime_trigger(const char *hostid, const char *percent, const char *coeff,
+static int	create_rdds_downtime_trigger(const char *hostid, const char *percent, const char *coefficient,
 		const char *priority, zbx_uint64_t *triggerid)
 {
 	DB_RESULT	result;
@@ -3400,7 +3400,7 @@ static int	create_rdds_downtime_trigger(const char *hostid, const char *percent,
 			"values (" ZBX_FS_UI64 ", '{" ZBX_FS_UI64 "}>={$RSM.SLV.RDDS.DOWNTIME}%s',"
 				"'RDDS service was unavailable for %s of allowed $1',"
 				"'', '0', '%s', '', NULL, '0', '0')",
-			*triggerid, functionid, coeff, percent, priority))
+			*triggerid, functionid, coefficient, percent, priority))
 	{
 		return FAIL;
 	}
@@ -3439,22 +3439,27 @@ static int	create_trigger_dependency(zbx_uint64_t triggerid, zbx_uint64_t depend
 	return SUCCEED;
 }
 
+/* percent, coefficient, priority */
+const char	*trigger_params[][3] = {
+	{"10%",		"*0.1",		"2"},
+	{"25%",		"*0.25",	"3"},
+	{"50%",		"*0.5",		"3"},
+	{"75%",		"*0.75",	"4"},
+	{"100%",	"",		"5"}
+};
+
 static int	create_dependent_rdds_trigger_chain(const char *hostid)
 {
 	zbx_uint64_t	triggerid = 0, dependid = 0;
 	int		i;
-	const char	*strs[15] = {
-		/* percent, coeff, priority */
-		"10%",		"*0.1",		"2",
-		"25%",		"*0.25",	"3",
-		"50%",		"*0.5",		"3",
-		"75%",		"*0.75",	"4",
-		"100%",		"",		"5"
-	};
 
-	for (i = 0; i < 15; i += 3)
+	for (i = 0; i < sizeof(trigger_params) / sizeof(*trigger_params); i++)
 	{
-		if (SUCCEED != create_rdds_downtime_trigger(hostid, strs[i], strs[i + 1], strs[i + 2], &triggerid))
+		const char	*percent     = trigger_params[i][0];
+		const char	*coefficient = trigger_params[i][1];
+		const char	*priority    = trigger_params[i][2];
+
+		if (SUCCEED != create_rdds_downtime_trigger(hostid, percent, coefficient, priority, &triggerid))
 			return FAIL;
 
 		if (0 != triggerid && 0 != dependid)
@@ -3530,7 +3535,6 @@ static int	create_slv_rtt_item(zbx_uint64_t hostid, zbx_uint64_t itemid, int ite
 		zbx_uint64_t applicationid)
 {
 	if (ZBX_DB_OK > DBexecute(
-
 			"insert into items (itemid,type,snmp_community,snmp_oid,hostid,name,key_,delay,history,trends,"
 				"status,value_type,trapper_hosts,units,multiplier,delta,"
 				"snmpv3_securityname,snmpv3_securitylevel,snmpv3_authpassphrase,snmpv3_privpassphrase,"
@@ -3563,20 +3567,11 @@ static int	create_ratio_of_failed_tests_triggers(zbx_uint64_t itemid, const char
 	size_t		i;
 	zbx_uint64_t	prev_triggerid = 0;
 
-	/* percent, coeff, priority */
-	const char* trigger_params[5][3] = {
-		{"10%",		"*0.1",		"2"},
-		{"25%",		"*0.25",	"3"},
-		{"50%",		"*0.5",		"3"},
-		{"75%",		"*0.75",	"4"},
-		{"100%",	"",		"5"}
-	};
-
 	for (i = 0; i < sizeof(trigger_params) / sizeof(*trigger_params); i++)
 	{
-		const char	*percents    = trigger_params[i][0];
+		const char	*percent     = trigger_params[i][0];
 		const char	*coefficient = trigger_params[i][1];
-		const char	*severity    = trigger_params[i][2];
+		const char	*priority    = trigger_params[i][2];
 
 		zbx_uint64_t	functionid = DBget_maxid_num("functions", 1);
 		zbx_uint64_t	triggerid  = DBget_maxid_num("triggers", 1);
@@ -3585,7 +3580,7 @@ static int	create_ratio_of_failed_tests_triggers(zbx_uint64_t itemid, const char
 				"priority,lastchange,comments,error,templateid,type,state,flags) values"
 				" (" ZBX_FS_UI64 ",'{" ZBX_FS_UI64 "}>%s%s',"
 				"'Ratio of failed %s tests exceeded %s of allowed $1%%','',0,0,%s,0,'','',NULL,0,0,0)",
-				triggerid, functionid, macro, coefficient, service, percents, severity))
+				triggerid, functionid, macro, coefficient, service, percent, priority))
 		{
 			return FAIL;
 		}

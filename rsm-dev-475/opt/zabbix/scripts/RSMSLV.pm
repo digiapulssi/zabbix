@@ -94,7 +94,7 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		get_macro_dns_tcp_rtt_low get_macro_rdds_rtt_low get_dns_udp_delay get_dns_tcp_delay
 		get_rdds_delay get_epp_delay get_macro_epp_probe_online get_macro_epp_rollweek_sla
 		get_macro_dns_update_time get_macro_rdds_update_time get_tld_items get_hostid
-		get_rtt_low get_slv_rtt
+		get_rtt_low
 		get_macro_epp_rtt_low get_macro_probe_avail_limit get_itemid_by_key get_itemid_by_host
 		get_itemid_by_hostid get_itemid_like_by_hostid get_itemids_by_host_and_keypart get_lastclock get_tlds
 		get_oldest_clock
@@ -119,7 +119,7 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		float_value_exists
 		sql_time_condition get_incidents get_downtime get_downtime_prepare get_downtime_execute
 		history_table
-		get_lastvalue get_itemids_by_hostids get_itemids_by_key_pattern_and_hosts get_nsip_values
+		get_lastvalue get_itemids_by_hostids get_nsip_values
 		get_valuemaps get_statusmaps get_detailed_result
 		get_avail_valuemaps
 		get_result_string get_tld_by_trigger truncate_from truncate_till alerts_enabled
@@ -135,10 +135,7 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		write_file read_file
 		cycle_start
 		cycle_end
-		cycles_till_end_of_month
-		get_end_of_month get_end_of_prev_month
-		get_slv_rtt_cycle_stats get_slv_rtt_cycle_stats_aggregated
-		get_slv_rtt_monthly_items update_slv_rtt_monthly_stats
+		update_slv_rtt_monthly_stats
 		usage);
 
 # configuration, set in set_slv_config()
@@ -325,15 +322,15 @@ sub get_slv_rtt($;$)
 		fail("internal error: get_slv_rtt() called for $service without specifying protocol")
 			unless (defined($proto));
 
-		return __get_macro('{$RSM.SLV.DNS.UDP.RTT}') if $proto == PROTO_UDP;
-		return __get_macro('{$RSM.SLV.DNS.TCP.RTT}') if $proto == PROTO_TCP;
+		return __get_macro('{$RSM.SLV.DNS.UDP.RTT}') if ($proto == PROTO_UDP);
+		return __get_macro('{$RSM.SLV.DNS.TCP.RTT}') if ($proto == PROTO_TCP);
 
 		fail("Unhandled protocol \"$proto\"");
 	}
 
-	return __get_macro('{$RSM.SLV.RDDS.RTT}')   if $service eq 'rdds';
-	return __get_macro('{$RSM.SLV.RDDS43.RTT}') if $service eq 'rdds43';
-	return __get_macro('{$RSM.SLV.RDDS80.RTT}') if $service eq 'rdds80';
+	return __get_macro('{$RSM.SLV.RDDS.RTT}')   if ($service eq 'rdds');
+	return __get_macro('{$RSM.SLV.RDDS43.RTT}') if ($service eq 'rdds43');
+	return __get_macro('{$RSM.SLV.RDDS80.RTT}') if ($service eq 'rdds80');
 
 	fail("Unhandled service \"$service\"");
 }
@@ -595,7 +592,7 @@ sub __get_probes($)
 {
 	my $name = shift;
 
-	my $name_condition = $name ? "name='$name' and" : "";
+	my $name_condition = ($name ? "name='$name' and" : "");
 
 	my $rows = db_select(
 		"select hosts.hostid,hosts.host,hostmacro.macro,hostmacro.value" .
@@ -3578,11 +3575,11 @@ sub get_slv_rtt_monthly_items($$$$)
 
 		# if any item was found on TLD, then all items must exist
 		fail("Item '$slv_item_key_performed' not found for TLD '$tld'")
-				unless exists($tld_items{$slv_item_key_performed});
+				unless (exists($tld_items{$slv_item_key_performed}));
 		fail("Item '$slv_item_key_failed' not found for TLD '$tld'")
-				unless exists($tld_items{$slv_item_key_failed});
+				unless (exists($tld_items{$slv_item_key_failed}));
 		fail("Item '$slv_item_key_pfailed' not found for TLD '$tld'")
-				unless exists($tld_items{$slv_item_key_pfailed});
+				unless (exists($tld_items{$slv_item_key_pfailed}));
 
 		if (!defined($tld_items{$slv_item_key_performed}[0]) ||
 				!defined($tld_items{$slv_item_key_failed}[0]) ||
@@ -3591,11 +3588,11 @@ sub get_slv_rtt_monthly_items($$$$)
 			# if any lastvalue on TLD is undefined, then all lastvalues must be undefined
 
 			fail("Item '$slv_item_key_performed' on TLD '$tld' has lastvalue while other related items don't")
-					if defined($tld_items{$slv_item_key_performed}[0]);
+					if (defined($tld_items{$slv_item_key_performed}[0]));
 			fail("Item '$slv_item_key_failed' on TLD '$tld' has lastvalue while other related items don't")
-					if defined($tld_items{$slv_item_key_failed}[0]);
+					if (defined($tld_items{$slv_item_key_failed}[0]));
 			fail("Item '$slv_item_key_pfailed' on TLD '$tld' has lastvalue while other related items don't")
-					if defined($tld_items{$slv_item_key_pfailed}[0]);
+					if (defined($tld_items{$slv_item_key_pfailed}[0]));
 		}
 		else
 		{
