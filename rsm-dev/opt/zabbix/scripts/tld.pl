@@ -1157,7 +1157,7 @@ sub create_slv_items
 	create_slv_item('DNS availability', 'rsm.slv.dns.avail', $hostid, VALUE_TYPE_AVAIL, [get_application_id(APP_SLV_PARTTEST, $hostid)]);
 	create_slv_item('DNS minutes of downtime', 'rsm.slv.dns.downtime', $hostid, VALUE_TYPE_NUM, [get_application_id(APP_SLV_CURMON, $hostid)]);
 	create_slv_item('DNS weekly unavailability', 'rsm.slv.dns.rollweek', $hostid, VALUE_TYPE_PERC, [get_application_id(APP_SLV_ROLLWEEK, $hostid)]);
-	
+
 	create_avail_trigger('DNS', $host_name);
 	create_dns_downtime_trigger($host_name, 5);
 	create_dependent_trigger_chain($host_name, 'DNS', \&create_rollweek_trigger, $trigger_thresholds);
@@ -1849,7 +1849,7 @@ sub create_avail_trigger($$)
 	really(create_trigger($options, $host_name));
 }
 
- sub create_dns_downtime_trigger($$)
+sub create_dns_downtime_trigger($$)
 {
 	my $host_name = shift;
 	my $priority = shift;
