@@ -1,7 +1,7 @@
 #!/usr/bin/php
 <?php
 
-require_once "CSlaReport.php";
+require_once dirname(__FILE__) . "/CSlaReport.php";
 
 main($argv);
 

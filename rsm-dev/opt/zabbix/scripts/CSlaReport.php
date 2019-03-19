@@ -688,6 +688,49 @@ class CSlaReport
 
 	private static function getDbConfigFromFrontend($server_id)
 	{
+		global $DB;
+
+		if (!isset($DB))
+		{
+			throw new Exception("Failed to get DB config");
+		}
+		if (!array_key_exists($server_id, $DB["SERVERS"]))
+		{
+			throw new Exception("Invalid server ID: {$server_id}");
+		}
+
+		$server_conf = $DB["SERVERS"][$server_id];
+
+		$ssl_conf = [];
+
+		if (isset($server_conf["DB_KEY_FILE"]))
+		{
+			$ssl_conf[PDO::MYSQL_ATTR_SSL_KEY] = $server_conf["DB_KEY_FILE"];
+		}
+		if (isset($server_conf["DB_CERT_FILE"]))
+		{
+			$ssl_conf[PDO::MYSQL_ATTR_SSL_CERT] = $server_conf["DB_CERT_FILE"];
+		}
+		if (isset($server_conf["DB_CA_FILE"]))
+		{
+			$ssl_conf[PDO::MYSQL_ATTR_SSL_CA] = $server_conf["DB_CA_FILE"];
+		}
+		if (isset($server_conf["DB_CA_PATH"]))
+		{
+			$ssl_conf[PDO::MYSQL_ATTR_SSL_CAPATH] = $server_conf["DB_CA_PATH"];
+		}
+		if (isset($server_conf["DB_CA_CIPHER"]))
+		{
+			$ssl_conf[PDO::MYSQL_ATTR_SSL_CIPHER] = $server_conf["DB_CA_CIPHER"];
+		}
+
+		return [
+			"hostname" => $server_conf["SERVER"],
+			"username" => $server_conf["USER"],
+			"password" => $server_conf["PASSWORD"],
+			"database" => $server_conf["DATABASE"],
+			"ssl_conf" => $ssl_conf,
+		];
 	}
 
 	private static function getDbConfigFromRsmConf($server_id)
