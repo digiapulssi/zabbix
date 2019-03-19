@@ -31,7 +31,6 @@ my $month_latest_cycle = current_month_latest_cycle();
 init_values();
 process_values();
 send_values();
-print "\n\n";
 slv_exit(SUCCESS);
 
 sub process_values
@@ -84,8 +83,6 @@ sub process_slv_item
 	my $slv_itemid = shift;
 	my $slv_itemkey = shift;
 
-	print "$slv_itemid, $slv_itemkey\n";
-
 	if ($slv_itemkey =~ /\[(.+,.+)\]$/)
 	{
 		process_rtt_items($tld, $slv_itemid, $slv_itemkey, $1);
@@ -94,8 +91,6 @@ sub process_slv_item
 	{
 		fail("missing ns,ip pair in item key '$slv_itemkey'");
 	}
-
-	print "\n";
 }
 
 sub get_dns_udp_rtt_items_by_nsip_pairs
@@ -130,11 +125,8 @@ sub process_rtt_items # for a particular slv item
 
 	if ($slv_clock >= $month_latest_cycle)
 	{
-		print "Noting to calculate!\n";
 		return;
 	}
-
-	print ">>> $slv_clock\n";
 
 	my $rtt_items = get_dns_udp_rtt_items_by_nsip_pairs($nsip); # one per probe
 	my $rtt_item_count = scalar(@{$rtt_items});
@@ -152,18 +144,19 @@ sub process_rtt_items # for a particular slv item
 
 		foreach (@{$rtt_item_history})
 		{
-			print "-> ".Dumper($_)."\n";
-			if ($_ < -200)
+			my $value = int($_->[0]);
+
+			if ($value <= -200)
 			{
 				$bad_probe_count++;
 			}
 		}
 
-		$cycle_down = ($bad_probe_count >= 0.5 * $rtt_item_count);
+		$cycle_down = ($bad_probe_count >= 0.5 * $rtt_item_count) ? 1 : 0;
 	}
 
 	my $new_value = $slv_lastvalue + $cycle_down;
-	print "Sending values: $new_value\n";
+
 	push_value($tld, $slv_itemkey, $slv_clock + 60, $new_value);
 }
 
