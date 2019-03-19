@@ -2,12 +2,8 @@
 #
 # Minutes of DNS downtime during running month for particular nameservers
 
-BEGIN
-{
-	our $MYDIR = $0; $MYDIR =~ s,(.*)/.*/.*,$1,; $MYDIR = '..' if ($MYDIR eq $0);
-}
+BEGIN { our $MYDIR = $0; $MYDIR =~ s,(.*)/.*/.*,$1,; $MYDIR = '..' if ($MYDIR eq $0); }
 use lib $MYDIR;
-
 use strict;
 use warnings;
 use RSM;
@@ -30,6 +26,7 @@ db_connect();
 # my ($month_start, $till, $cycle_start) = get_downtime_bounds($delay, getopt('now'));
 
 my $month_first_cycle = current_month_first_cycle();
+my $month_latest_cycle = current_month_latest_cycle();
 
 init_values();
 process_values();
@@ -91,7 +88,7 @@ sub process_slv_item
 
 	if ($slv_itemkey =~ /\[(.+,.+)\]$/)
 	{
-		process_rtt_items($tld, $slv_itemid, $slv_itemkey, get_dns_udp_rtt_items_by_nsip_pairs($1));
+		process_rtt_items($tld, $slv_itemid, $slv_itemkey, $1);
 	}
 	else
 	{
@@ -109,91 +106,85 @@ sub get_dns_udp_rtt_items_by_nsip_pairs
 		" where key_ like '$rtt_item_key_pattern\[\%$nsip]' and templateid is not null");
 }
 
+sub rtt_itemids
+{
+	my $items = shift;
+	my $itemids = [];
+
+	foreach (@{$items})
+	{
+		push($itemids, $_->[0]);
+	}
+
+	return $itemids;
+}
+
 sub process_rtt_items # for a particular slv item
 {
 	my $tld = shift;
 	my $slv_itemid = shift;
 	my $slv_itemkey = shift;
-	my $rtt_items = shift;
-	print ">>> $slv_itemid, $slv_itemkey\n";
+	my $nsip = shift;
 
 	my ($slv_lastvalue, $slv_clock) = @{get_slv_lastvalue_and_clock_by_itemid($slv_itemid)};
-	print "$slv_lastvalue, $slv_clock\n";
 
-	my $rtt_lastvalues_and_clocks = get_rtt_lastvalues_and_clocks_by_items($rtt_items, $slv_clock);
-	print Dumper($rtt_lastvalues_and_clocks)."\n";
+	if ($slv_clock >= $month_latest_cycle)
+	{
+		print "Noting to calculate!\n";
+		return;
+	}
 
-# 	my $slv_value;
-# 	my $slv_clock;
-# 
-# 	if (SUCCESS != get_lastvalue($slv_itemid, ITEM_VALUE_TYPE_UINT64, \$slv_value, \$slv_clock))
-# 	{
-# # 		fail("cannot obtain lastvalue for item $slv_itemid, $slv_itemkey");
-# 		$slv_value = 0;
-# 		$slv_clock = $month_start;
-# 	}
+	print ">>> $slv_clock\n";
 
-# 	print ">>> slv lastvalue: $slv_value, $slv_clock\n";
-# 
-# 	my $from = cycle_start($slv_clock, 60);
-# 	my $till = $from + 60;
-# 
-# 	print ">>> time: $from, $till\n";
-# 
-# 	my $rtt_itemids = [];
-# 
-# 	foreach (@{$rtt_items})
-# 	{
-# 		push($rtt_itemids, $_->[0]);
-# 	}
-# 
-# 	my $history = get_rtt_items_history($rtt_itemids, $from, $till);
-# 	my $success_count = 0;
-# 	my $fail_count = 0;
-# 
-# 	foreach (@{$history})
-# 	{
-# 		if ($_->[0] >= -200)
-# 		{
-# 			$success_count++;
-# 		}
-# 		else
-# 		{
-# 			$fail_count++;
-# 		}
-# 	}
-# 
-# 	print ">>> $success_count/$fail_count\n";
-# 
-# # 	push_value($tld, $slv_itemkey, $from, ($success_count > $fail_count ? '1' : '0'), 'nsip downtime');
-# 	push_value($tld, $slv_itemkey, time(), int(rand(1000000)));
+	my $rtt_items = get_dns_udp_rtt_items_by_nsip_pairs($nsip); # one per probe
+	my $rtt_item_count = scalar(@{$rtt_items});
+
+	my $rtt_item_history = get_rtt_item_history(rtt_itemids($rtt_items), $slv_clock, $slv_clock + 60);
+	my $cycle_down;
+
+	if (!defined($rtt_item_history) or 0 == scalar(@{$rtt_item_history}))
+	{
+		$cycle_down = 0;
+	}
+	else
+	{
+		my $bad_probe_count = 0;
+
+		foreach (@{$rtt_item_history})
+		{
+			print "-> ".Dumper($_)."\n";
+			if ($_ < -200)
+			{
+				$bad_probe_count++;
+			}
+		}
+
+		$cycle_down = ($bad_probe_count >= 0.5 * $rtt_item_count);
+	}
+
+	my $new_value = $slv_lastvalue + $cycle_down;
+	print "Sending values: $new_value\n";
+	push_value($tld, $slv_itemkey, $slv_clock + 60, $new_value);
 }
 
 sub get_slv_lastvalue_and_clock_by_itemid
 {
 	my $itemid = shift;
 
-	my $rows_ref = db_select("select value,clock from lastvalue where itemid=$itemid".
-		" and clock>=$month_first_cycle");
+	my $rows_ref = db_select("select value,clock from lastvalue where itemid=$itemid");
 
-	return defined($rows_ref) ? $rows_ref->[0] : [0, $month_first_cycle];
+	# start with the first cycle of the current month if there are no previous slv values
+	return $rows_ref->[0] // [0, $month_first_cycle];
 }
 
-sub get_rtt_lastvalues_and_clocks_by_items
+sub get_rtt_item_history
 {
-	my $items = shift;
+	my $itemids = shift;
 	my $from = shift;
-	my $itemids = '';
+	my $till = shift;
 
-	foreach (@{$items})
-	{
-		$itemids .= $_->[0];
-		$itemids .= ','
-	}
-	$itemids = substr($itemids, 0, -1);
-
-	return db_select("select value,clock from lastvalue where itemid in ($itemids)".
-		" and clock>=$from");
+	return db_select("select value from history where itemid in (".join(',', @{$itemids}).")".
+		" and clock between $from and $till");
 }
 
 sub current_month_first_cycle
@@ -203,13 +194,7 @@ sub current_month_first_cycle
 	return cycle_start($dt->epoch, 60);
 }
 
-sub get_rtt_items_history
+sub current_month_latest_cycle
 {
-	my $itemids = shift;
-	my $from = shift;
-	my $till = shift;
-
-	return db_select("select value from history where itemid in (".join(',', @{$itemids}).")".
-		" and clock between ".shift()." and ".shift());
+	return cycle_start(time(), 60) - ROLLWEEK_SHIFT_BACK;
 }
-
