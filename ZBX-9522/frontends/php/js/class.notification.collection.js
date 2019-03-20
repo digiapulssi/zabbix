@@ -41,6 +41,7 @@ ZBX_NotificationCollection.prototype.makeNodes = function() {
 
 	this.btnClose = document.createElement('button');
 	this.btnClose.setAttribute('title', locale['S_CLEAR']);
+	this.btnClose.setAttribute('type', 'button');
 	this.btnClose.className = 'overlay-close-btn';
 	this.node.appendChild(this.btnClose);
 
@@ -51,10 +52,12 @@ ZBX_NotificationCollection.prototype.makeNodes = function() {
 	var controls = document.createElement('ul');
 	header.appendChild(controls);
 
-	this.btnMute = this.makeToggleBtn('btn-sound-on', 'btn-sound-off');
-	this.btnMute.setAttribute('title', locale['S_MUTE'] + '/' + locale['S_UNMUTE']);
+	this.btnMute = this.makeToggleBtn(
+		{class: 'btn-sound-on', title: locale['S_MUTE']},
+		{class: 'btn-sound-off', title: locale['S_UNMUTE']}
+	);
 
-	this.btnSnooze = this.makeToggleBtn('btn-alarm-on', 'btn-alarm-off');
+	this.btnSnooze = this.makeToggleBtn({class: 'btn-alarm-on'}, {class: 'btn-alarm-off'});
 	this.btnSnooze.setAttribute('title', locale['S_SNOOZE']);
 
 	controls.appendChild(document.createElement('li').appendChild(this.btnSnooze));
@@ -69,13 +72,16 @@ ZBX_NotificationCollection.prototype.makeNodes = function() {
 /**
  * Creates <button> node with method 'renderState(bool)'.
  *
- * @param {string} classInactive
- * @param {string} classActive
+ * @param {object} attrsInactive
+ * @param {object} attrsActive
  */
-ZBX_NotificationCollection.prototype.makeToggleBtn = function(classInactive, classActive) {
+ZBX_NotificationCollection.prototype.makeToggleBtn = function(attrsInactive, attrsActive) {
 	var button = document.createElement('button');
 	button.renderState = function(isActive) {
-		this.className = isActive ? classActive : classInactive;
+		var attrs = isActive ? attrsActive : attrsInactive;
+		for (var attrName in attrs) {
+			this.setAttribute(attrName, attrs[attrName]);
+		}
 	}
 	return button;
 }

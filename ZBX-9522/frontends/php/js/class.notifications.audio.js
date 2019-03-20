@@ -179,7 +179,7 @@ ZBX_NotificationsAudio.prototype.getTimeout = function() {
 }
 
 /**
- * This handler will be invoked once audio file has successfully per-loaded.
+ * This handler will be invoked once audio file has successfully pre-loaded.
  * We attempt to auto play and see if we have policy error.
  */
 ZBX_NotificationsAudio.prototype.handleOnloadeddata = function() {

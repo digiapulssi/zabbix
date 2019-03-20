@@ -21,8 +21,7 @@
 ZBX_LocalStorage.defines = {
 	EVT_WRITE: 0,
 	EVT_CHANGE: 1,
-	EVT_MAP: 2,
-	ANY_KEY: '*'
+	EVT_MAP: 2
 }
 
 /**
@@ -115,9 +114,6 @@ ZBX_LocalStorage.prototype.ensureKey = function(key) {
 	if (typeof key !== 'string') {
 		throw 'Key must be a string, ' + (typeof key) + ' given instead.';
 	}
-	else if (key == ZBX_LocalStorage.defines.ANY_KEY) {
-		throw 'This key is reserved and cannot be used: ' + key;
-	}
 
 	if (!this.hasKey(key)) {
 		throw 'Unknown localStorage key access at "'+key+'"';
@@ -200,7 +196,7 @@ ZBX_LocalStorage.prototype.unwrap = function(value) {
  */
 ZBX_LocalStorage.prototype.truncate = function() {
 	localStorage.clear();
-	for (key in this.keys) {
+	for (var key in this.keys) {
 		this.writeKey(key, this.keys[key]);
 	}
 	console.warn('Zabbix local storage has been truncated.');

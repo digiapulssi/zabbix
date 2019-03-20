@@ -17,6 +17,10 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
+/**
+ * Amount of seconds for keep-alive interval.
+ */
+ZBX_BrowserTab.keepAliveInterval = 30;
 
 /**
  * This object is representing a browser tab. Implements singleton pattern.
@@ -38,7 +42,6 @@ function ZBX_BrowserTab(store) {
 	this.uid = (Math.random() % 9e6).toString(36).substr(2);
 	this.focused = false;
 	this.store = store;
-	this.keepAliveInterval = 30000; // 30 seconds
 
 	this.onFocusCbs = [];
 	this.onBlurCbs = [];
@@ -60,17 +63,20 @@ ZBX_BrowserTab.prototype.getAllTabIds = function() {
  * Looks for crashed tabs.
  */
 ZBX_BrowserTab.prototype.checkAlive = function() {
-	var now = Math.floor(+new Date / 1000) - 60;
+	var since = Math.floor(+new Date / 1000) - (ZBX_BrowserTab.keepAliveInterval - 1) * 2;
 	var tabs = this.store.readKey('tabs.lastseen');
 
 	for (var tabId in tabs) {
-		if (tabs[tabId] < now) {
+		if (tabs[tabId] < since) {
 			this.handleCrashed(tabId);
 		}
 	}
 }
 
 /**
+ * A focus event on current tab is spoofed, if this tab recovered a crashed tab,
+ * that previously was the last focused one.
+ *
  * @param {string} tabId  The crashed tab id.
  */
 ZBX_BrowserTab.prototype.handleCrashed = function(tabId) {
@@ -79,7 +85,6 @@ ZBX_BrowserTab.prototype.handleCrashed = function(tabId) {
 	}.bind(this));
 
 	if (this.store.readKey('tabs.lastfocused') == tabId) {
-		this.store.writeKey('tabs.lastfocused', this.uid);
 		console.info('Recovered a crashed tab '+tabId+'. Now tab ' + this.uid + ' is polling for notifications.');
 		this.handleFocus();
 	}
@@ -110,7 +115,7 @@ ZBX_BrowserTab.prototype.onUnload = function(callback) {
  * Rewrite focused tab id.
  */
 ZBX_BrowserTab.prototype.handleBlur = function() {
-	this.onBlurCbs.forEach(function(c) {c(this)});
+	this.onBlurCbs.forEach(function(c) {c(this)}.bind(this));
 	this.store.writeKey('tabs.lastblured', this.uid);
 }
 
@@ -156,7 +161,7 @@ ZBX_BrowserTab.prototype.isFocused = function() {
  * @return {bool}
  */
 ZBX_BrowserTab.prototype.isSingleSession = function() {
-	return this.getAllTabIds().length < 2;
+	return this.getAllTabIds().length == 1;
 }
 
 /**
@@ -182,7 +187,7 @@ ZBX_BrowserTab.prototype.register = function() {
 	setInterval(function() {
 		this.keepAlive();
 		this.checkAlive();
-	}.bind(this), this.keepAliveInterval);
+	}.bind(this), ZBX_BrowserTab.keepAliveInterval * 1000);
 
 	window.addEventListener('beforeunload', this.handleBeforeUnload.bind(this));
 	window.addEventListener('focus', this.handleFocus.bind(this));
