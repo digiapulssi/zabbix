@@ -347,7 +347,7 @@ foreach (@server_keys)
 
 #	my $dns_udp_rtt_high_history = get_history_by_itemid(CONFIGVALUE_DNS_UDP_RTT_HIGH_ITEMID, $from, $till);
 
-	my $all_probes_ref = get_probes();
+	my $all_probes_ref;
 
 	if (opt('probe'))
 	{
@@ -365,9 +365,11 @@ foreach (@server_keys)
 			fail($msg);
 		}
 
-		$all_probes_ref = {
-			$probe	=> $all_probes_ref->{$probe}
-		};
+		$all_probes_ref = get_probes(undef, $probe);
+	}
+	else
+	{
+		$all_probes_ref = get_probes();
 	}
 
 	my $probe_times_ref = get_probe_times($from, $till, $all_probes_ref);
