@@ -369,13 +369,11 @@ class CSlaReport
 			}
 			if (!is_float($tld["dns"]["rttUDP"]))
 			{
-				// TODO: uncomment
-				//throw new Exception("\$data[{$hostid}]['dns']['rttUDP'] is not float");
+				throw new Exception("\$data[{$hostid}]['dns']['rttUDP'] is not float");
 			}
 			if (!is_float($tld["dns"]["rttTCP"]))
 			{
-				// TODO: uncomment
-				//throw new Exception("\$data[{$hostid}]['dns']['rttTCP'] is not float");
+				throw new Exception("\$data[{$hostid}]['dns']['rttTCP'] is not float");
 			}
 			if (!is_bool($tld["rdds"]["enabled"]))
 			{
@@ -389,8 +387,7 @@ class CSlaReport
 				}
 				if (!is_float($tld["rdds"]["rtt"]))
 				{
-					// TODO: uncomment
-					//throw new Exception("\$data[{$hostid}]['rdds']['rtt'] is not float");
+					throw new Exception("\$data[{$hostid}]['rdds']['rtt'] is not float");
 				}
 			}
 			else
