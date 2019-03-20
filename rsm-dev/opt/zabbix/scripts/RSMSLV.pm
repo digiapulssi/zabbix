@@ -3485,7 +3485,7 @@ sub get_slv_rtt_cycle_stats($$$$)
 			" where itemid in ($tld_itemids_str) and clock between $cycle_start and $cycle_end");
 
 	return {
-		'expected'   => scalar(@{$tld_itemids}),        # number of expected tests, based on number of items and cycles and whatnots
+		'expected'   => scalar(@{$tld_itemids}),        # number of expected tests, based on number of items and number of probes
 		'total'      => $rows->[0][0],                  # number of received values, including errors
 		'performed'  => $rows->[0][1] + $rows->[0][2],  # number of received values, excluding errors (timeout errors are valid values)
 		'failed'     => $rows->[0][1],                  # number of failed tests - timeout errors and successful queries over the time limit
