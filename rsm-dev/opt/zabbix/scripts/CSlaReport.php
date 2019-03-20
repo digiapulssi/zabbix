@@ -617,40 +617,6 @@ class CSlaReport
 		return $rows;
 	}
 
-	private static function dbSelectCol($sql, $input_parameters = NULL)
-	{
-		$rows = self::dbSelect($sql, $input_parameters);
-		if (count($rows) > 0 && count($rows[0]) > 1)
-		{
-			throw new Exception("Query returned more than one column");
-		}
-		return array_map("current", $rows);
-	}
-
-	private static function dbSelectRow($sql, $input_parameters = NULL)
-	{
-		$rows = self::dbSelect($sql, $input_parameters);
-		if (count($rows) === 0)
-		{
-			throw new Exception("Query did not return any row");
-		}
-		if (count($rows) > 1)
-		{
-			throw new Exception("Query returned more than one row");
-		}
-		return $rows[0];
-	}
-
-	private static function dbSelectValue($sql, $input_parameters = NULL)
-	{
-		$cols = self::dbSelectRow($sql, $input_parameters);
-		if (count($cols) > 1)
-		{
-			throw new Exception("Query returned more than one value");
-		}
-		return $cols[0];
-	}
-
 	private static function dbConnect($server_id)
 	{
 		self::$sql_count = 0;
