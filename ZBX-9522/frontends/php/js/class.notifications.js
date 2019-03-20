@@ -240,7 +240,7 @@ ZBX_Notifications.prototype.onTabUnload = function(tab) {
  * @param {string} tabId.
  */
 ZBX_Notifications.prototype.onTabFocusChanged = function(tabId) {
-	var activeBlured = this.doPollServer && this.tab.uid != tabId;
+	var activeBlured = (this.doPollServer && this.tab.uid != tabId);
 
 	if (activeBlured) {
 		this.store.writeKey('notifications.alarm.seek', this.player.getSeek());
@@ -248,7 +248,7 @@ ZBX_Notifications.prototype.onTabFocusChanged = function(tabId) {
 		this.player.stop();
 	}
 
-	this.doPollServer = this.tab.uid == tabId;
+	this.doPollServer = (this.tab.uid === tabId);
 }
 
 /**
@@ -282,10 +282,10 @@ ZBX_Notifications.prototype.writeAlarm = function(notif, opts) {
 		this.store.resetKey('notifications.alarm.seek');
 	}
 
-	if (opts.timeout === -1) { // Play in loop till end of notification timeout.
+	if (opts.timeout == -1) { // Play in loop till end of notification timeout.
 		this.store.writeKey('notifications.alarm.timeout', notif.ttl);
 	}
-	else if (opts.timeout === 1) { // Play once till end of audio file.
+	else if (opts.timeout == 1) { // Play once till end of audio file.
 		this.store.writeKey('notifications.alarm.timeout', -1);
 	}
 	else { // Play in loop till end of arbitrary timeout.
