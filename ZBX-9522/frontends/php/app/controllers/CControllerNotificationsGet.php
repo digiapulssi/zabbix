@@ -22,15 +22,11 @@
 class CControllerNotificationsGet extends CController {
 
 	protected function checkInput() {
-		$fields = [];
-
-		$ret = $this->validateInput($fields);
-
-		return $ret;
+		return true;
 	}
 
 	protected function checkPermissions() {
-		return ($this->getUserType() >= USER_TYPE_ZABBIX_USER);
+		return (!CWebUser::isGuest() && $this->getUserType() >= USER_TYPE_ZABBIX_USER);
 	}
 
 	protected function doAction() {

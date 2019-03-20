@@ -23,21 +23,21 @@ class CControllerNotificationsMute extends CController {
 
 	protected function checkInput() {
 		$fields = [
-			'mute' => 'required|int32|in 0,1'
+			'mute' => 'required|in 0,1'
 		];
 
 		$ret = $this->validateInput($fields);
 
 		if (!$ret) {
-			http_response_code(400);
-			$this->setResponse(new CControllerResponseData(['main_block' => 'Incorrect request.']));
+			$data = json_encode(['error' => _('Invalid request.')]);
+			$this->setResponse(new CControllerResponseData(['main_block' => $data]));
 		}
 
 		return $ret;
 	}
 
 	protected function checkPermissions() {
-		return ($this->getUserType() >= USER_TYPE_ZABBIX_USER);
+		return (!CWebUser::isGuest() && $this->getUserType() >= USER_TYPE_ZABBIX_USER);
 	}
 
 	protected function doAction() {

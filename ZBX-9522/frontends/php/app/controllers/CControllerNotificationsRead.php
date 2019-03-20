@@ -29,15 +29,15 @@ class CControllerNotificationsRead extends CController {
 		$ret = $this->validateInput($fields);
 
 		if (!$ret) {
-			http_response_code(400);
-			$this->setResponse(new CControllerResponseData(['main_block' => 'Incorrect request.']));
+			$data = json_encode(['error' => _('Invalid request.')]);
+			$this->setResponse(new CControllerResponseData(['main_block' => $data]));
 		}
 
 		return $ret;
 	}
 
 	protected function checkPermissions() {
-		return ($this->getUserType() >= USER_TYPE_ZABBIX_USER);
+		return (!CWebUser::isGuest() && $this->getUserType() >= USER_TYPE_ZABBIX_USER);
 	}
 
 	protected function doAction() {
@@ -56,9 +56,8 @@ class CControllerNotificationsRead extends CController {
 		$msgsettings['last.clock'] = $last_event['clock'] + 1;
 		updateMessageSettings($msgsettings);
 
-		$this->setResponse(new CControllerResponseData(['main_block' => json_encode([
-			'ids' => array_keys($events)
-		])]));
+		$data = json_encode(['ids' => array_keys($events)]);
+		$this->setResponse(new CControllerResponseData(['main_block' => $data]));
 	}
 }
 
