@@ -528,10 +528,9 @@ sub get_probes
 	$name_cond = " and h.host='$name'" if ($name);
 
 	my $rows_ref = db_select(
-		"select h.host,h.hostid".
+		"select h.host,h.hostid,h.status".
 		" from hosts h, hosts_groups hg".
 		" where h.hostid=hg.hostid".
-			" and h.status=0".
 			$name_cond.
 			" and hg.groupid=".PROBES_GROUPID);
 
@@ -541,6 +540,7 @@ sub get_probes
 	{
 		my $host = $row_ref->[0];
 		my $hostid = $row_ref->[1];
+		my $status = $row_ref->[2];
 
 		if ($service ne 'DNS')
 		{
@@ -554,7 +554,7 @@ sub get_probes
 			next if (scalar(@$rows_ref) != 0 and $rows_ref->[0]->[0] == 0);
 		}
 
-		$result->{$host} = $hostid;
+		$result->{$host} = {'hostid' => $hostid, 'status' => $status};
 	}
 
 	return $result;
@@ -1338,18 +1338,26 @@ sub __print_probe_times
 #   ...
 # }
 #
-# NB! If a probe was down for the whole specified period it won't be in a hash.
+# NB! If a probe was down for the whole specified period or is currently disabled it won't be in a hash.
 sub get_probe_times($$$)
 {
 	my $from = shift;
 	my $till = shift;
-	my $probes_ref = shift; # { host => hostid, ... }
+	my $probes_ref = shift;	# {host => {'hostid' => hostid, 'status' => status}, ...}
 
 	my $result = {};
 
 	return $result if (scalar(keys(%{$probes_ref})) == 0);
 
-	my @probes = map {"'$_ - mon'"} (keys(%{$probes_ref}));
+	my @probes;
+	foreach my $probe (keys(%{$probes_ref}))
+	{
+		next unless ($probes_ref->{$probe}->{'status'} == HOST_STATUS_MONITORED);
+
+		push(@probes, "'$probe - mon'");
+	}
+
+	return $result if (scalar(@probes) == 0);
 
 	my $items_ref = db_select(
 		"select i.itemid,h.host".
