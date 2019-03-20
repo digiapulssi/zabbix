@@ -203,7 +203,7 @@ if (defined($OPTS{'set-type'})) {
 #### Manage NS + IP server pairs ####
 if (defined($OPTS{'get-nsservers-list'}))
 {
-	# all fiels in a CSV must be double-quoted, even if empty
+	# all fields in a CSV must be double-quoted, even if empty
 	my $csv = Text::CSV_XS->new({binary => 1, auto_diag => 1, always_quote => 1, eol => "\n"});
 
 	my @tlds = ($OPTS{'tld'} // get_tld_list());
@@ -250,7 +250,7 @@ if (defined($OPTS{'list-services'}))
 
 	my @rows = ();
 
-	# all fiels in a CSV must be double-quoted, even if empty
+	# all fields in a CSV must be double-quoted, even if empty
 	my $csv = Text::CSV_XS->new({binary => 1, auto_diag => 1, always_quote => 1, eol => "\n"});
 
 	foreach my $tld (sort(@tlds))
@@ -1137,8 +1137,8 @@ sub create_dependent_trigger_chain($$$$)
 
 	foreach my $k (sort keys %{$thresholds_ref})
 	{
-		my $threshold = $trigger_thresholds->{$k}->{'threshold'};
-		my $priority = $trigger_thresholds->{$k}->{'priority'};
+		my $threshold = $thresholds_ref->{$k}->{'threshold'};
+		my $priority = $thresholds_ref->{$k}->{'priority'};
 		next if ($threshold eq 0);
 
 		my $result = &$fun($service, $host_name, $threshold, $priority, \$created);
@@ -1165,7 +1165,7 @@ sub create_slv_items($$$)
 	create_slv_item('DNS availability', 'rsm.slv.dns.avail', $hostid, VALUE_TYPE_AVAIL, [get_application_id(APP_SLV_PARTTEST, $hostid)]);
 	create_slv_item('DNS minutes of downtime', 'rsm.slv.dns.downtime', $hostid, VALUE_TYPE_NUM, [get_application_id(APP_SLV_CURMON, $hostid)]);
 	create_slv_item('DNS weekly unavailability', 'rsm.slv.dns.rollweek', $hostid, VALUE_TYPE_PERC, [get_application_id(APP_SLV_ROLLWEEK, $hostid)]);
-	
+
 	create_avail_trigger('DNS', $host_name);
 	create_dns_downtime_trigger($host_name, 5);
 	create_dependent_trigger_chain($host_name, 'DNS', \&create_rollweek_trigger, $trigger_thresholds);
@@ -1198,6 +1198,25 @@ sub create_slv_items($$$)
 
 		create_avail_trigger('EPP', $host_name);
 # 		create_dependent_trigger_chain($host_name, 'EPP', \&create_downtime_trigger, $trigger_thresholds);
+	}
+
+	create_slv_item('Number of performed monthly DNS UDP tests', 'rsm.slv.dns.udp.rtt.performed', $hostid, VALUE_TYPE_NUM , [get_application_id(APP_SLV_CURMON, $hostid)]);
+	create_slv_item('Number of failed monthly DNS UDP tests'   , 'rsm.slv.dns.udp.rtt.failed'   , $hostid, VALUE_TYPE_NUM , [get_application_id(APP_SLV_CURMON, $hostid)]);
+	create_slv_item('Ratio of failed monthly DNS UDP tests'    , 'rsm.slv.dns.udp.rtt.pfailed'  , $hostid, VALUE_TYPE_PERC, [get_application_id(APP_SLV_CURMON, $hostid)]);
+	create_slv_item('Number of performed monthly DNS TCP tests', 'rsm.slv.dns.tcp.rtt.performed', $hostid, VALUE_TYPE_NUM , [get_application_id(APP_SLV_CURMON, $hostid)]);
+	create_slv_item('Number of failed monthly DNS TCP tests'   , 'rsm.slv.dns.tcp.rtt.failed'   , $hostid, VALUE_TYPE_NUM , [get_application_id(APP_SLV_CURMON, $hostid)]);
+	create_slv_item('Ratio of failed monthly DNS TCP tests'    , 'rsm.slv.dns.tcp.rtt.pfailed'  , $hostid, VALUE_TYPE_PERC, [get_application_id(APP_SLV_CURMON, $hostid)]);
+
+	create_dependent_trigger_chain($host_name, 'DNS UDP', \&create_ratio_of_failed_tests_trigger, $trigger_thresholds);
+	create_dependent_trigger_chain($host_name, 'DNS TCP', \&create_ratio_of_failed_tests_trigger, $trigger_thresholds);
+
+	if (defined($OPTS{'rdds43-servers'}) || defined($OPTS{'rdds80-servers'}) || defined($OPTS{'rdap-base-url'}))
+	{
+		create_slv_item('Number of performed monthly RDDS queries', 'rsm.slv.rdds.rtt.performed', $hostid, VALUE_TYPE_NUM , [get_application_id(APP_SLV_CURMON, $hostid)]);
+		create_slv_item('Number of failed monthly RDDS queries'   , 'rsm.slv.rdds.rtt.failed'   , $hostid, VALUE_TYPE_NUM , [get_application_id(APP_SLV_CURMON, $hostid)]);
+		create_slv_item('Ratio of failed monthly RDDS queries  '  , 'rsm.slv.rdds.rtt.pfailed'  , $hostid, VALUE_TYPE_PERC, [get_application_id(APP_SLV_CURMON, $hostid)]);
+
+		create_dependent_trigger_chain($host_name, 'RDDS', \&create_ratio_of_failed_tests_trigger, $trigger_thresholds);
 	}
 }
 
@@ -1863,7 +1882,7 @@ sub create_avail_trigger($$)
 	really(create_trigger($options, $host_name));
 }
 
- sub create_dns_downtime_trigger($$)
+sub create_dns_downtime_trigger($$)
 {
 	my $host_name = shift;
 	my $priority = shift;
@@ -1912,10 +1931,62 @@ sub create_rollweek_trigger($$$$$)
 
 	my $service_lc = lc($service);
 
-        my $options =
+	my $options =
 	{
 		'description' => $service.' rolling week is over '.$threshold.'%',
 		'expression' => '{'.$host_name.':rsm.slv.'.$service_lc.'.rollweek.last(0)}>='.$threshold,
+		'priority' => $priority
+	};
+
+	really(create_trigger($options, $host_name, $created_ref));
+}
+
+sub create_ratio_of_failed_tests_trigger($$$$$)
+{
+	my $service = shift;
+	my $host_name = shift;
+	my $threshold = shift;
+	my $priority = shift;
+	my $created_ref = shift;
+
+	my $item_key;
+	my $macro;
+
+	if ($service eq 'DNS UDP')
+	{
+		$item_key = 'rsm.slv.dns.udp.rtt.pfailed';
+		$macro = '{$RSM.SLV.DNS.UDP.RTT}';
+	}
+	elsif ($service eq 'DNS TCP')
+	{
+		$item_key = 'rsm.slv.dns.tcp.rtt.pfailed';
+		$macro = '{$RSM.SLV.DNS.TCP.RTT}';
+	}
+	elsif ($service eq 'RDDS')
+	{
+		$item_key = 'rsm.slv.rdds.rtt.pfailed';
+		$macro = '{$RSM.SLV.RDDS.RTT}';
+	}
+	else
+	{
+		fail("Unknown service '$service'");
+	}
+
+	my $expression;
+
+	if ($threshold == 100)
+	{
+		$expression = "{$host_name:$item_key.last()}>$macro"
+	}
+	else
+	{
+		my $threshold_perc = $threshold / 100;
+		$expression = "{$host_name:$item_key.last()}>$macro*$threshold_perc"
+	}
+
+	my $options = {
+		'description' => "Ratio of failed $service tests exceeded $threshold% of allowed \$1%",
+		'expression' => $expression,
 		'priority' => $priority
 	};
 

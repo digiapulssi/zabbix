@@ -3383,12 +3383,12 @@ static int	DBpatch_3000305(void)
 	return SUCCEED;
 }
 
-static int	create_rdds_downtime_trigger(const char *hostid, const char *percent, const char *coeff,
+static int	create_rdds_downtime_trigger(const char *hostid, const char *percent, const char *coefficient,
 		const char *priority, zbx_uint64_t *triggerid)
 {
 	DB_RESULT	result;
 	DB_ROW		row;
-	zbx_uint64_t	functionid, itemid;
+	zbx_uint64_t	functionid;
 	const char	*itemkey = "rsm.slv.rdds.downtime";
 
 	*triggerid = DBget_maxid("triggers");
@@ -3400,7 +3400,7 @@ static int	create_rdds_downtime_trigger(const char *hostid, const char *percent,
 			"values (" ZBX_FS_UI64 ", '{" ZBX_FS_UI64 "}>={$RSM.SLV.RDDS.DOWNTIME}%s',"
 				"'RDDS service was unavailable for %s of allowed $1',"
 				"'', '0', '%s', '', NULL, '0', '0')",
-			*triggerid, functionid, coeff, percent, priority))
+			*triggerid, functionid, coefficient, percent, priority))
 	{
 		return FAIL;
 	}
@@ -3439,22 +3439,27 @@ static int	create_trigger_dependency(zbx_uint64_t triggerid, zbx_uint64_t depend
 	return SUCCEED;
 }
 
+/* percent, coefficient, priority */
+const char	*trigger_params[][3] = {
+	{"10%",		"*0.1",		"2"},
+	{"25%",		"*0.25",	"3"},
+	{"50%",		"*0.5",		"3"},
+	{"75%",		"*0.75",	"4"},
+	{"100%",	"",		"5"}
+};
+
 static int	create_dependent_rdds_trigger_chain(const char *hostid)
 {
 	zbx_uint64_t	triggerid = 0, dependid = 0;
 	int		i;
-	const char	*strs[15] = {
-		/* percent, coeff, priority */
-		"10%",		"*0.1",		"2",
-		"25%",		"*0.25",	"3",
-		"50%",		"*0.5",		"3",
-		"75%",		"*0.75",	"4",
-		"100%",		"",		"5"
-	};
 
-	for (i = 0; i < 15; i += 3)
+	for (i = 0; i < sizeof(trigger_params) / sizeof(*trigger_params); i++)
 	{
-		if (SUCCEED != create_rdds_downtime_trigger(hostid, strs[i], strs[i + 1], strs[i + 2], &triggerid))
+		const char	*percent     = trigger_params[i][0];
+		const char	*coefficient = trigger_params[i][1];
+		const char	*priority    = trigger_params[i][2];
+
+		if (SUCCEED != create_rdds_downtime_trigger(hostid, percent, coefficient, priority, &triggerid))
 			return FAIL;
 
 		if (0 != triggerid && 0 != dependid)
@@ -3663,6 +3668,282 @@ static int	DBpatch_3000307(void)
 	return SUCCEED;
 }
 
+static int	create_slv_rtt_item(zbx_uint64_t hostid, zbx_uint64_t itemid, int item_type, int item_value_type,
+		const char *item_name, const char *item_key, const char *item_units, zbx_uint64_t itemappid,
+		zbx_uint64_t applicationid)
+{
+	if (ZBX_DB_OK > DBexecute(
+			"insert into items (itemid,type,snmp_community,snmp_oid,hostid,name,key_,delay,history,trends,"
+				"status,value_type,trapper_hosts,units,multiplier,delta,"
+				"snmpv3_securityname,snmpv3_securitylevel,snmpv3_authpassphrase,snmpv3_privpassphrase,"
+				"formula,logtimefmt,templateid,valuemapid,delay_flex,params,ipmi_sensor,data_type,"
+				"authtype,username,password,publickey,privatekey,flags,interfaceid,port,description,"
+				"inventory_link,lifetime,snmpv3_authprotocol,snmpv3_privprotocol,snmpv3_contextname,evaltype)"
+			" values (" ZBX_FS_UI64 ",%d,'',''," ZBX_FS_UI64 ",'%s','%s','60','90','365',"
+				"'0',%d,'','%s','0','1',"
+				"'','0','','',"
+				"'1','',NULL,NULL,'','','','0',"
+				"'0','','','','','0',NULL,'','',"
+				"'0','30','0','0','','0')",
+			itemid, item_type, hostid, item_name, item_key, item_value_type, item_units))
+	{
+		return FAIL;
+	}
+
+	if (ZBX_DB_OK > DBexecute(
+			"insert into items_applications (itemappid,applicationid,itemid) values (" ZBX_FS_UI64 ","
+			ZBX_FS_UI64 "," ZBX_FS_UI64 ")", itemappid, applicationid, itemid))
+	{
+		return FAIL;
+	}
+
+	return SUCCEED;
+}
+
+static int	create_ratio_of_failed_tests_triggers(zbx_uint64_t itemid, const char *service, const char *macro)
+{
+	size_t		i;
+	zbx_uint64_t	prev_triggerid = 0;
+
+	for (i = 0; i < sizeof(trigger_params) / sizeof(*trigger_params); i++)
+	{
+		const char	*percent     = trigger_params[i][0];
+		const char	*coefficient = trigger_params[i][1];
+		const char	*priority    = trigger_params[i][2];
+
+		zbx_uint64_t	functionid = DBget_maxid_num("functions", 1);
+		zbx_uint64_t	triggerid  = DBget_maxid_num("triggers", 1);
+
+		if (ZBX_DB_OK > DBexecute("insert into triggers (triggerid,expression,description,url,status,value,"
+				"priority,lastchange,comments,error,templateid,type,state,flags) values"
+				" (" ZBX_FS_UI64 ",'{" ZBX_FS_UI64 "}>%s%s',"
+				"'Ratio of failed %s tests exceeded %s of allowed $1%%','',0,0,%s,0,'','',NULL,0,0,0)",
+				triggerid, functionid, macro, coefficient, service, percent, priority))
+		{
+			return FAIL;
+		}
+
+		if (ZBX_DB_OK > DBexecute("insert into functions (functionid,itemid,triggerid,function,parameter) "
+				" values (" ZBX_FS_UI64 "," ZBX_FS_UI64 "," ZBX_FS_UI64 ",'last','')",
+				functionid, itemid, triggerid))
+		{
+			return FAIL;
+		}
+
+		if (0 != prev_triggerid)
+		{
+			if (SUCCEED != create_trigger_dependency(triggerid, prev_triggerid))
+			{
+				return FAIL;
+			}
+		}
+
+		prev_triggerid = triggerid;
+	}
+
+	return SUCCEED;
+}
+
+static int	DBpatch_3000308(void)
+{
+	int		ret = FAIL;
+	DB_RESULT	hosts_result;
+	DB_ROW		hosts_row;
+
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	/* get hostid of all hosts that have status = HOST_STATUS_MONITORED and are in "TLDs" group */
+	hosts_result = DBselect(
+			"select h.hostid"
+			" from hosts h,hosts_groups hg"
+			" where h.status=0 and hg.hostid=h.hostid and hg.groupid=140");
+
+	while (NULL != (hosts_row = DBfetch(hosts_result)))
+	{
+		DB_RESULT	result;
+		DB_ROW		row;
+		zbx_uint64_t	hostid;		/* ID of current host */
+		zbx_uint64_t	applicationid;	/* ID of "SLV current month" application on current host */
+		zbx_uint64_t	next_itemid;	/* ID of next row in items table */
+		zbx_uint64_t	next_itemappid;	/* ID of next row in items_applications table */
+		zbx_uint64_t	itemid_udp_performed;
+		zbx_uint64_t	itemid_udp_failed;
+		zbx_uint64_t	itemid_udp_pfailed;
+		zbx_uint64_t	itemid_tcp_performed;
+		zbx_uint64_t	itemid_tcp_failed;
+		zbx_uint64_t	itemid_tcp_pfailed;
+
+		ZBX_STR2UINT64(hostid, hosts_row[0]);
+
+		/* get ID of "SLV current month" application on current host */
+
+		result = DBselect("select applicationid from applications where hostid=" ZBX_FS_UI64 " and"
+				" name='SLV current month'", hostid);
+
+		if (NULL == (row = DBfetch(result)))
+		{
+			DBfree_result(result);
+			goto out;
+		}
+
+		ZBX_STR2UINT64(applicationid, row[0]);
+
+		DBfree_result(result);
+
+		/* reserve 6 IDs in "items" and "items_applications" tables */
+
+		next_itemid = DBget_maxid_num("items", 6);
+		next_itemappid = DBget_maxid_num("items_applications", 6);
+
+		itemid_udp_performed = next_itemid++;
+		itemid_udp_failed    = next_itemid++;
+		itemid_udp_pfailed   = next_itemid++;
+		itemid_tcp_performed = next_itemid++;
+		itemid_tcp_failed    = next_itemid++;
+		itemid_tcp_pfailed   = next_itemid++;
+
+		/* create items and link them to "SLV current month" application */
+
+		if (SUCCEED != create_slv_rtt_item(hostid, itemid_udp_performed, 2, 3, "Number of performed monthly DNS UDP tests",
+				"rsm.slv.dns.udp.rtt.performed", "", next_itemappid++, applicationid))
+		{
+			goto out;
+		}
+		if (SUCCEED != create_slv_rtt_item(hostid, itemid_udp_failed, 2, 3, "Number of failed monthly DNS UDP tests",
+				"rsm.slv.dns.udp.rtt.failed", "", next_itemappid++, applicationid))
+		{
+			goto out;
+		}
+		if (SUCCEED != create_slv_rtt_item(hostid, itemid_udp_pfailed, 2, 0, "Ratio of failed monthly DNS UDP tests",
+				"rsm.slv.dns.udp.rtt.pfailed", "%", next_itemappid++, applicationid))
+		{
+			goto out;
+		}
+		if (SUCCEED != create_slv_rtt_item(hostid, itemid_tcp_performed, 2, 3, "Number of performed monthly DNS TCP tests",
+				"rsm.slv.dns.tcp.rtt.performed", "", next_itemappid++, applicationid))
+		{
+			goto out;
+		}
+		if (SUCCEED != create_slv_rtt_item(hostid, itemid_tcp_failed, 2, 3, "Number of failed monthly DNS TCP tests",
+				"rsm.slv.dns.tcp.rtt.failed", "", next_itemappid++, applicationid))
+		{
+			goto out;
+		}
+		if (SUCCEED != create_slv_rtt_item(hostid, itemid_tcp_pfailed, 2, 0, "Ratio of failed monthly DNS TCP tests",
+				"rsm.slv.dns.tcp.rtt.pfailed", "%", next_itemappid++, applicationid))
+		{
+			goto out;
+		}
+
+		if (SUCCEED != create_ratio_of_failed_tests_triggers(itemid_udp_pfailed, "DNS UDP", "{$RSM.SLV.DNS.UDP.RTT}"))
+		{
+			goto out;
+		}
+		if (SUCCEED != create_ratio_of_failed_tests_triggers(itemid_tcp_pfailed, "DNS TCP", "{$RSM.SLV.DNS.TCP.RTT}"))
+		{
+			goto out;
+		}
+	}
+
+	ret = SUCCEED;
+out:
+	DBfree_result(hosts_result);
+
+	return ret;
+}
+
+static int	DBpatch_3000309(void)
+{
+	int		ret = FAIL;
+	DB_RESULT	hosts_result;
+	DB_ROW		hosts_row;
+
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	/* get hostid of all hosts that have status = HOST_STATUS_MONITORED,*/
+	/* are in "TLDs" group and have either RDDS or RDAP enabled */
+	hosts_result = DBselect(
+			"select distinct hosts.hostid"
+			" from hosts"
+				" left join hosts_groups on hosts_groups.hostid=hosts.hostid"
+				" left join hosts as templates on templates.host=concat('Template ',hosts.host)"
+				" left join hostmacro on hostmacro.hostid=templates.hostid"
+			" where hosts.status=0 and"
+				" hosts_groups.groupid=140 and"
+				" hostmacro.macro in ('{$RSM.TLD.RDDS.ENABLED}','{$RDAP.TLD.ENABLED}') and"
+				" hostmacro.value='1'");
+
+	while (NULL != (hosts_row = DBfetch(hosts_result)))
+	{
+		DB_RESULT	result;
+		DB_ROW		row;
+		zbx_uint64_t	hostid;		/* ID of current host */
+		zbx_uint64_t	applicationid;	/* ID of "SLV current month" application on current host */
+		zbx_uint64_t	next_itemid;	/* ID of next row in items table */
+		zbx_uint64_t	next_itemappid;	/* ID of next row in items_applications table */
+		zbx_uint64_t	itemid_performed;
+		zbx_uint64_t	itemid_failed;
+		zbx_uint64_t	itemid_pfailed;
+
+		ZBX_STR2UINT64(hostid, hosts_row[0]);
+
+		/* get ID of "SLV current month" application on current host */
+
+		result = DBselect("select applicationid from applications where hostid=" ZBX_FS_UI64 " and"
+				" name='SLV current month'", hostid);
+
+		if (NULL == (row = DBfetch(result)))
+		{
+			DBfree_result(result);
+			goto out;
+		}
+
+		ZBX_STR2UINT64(applicationid, row[0]);
+
+		DBfree_result(result);
+
+		/* reserve 3 IDs in "items" and "items_applications" tables */
+
+		next_itemid = DBget_maxid_num("items", 3);
+		next_itemappid = DBget_maxid_num("items_applications", 3);
+
+		itemid_performed = next_itemid++;
+		itemid_failed    = next_itemid++;
+		itemid_pfailed   = next_itemid++;
+
+		/* create items and link them to "SLV current month" application */
+
+		if (SUCCEED != create_slv_rtt_item(hostid, itemid_performed, 2, 3, "Number of performed monthly RDDS queries",
+				"rsm.slv.rdds.rtt.performed", "", next_itemappid++, applicationid))
+		{
+			goto out;
+		}
+		if (SUCCEED != create_slv_rtt_item(hostid, itemid_failed, 2, 3, "Number of failed monthly RDDS queries",
+				"rsm.slv.rdds.rtt.failed", "", next_itemappid++, applicationid))
+		{
+			goto out;
+		}
+		if (SUCCEED != create_slv_rtt_item(hostid, itemid_pfailed, 2, 0, "Ratio of failed monthly RDDS queries",
+				"rsm.slv.rdds.rtt.pfailed", "%", next_itemappid++, applicationid))
+		{
+			goto out;
+		}
+
+		if (SUCCEED != create_ratio_of_failed_tests_triggers(itemid_pfailed, "RDDS", "{$RSM.SLV.RDDS.RTT}"))
+		{
+			goto out;
+		}
+	}
+
+	ret = SUCCEED;
+out:
+	DBfree_result(hosts_result);
+
+	return ret;
+}
+
 #endif
 
 DBPATCH_START(3000)
@@ -3756,5 +4037,7 @@ DBPATCH_ADD(3000304, 0, 0)	/* update and add new RSM.SLV.* macros */
 DBPATCH_ADD(3000305, 0, 0)	/* add DNS downtime trigger to existing tld hosts */
 DBPATCH_ADD(3000306, 0, 0)	/* add RDDS downtime triggers to existing tld hosts */
 DBPATCH_ADD(3000307, 0, 0)	/* add rsm.slv.dns.ns.downtime to tld hosts */
+DBPATCH_ADD(3000308, 0, 0)	/* add "DNS Resolution RTT (performed/failed/pfailed)" items to existing tld hosts */
+DBPATCH_ADD(3000309, 0, 0)	/* add "RDDS Resolution RTT (performed/failed/pfailed)" items to existing tld hosts */
 
 DBPATCH_END()
