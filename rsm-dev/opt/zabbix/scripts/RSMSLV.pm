@@ -3633,6 +3633,7 @@ sub update_slv_rtt_monthly_stats($$$$$$$$)
 
 	init_values();
 
+	TLD_LOOP:
 	foreach my $tld (keys(%{$slv_items}))
 	{
 		my $last_clock           = $slv_items->{$tld}{$slv_item_key_performed}[0];
@@ -3675,7 +3676,7 @@ sub update_slv_rtt_monthly_stats($$$$$$$$)
 				{
 					dbg("stopping updatig TLD '$tld' because of missing data, cycle from $cycle_start till $cycle_end");
 				}
-				last;
+				last TLD_LOOP;
 			}
 
 			$cycles_till_end_of_month--;
