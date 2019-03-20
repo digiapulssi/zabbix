@@ -211,7 +211,6 @@ ZBX_Notifications.prototype.onSnoozeChange = function(bool) {
 	this.onNotificationsList(listObj);
 }
 
-
 /**
  * Sets mute state, either muted on not.
  *
@@ -343,6 +342,9 @@ ZBX_Notifications.prototype.btnCloseClicked = function() {
 		.then(function(resp) {
 			this.store.resetKey('notifications.list');
 			this.onNotificationsList({});
+
+			this.store.resetKey('notifications.alarm.start');
+			this.renderPlayer();
 		}.bind(this));
 }
 
