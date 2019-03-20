@@ -3665,7 +3665,7 @@ sub update_slv_rtt_monthly_stats($$$$$$$$)
 
 			if ($cycle_start > $now)
 			{
-				last;
+				last TLD_LOOP;
 			}
 
 			my $rtt_stats = get_slv_rtt_cycle_stats_aggregated($rtt_params_list, $cycle_start, $cycle_end, $tld);
