@@ -64,7 +64,7 @@ function ZBX_Notifications(store, tab) {
 	this.player.file(this.store.readKey('notifications.alarm.wave'));
 	this.player.onTimeout = this.onPlayerTimeout.bind(this);
 
-	setInterval(this.mainLoop.bind(this), ZBX_Notifications.POLL_INTERVAL);
+	this.mainLoopId = setInterval(this.mainLoop.bind(this), ZBX_Notifications.POLL_INTERVAL);
 
 	// Upon object creation we invoke tab.onFocus hook if tab was not opened in background.
 	// Re-stack exists because of IE11.
@@ -116,6 +116,11 @@ ZBX_Notifications.prototype.onStoreUpdate = function(key, value) {
  * @param {object} resp  Server response object.
  */
 ZBX_Notifications.prototype.onPollerReceive = function(resp) {
+	if (resp.error) {
+		clearInterval(this.mainLoopId);
+		return this.store.truncate();
+	}
+
 	this.writeSettings(resp.settings);
 	if (this.store.readKey('notifications.listid') == resp.listid) {
 		return;
