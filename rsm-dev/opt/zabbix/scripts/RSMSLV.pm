@@ -3665,7 +3665,7 @@ sub update_slv_rtt_monthly_stats($$$$$$$$)
 
 			if ($cycle_start > $now)
 			{
-				last TLD_LOOP;
+				next TLD_LOOP;
 			}
 
 			my $rtt_stats = get_slv_rtt_cycle_stats_aggregated($rtt_params_list, $cycle_start, $cycle_end, $tld);
@@ -3676,7 +3676,7 @@ sub update_slv_rtt_monthly_stats($$$$$$$$)
 				{
 					dbg("stopping updatig TLD '$tld' because of missing data, cycle from $cycle_start till $cycle_end");
 				}
-				last TLD_LOOP;
+				next TLD_LOOP;
 			}
 
 			$cycles_till_end_of_month--;
