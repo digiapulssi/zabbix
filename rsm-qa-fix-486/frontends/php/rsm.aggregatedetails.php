@@ -279,12 +279,18 @@ if ($data['tld_host'] && $data['time'] && $data['slvItemId'] && $data['type'] !=
 
 	// Get probes for specific TLD.
 	$tld_probes = API::Host()->get([
-		'output' => ['hostid', 'host', 'name'],
+		'output' => ['hostid', 'host', 'name', 'status'],
 		'filter' => [
 			'host' => array_keys($tld_probe_names)
 		],
 		'preservekeys' => true
 	]);
+
+	$data['probes_status'] = [];
+	foreach ($tld_probes as $tld_probe) {
+		$probe_name = substr($tld_probe['host'], strlen($data['tld_host']) + 1);
+		$data['probes_status'][$probe_name] = $tld_probe['status'];
+	}
 
 	/**
 	 * Select what NameServers are used by each probe.
