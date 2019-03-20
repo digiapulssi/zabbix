@@ -648,7 +648,7 @@ function getHostGroupsInfo($selement, $i, $show_unack) {
 		];
 		$hasStatus = true;
 	}
-	elseif ($i['disabled']) {
+	elseif ($i['disabled'] == count($selement['hosts'])) {
 		if (!$hasProblem) {
 			$info['icon_type'] = SYSMAP_ELEMENT_ICON_DISABLED;
 			$info['iconid'] = $selement['iconid_disabled'];
