@@ -292,7 +292,7 @@ class CSlaReport
 					break;
 
 				case "rsm.slv.rdds.rtt.pfailed":
-					$data[$hostid]["dns"]["rtt"] = 100 - $value;
+					$data[$hostid]["rdds"]["rtt"] = 100 - $value;
 					break;
 
 				default:
