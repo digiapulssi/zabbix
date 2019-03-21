@@ -1937,10 +1937,17 @@ sub create_dns_ns_downtime_trigger
 	$nsipname =~ s/,/ (/;
 	$nsipname .= ')';
 
+	my $threshold_str = '';
+
+	if ($threshold < 100)
+	{
+		$threshold_str = "*".($threshold * 0.01)
+	}
+
 	my $options =
 	{
 		'description' => 'DNS '.$nsipname.' downtime exceeded '.$threshold.'% of allowed $1 minutes',
-		'expression' => '{'.$host_name.':rsm.slv.dns.ns.downtime['.$nsip.'].last()}>{$RSM.SLV.NS.DOWNTIME}*'.($threshold * 0.01),
+		'expression' => '{'.$host_name.':rsm.slv.dns.ns.downtime['.$nsip.'].last()}>{$RSM.SLV.NS.DOWNTIME}'.$threshold_str,
 		'priority' => $priority
 	};
 
