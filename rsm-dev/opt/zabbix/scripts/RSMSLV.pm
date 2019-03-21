@@ -103,6 +103,7 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		get_templated_nsips db_exec tld_interface_enabled
 		tld_interface_enabled_create_cache tld_interface_enabled_delete_cache
 		db_select db_select_binds set_slv_config get_cycle_bounds get_rollweek_bounds get_downtime_bounds
+		db_explain
 		get_probe_times probe_offline_at probes2tldhostids
 		slv_max_cycles
 		get_probe_online_key_itemid
@@ -1227,6 +1228,62 @@ sub db_select($;$)
 	}
 
 	return $rows_ref;
+}
+
+sub db_explain($$)
+{
+	my $sql    = shift;
+	my $params = shift; # optional; reference to an array
+
+	my $rows = db_select("explain $sql", $params);
+
+	my @header = (
+		"id",
+		"select_type",
+		"table",
+		"partitions",
+		"type",
+		"possible_keys",
+		"key",
+		"key_len",
+		"ref",
+		"rows",
+		"filtered",
+		"Extra"
+	);
+
+	my @col_widths = map(length, @header);
+
+	foreach my $row (@{$rows})
+	{
+		for (my $i = 0; $i < scalar(@{$row}); $i++)
+		{
+			$row->[$i] //= "NULL";
+			if ($col_widths[$i] < length($row->[$i]))
+			{
+				$col_widths[$i] = length($row->[$i]);
+			}
+		}
+	}
+
+	my $line_width = 0;
+	my $line_format = "";
+	for (my $i = 0; $i < scalar(@header); $i++)
+	{
+		$line_width += 2 + $col_widths[$i] + 1;
+		$line_format .= "| %-${col_widths[$i]}s ";
+	}
+	$line_width += 2;
+	$line_format .= " |\n";
+
+	print("-" x $line_width . "\n");
+	printf($line_format, @header);
+	print("-" x $line_width . "\n");
+	foreach my $row (@{$rows})
+	{
+		printf($line_format, @{$row});
+	}
+	print("-" x $line_width . "\n");
 }
 
 sub db_select_binds
@@ -3411,6 +3468,8 @@ sub cycles_till_end_of_month($$)
 
 	if (opt('debug'))
 	{
+		require DateTime;
+
 		dbg('now              - ', DateTime->from_epoch('epoch' => $now));
 		dbg('this cycle start - ', DateTime->from_epoch('epoch' => $this_cycle_start));
 		dbg('end of month     - ', DateTime->from_epoch('epoch' => $end_of_month));
