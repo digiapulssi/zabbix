@@ -1915,10 +1915,17 @@ sub create_downtime_trigger($$$$$)
 
 	my $service_lc = lc($service);
 
+	my $threshold_str = '';
+
+	if ($threshold < 100)
+	{
+		$threshold_str = "*".($threshold * 0.01)
+	}
+
 	my $options =
 	{
 		'description' => $service.' service was unavailable for '.$threshold.'% of allowed $1 minutes',
-		'expression' => '{'.$host_name.':rsm.slv.'.$service_lc.'.downtime.last(0)}>={$RSM.SLV.'.$service.'.DOWNTIME}*'.($threshold * 0.01),
+		'expression' => '{'.$host_name.':rsm.slv.'.$service_lc.'.downtime.last(0)}>={$RSM.SLV.'.$service.'.DOWNTIME}'.$threshold_str,
 		'priority' => $priority
 	};
 
