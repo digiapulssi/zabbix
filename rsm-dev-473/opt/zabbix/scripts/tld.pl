@@ -1116,9 +1116,7 @@ sub create_all_slv_ns_items($$$$)
 	create_slv_item("DNS minutes of $ns_name ($ip) downtime", "rsm.slv.dns.ns.downtime[$ns_name,$ip]",
 			$hostid, VALUE_TYPE_NUM, [get_application_id(APP_SLV_CURMON, $hostid)]);
 
-	print ">>> A\n";
 	create_dependent_trigger_chain($host_name, "$ns_name,$ip", \&create_dns_ns_downtime_trigger, $trigger_thresholds);
-	print ">>> Z\n";
 
 # 	create_slv_item('% of successful monthly DNS resolution RTT (UDP): $1 ($2)', 'rsm.slv.dns.ns.rtt.udp.month['.$ns_name.','.$ip.']', $hostid, VALUE_TYPE_PERC, [get_application_id(APP_SLV_MONTHLY, $hostid)]);
 # 	create_slv_item('% of successful monthly DNS resolution RTT (TCP): $1 ($2)', 'rsm.slv.dns.ns.rtt.tcp.month['.$ns_name.','.$ip.']', $hostid, VALUE_TYPE_PERC, [get_application_id(APP_SLV_MONTHLY, $hostid)]);
@@ -1934,8 +1932,6 @@ sub create_dns_ns_downtime_trigger
 	my $threshold = shift;
 	my $priority = shift;
 	my $created_ref = shift;
-
-	print "create_dns_ns_downtime_trigger: ($nsip) $host_name, $threshold, $priority\n";
 
 	my $nsipname = $nsip;
 	$nsipname =~ s/,/ (/;
