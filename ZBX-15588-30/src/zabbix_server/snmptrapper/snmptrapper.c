@@ -580,7 +580,7 @@ static int	get_latest_data()
 
 /******************************************************************************
  *                                                                            *
- * Function: main_snmptrapper_loop                                            *
+ * Function: snmptrapper_thread                                               *
  *                                                                            *
  * Purpose: SNMP trap reader's entry point                                    *
  *                                                                            *

@@ -24,7 +24,7 @@
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_send_response                                                *
+ * Function: zbx_send_response_ext                                            *
  *                                                                            *
  * Purpose: send json SUCCEED or FAIL to socket along with an info message    *
  *                                                                            *
@@ -37,8 +37,6 @@
  *               NETWORK_ERROR - network related error occurred               *
  *                                                                            *
  * Author: Alexander Vladishev, Alexei Vladishev                              *
- *                                                                            *
- * Comments:                                                                  *
  *                                                                            *
  ******************************************************************************/
 int	zbx_send_response_ext(zbx_socket_t *sock, int result, const char *info, int protocol, int timeout)
