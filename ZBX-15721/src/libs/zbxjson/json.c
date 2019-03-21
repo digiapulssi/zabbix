@@ -162,11 +162,11 @@ void	zbx_json_free(struct zbx_json *j)
 
 static size_t	__zbx_json_stringsize(const char *string, zbx_json_type_t type)
 {
-	size_t		len = 0;
-	const char	*sptr;
-	char		buffer[] = {"null"};
+	size_t			len = 0;
+	const unsigned char	*sptr;
+	char			buffer[] = {"null"};
 
-	for (sptr = (NULL != string ? string : buffer); '\0' != *sptr; sptr++)
+	for (sptr = (unsigned char *)(NULL != string ? string : buffer); '\0' != *sptr; sptr++)
 	{
 		switch (*sptr)
 		{
@@ -218,13 +218,13 @@ static char	zbx_num2hex(unsigned char c)
 
 static char	*__zbx_json_insstring(char *p, const char *string, zbx_json_type_t type)
 {
-	const char	*sptr;
-	char		buffer[] = {"null"};
+	const unsigned char	*sptr;
+	char			buffer[] = {"null"};
 
 	if (NULL != string && ZBX_JSON_TYPE_STRING == type)
 		*p++ = '"';
 
-	for (sptr = (NULL != string ? string : buffer); '\0' != *sptr; sptr++)
+	for (sptr = (unsigned char *)(NULL != string ? string : buffer); '\0' != *sptr; sptr++)
 	{
 		switch (*sptr)
 		{
