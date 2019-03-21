@@ -173,8 +173,8 @@ class CControllerPopupPreprocTestSend extends CControllerPopupPreprocTest {
 						'value' => $result['result']
 					];
 				}
-				elseif (array_key_exists('failure', $result)) {
-					$output['final'] = $result['failure'];
+				elseif (array_key_exists('failed', $result)) {
+					$output['final'] = $result['failed'];
 				}
 			}
 		}
