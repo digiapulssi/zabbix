@@ -146,8 +146,8 @@ class CControllerPopupPreprocTestSend extends CControllerPopupPreprocTest {
 						unset($data['steps'][$i]);
 						continue;
 					}
-					elseif (array_key_exists($i, $result)) {
-						$step += $result[$i];
+					elseif (array_key_exists($i, $result['data'])) {
+						$step += $result['data'][$i];
 
 						if (array_key_exists('error', $step)) {
 							// If error happened and no value is set, frontend shows label 'No value'.
@@ -166,6 +166,16 @@ class CControllerPopupPreprocTestSend extends CControllerPopupPreprocTest {
 				unset($step);
 
 				$output['steps'] = $data['steps'];
+
+				if (array_key_exists('result', $result['data'])) {
+					$output['final'] = [
+						'action' => _s('Result converted to %1$s', itemValueTypeString($data['value_type'])),
+						'value' => $result['data']['result']
+					];
+				}
+				elseif (array_key_exists('failure', $result['data'])) {
+					$output['final'] = $result['data']['failure'];
+				}
 			}
 		}
 

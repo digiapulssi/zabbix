@@ -156,6 +156,16 @@ $templates = [
 			]))
 				->addStyle('margin-top: 1px;')
 				->addClass(ZBX_STYLE_GREY)
+		),
+	(new CTag('script', true))
+		->setAttribute('type', 'text/x-jquery-tmpl')
+		->setId('preprocessing-test-final-result')
+		->addItem(
+			(new CRow([
+				'',
+				(new CCol('#{action}'))->addClass(ZBX_STYLE_GREY),
+				(new CCol('#{value}'))->addClass(ZBX_STYLE_RIGHT)
+			]))->setId('final-result')
 		)
 ];
 

@@ -55,6 +55,7 @@ function itemPreprocessingTest(form) {
 			// Clean previous results.
 			jQuery('[id^="preproc-test-step-"][id$="-result"]').empty();
 			jQuery('[id^="preproc-test-step-"][id$="-name"] > div').remove();
+			jQuery('#final-result').remove();
 		},
 		success: function(ret) {
 			jQuery(form).parent().find('.msg-bad, .msg-good').remove();
@@ -64,6 +65,13 @@ function itemPreprocessingTest(form) {
 			if (typeof ret.messages !== 'undefined') {
 				jQuery(ret.messages).insertBefore(jQuery(form));
 				jQuery(form).parent().find('.link-action').click();
+			}
+
+			if (typeof ret.final !== 'undefined') {
+				var tmpl_final_result = new Template(jQuery('#preprocessing-test-final-result').html()),
+					final = (typeof ret.final === 'string') ? {action: ret.final} : ret.final;
+
+				jQuery('#preprocessing-steps').append(jQuery(tmpl_final_result.evaluate(final)));
 			}
 
 			jQuery('#value, #time, [name^=macros]').prop('disabled', false);
