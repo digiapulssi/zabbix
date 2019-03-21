@@ -31,6 +31,7 @@ class CControllerNotificationsGet extends CController {
 
 	protected function doAction() {
 		$msgsettings = getMessageSettings();
+		$triggerLimit = 15;
 
 		$result = [
 			'notifications' => [],
@@ -56,16 +57,15 @@ class CControllerNotificationsGet extends CController {
 
 		$options = [
 			'monitored' => true,
-			'lastChangeSince' => max([$lastMsgTime, $msgsettings['last.clock'], time() - $msgsettings['timeout']]),
+			'lastChangeSince' => max([$msgsettings['last.clock'], time() - $msgsettings['timeout']]),
 			'value' => [TRIGGER_VALUE_TRUE, TRIGGER_VALUE_FALSE],
 			'priority' => array_keys($msgsettings['triggers.severities']),
-			'triggerLimit' => 15
+			'triggerLimit' => $triggerLimit
 		];
 		if (!$msgsettings['triggers.recovery']) {
 			$options['value'] = [TRIGGER_VALUE_TRUE];
 		}
 
-		// TODO this function call profiled to run 1.3 seconds!
 		$events = getLastEvents($options);
 
 		$sort_clock = [];
@@ -74,8 +74,7 @@ class CControllerNotificationsGet extends CController {
 
 		$used_triggers = [];
 		foreach ($events as $event) {
-
-			if (count($used_triggers) > 14) {
+			if (count($used_triggers) == $triggerLimit) {
 				break;
 			}
 
@@ -92,14 +91,12 @@ class CControllerNotificationsGet extends CController {
 			if ($event['value'] == TRIGGER_VALUE_FALSE) {
 				$priority = 0;
 				$title = _('Resolved');
-				$sound = $msgsettings['sounds.recovery'];
-				$sound = '-1';
+				$fileid = '-1';
 			}
 			else {
 				$priority = $trigger['priority'];
 				$title = _('Problem on');
-				$sound = $msgsettings['sounds.'.$trigger['priority']];
-				$sound = $trigger['priority'];
+				$fileid = $trigger['priority'];
 			}
 
 			$url_tr_status = 'tr_status.php?hostid='.$host['hostid'];
@@ -111,8 +108,7 @@ class CControllerNotificationsGet extends CController {
 				'id' => $event['eventid'],
 				'ttl' => $event['clock'] + $msgsettings['timeout'] - time(),
 				'priority' => $priority,
-				'sound' => $sound,
-				'file' => $sound,
+				'file' => $fileid,
 				'severity_style' => getSeverityStyle($trigger['priority'], $event['value'] == TRIGGER_VALUE_TRUE),
 				'title' => $title.' [url='.$url_tr_status.']'.CHtml::encode($host['name']).'[/url]',
 				'body' => [
