@@ -3599,7 +3599,7 @@ static int	create_slv_dns_ns_downtime_item(const char *tld, const char *hostid, 
 			"authtype,username,password,publickey,privatekey,flags,interfaceid,port,description,"
 			"inventory_link,lifetime,snmpv3_authprotocol,snmpv3_privprotocol,snmpv3_contextname,evaltype)"
 		" values ('" ZBX_FS_UI64 "','2','','','%s',"
-			"'DNS minutes of %s (%s) downtime','rsm.slv.dns.ns.downtime[%s,%s]','','90','365',"
+			"'DNS minutes of %s (%s) downtime','rsm.slv.dns.ns.downtime[%s,%s]','60','90','365',"
 			"'0','0','','','0','0',"
 			"'','0','','',"
 			"'1','',NULL,NULL,'','','','0',"
