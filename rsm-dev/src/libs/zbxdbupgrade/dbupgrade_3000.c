@@ -3806,6 +3806,26 @@ out:
 	return ret;
 }
 
+static int	DBpatch_3000309(void)
+{
+	const ZBX_TABLE table =
+			{"sla_reports", "hostid,year,month", 0,
+				{
+					{"hostid", NULL, "hosts", "hostid", 0, ZBX_TYPE_ID, ZBX_NOTNULL, 0},
+					{"year", NULL, NULL, NULL, 0, ZBX_TYPE_INT, ZBX_NOTNULL, 0},
+					{"month", NULL, NULL, NULL, 0, ZBX_TYPE_INT, ZBX_NOTNULL, 0},
+					{"report", NULL, NULL, NULL, 0, ZBX_TYPE_TEXT, ZBX_NOTNULL, 0},
+					{0}
+				},
+				NULL
+			};
+
+	if (SUCCEED != DBcreate_table(&table))
+		return FAIL;
+
+	return SUCCEED;
+}
+
 #endif
 
 DBPATCH_START(3000)
@@ -3900,5 +3920,6 @@ DBPATCH_ADD(3000305, 0, 0)	/* add DNS downtime trigger to existing tld hosts */
 DBPATCH_ADD(3000306, 0, 0)	/* add RDDS downtime triggers to existing tld hosts */
 DBPATCH_ADD(3000307, 0, 0)	/* add "DNS Resolution RTT (performed/failed/pfailed)" items to existing tld hosts */
 DBPATCH_ADD(3000308, 0, 0)	/* add "RDDS Resolution RTT (performed/failed/pfailed)" items to existing tld hosts */
+DBPATCH_ADD(3000309, 0, 0)	/* create sla_reports table*/
 
 DBPATCH_END()
