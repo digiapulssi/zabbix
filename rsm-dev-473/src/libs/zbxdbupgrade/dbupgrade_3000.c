@@ -3944,6 +3944,30 @@ out:
 	return ret;
 }
 
+static int	DBpatch_3000310(void)
+{
+	DB_RESULT	result;
+
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	if (ZBX_DB_OK > DBexecute("update globalmacro set macro='{$RSM.SLV.NS.DOWNTIME}'"
+				" where macro='{$RSM.SLV.NS.AVAIL}'"))
+	{
+		return FAIL;
+	}
+
+	if (ZBX_DB_OK > DBexecute("update items set"
+				" key_='rsm.configvalue[RSM.SLV.NS.DOWNTIME]',"
+				" params='{$RSM.SLV.NS.DOWNTIME}'"
+				" where key_='rsm.configvalue[RSM.SLV.NS.AVAIL]'"))
+	{
+		return FAIL;
+	}
+
+	return SUCCEED;
+}
+
 #endif
 
 DBPATCH_START(3000)
@@ -4039,5 +4063,6 @@ DBPATCH_ADD(3000306, 0, 0)	/* add RDDS downtime triggers to existing tld hosts *
 DBPATCH_ADD(3000307, 0, 0)	/* add rsm.slv.dns.ns.downtime to tld hosts */
 DBPATCH_ADD(3000308, 0, 0)	/* add "DNS Resolution RTT (performed/failed/pfailed)" items to existing tld hosts */
 DBPATCH_ADD(3000309, 0, 0)	/* add "RDDS Resolution RTT (performed/failed/pfailed)" items to existing tld hosts */
+DBPATCH_ADD(3000310, 0, 0)	/* rename macro RSM.SLV.NS.AVAIL into RSM.SLV.NS.DOWNTIME */
 
 DBPATCH_END()
