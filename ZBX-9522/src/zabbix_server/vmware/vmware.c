@@ -34,6 +34,7 @@
 #include "zbxself.h"
 
 #include "vmware.h"
+#include "../../libs/zbxalgo/vectorimpl.h"
 
 /*
  * The VMware data (zbx_vmware_service_t structure) are stored in shared memory.
@@ -101,6 +102,7 @@ static zbx_vmware_t	*vmware = NULL;
 #define ZBX_VMWARE_COUNTERS_INIT_SIZE	500
 
 #define ZBX_VPXD_STATS_MAXQUERYMETRICS	64
+#define ZBX_MAXQUERYMETRICS_UNLIMITED	1000
 
 /* VMware service object name mapping for vcenter and vsphere installations */
 typedef struct
@@ -160,6 +162,16 @@ typedef struct
 	char			*error;
 }
 zbx_vmware_perf_data_t;
+
+typedef struct
+{
+	zbx_uint64_t	id;
+	xmlNode		*xml_node;
+}
+zbx_id_xmlnode_t;
+
+ZBX_VECTOR_DECL(id_xmlnode, zbx_id_xmlnode_t)
+ZBX_VECTOR_IMPL(id_xmlnode, zbx_id_xmlnode_t)
 
 static char	*hv_propmap[] = {
 	ZBX_XPATH_HV_QUICKSTATS("overallCpuUsage"),			/* ZBX_VMWARE_HVPROP_OVERALL_CPU_USAGE */
@@ -3012,19 +3024,21 @@ out:
  * Parameters: easyhandle     - [IN] the CURL handle                          *
  *             event_session  - [IN] event session (EventHistoryCollector)    *
  *                                   identifier                               *
+ *             soap_count     - [IN] max count of events in response          *
  *             error          - [OUT] the error message in the case of failure*
  *                                                                            *
  * Return value: SUCCEED - the operation has completed successfully           *
  *               FAIL    - the operation has failed                           *
  *                                                                            *
  ******************************************************************************/
-static int	vmware_service_read_previous_events(CURL *easyhandle, const char *event_session, char **error)
+static int	vmware_service_read_previous_events(CURL *easyhandle, const char *event_session, int soap_count,
+		char **error)
 {
 #	define ZBX_POST_VMWARE_READ_PREVIOUS_EVENTS					\
 		ZBX_POST_VSPHERE_HEADER							\
 		"<ns0:ReadPreviousEvents>"						\
 			"<ns0:_this type=\"EventHistoryCollector\">%s</ns0:_this>"	\
-			"<ns0:maxCount>10</ns0:maxCount>"				\
+			"<ns0:maxCount>%d</ns0:maxCount>"				\
 		"</ns0:ReadPreviousEvents>"						\
 		ZBX_POST_VSPHERE_FOOTER
 
@@ -3033,11 +3047,19 @@ static int	vmware_service_read_previous_events(CURL *easyhandle, const char *eve
 	int		err, opt, ret = FAIL;
 	char		tmp[MAX_STRING_LEN], *event_session_esc;
 
-	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s() soap_count: %d", __function_name, soap_count);
+
+	page.offset = 0;
+
+	if (0 >= soap_count)
+	{
+		ret = SUCCEED;
+		goto out;
+	}
 
 	event_session_esc = xml_escape_dyn(event_session);
 
-	zbx_snprintf(tmp, sizeof(tmp), ZBX_POST_VMWARE_READ_PREVIOUS_EVENTS, event_session_esc);
+	zbx_snprintf(tmp, sizeof(tmp), ZBX_POST_VMWARE_READ_PREVIOUS_EVENTS, event_session_esc, soap_count);
 
 	zbx_free(event_session_esc);
 
@@ -3046,8 +3068,6 @@ static int	vmware_service_read_previous_events(CURL *easyhandle, const char *eve
 		*error = zbx_dsprintf(*error, "Cannot set cURL option %d: %s.", opt, curl_easy_strerror(err));
 		goto out;
 	}
-
-	page.offset = 0;
 
 	if (CURLE_OK != (err = curl_easy_perform(easyhandle)))
 	{
@@ -3128,32 +3148,139 @@ out:
 	return ret;
 }
 
-int	vmware_service_parse_event_data(zbx_vector_ptr_t *events, zbx_uint64_t last_key, const char *xml)
+/******************************************************************************
+ *                                                                            *
+ * Function: vmware_service_put_event_data                                    *
+ *                                                                            *
+ * Purpose: read event data by id from xml and put to array of events         *
+ *                                                                            *
+ * Parameters: events    - [IN/OUT] the array of parsed events                *
+ *             xml_event - [IN] the xml node and id of parsed event           *
+ *             xdoc      - [IN] xml document with eventlog records            *
+ *                                                                            *
+ * Return value: SUCCEED - the operation has completed successfully           *
+ *               FAIL    - the operation has failed                           *
+ ******************************************************************************/
+static int	vmware_service_put_event_data(zbx_vector_ptr_t *events, zbx_id_xmlnode_t xml_event, xmlDoc *xdoc)
+{
+	zbx_vmware_event_t	*event = NULL;
+	char			*message, *time_str;
+	int			timestamp = 0;
+
+	if (NULL == (message = zbx_xml_read_node_value(xdoc, xml_event.xml_node, ZBX_XPATH_NN("fullFormattedMessage"))))
+	{
+		zabbix_log(LOG_LEVEL_TRACE, "skipping event key '" ZBX_FS_UI64 "', fullFormattedMessage"
+				" is missing", xml_event.id);
+		return FAIL;
+	}
+
+	zbx_replace_invalid_utf8(message);
+
+	if (NULL == (time_str = zbx_xml_read_node_value(xdoc, xml_event.xml_node, ZBX_XPATH_NN("createdTime"))))
+	{
+		zabbix_log(LOG_LEVEL_TRACE, "createdTime is missing for event key '" ZBX_FS_UI64 "'", xml_event.id);
+	}
+	else
+	{
+		int	year, mon, mday, hour, min, sec, t;
+
+		/* 2013-06-04T14:19:23.406298Z */
+		if (6 != sscanf(time_str, "%d-%d-%dT%d:%d:%d.%*s", &year, &mon, &mday, &hour, &min, &sec))
+		{
+			zabbix_log(LOG_LEVEL_TRACE, "unexpected format of createdTime '%s' for event"
+					" key '" ZBX_FS_UI64 "'", time_str, xml_event.id);
+		}
+		else if (SUCCEED != zbx_utc_time(year, mon, mday, hour, min, sec, &t))
+		{
+			zabbix_log(LOG_LEVEL_TRACE, "cannot convert createdTime '%s' for event key '"
+					ZBX_FS_UI64 "'", time_str, xml_event.id);
+		}
+		else
+			timestamp = t;
+
+		zbx_free(time_str);
+	}
+
+	event = (zbx_vmware_event_t *)zbx_malloc(event, sizeof(zbx_vmware_event_t));
+	event->key = xml_event.id;
+	event->message = message;
+	event->timestamp = timestamp;
+	zbx_vector_ptr_append(events, event);
+
+	return SUCCEED;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: vmware_service_parse_event_data                                  *
+ *                                                                            *
+ * Purpose: parse multiple events data                                        *
+ *                                                                            *
+ * Parameters: events   - [IN/OUT] the array of parsed events                 *
+ *             last_key - [IN] the key of last parsed event                   *
+ *             xml      - [IN] xml string with eventlog records               *
+ *             len      - [IN] length of xml string                           *
+ *                                                                            *
+ * Return value: The count of events successfully parsed                      *
+ *                                                                            *
+ ******************************************************************************/
+int	vmware_service_parse_event_data(zbx_vector_ptr_t *events, zbx_uint64_t last_key, const char *xml, size_t len)
 {
 	const char		*__function_name = "vmware_service_parse_event_data";
 
-	zbx_vector_str_t	keys;
-	zbx_vector_uint64_t	ids;
+	zbx_vector_id_xmlnode_t	ids;
 	int			i, parsed_num = 0;
+	char			*value;
+	xmlDoc			*doc;
+	xmlXPathContext		*xpathCtx;
+	xmlXPathObject		*xpathObj;
+	xmlNodeSetPtr		nodeset;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() last_key:" ZBX_FS_UI64, __function_name, last_key);
 
-	zbx_vector_str_create(&keys);
-
-	if (SUCCEED != zbx_xml_read_values(xml, ZBX_XPATH_LN2("returnval", "key"), &keys))
-		goto out;
-
-	zbx_vector_uint64_create(&ids);
-
-	for (i = 0; i < keys.values_num; i++)
+	if (NULL == (doc = xmlReadMemory(xml, len, ZBX_VM_NONAME_XML, NULL, ZBX_XML_PARSE_OPTS)))
 	{
-		zbx_uint64_t	key;
+		zabbix_log(LOG_LEVEL_DEBUG, "Cannot parse evenlog list.");
+		goto out;
+	}
 
-		if (SUCCEED != is_uint64(keys.values[i], &key))
+	xpathCtx = xmlXPathNewContext(doc);
+
+	if (NULL == (xpathObj = xmlXPathEvalExpression((xmlChar *)"/*/*/*"ZBX_XPATH_LN("returnval"), xpathCtx)))
+	{
+		zabbix_log(LOG_LEVEL_DEBUG, "Cannot make evenlog list parsing query.");
+		goto clean;
+	}
+
+	if (0 != xmlXPathNodeSetIsEmpty(xpathObj->nodesetval))
+	{
+		zabbix_log(LOG_LEVEL_DEBUG, "Cannot find items in evenlog list.");
+		goto clean;
+	}
+
+	nodeset = xpathObj->nodesetval;
+	zbx_vector_id_xmlnode_create(&ids);
+	zbx_vector_id_xmlnode_reserve(&ids, nodeset->nodeNr);
+
+	for (i = 0; i < nodeset->nodeNr; i++)
+	{
+		zbx_id_xmlnode_t	xml_event;
+		zbx_uint64_t		key;
+
+		if (NULL == (value = zbx_xml_read_node_value(doc, nodeset->nodeTab[i], ZBX_XPATH_NN("key"))))
 		{
-			zabbix_log(LOG_LEVEL_TRACE, "skipping event key '%s', not a number", keys.values[i]);
+			zabbix_log(LOG_LEVEL_TRACE, "skipping eventlog record without key, xml number '%d'", i);
 			continue;
 		}
+
+		if (SUCCEED != is_uint64(value, &key))
+		{
+			zabbix_log(LOG_LEVEL_TRACE, "skipping eventlog key '%s', not a number", value);
+			zbx_free(value);
+			continue;
+		}
+
+		zbx_free(value);
 
 		if (key <= last_key)
 		{
@@ -3161,77 +3288,33 @@ int	vmware_service_parse_event_data(zbx_vector_ptr_t *events, zbx_uint64_t last_
 			continue;
 		}
 
-		zbx_vector_uint64_append(&ids, key);
+		xml_event.id = key;
+		xml_event.xml_node = nodeset->nodeTab[i];
+		zbx_vector_id_xmlnode_append(&ids, xml_event);
 	}
-
-	zbx_vector_str_clear_ext(&keys, zbx_ptr_free);
 
 	if (0 != ids.values_num)
 	{
-		zbx_vector_uint64_sort(&ids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
+		zbx_vector_id_xmlnode_sort(&ids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
+		zbx_vector_ptr_reserve(events, ids.values_num + events->values_alloc);
 
 		/* we are reading "scrollable views" in reverse chronological order, */
 		/* so inside a "scrollable view" latest events should come first too */
 		for (i = ids.values_num - 1; i >= 0; i--)
 		{
-			zbx_vmware_event_t	*event = NULL;
-			char			*message, *time_str, xpath[MAX_STRING_LEN];
-			int			timestamp = 0;
-
-			zbx_snprintf(xpath, sizeof(xpath), ZBX_XPATH_LN2("returnval", "key") "[.='" ZBX_FS_UI64 "']/.."
-					ZBX_XPATH_LN("fullFormattedMessage"), ids.values[i]);
-
-			if (NULL == (message = zbx_xml_read_value(xml, xpath)))
-			{
-				zabbix_log(LOG_LEVEL_TRACE, "skipping event key '" ZBX_FS_UI64 "', fullFormattedMessage"
-						" is missing", ids.values[i]);
-				continue;
-			}
-
-			zbx_replace_invalid_utf8(message);
-
-			zbx_snprintf(xpath, sizeof(xpath), ZBX_XPATH_LN2("returnval", "key") "[.='" ZBX_FS_UI64 "']/.."
-					ZBX_XPATH_LN("createdTime"), ids.values[i]);
-
-			if (NULL == (time_str = zbx_xml_read_value(xml, xpath)))
-			{
-				zabbix_log(LOG_LEVEL_TRACE, "createdTime is missing for event key '" ZBX_FS_UI64 "'",
-						ids.values[i]);
-			}
-			else
-			{
-				int	year, mon, mday, hour, min, sec, t;
-
-				/* 2013-06-04T14:19:23.406298Z */
-				if (6 != sscanf(time_str, "%d-%d-%dT%d:%d:%d.%*s", &year, &mon, &mday, &hour, &min, &sec))
-				{
-					zabbix_log(LOG_LEVEL_TRACE, "unexpected format of createdTime '%s' for event"
-							" key '" ZBX_FS_UI64 "'", time_str, ids.values[i]);
-				}
-				else if (SUCCEED != zbx_utc_time(year, mon, mday, hour, min, sec, &t))
-				{
-					zabbix_log(LOG_LEVEL_TRACE, "cannot convert createdTime '%s' for event key '"
-							ZBX_FS_UI64 "'", time_str, ids.values[i]);
-				}
-				else
-					timestamp = t;
-
-				zbx_free(time_str);
-			}
-
-			event = zbx_malloc(event, sizeof(zbx_vmware_event_t));
-			event->key = ids.values[i];
-			event->message = message;
-			event->timestamp = timestamp;
-			zbx_vector_ptr_append(events, event);
-			parsed_num++;
+			if (SUCCEED == vmware_service_put_event_data(events, ids.values[i], doc))
+				parsed_num++;
 		}
 	}
 
-	zbx_vector_uint64_destroy(&ids);
-out:
-	zbx_vector_str_destroy(&keys);
+	zbx_vector_id_xmlnode_destroy(&ids);
+clean:
+	if (NULL != xpathObj)
+		xmlXPathFreeObject(xpathObj);
 
+	xmlXPathFreeContext(xpathCtx);
+	xmlFreeDoc(doc);
+out:
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s() parsed:%d", __function_name, parsed_num);
 
 	return parsed_num;
@@ -3258,7 +3341,9 @@ static int	vmware_service_get_event_data(const zbx_vmware_service_t *service, CU
 	const char	*__function_name = "vmware_service_get_event_data";
 
 	char		*event_session = NULL;
-	int		ret = FAIL;
+	int		ret = FAIL, soap_count = 5; /* 10 - initial value of eventlog records number in one response */
+	zbx_uint64_t	eventlog_last_key;
+
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
@@ -3268,12 +3353,33 @@ static int	vmware_service_get_event_data(const zbx_vmware_service_t *service, CU
 	if (SUCCEED != vmware_service_reset_event_history_collector(easyhandle, event_session, error))
 		goto end_session;
 
+	if (NULL != service->data && 0 != service->data->events.values_num &&
+			((const zbx_vmware_event_t *)service->data->events.values[0])->key > service->eventlog_last_key)
+	{
+		eventlog_last_key = ((const zbx_vmware_event_t *)service->data->events.values[0])->key;
+	}
+	else
+		eventlog_last_key = service->eventlog_last_key;
+
 	do
 	{
-		if (SUCCEED != vmware_service_read_previous_events(easyhandle, event_session, error))
+		if ((ZBX_MAXQUERYMETRICS_UNLIMITED / 2) >= soap_count)
+			soap_count = soap_count * 2;
+		else if (ZBX_MAXQUERYMETRICS_UNLIMITED != soap_count)
+			soap_count = ZBX_MAXQUERYMETRICS_UNLIMITED;
+
+		if (0 != events->values_num &&
+				(((const zbx_vmware_event_t *)events->values[events->values_num - 1])->key -
+				eventlog_last_key -1) < (unsigned int)soap_count)
+		{
+			soap_count = ((const zbx_vmware_event_t *)events->values[events->values_num - 1])->key -
+					eventlog_last_key - 1;
+		}
+
+		if (SUCCEED != vmware_service_read_previous_events(easyhandle, event_session, soap_count, error))
 			goto end_session;
 	}
-	while (0 < vmware_service_parse_event_data(events, service->eventlog_last_key, page.data));
+	while (0 < vmware_service_parse_event_data(events, eventlog_last_key, page.data, page.offset));
 
 	ret = SUCCEED;
 end_session:
@@ -3667,16 +3773,32 @@ static int	vmware_service_get_maxquerymetrics(CURL *easyhandle, int *max_qm, cha
 		zbx_free(*error);
 	}
 
+	ret = SUCCEED;
+
 	if (NULL == (val = zbx_xml_read_value(page.data, ZBX_XPATH_MAXQUERYMETRICS())))
 	{
 		*max_qm = ZBX_VPXD_STATS_MAXQUERYMETRICS;
 		zabbix_log(LOG_LEVEL_DEBUG, "maxQueryMetrics used default value %d", ZBX_VPXD_STATS_MAXQUERYMETRICS);
-		ret = SUCCEED;
 		goto out;
 	}
 
-	if (SUCCEED != (ret = is_uint31(val, max_qm)))
-		*error = zbx_dsprintf(*error, "Cannot convert maxQueryMetrics from %s.",  val);
+	/* vmware article 2107096                                                                    */
+	/* Edit the config.vpxd.stats.maxQueryMetrics key in the advanced settings of vCenter Server */
+	/* To disable the limit, set a value to -1                                                   */
+	/* Edit the web.xml file. To disable the limit, set a value 0                                */
+	if (-1 == atoi(val))
+	{
+		*max_qm = ZBX_MAXQUERYMETRICS_UNLIMITED;
+	}
+	else if (SUCCEED != is_uint31(val, max_qm))
+	{
+		zabbix_log(LOG_LEVEL_DEBUG, "Cannot convert maxQueryMetrics from %s.", val);
+		*max_qm = ZBX_VPXD_STATS_MAXQUERYMETRICS;
+	}
+	else if (0 == *max_qm)
+	{
+		*max_qm = ZBX_MAXQUERYMETRICS_UNLIMITED;
+	}
 
 	zbx_free(val);
 out:
@@ -3908,6 +4030,7 @@ static void	vmware_service_update(zbx_vmware_service_t *service)
 	struct curl_slist	*headers = NULL;
 	zbx_vmware_data_t	*data;
 	zbx_vector_str_t	hvs;
+	zbx_vector_ptr_t	events;
 	int			opt, err, i, ret = FAIL;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() '%s'@'%s'", __function_name, service->username, service->url);
@@ -3988,21 +4111,34 @@ clean:
 	zbx_vector_str_clear_ext(&hvs, zbx_ptr_free);
 	zbx_vector_str_destroy(&hvs);
 out:
+	zbx_vector_ptr_create(&events);
 	zbx_vmware_lock();
 
 	/* remove UPDATING flag and set READY or FAILED flag */
 	service->state &= ~(ZBX_VMWARE_STATE_MASK | ZBX_VMWARE_STATE_UPDATING);
 	service->state |= (SUCCEED == ret) ? ZBX_VMWARE_STATE_READY : ZBX_VMWARE_STATE_FAILED;
 
+	if (NULL != service->data && 0 != service->data->events.values_num &&
+			((const zbx_vmware_event_t *)service->data->events.values[0])->key > service->eventlog_last_key)
+	{
+		zbx_vector_ptr_append_array(&events, service->data->events.values, service->data->events.values_num);
+		zbx_vector_ptr_clear(&service->data->events);
+	}
+
 	vmware_data_shared_free(service->data);
 	service->data = vmware_data_shared_dup(data);
-	vmware_data_free(data);
+
+	if (0 != events.values_num)
+		zbx_vector_ptr_append_array(&service->data->events, events.values, events.values_num);
 
 	service->lastcheck = time(NULL);
 
 	vmware_service_update_perf_entities(service);
 
 	zbx_vmware_unlock();
+
+	vmware_data_free(data);
+	zbx_vector_ptr_destroy(&events);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, zbx_result_string(ret));
 }
@@ -4256,7 +4392,6 @@ static void	vmware_service_copy_perf_data(zbx_vmware_service_t *service, zbx_vec
  *             entities     - [IN] the performance collector entities to      *
  *                                 retrieve counters for                      *
  *             counters_max - [IN] the maximum number of counters per query.  *
- *                                 0 - unlimited.                             *
  *             perfdata     - [OUT] the performance counter values            *
  *                                                                            *
  ******************************************************************************/
@@ -4271,9 +4406,6 @@ static void	vmware_service_retrieve_perf_counters(zbx_vmware_service_t *service,
 	zbx_vmware_perf_entity_t	*entity;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() counters_max:%d", __function_name, counters_max);
-
-	if (0 == counters_max)
-		counters_max = INT_MAX;
 
 	while (0 != entities->values_num)
 	{
@@ -4517,7 +4649,7 @@ static void	vmware_service_update_perf(zbx_vmware_service_t *service)
 
 	zbx_vmware_unlock();
 
-	vmware_service_retrieve_perf_counters(service, easyhandle, &entities, 0, &perfdata);
+	vmware_service_retrieve_perf_counters(service, easyhandle, &entities, ZBX_MAXQUERYMETRICS_UNLIMITED, &perfdata);
 	vmware_service_retrieve_perf_counters(service, easyhandle, &hist_entities, service->data->max_query_metrics,
 			&perfdata);
 
