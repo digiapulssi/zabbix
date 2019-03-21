@@ -55,6 +55,7 @@ int	zbx_trapper_preproc_test(zbx_socket_t *sock, const struct zbx_json_parse *jp
 	zbx_vector_ptr_t	steps, results;
 	const char		*pnext;
 	struct zbx_json		json;
+	zbx_preproc_result_t	*result = NULL;
 
 	zbx_vector_ptr_create(&steps);
 	zbx_vector_ptr_create(&results);
@@ -168,11 +169,12 @@ int	zbx_trapper_preproc_test(zbx_socket_t *sock, const struct zbx_json_parse *jp
 	zbx_json_init(&json, results.values_num * 256);
 
 	zbx_json_addstring(&json, ZBX_PROTO_TAG_RESPONSE, "success", ZBX_JSON_TYPE_STRING);
-	zbx_json_addarray(&json, ZBX_PROTO_TAG_DATA);
+	zbx_json_addobject(&json, ZBX_PROTO_TAG_DATA);
+	zbx_json_addarray(&json, ZBX_PROTO_TAG_STEPS);
 
 	for (i = 0; i < results.values_num; i++)
 	{
-		zbx_preproc_result_t	*result = (zbx_preproc_result_t *)results.values[i];
+		result = (zbx_preproc_result_t *)results.values[i];
 
 		zbx_json_addobject(&json, NULL);
 
@@ -200,6 +202,41 @@ int	zbx_trapper_preproc_test(zbx_socket_t *sock, const struct zbx_json_parse *jp
 
 		zbx_json_close(&json);
 	}
+	zbx_json_close(&json);
+
+	if (NULL != result && ZBX_VARIANT_NONE != result->value.type && NULL == preproc_error)
+	{
+		int type;
+
+		switch (value_type)
+		{
+			case ITEM_VALUE_TYPE_FLOAT:
+				type = ZBX_VARIANT_DBL;
+				break;
+			case ITEM_VALUE_TYPE_UINT64:
+				type = ZBX_VARIANT_UI64;
+				break;
+			default:
+				/* ITEM_VALUE_TYPE_STR, ITEM_VALUE_TYPE_TEXT, ITEM_VALUE_TYPE_LOG */
+				type = ZBX_VARIANT_STR;
+		}
+
+		if (FAIL != (ret = zbx_variant_convert(&result->value, type)))
+		{
+			zbx_json_addstring(&json, ZBX_PROTO_TAG_RESULT, zbx_variant_value_desc(&result->value),
+					ZBX_JSON_TYPE_STRING);
+		}
+		else
+		{
+			preproc_error = zbx_dsprintf(preproc_error, "Value \"%s\" of type \"%s\" is not"
+					" suitable for value type \"%s\".", zbx_variant_value_desc(&result->value),
+					zbx_variant_type_desc(&result->value),
+					zbx_item_value_type_string((zbx_item_value_type_t)value_type));
+
+			zbx_json_addstring(&json, ZBX_PROTO_TAG_FAILED, preproc_error, ZBX_JSON_TYPE_STRING);
+		}
+	}
+	zbx_json_close(&json);
 
 	zbx_tcp_send_bytes_to(sock, json.buffer, json.buffer_size, CONFIG_TIMEOUT);
 
