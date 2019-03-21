@@ -3823,6 +3823,16 @@ static int	DBpatch_3000309(void)
 	if (SUCCEED != DBcreate_table(&table))
 		return FAIL;
 
+	/* add constraint */
+	if (ZBX_DB_OK > DBexecute(
+			"alter table `sla_reports`"
+			" add constraint `c_sla_reports_1`"
+				" foreign key (`hostid`) references `hosts` (`hostid`)"
+			" on delete cascade"))
+	{
+		return FAIL;
+	}
+
 	return SUCCEED;
 }
 
