@@ -3966,6 +3966,109 @@ static int	DBpatch_3000310(void)
 	return SUCCEED;
 }
 
+static int	create_dns_ns_downtime_trigger(const char *hostid, const char *itemid, const char *nsip,
+				const char *percent, const char *coefficient, const char *priority,
+				zbx_uint64_t *triggerid)
+{
+	DB_RESULT	result;
+	DB_ROW		row;
+	zbx_uint64_t	functionid;
+
+	*triggerid = DBget_maxid("triggers");
+	functionid = DBget_maxid("functions");
+
+	if (ZBX_DB_OK > DBexecute(
+			"insert into triggers (triggerid,expression,description,"
+				"url,status,priority,comments,templateid,type,flags)"
+			"values (" ZBX_FS_UI64 ", '{" ZBX_FS_UI64 "}>={$RSM.SLV.NS.DOWNTIME}%s',"
+				"'RDDS service was unavailable for %s of allowed $1',"
+				"'', '0', '%s', '', NULL, '0', '0')",
+			*triggerid, functionid, coefficient, percent, priority))
+	{
+		return FAIL;
+	}
+
+	if (ZBX_DB_OK > DBexecute(
+			"insert into functions (functionid,itemid,triggerid,function,parameter) values"
+			" (" ZBX_FS_UI64 ", %s," ZBX_FS_UI64 ",'last','0')",
+			functionid, itemid, *triggerid))
+	{
+		return FAIL;
+	}
+
+	DBfree_result(result);
+
+	return SUCCEED;
+}
+
+static int	create_dependent_dns_ns_trigger_chain(const char *hostid, const char *itemid, const char *nsip)
+{
+	zbx_uint64_t	triggerid = 0, dependid = 0;
+	int		i;
+
+	for (i = 0; i < sizeof(trigger_params) / sizeof(*trigger_params); i++)
+	{
+		const char	*percent     = trigger_params[i][0];
+		const char	*coefficient = trigger_params[i][1];
+		const char	*priority    = trigger_params[i][2];
+
+		if (SUCCEED != create_dns_ns_downtime_trigger(hostid, itemid, nsip, percent, coefficient,
+				priority, &triggerid))
+		{
+			return FAIL;
+		}
+
+		if (0 != triggerid && 0 != dependid)
+		{
+			if (SUCCEED != create_trigger_dependency(triggerid, dependid))
+				return FAIL;
+		}
+
+		dependid = triggerid;
+	}
+
+	return SUCCEED;
+}
+
+static int	DBpatch_3000311(void)
+{
+	DB_RESULT	result;
+	DB_ROW		row;
+	char		*itemkey, *nsip;
+	int		prefixlen, itemkeylen;
+	const char	*key_prefix = "rsm.slv.dns.ns.downtime[";
+
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	prefixlen = strlen(key_prefix);
+
+	result = DBselect("select h.hostid,i.itemid,i.key_ from items i"
+			" left join hosts h on i.hostid=h.hostid"
+			" left join hosts_groups hg on hg.groupid=140"
+			" where i.key_ like '%s%%'", key_prefix);
+
+	while (NULL != (row = DBfetch(result)))
+	{
+		itemkey = zbx_strdup(NULL, row[2]);
+		itemkeylen = strlen(itemkey);
+
+		if (itemkeylen < (prefixlen + 2)) /* +2 for closing ] and at least on char inside */
+		{
+			zabbix_log(LOG_LEVEL_CRIT, "bogus item key too short");
+			return FAIL;
+		}
+
+		itemkey[itemkeylen - 1] = 0; /* overwrite closing ] */
+
+		create_dependent_dns_ns_trigger_chain(row[0], row[1], itemkey + prefixlen);
+
+		zbx_free(itemkey);
+	}
+
+	return SUCCEED;
+}
+
 #endif
 
 DBPATCH_START(3000)
@@ -4062,5 +4165,6 @@ DBPATCH_ADD(3000307, 0, 0)	/* add rsm.slv.dns.ns.downtime to tld hosts */
 DBPATCH_ADD(3000308, 0, 0)	/* add "DNS Resolution RTT (performed/failed/pfailed)" items to existing tld hosts */
 DBPATCH_ADD(3000309, 0, 0)	/* add "RDDS Resolution RTT (performed/failed/pfailed)" items to existing tld hosts */
 DBPATCH_ADD(3000310, 0, 0)	/* rename macro RSM.SLV.NS.AVAIL into RSM.SLV.NS.DOWNTIME */
+DBPATCH_ADD(3000311, 0, 0)	/* add nameserver downtime triggers to tld hosts */
 
 DBPATCH_END()
