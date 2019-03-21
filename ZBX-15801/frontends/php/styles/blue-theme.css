@@ -491,11 +491,10 @@ article, main {
         max-width: 200px;
         overflow: hidden;
         text-overflow: ellipsis;
-        vertical-align: top; }
+        vertical-align: top;
+        white-space: nowrap; }
   .filter-breadcrumb > li {
     padding: 1px 0; }
-  .filter-breadcrumb > li:first-child {
-    white-space: nowrap; }
   .filter-breadcrumb + .filter-space {
     margin-top: -29px; }
 

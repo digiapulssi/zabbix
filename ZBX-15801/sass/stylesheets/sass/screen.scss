@@ -683,16 +683,13 @@ article {
 				overflow: hidden;
 				text-overflow: ellipsis;
 				vertical-align: top;
+				white-space: nowrap;
 			}
 		}
 	}
 
 	> li {
 		padding: 1px 0;
-	}
-
-	> li:first-child {
-		white-space: nowrap;
 	}
 
 	+ .filter-space {
