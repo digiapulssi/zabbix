@@ -809,6 +809,7 @@ sub get_lastvalues_from_db($$$)
 		{
 			# this item belongs to Probe (we do not care about DNS TCP)
 			next if (substr($key, 0, length("rsm.dns.tcp")) eq "rsm.dns.tcp");
+
 			next if (substr($key, 0, length("rsm.conf")) eq "rsm.conf");
 			next if (substr($key, 0, length("rsm.probe")) eq "rsm.probe");
 
@@ -998,7 +999,7 @@ sub calculate_cycle($$$$$$$$)
 	my $cycle_clock = shift;
 	my $delay = shift;
 	my $rtt_limit = shift;
-	my $probes_ref = shift;	# probes ('name' => 'hostid') available for this service
+	my $probes_ref = shift;	# probes ('name' => {'hostid' => hostid, 'status' => status}) available for this service
 	my $interfaces_ref = shift;
 
 	my $from = cycle_start($cycle_clock, $delay);
@@ -1352,7 +1353,17 @@ sub calculate_cycle($$$$$$$$)
 	# add "Offline" and "No results"
 	foreach my $probe (keys(%{$probes_ref}))
 	{
-		my $probe_online = probe_online_at($probe, $from);
+		my $probe_online;
+
+		if ($probes_ref->{$probe}->{'status'} == HOST_STATUS_MONITORED)
+		{
+			print("getting online at ", ts_full($from), "\n") if ($probe eq 'Zabcity');
+			$probe_online = probe_online_at($probe, $from);
+		}
+		else
+		{
+			$probe_online = 0;
+		}
 
 		foreach my $interface (@{$interfaces_ref})
 		{

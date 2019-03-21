@@ -3,6 +3,20 @@ Changes for rsm1.3.0alpha1
 New features:
 
 --------------------------------------------------------------------------------
+Changes for rsm1.2.0rc12
+
+Bug fixes:
+....I..... [488] added configurable limit of time to look back for incident measurement files, 1 hour by default (dimir)
+....I..... [489] fixed online nodes calculation script to mind probe status (dimir)
+
+--------------------------------------------------------------------------------
+Changes for rsm1.2.0rc11
+
+Bug fixes:
+....I..... [486] added listing disabled probes as "Offline" in recent measurement files (dimir)
+..F....... [486] fixed inconsistent probe status displaying in DNS and RDDS details page (miks)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.2.0rc10
 
 New features:

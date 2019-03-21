@@ -25,6 +25,8 @@ use constant AUDIT_RESOURCE_INCIDENT => 32;
 
 use constant MAX_CONTINUE_PERIOD => 30;	# minutes (NB! make sure to update this number in the help message)
 
+use constant DEFAULT_INCIDENT_MEASUREMENTS_LIMIT => 3600;	# seconds, maximum period to look back for recent measurement files for an incident
+
 parse_opts('tld=s', 'service=s', 'period=n', 'from=n', 'continue!', 'print-period!', 'ignore-file=s', 'probe=s', 'limit=n', 'max-children=n', 'server-key=s');
 
 # do not write any logs
@@ -49,6 +51,10 @@ if (!opt('dry-run') && (my $error = rsm_targets_prepare(AH_SLA_API_TMP_DIR, AH_S
 
 my $config = get_rsm_config();
 set_slv_config($config);
+
+my $incident_measurements_limit = (defined($config->{'sla_api'}->{'incident_measurements_limit'}) ?
+		$config->{'sla_api'}->{'incident_measurements_limit'} :
+		DEFAULT_INCIDENT_MEASUREMENTS_LIMIT);
 
 my @server_keys = (opt('server-key') ? getopt('server-key') : get_rsm_server_keys($config));
 
@@ -347,7 +353,7 @@ foreach (@server_keys)
 
 #	my $dns_udp_rtt_high_history = get_history_by_itemid(CONFIGVALUE_DNS_UDP_RTT_HIGH_ITEMID, $from, $till);
 
-	my $all_probes_ref = get_probes();
+	my $all_probes_ref;
 
 	if (opt('probe'))
 	{
@@ -365,9 +371,11 @@ foreach (@server_keys)
 			fail($msg);
 		}
 
-		$all_probes_ref = {
-			$probe	=> $all_probes_ref->{$probe}
-		};
+		$all_probes_ref = get_probes(undef, $probe);
+	}
+	else
+	{
+		$all_probes_ref = get_probes();
 	}
 
 	my $probe_times_ref = get_probe_times($from, $till, $all_probes_ref);
@@ -802,9 +810,13 @@ foreach (@server_keys)
 
 					my $recent_json;
 
-					my $clock = $event_start;
+					# Mind the limit of looking back for recent measurements. If incident
+					# has ended more than limit time ago, we'll do nothing.
 
-					while ($clock < ($event_end // $till))
+					my $clock =  cycle_start($now - $incident_measurements_limit, $delay);
+					my $check_till = $event_end // $till;
+
+					while ($clock < $check_till)
 					{
 						if (ah_get_recent_measurement($ah_tld, $service, $clock, \$recent_json) != AH_SUCCESS)
 						{

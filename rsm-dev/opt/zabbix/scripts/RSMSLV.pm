@@ -567,7 +567,7 @@ sub get_tlds(;$$$)
 # $probes_cache{$server_key}{$name}{$service} = {$host => $hostid, ...}
 my %probes_cache = ();
 
-# Returns a reference to hash of all probes (host => hostid).
+# Returns a reference to hash of all probes (host => {'hostid' => hostid, 'status' => status}).
 sub get_probes(;$$)
 {
 	my $service = shift; # "IP4", "IP6", "RDDS" or any other
@@ -588,7 +588,6 @@ sub get_probes(;$$)
 
 	return $probes_cache{$server_key}{$name}{$service};
 }
-
 sub __get_probes($)
 {
 	my $name = shift;
@@ -596,14 +595,13 @@ sub __get_probes($)
 	my $name_condition = ($name ? "name='$name' and" : "");
 
 	my $rows = db_select(
-		"select hosts.hostid,hosts.host,hostmacro.macro,hostmacro.value" .
+		"select hosts.hostid,hosts.host,hostmacro.macro,hostmacro.value,hosts.status" .
 		" from hosts" .
 			" left join hosts_groups on hosts_groups.hostid=hosts.hostid" .
 			" left join hosts_templates as hosts_templates_1 on hosts_templates_1.hostid=hosts.hostid" .
 			" left join hosts_templates as hosts_templates_2 on hosts_templates_2.hostid=hosts_templates_1.templateid" .
 			" left join hostmacro on hostmacro.hostid=hosts_templates_2.templateid" .
 		" where $name_condition" .
-			" hosts.status=" . HOST_STATUS_MONITORED . " and" .
 			" hosts_groups.groupid=" . PROBES_GROUPID . " and" .
 			" hostmacro.macro in ('{\$RSM.IP4.ENABLED}','{\$RSM.IP6.ENABLED}','{\$RSM.RDDS.ENABLED}')");
 
@@ -616,24 +614,24 @@ sub __get_probes($)
 
 	foreach my $row (@{$rows})
 	{
-		my ($hostid, $host, $macro, $value) = @{$row};
+		my ($hostid, $host, $macro, $value, $status) = @{$row};
 
 		if (!exists($result{'ALL'}{$host}))
 		{
-			$result{'ALL'}{$host} = $hostid;
+			$result{'ALL'}{$host} = {'hostid' => $hostid, 'status' => $status};
 		}
 
 		if ($macro eq '{$RSM.IP4.ENABLED}')
 		{
-			$result{'IP4'}{$host} = $hostid if $value;
+			$result{'IP4'}{$host} = {'hostid' => $hostid, 'status' => $status} if ($value);
 		}
 		elsif ($macro eq '{$RSM.IP6.ENABLED}')
 		{
-			$result{'IP6'}{$host} = $hostid if $value;
+			$result{'IP6'}{$host} = {'hostid' => $hostid, 'status' => $status} if ($value);
 		}
 		elsif ($macro eq '{$RSM.RDDS.ENABLED}')
 		{
-			$result{'RDDS'}{$host} = $hostid if $value;
+			$result{'RDDS'}{$host} = {'hostid' => $hostid, 'status' => $status} if ($value);
 		}
 	}
 
@@ -1491,18 +1489,26 @@ sub __print_probe_times
 #   ...
 # }
 #
-# NB! If a probe was down for the whole specified period it won't be in a hash.
+# NB! If a probe was down for the whole specified period or is currently disabled it won't be in a hash.
 sub get_probe_times($$$)
 {
 	my $from = shift;
 	my $till = shift;
-	my $probes_ref = shift; # { host => hostid, ... }
+	my $probes_ref = shift;	# {host => {'hostid' => hostid, 'status' => status}, ...}
 
 	my $result = {};
 
 	return $result if (scalar(keys(%{$probes_ref})) == 0);
 
-	my @probes = map {"'$_ - mon'"} (keys(%{$probes_ref}));
+	my @probes;
+	foreach my $probe (keys(%{$probes_ref}))
+	{
+		next unless ($probes_ref->{$probe}->{'status'} == HOST_STATUS_MONITORED);
+
+		push(@probes, "'$probe - mon'");
+	}
+
+	return $result if (scalar(@probes) == 0);
 
 	my $items_ref = db_select(
 		"select i.itemid,h.host".
