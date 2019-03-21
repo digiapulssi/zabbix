@@ -3946,8 +3946,6 @@ out:
 
 static int	DBpatch_3000310(void)
 {
-	DB_RESULT	result;
-
 	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
 		return SUCCEED;
 
