@@ -34,7 +34,7 @@ $form = (new CForm())
 	->addVar('action', $data['action']);
 
 // Create item form list.
-$item_form_list = (new CFormList('itemFormList'))
+$item_form_list = (new CFormList('item-form-list'))
 	// Append type to form list.
 	->addRow(
 		(new CVisibilityBox('visible[type]', 'type', _('Original')))
@@ -316,7 +316,7 @@ $item_form_list
 	);
 
 // Create preprocessing form list.
-$preprocessing_form_list = (new CFormList('itemFormList'))
+$preprocessing_form_list = (new CFormList('preprocessing-form-list'))
 	// Append item pre-processing to preprocessing form list.
 	->addRow(
 		(new CVisibilityBox('visible[preprocessing]', 'preprocessing_div', _('Original')))
