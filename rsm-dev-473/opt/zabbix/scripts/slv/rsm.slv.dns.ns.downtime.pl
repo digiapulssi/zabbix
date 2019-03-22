@@ -16,6 +16,7 @@ my $slv_item_key_pattern = 'rsm.slv.dns.ns.downtime';
 my $rtt_item_key_pattern = 'rsm.dns.udp.rtt';
 my $current_month_latest_cycle = current_month_latest_cycle();
 
+system("echo perl > /root/running");
 parse_slv_opts();
 fail_if_running();
 set_slv_config(get_rsm_config());
@@ -131,7 +132,6 @@ sub process_cycles # for a particular slv item
 			if (defined($oldest_rtt_clock_this_month))
 			{
 				$slv_old_value = 0;
-				print "$oldest_rtt_clock_this_month -> ".cycle_start($oldest_rtt_clock_this_month, 60)."\n";
 				$slv_new_clock = cycle_start($oldest_rtt_clock_this_month, 60);
 			}
 			else
@@ -142,8 +142,6 @@ sub process_cycles # for a particular slv item
 		}
 
 		my $slv_new_value = $slv_old_value + cycle_is_down($rtt_itemids, $slv_new_clock);
-
-		print "push_value: $tld, $slv_itemkey, $slv_new_clock, $slv_new_value\n";
 
 		push_value($tld, $slv_itemkey, $slv_new_clock, $slv_new_value);
 		$slv_old_value_and_clock = [$slv_new_value, $slv_new_clock];
@@ -195,8 +193,6 @@ sub cycle_is_down
 
 	my $failed_rtt_value_count = get_failed_rtt_value_count($rtt_itemids, $cycle_start, $cycle_start + 60);
 	my $limit = (SLV_UNAVAILABILITY_LIMIT * 0.01) * $probe_count;
-
-	print "--> ".SLV_UNAVAILABILITY_LIMIT.", $probe_count => $failed_rtt_value_count :: $limit\n";
 
 	return ($failed_rtt_value_count > $limit) ? 1 : 0;
 }
