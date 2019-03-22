@@ -813,7 +813,10 @@ foreach (@server_keys)
 					# Mind the limit of looking back for recent measurements. If incident
 					# has ended more than limit time ago, we'll do nothing.
 
-					my $clock =  cycle_start($now - $incident_measurements_limit, $delay);
+					my $limit = cycle_start($now - $incident_measurements_limit, $delay);
+
+					my $clock = ($event_start > $limit ? $event_start : $limit);
+
 					my $check_till = $event_end // $till;
 
 					while ($clock < $check_till)

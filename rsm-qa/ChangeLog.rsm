@@ -1,3 +1,9 @@
+Changes for rsm1.2.0rc13
+
+Bug fixes:
+....I..... [sub-488] fixed incorrect period selection for incident measurements limit (dimir)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.2.0rc12
 
 Bug fixes:
