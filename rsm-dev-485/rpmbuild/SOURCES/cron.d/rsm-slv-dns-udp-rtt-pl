@@ -1,0 +1,1 @@
+* * * * * root sleep 11; /opt/zabbix/scripts/slv/rsm.slv.dns.udp.rtt.pl >> /var/log/zabbix/rsm.slv.err 2>&1
