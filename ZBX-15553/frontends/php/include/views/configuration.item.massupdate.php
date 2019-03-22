@@ -46,8 +46,8 @@ $item_form_list = (new CFormList('itemFormList'))
 
 // Append hosts to item form list.
 if ($data['displayInterfaces']) {
-	$interfacesComboBox = new CComboBox('interfaceid', $data['interfaceid']);
-	$interfacesComboBox->addItem(new CComboItem(0, '', false, false));
+	$interfaces_combo_box = new CComboBox('interfaceid', $data['interfaceid']);
+	$interfaces_combo_box->addItem(new CComboItem(0, '', false, false));
 
 	// Set up interface groups sorted by priority.
 	$interface_types = zbx_objectValues($data['hosts']['interfaces'], 'type');
@@ -71,7 +71,7 @@ if ($data['displayInterfaces']) {
 		$interface_groups[$interface['type']]->addItem($option);
 	}
 	foreach ($interface_groups as $interface_group) {
-		$interfacesComboBox->addItem($interface_group);
+		$interfaces_combo_box->addItem($interface_group);
 	}
 
 	$span = (new CSpan(_('No interface found')))
@@ -84,7 +84,7 @@ if ($data['displayInterfaces']) {
 			->setLabel(_('Host interface'))
 			->setChecked(isset($data['visible']['interfaceid']))
 			->setAttribute('data-multiple-interface-types', $data['multiple_interface_types']),
-		(new CDiv([$interfacesComboBox, $span]))->setId('interfaceDiv'),
+		(new CDiv([$interfaces_combo_box, $span]))->setId('interfaceDiv'),
 		'interface_row'
 	);
 	$form->addVar('selectedInterfaceId', $data['interfaceid']);
@@ -412,16 +412,16 @@ $item_form_list
 	);
 
 // Append status to form list.
-$statusComboBox = new CComboBox('status', $data['status']);
+$status_combo_box = new CComboBox('status', $data['status']);
 foreach ([ITEM_STATUS_ACTIVE, ITEM_STATUS_DISABLED] as $status) {
-	$statusComboBox->addItem($status, item_status2str($status));
+	$status_combo_box->addItem($status, item_status2str($status));
 }
 $item_form_list
 	->addRow(
 		(new CVisibilityBox('visible[status]', 'status', _('Original')))
 			->setLabel(_('Status'))
 			->setChecked(isset($data['visible']['status'])),
-		$statusComboBox
+		$status_combo_box
 	)
 	// Append logtime to form list.
 	->addRow(
@@ -432,10 +432,10 @@ $item_form_list
 	);
 
 // Append valuemap to form list.
-$valueMapsComboBox = new CComboBox('valuemapid', $data['valuemapid']);
-$valueMapsComboBox->addItem(0, _('As is'));
+$value_maps_combo_box = new CComboBox('valuemapid', $data['valuemapid']);
+$value_maps_combo_box->addItem(0, _('As is'));
 foreach ($data['valuemaps'] as $valuemap) {
-	$valueMapsComboBox->addItem($valuemap['valuemapid'], $valuemap['name']);
+	$value_maps_combo_box->addItem($valuemap['valuemapid'], $valuemap['name']);
 }
 
 $item_form_list
@@ -443,7 +443,7 @@ $item_form_list
 		(new CVisibilityBox('visible[valuemapid]', 'valuemap', _('Original')))
 			->setLabel(_('Show value'))
 			->setChecked(isset($data['visible']['valuemapid'])),
-		(new CDiv([$valueMapsComboBox, SPACE,
+		(new CDiv([$value_maps_combo_box, SPACE,
 			(new CLink(_('show value mappings'), 'adm.valuemapping.php'))->setAttribute('target', '_blank')
 		]))->setId('valuemap')
 	)
