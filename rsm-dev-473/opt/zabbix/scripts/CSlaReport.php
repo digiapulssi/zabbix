@@ -22,11 +22,6 @@ class CSlaReport
 	 */
 	public static function generate($server_id, $tlds, $year, $month)
 	{
-		if (defined("STATS") && STATS === true)
-		{
-			$start_time = microtime(true);
-		}
-
 		if (!is_int($server_id))
 		{
 			self::$error = "\$server_id must be integer";
@@ -146,20 +141,13 @@ class CSlaReport
 
 		date_default_timezone_set($default_timezone);
 
-		if (defined("STATS") && STATS === true)
-		{
-			printf("(STATS) Report count - %d\n", count($reports));
-			printf("(STATS) SQL count    - %d\n", self::$sql_count);
-			printf("(STATS) SQL time     - %.6f\n", self::$sql_time);
-			printf("(STATS) Total time   - %.6f\n", microtime(true) - $start_time);
-			printf("(STATS) Mem usage    - %.2f MB\n", memory_get_peak_usage(true) / 1024 / 1024);
-		}
-
 		return $reports;
 	}
 
 	private static function collectData($tlds, $from, $till)
 	{
+		$data = [];
+
 		// get hostid of TLDs
 
 		$rows = self::getTldHostIds($tlds);
@@ -333,72 +321,72 @@ class CSlaReport
 			}
 			if (is_null($tld["dns"]["availability"]))
 			{
-				throw new Exception("\$data[{$hostid}]['dns']['availability'] is null");
+				throw new Exception("\$data[{$hostid}]['dns']['availability'] is null (TLD: '{$tld["host"]}')");
 			}
 			if (!is_array($tld["dns"]["ns"]))
 			{
-				throw new Exception("\$data[{$hostid}]['dns']['ns'] is not an array");
+				throw new Exception("\$data[{$hostid}]['dns']['ns'] is not an array (TLD: '{$tld["host"]}')");
 			}
 			if (count($tld["dns"]["ns"]) === 0)
 			{
 				// TODO: uncomment
-				//throw new Exception("\$data[{$hostid}]['dns']['ns'] is empty array");
+				//throw new Exception("\$data[{$hostid}]['dns']['ns'] is empty array (TLD: '{$tld["host"]}')");
 			}
 			foreach ($tld["dns"]["ns"] as $i => $ns)
 			{
 				if (is_null($ns["hostname"]))
 				{
-					throw new Exception("\$data[{$hostid}]['dns']['ns'][{$i}]['hostname'] is null");
+					throw new Exception("\$data[{$hostid}]['dns']['ns'][{$i}]['hostname'] is null (TLD: '{$tld["host"]}')");
 				}
 				if (is_null($ns["ipAddress"]))
 				{
-					throw new Exception("\$data[{$hostid}]['dns']['ns'][{$i}]['ipAddress'] is null");
+					throw new Exception("\$data[{$hostid}]['dns']['ns'][{$i}]['ipAddress'] is null (TLD: '{$tld["host"]}')");
 				}
 				if (is_null($ns["availability"]))
 				{
-					throw new Exception("\$data[{$hostid}]['dns']['ns'][{$i}]['availability'] is null");
+					throw new Exception("\$data[{$hostid}]['dns']['ns'][{$i}]['availability'] is null (TLD: '{$tld["host"]}')");
 				}
 				if (is_null($ns["from"]))
 				{
-					throw new Exception("\$data[{$hostid}]['dns']['ns'][{$i}]['from'] is null");
+					throw new Exception("\$data[{$hostid}]['dns']['ns'][{$i}]['from'] is null (TLD: '{$tld["host"]}')");
 				}
 				if (is_null($ns["to"]))
 				{
-					throw new Exception("\$data[{$hostid}]['dns']['ns'][{$i}]['to'] is null");
+					throw new Exception("\$data[{$hostid}]['dns']['ns'][{$i}]['to'] is null (TLD: '{$tld["host"]}')");
 				}
 			}
 			if (!is_float($tld["dns"]["rttUDP"]))
 			{
-				throw new Exception("\$data[{$hostid}]['dns']['rttUDP'] is not float");
+				throw new Exception("\$data[{$hostid}]['dns']['rttUDP'] is not float (TLD: '{$tld["host"]}')");
 			}
 			if (!is_float($tld["dns"]["rttTCP"]))
 			{
-				throw new Exception("\$data[{$hostid}]['dns']['rttTCP'] is not float");
+				throw new Exception("\$data[{$hostid}]['dns']['rttTCP'] is not float (TLD: '{$tld["host"]}')");
 			}
 			if (!is_bool($tld["rdds"]["enabled"]))
 			{
-				throw new Exception("\$data[{$hostid}]['rdds']['enabled'] is not bool");
+				throw new Exception("\$data[{$hostid}]['rdds']['enabled'] is not bool (TLD: '{$tld["host"]}')");
 			}
 			if ($tld["rdds"]["enabled"])
 			{
 				if (is_null($tld["rdds"]["availability"]))
 				{
-					throw new Exception("\$data[{$hostid}]['rdds']['availability'] is null");
+					throw new Exception("\$data[{$hostid}]['rdds']['availability'] is null (TLD: '{$tld["host"]}')");
 				}
 				if (!is_float($tld["rdds"]["rtt"]))
 				{
-					throw new Exception("\$data[{$hostid}]['rdds']['rtt'] is not float");
+					throw new Exception("\$data[{$hostid}]['rdds']['rtt'] is not float (TLD: '{$tld["host"]}')");
 				}
 			}
 			else
 			{
 				if (!is_null($tld["rdds"]["availability"]))
 				{
-					throw new Exception("\$data[{$hostid}]['rdds']['availability'] is not null");
+					throw new Exception("\$data[{$hostid}]['rdds']['availability'] is not null (TLD: '{$tld["host"]}')");
 				}
 				if (!is_null($tld["rdds"]["rtt"]))
 				{
-					throw new Exception("\$data[{$hostid}]['rdds']['rtt'] is not null");
+					throw new Exception("\$data[{$hostid}]['rdds']['rtt'] is not null (TLD: '{$tld["host"]}')");
 				}
 			}
 		}
@@ -406,9 +394,9 @@ class CSlaReport
 
 	private static function generateXml(&$tlds, &$data, $generationDateTime, $reportPeriodFrom, $reportPeriodTo)
 	{
-		$reports = array_fill_keys($tlds, null);
+		$reports = array_fill_keys($tlds, null); // for sorting, based on $tlds
 
-		foreach ($data as $tld)
+		foreach ($data as $tldid => $tld)
 		{
 			$xml = new SimpleXMLElement("<reportTLD/>");
 			$xml->addAttribute("id", $tld["host"]);
@@ -445,10 +433,14 @@ class CSlaReport
 			$dom = dom_import_simplexml($xml)->ownerDocument;
 			$dom->formatOutput = true;
 
-			$reports[$tld["host"]] = $dom->saveXML();
+			$reports[$tld["host"]] = [
+				"hostid" => $tldid,
+				"host"   => $tld["host"],
+				"report" => $dom->saveXML(),
+			];
 		}
 
-		return $reports;
+		return array_values($reports);
 	}
 
 	################################################################################
@@ -528,7 +520,11 @@ class CSlaReport
 			" where hosts_groups.groupid=140";
 		$params = [];
 
-		if (count($tlds) > 0)
+		if (count($tlds) === 0)
+		{
+			$sql .= " order by hosts.host asc";
+		}
+		else
 		{
 			$tlds_placeholder = substr(str_repeat("?,", count($tlds)), 0, -1);
 			$sql .= " and hosts.host in ({$tlds_placeholder})";
@@ -552,7 +548,8 @@ class CSlaReport
 					"select itemid,max(clock) as clock" .
 					" from {$history_table}" .
 					" where itemid in ({$itemids_placeholder}) and" .
-						" clock between ? and ? group by itemid" .
+						" clock between ? and ?" .
+					" group by itemid" .
 				") as history_max_clock" .
 			" where history_max_clock.itemid={$history_table}.itemid and" .
 				" history_max_clock.clock={$history_table}.clock";
@@ -581,7 +578,7 @@ class CSlaReport
 	# DB methods
 	################################################################################
 
-	private static function dbSelect($sql, $input_parameters = NULL)
+	public static function dbSelect($sql, $input_parameters = NULL)
 	{
 		if (defined("DEBUG") && DEBUG === true)
 		{
@@ -614,7 +611,54 @@ class CSlaReport
 		return $rows;
 	}
 
-	private static function dbConnect($server_id)
+	public static function dbExecute($sql, $input_parameters = NULL)
+	{
+		if (defined("DEBUG") && DEBUG === true)
+		{
+			$params = is_null($input_parameters) ? "NULL" : "[" . implode(", ", $input_parameters) . "]";
+			printf("(DEBUG) %s() query  - %s\n", __method__, $sql);
+			printf("(DEBUG) %s() params - %s\n", __method__, $params);
+		}
+
+		if (defined("STATS") && STATS === true)
+		{
+			$time = microtime(true);
+		}
+
+		$sth = self::$dbh->prepare($sql);
+		$sth->execute($input_parameters);
+		$rows = $sth->rowCount();
+
+		if (defined("STATS") && STATS === true)
+		{
+			self::$sql_time += microtime(true) - $time;
+			self::$sql_count++;
+		}
+
+		if (defined("DEBUG") && DEBUG === true)
+		{
+			printf("(DEBUG) %s() result - %s row(s)\n", __method__, $rows);
+		}
+
+		return $rows;
+	}
+
+	public static function dbBeginTransaction()
+	{
+		self::$dbh->beginTransaction();
+	}
+
+	public static function dbRollBack()
+	{
+		self::$dbh->rollBack();
+	}
+
+	public static function dbCommit()
+	{
+		self::$dbh->commit();
+	}
+
+	public static function dbConnect($server_id)
 	{
 		self::$sql_count = 0;
 		self::$sql_time = 0.0;
@@ -629,12 +673,19 @@ class CSlaReport
 		self::$dbh = new PDO("mysql:host={$hostname};dbname={$database}", $username, $password, $ssl_conf);
 		self::$dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 		self::$dbh->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_NUM);
+		self::$dbh->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
 		self::$dbh->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
 	}
 
-	private static function dbDisconnect()
+	public static function dbDisconnect()
 	{
 		self::$dbh = NULL;
+
+		if (defined("STATS") && STATS === true)
+		{
+			printf("(STATS) SQL count - %d\n", self::$sql_count);
+			printf("(STATS) SQL time  - %.6f\n", self::$sql_time);
+		}
 	}
 
 	private static function getDbConfig($server_id)

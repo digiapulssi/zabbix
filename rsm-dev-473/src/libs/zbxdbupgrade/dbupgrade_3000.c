@@ -3946,6 +3946,36 @@ out:
 
 static int	DBpatch_3000310(void)
 {
+	const ZBX_TABLE table =
+			{"sla_reports", "hostid,year,month", 0,
+				{
+					{"hostid", NULL, "hosts", "hostid", 0, ZBX_TYPE_ID, ZBX_NOTNULL, 0},
+					{"year", NULL, NULL, NULL, 0, ZBX_TYPE_INT, ZBX_NOTNULL, 0},
+					{"month", NULL, NULL, NULL, 0, ZBX_TYPE_INT, ZBX_NOTNULL, 0},
+					{"report", NULL, NULL, NULL, 0, ZBX_TYPE_TEXT, ZBX_NOTNULL, 0},
+					{0}
+				},
+				NULL
+			};
+
+	if (SUCCEED != DBcreate_table(&table))
+		return FAIL;
+
+	/* add constraint */
+	if (ZBX_DB_OK > DBexecute(
+			"alter table `sla_reports`"
+			" add constraint `c_sla_reports_1`"
+				" foreign key (`hostid`) references `hosts` (`hostid`)"
+			" on delete cascade"))
+	{
+		return FAIL;
+	}
+
+	return SUCCEED;
+}
+
+static int	DBpatch_3000311(void)
+{
 	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
 		return SUCCEED;
 
@@ -4030,7 +4060,7 @@ static int	create_dependent_dns_ns_trigger_chain(const char *hostid, const char 
 	return SUCCEED;
 }
 
-static int	DBpatch_3000311(void)
+static int	DBpatch_3000312(void)
 {
 	DB_RESULT	result;
 	DB_ROW		row;
@@ -4164,7 +4194,8 @@ DBPATCH_ADD(3000306, 0, 0)	/* add RDDS downtime triggers to existing tld hosts *
 DBPATCH_ADD(3000307, 0, 0)	/* add rsm.slv.dns.ns.downtime to tld hosts */
 DBPATCH_ADD(3000308, 0, 0)	/* add "DNS Resolution RTT (performed/failed/pfailed)" items to existing tld hosts */
 DBPATCH_ADD(3000309, 0, 0)	/* add "RDDS Resolution RTT (performed/failed/pfailed)" items to existing tld hosts */
-DBPATCH_ADD(3000310, 0, 0)	/* rename macro RSM.SLV.NS.AVAIL into RSM.SLV.NS.DOWNTIME */
-DBPATCH_ADD(3000311, 0, 0)	/* add nameserver downtime triggers to tld hosts */
+DBPATCH_ADD(3000310, 0, 0)	/* create sla_reports table*/
+DBPATCH_ADD(3000311, 0, 0)	/* rename macro RSM.SLV.NS.AVAIL into RSM.SLV.NS.DOWNTIME */
+DBPATCH_ADD(3000312, 0, 0)	/* add nameserver downtime triggers to tld hosts */
 
 DBPATCH_END()

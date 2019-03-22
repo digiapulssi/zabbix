@@ -103,6 +103,7 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		get_templated_nsips db_exec tld_interface_enabled
 		tld_interface_enabled_create_cache tld_interface_enabled_delete_cache
 		db_select db_select_binds set_slv_config get_cycle_bounds get_rollweek_bounds get_downtime_bounds
+		db_explain
 		get_probe_times probe_offline_at probes2tldhostids
 		slv_max_cycles
 		get_probe_online_key_itemid
@@ -566,7 +567,7 @@ sub get_tlds(;$$$)
 # $probes_cache{$server_key}{$name}{$service} = {$host => $hostid, ...}
 my %probes_cache = ();
 
-# Returns a reference to hash of all probes (host => hostid).
+# Returns a reference to hash of all probes (host => {'hostid' => hostid, 'status' => status}).
 sub get_probes(;$$)
 {
 	my $service = shift; # "IP4", "IP6", "RDDS" or any other
@@ -587,7 +588,6 @@ sub get_probes(;$$)
 
 	return $probes_cache{$server_key}{$name}{$service};
 }
-
 sub __get_probes($)
 {
 	my $name = shift;
@@ -595,14 +595,13 @@ sub __get_probes($)
 	my $name_condition = ($name ? "name='$name' and" : "");
 
 	my $rows = db_select(
-		"select hosts.hostid,hosts.host,hostmacro.macro,hostmacro.value" .
+		"select hosts.hostid,hosts.host,hostmacro.macro,hostmacro.value,hosts.status" .
 		" from hosts" .
 			" left join hosts_groups on hosts_groups.hostid=hosts.hostid" .
 			" left join hosts_templates as hosts_templates_1 on hosts_templates_1.hostid=hosts.hostid" .
 			" left join hosts_templates as hosts_templates_2 on hosts_templates_2.hostid=hosts_templates_1.templateid" .
 			" left join hostmacro on hostmacro.hostid=hosts_templates_2.templateid" .
 		" where $name_condition" .
-			" hosts.status=" . HOST_STATUS_MONITORED . " and" .
 			" hosts_groups.groupid=" . PROBES_GROUPID . " and" .
 			" hostmacro.macro in ('{\$RSM.IP4.ENABLED}','{\$RSM.IP6.ENABLED}','{\$RSM.RDDS.ENABLED}')");
 
@@ -615,24 +614,24 @@ sub __get_probes($)
 
 	foreach my $row (@{$rows})
 	{
-		my ($hostid, $host, $macro, $value) = @{$row};
+		my ($hostid, $host, $macro, $value, $status) = @{$row};
 
 		if (!exists($result{'ALL'}{$host}))
 		{
-			$result{'ALL'}{$host} = $hostid;
+			$result{'ALL'}{$host} = {'hostid' => $hostid, 'status' => $status};
 		}
 
 		if ($macro eq '{$RSM.IP4.ENABLED}')
 		{
-			$result{'IP4'}{$host} = $hostid if $value;
+			$result{'IP4'}{$host} = {'hostid' => $hostid, 'status' => $status} if ($value);
 		}
 		elsif ($macro eq '{$RSM.IP6.ENABLED}')
 		{
-			$result{'IP6'}{$host} = $hostid if $value;
+			$result{'IP6'}{$host} = {'hostid' => $hostid, 'status' => $status} if ($value);
 		}
 		elsif ($macro eq '{$RSM.RDDS.ENABLED}')
 		{
-			$result{'RDDS'}{$host} = $hostid if $value;
+			$result{'RDDS'}{$host} = {'hostid' => $hostid, 'status' => $status} if ($value);
 		}
 	}
 
@@ -1229,6 +1228,62 @@ sub db_select($;$)
 	return $rows_ref;
 }
 
+sub db_explain($$)
+{
+	my $sql    = shift;
+	my $params = shift; # optional; reference to an array
+
+	my $rows = db_select("explain $sql", $params);
+
+	my @header = (
+		"id",
+		"select_type",
+		"table",
+		"partitions",
+		"type",
+		"possible_keys",
+		"key",
+		"key_len",
+		"ref",
+		"rows",
+		"filtered",
+		"Extra"
+	);
+
+	my @col_widths = map(length, @header);
+
+	foreach my $row (@{$rows})
+	{
+		for (my $i = 0; $i < scalar(@{$row}); $i++)
+		{
+			$row->[$i] //= "NULL";
+			if ($col_widths[$i] < length($row->[$i]))
+			{
+				$col_widths[$i] = length($row->[$i]);
+			}
+		}
+	}
+
+	my $line_width = 0;
+	my $line_format = "";
+	for (my $i = 0; $i < scalar(@header); $i++)
+	{
+		$line_width += 2 + $col_widths[$i] + 1;
+		$line_format .= "| %-${col_widths[$i]}s ";
+	}
+	$line_width += 2;
+	$line_format .= " |\n";
+
+	print("-" x $line_width . "\n");
+	printf($line_format, @header);
+	print("-" x $line_width . "\n");
+	foreach my $row (@{$rows})
+	{
+		printf($line_format, @{$row});
+	}
+	print("-" x $line_width . "\n");
+}
+
 sub db_select_binds
 {
 	$_global_sql = shift;
@@ -1434,18 +1489,26 @@ sub __print_probe_times
 #   ...
 # }
 #
-# NB! If a probe was down for the whole specified period it won't be in a hash.
+# NB! If a probe was down for the whole specified period or is currently disabled it won't be in a hash.
 sub get_probe_times($$$)
 {
 	my $from = shift;
 	my $till = shift;
-	my $probes_ref = shift; # { host => hostid, ... }
+	my $probes_ref = shift;	# {host => {'hostid' => hostid, 'status' => status}, ...}
 
 	my $result = {};
 
 	return $result if (scalar(keys(%{$probes_ref})) == 0);
 
-	my @probes = map {"'$_ - mon'"} (keys(%{$probes_ref}));
+	my @probes;
+	foreach my $probe (keys(%{$probes_ref}))
+	{
+		next unless ($probes_ref->{$probe}->{'status'} == HOST_STATUS_MONITORED);
+
+		push(@probes, "'$probe - mon'");
+	}
+
+	return $result if (scalar(@probes) == 0);
 
 	my $items_ref = db_select(
 		"select i.itemid,h.host".
@@ -3411,6 +3474,8 @@ sub cycles_till_end_of_month($$)
 
 	if (opt('debug'))
 	{
+		require DateTime;
+
 		dbg('now              - ', DateTime->from_epoch('epoch' => $now));
 		dbg('this cycle start - ', DateTime->from_epoch('epoch' => $this_cycle_start));
 		dbg('end of month     - ', DateTime->from_epoch('epoch' => $end_of_month));
@@ -3633,6 +3698,7 @@ sub update_slv_rtt_monthly_stats($$$$$$$$)
 
 	init_values();
 
+	TLD_LOOP:
 	foreach my $tld (keys(%{$slv_items}))
 	{
 		my $last_clock           = $slv_items->{$tld}{$slv_item_key_performed}[0];
@@ -3664,7 +3730,7 @@ sub update_slv_rtt_monthly_stats($$$$$$$$)
 
 			if ($cycle_start > $now)
 			{
-				last;
+				next TLD_LOOP;
 			}
 
 			my $rtt_stats = get_slv_rtt_cycle_stats_aggregated($rtt_params_list, $cycle_start, $cycle_end, $tld);
@@ -3675,7 +3741,7 @@ sub update_slv_rtt_monthly_stats($$$$$$$$)
 				{
 					dbg("stopping updatig TLD '$tld' because of missing data, cycle from $cycle_start till $cycle_end");
 				}
-				last;
+				next TLD_LOOP;
 			}
 
 			$cycles_till_end_of_month--;

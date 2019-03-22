@@ -1354,7 +1354,7 @@ FIELD		|inventory_mode	|t_integer	|'0'	|NOT NULL	|0
 TABLE|dbversion||
 FIELD		|mandatory	|t_integer	|'0'	|NOT NULL	|
 FIELD		|optional	|t_integer	|'0'	|NOT NULL	|
-ROW		|3000133	|3000311
+ROW		|3000133	|3000312
 
 TABLE|rsm_ip_version|id|0
 FIELD		|id		|t_serial	|	|NOT NULL	|0
@@ -1405,3 +1405,9 @@ TABLE|lastvalue_str|itemid|0
 FIELD		|itemid		|t_id		|	|NOT NULL	|0			|1|items	|itemid
 FIELD		|clock		|t_time		|'0'	|NOT NULL	|0
 FIELD		|value		|t_varchar(255)	|''	|NOT NULL	|0
+
+TABLE|sla_reports|hostid,year,month|0
+FIELD		|hostid		|t_id		|	|NOT NULL	|0			|1|hosts	|hostid
+FIELD		|year		|t_integer	|	|NOT NULL	|0
+FIELD		|month		|t_integer	|	|NOT NULL	|0
+FIELD		|report		|t_text		|	|NOT NULL	|0
