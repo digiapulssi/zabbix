@@ -4000,8 +4000,6 @@ static int	create_dns_ns_downtime_trigger(const char *hostid, const char *itemid
 				const char *percent, const char *coefficient, const char *priority,
 				zbx_uint64_t *triggerid)
 {
-	DB_RESULT	result;
-	DB_ROW		row;
 	zbx_uint64_t	functionid;
 
 	*triggerid = DBget_maxid("triggers");
@@ -4025,8 +4023,6 @@ static int	create_dns_ns_downtime_trigger(const char *hostid, const char *itemid
 	{
 		return FAIL;
 	}
-
-	DBfree_result(result);
 
 	return SUCCEED;
 }
@@ -4064,7 +4060,7 @@ static int	DBpatch_3000312(void)
 {
 	DB_RESULT	result;
 	DB_ROW		row;
-	char		*itemkey, *nsip;
+	char		*itemkey;
 	int		prefixlen, itemkeylen;
 	const char	*key_prefix = "rsm.slv.dns.ns.downtime[";
 
