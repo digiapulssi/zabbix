@@ -79,16 +79,6 @@ function getSystemStatusData(array $filter) {
 		$filter_hostids = array_diff($filter_hostids, $exclude_hostids);
 	}
 
-	if (array_key_exists('problem', $filter) && $filter['problem'] !== '') {
-		$filter_triggerids = array_keys(API::Trigger()->get([
-			'output' => [],
-			'groupids' => $filter_groupids,
-			'hostids' => $filter_hostids,
-			'search' => ['description' => $filter['problem']],
-			'preservekeys' => true
-		]));
-	}
-
 	$data = [
 		'groups' => API::HostGroup()->get([
 			'output' => ['groupid', 'name'],
@@ -123,12 +113,12 @@ function getSystemStatusData(array $filter) {
 		'hostids' => $filter_hostids,
 		'source' => EVENT_SOURCE_TRIGGERS,
 		'object' => EVENT_OBJECT_TRIGGER,
-		'objectids' => $filter_triggerids,
 		'suppressed' => false,
 		'sortfield' => ['eventid'],
 		'sortorder' => ZBX_SORT_DOWN,
 		'preservekeys' => true
 	];
+
 	if (array_key_exists('severities', $filter)) {
 		$filter_severities = implode(',', $filter['severities']);
 		$all_severities = implode(',', range(TRIGGER_SEVERITY_NOT_CLASSIFIED, TRIGGER_SEVERITY_COUNT - 1));
@@ -137,16 +127,21 @@ function getSystemStatusData(array $filter) {
 			$options['severities'] = $filter['severities'];
 		}
 	}
+
 	if (array_key_exists('show_suppressed', $filter) && $filter['show_suppressed']) {
 		unset($options['suppressed']);
 		$options['selectSuppressionData'] = ['maintenanceid', 'suppress_until'];
 	}
+
 	if ($filter_ext_ack == EXTACK_OPTION_UNACK) {
 		$options['acknowledged'] = false;
 	}
 
-	$problems = API::Problem()->get($options);
+	if (array_key_exists('problem', $filter) && $filter['problem'] !== '') {
+		$options['search'] = ['name' => $filter['problem']];
+	}
 
+	$problems = API::Problem()->get($options);
 	if ($problems) {
 		$triggerids = [];
 
