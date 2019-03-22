@@ -151,10 +151,19 @@ foreach ($data['probes'] as $probe) {
 						}
 					}
 					else {
-						$cell_cnt = count($ipvs[$ipv]);
+						if (array_key_exists($ipv, $ipvs)) {
+							$cell_cnt = count($ipvs[$ipv]);
+						}
+						elseif (array_key_exists($ipv, $ns_ips)) {
+							$cell_cnt = count($ns_ips[$ipv]);
+						}
+						else {
+							$cell_cnt = 0;
+						}
+
 						$row[] = ($cell_cnt > 1)
 							? (new CCol('-'))->setColSpan($cell_cnt)
-							: '-';
+							: ($cell_cnt ? '-' : null);
 					}
 				}
 			}
