@@ -3981,9 +3981,9 @@ static int	create_dns_ns_downtime_trigger(const char *hostid, const char *itemid
 			"insert into triggers (triggerid,expression,description,"
 				"url,status,priority,comments,templateid,type,flags)"
 			"values (" ZBX_FS_UI64 ", '{" ZBX_FS_UI64 "}>={$RSM.SLV.NS.DOWNTIME}%s',"
-				"'RDDS service was unavailable for %s of allowed $1',"
+				"'DNS %s downtime exceeded %s of allowed $1',"
 				"'', '0', '%s', '', NULL, '0', '0')",
-			*triggerid, functionid, coefficient, percent, priority))
+			*triggerid, functionid, coefficient, nsip, percent, priority))
 	{
 		return FAIL;
 	}
