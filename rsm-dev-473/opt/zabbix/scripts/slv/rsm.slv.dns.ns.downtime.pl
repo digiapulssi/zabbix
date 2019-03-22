@@ -12,6 +12,8 @@ use TLD_constants qw(:groups :api);
 use Data::Dumper;
 use DateTime;
 
+use constant MAX_CYCLES_TO_PROCESS => 5;
+
 my $slv_item_key_pattern = 'rsm.slv.dns.ns.downtime';
 my $rtt_item_key_pattern = 'rsm.dns.udp.rtt';
 my $current_month_latest_cycle = current_month_latest_cycle();
@@ -103,7 +105,7 @@ sub process_cycles # for a particular slv item
 
 	for (;;)
 	{
-		last if ($n >= 5);
+		last if ($n >= MAX_CYCLES_TO_PROCESS);
 		$n++;
 
 		if (defined($slv_old_value_and_clock))
