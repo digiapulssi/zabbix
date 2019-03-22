@@ -16,7 +16,6 @@ my $slv_item_key_pattern = 'rsm.slv.dns.ns.downtime';
 my $rtt_item_key_pattern = 'rsm.dns.udp.rtt';
 my $current_month_latest_cycle = current_month_latest_cycle();
 
-system("echo perl > /root/running");
 parse_slv_opts();
 fail_if_running();
 set_slv_config(get_rsm_config());
