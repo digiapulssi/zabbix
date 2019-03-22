@@ -40,7 +40,7 @@ sub get_tlds_and_hostids
 
 	if (defined($tld))
 	{
-		$tld_cond = " and h.host='$tld'"
+		$tld_cond = " and h.host='$tld'";
 	}
 
 	return db_select(
