@@ -31,6 +31,7 @@ class CControllerNotificationsGet extends CController {
 
 	protected function doAction() {
 		$msgsettings = getMessageSettings();
+
 		$triggerLimit = 15;
 
 		$result = [
@@ -51,7 +52,7 @@ class CControllerNotificationsGet extends CController {
 			]
 		];
 
-		if (!$msgsettings['triggers.severities']) {
+		if (!$msgsettings['triggers.severities'] || !$msgsettings['enabled']) {
 			return $this->setResponse(new CControllerResponseData(['main_block' => json_encode($result)]));
 		}
 
