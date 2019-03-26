@@ -19,6 +19,30 @@
 
 
 jQuery(function($) {
+	var App = {
+		localStorage: null,
+		browserTab: null,
+		notifications: null,
+		logout: function() {
+			this.localStorage.truncate();
+
+			var url = new Curl('index.php', true);
+			url.setArgument('reconnect', 1);
+			window.location.replace(url.getUrl());
+		},
+		construct: function() {
+			this.localStorage = new ZBX_LocalStorage('1');
+			this.browserTab = new ZBX_BrowserTab(this.localStorage);
+			this.notifications = new ZBX_Notifications(this.localStorage, this.browserTab);
+		},
+		init: function() {
+			document.body.appendChild(App.notifications.dom.node);
+			$(App.notifications.dom.node).draggable();
+		}
+	}
+	App.construct();
+	App.init();
+	window.App = App
 
 	if ($('#search').length) {
 		createSuggest('search');
