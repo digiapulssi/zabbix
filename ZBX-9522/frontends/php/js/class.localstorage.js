@@ -183,7 +183,7 @@ ZBX_LocalStorage.prototype.wrap = function(value) {
 }
 
 /**
- * @param {value} string
+ * @param {string} value
  *
  * @return {mixed}
  */
@@ -193,6 +193,8 @@ ZBX_LocalStorage.prototype.unwrap = function(value) {
 
 /**
  * Removes all local storage and creates default objects.
+ *
+ * @param {string} value
  */
 ZBX_LocalStorage.prototype.truncate = function() {
 	localStorage.clear();

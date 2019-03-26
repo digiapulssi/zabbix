@@ -236,6 +236,11 @@ ZBX_Notifications.prototype.onTabUnload = function(tab) {
 		this.store.writeKey('notifications.alarm.seek', this.player.getSeek());
 		this.store.writeKey('notifications.alarm.timeout', this.player.getTimeout());
 	}
+
+	// If the last tab is unloded.
+	if (!tab.getAllTabIds().length) {
+		this.store.truncate();
+	}
 }
 
 /**
