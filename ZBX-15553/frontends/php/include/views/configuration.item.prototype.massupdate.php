@@ -584,16 +584,21 @@ $item_form_list
 		(new CTextArea('description', $data['description']))->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
 	);
 
-$form->addItem(
-	(new CTabView())
-		->addTab('item_tab', _('Item prototype'), $item_form_list)
-		->addTab('preprocessing_tab', _('Preprocessing'), $preprocessing_form_list)
-		// Append buttons to form.
-		->setFooter(makeFormFooter(
-			new CSubmit('massupdate', _('Update')),
-			[new CButtonCancel(url_params(['hostid', 'parent_discoveryid']))]
-		))
-);
+$tabs = (new CTabView())
+	->addTab('item_tab', _('Item prototype'), $item_form_list)
+	->addTab('preprocessing_tab', _('Preprocessing'), $preprocessing_form_list)
+	// Append buttons to form.
+	->setFooter(makeFormFooter(
+		new CSubmit('massupdate', _('Update')),
+		[new CButtonCancel(url_params(['hostid', 'parent_discoveryid']))]
+	));
+
+if (!hasRequest('massupdate')) {
+	$tabs->setSelected(0);
+}
+
+$form->addItem($tabs);
+
 $widget->addItem($form);
 
 require_once dirname(__FILE__).'/js/configuration.item.massupdate.js.php';
