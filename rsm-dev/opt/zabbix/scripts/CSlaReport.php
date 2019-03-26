@@ -12,13 +12,13 @@ class CSlaReport
 	 * Generates SLA reports.
 	 *
 	 * @param int   $server_id ID of server in config file
-	 * @param array $tlds      array of TLD names, may be empty array
+	 * @param array $tlds      array of TLD names; if empty, reports for all TLDs will be generated
 	 * @param int   $year      year
 	 * @param int   $month     month
 	 *
 	 * @static
 	 *
-	 * @return array|null Returns array of reports NULL on error. Use CSlaReport::$error to get erorr message.
+	 * @return array|null Returns array of reports or NULL on error. Use CSlaReport::$error to get the erorr message.
 	 */
 	public static function generate($server_id, $tlds, $year, $month)
 	{
@@ -246,6 +246,10 @@ class CSlaReport
 			{
 				array_push($itemids_uint, $itemid);
 			}
+			else
+			{
+				throw new Exception("Unhandled item type: '{$type}' (hostid: {$hostid}, key: {$key})");
+			}
 		}
 
 		// get monthly lastvalue
@@ -268,11 +272,11 @@ class CSlaReport
 					break;
 
 				case "rsm.slv.dns.udp.rtt.pfailed":
-					$data[$hostid]["dns"]["rttUDP"] = 100 - $value;
+					$data[$hostid]["dns"]["rttUDP"] = 100.0 - $value;
 					break;
 
 				case "rsm.slv.dns.tcp.rtt.pfailed":
-					$data[$hostid]["dns"]["rttTCP"] = 100 - $value;
+					$data[$hostid]["dns"]["rttTCP"] = 100.0 - $value;
 					break;
 
 				case "rsm.slv.rdds.downtime":
@@ -280,7 +284,7 @@ class CSlaReport
 					break;
 
 				case "rsm.slv.rdds.rtt.pfailed":
-					$data[$hostid]["rdds"]["rtt"] = 100 - $value;
+					$data[$hostid]["rdds"]["rtt"] = 100.0 - $value;
 					break;
 
 				default:
@@ -342,6 +346,7 @@ class CSlaReport
 				{
 					throw new Exception("\$data[{$hostid}]['dns']['ns'][{$i}]['ipAddress'] is null (TLD: '{$tld["host"]}')");
 				}
+				// TODO: "availability", "from", "till" - what if NS was disabled for whole month?
 				if (is_null($ns["availability"]))
 				{
 					throw new Exception("\$data[{$hostid}]['dns']['ns'][{$i}]['availability'] is null (TLD: '{$tld["host"]}')");
@@ -408,7 +413,7 @@ class CSlaReport
 			$xml_dns->addChild("serviceAvailability", $tld["dns"]["availability"]);
 			foreach ($tld["dns"]["ns"] as $ns)
 			{
-				$xml_ns = $xml_dns->addChild("serviceAvailability", $ns["availability"]);
+				$xml_ns = $xml_dns->addChild("nsAvailability", $ns["availability"]);
 				$xml_ns->addAttribute("hostname", $ns["hostname"]);
 				$xml_ns->addAttribute("ipAddress", $ns["ipAddress"]);
 				$xml_ns->addAttribute("from", $ns["from"]);
