@@ -23,7 +23,6 @@
 require_once dirname(__FILE__).'/include/gettextwrapper.inc.php';
 require_once dirname(__FILE__).'/include/js.inc.php';
 require_once dirname(__FILE__).'/include/locales.inc.php';
-require_once dirname(__FILE__).'/include/defines.inc.php';
 
 // if we must provide language constants on language different from English
 if (isset($_GET['lang'])) {
@@ -269,14 +268,7 @@ else {
 	$files = $_GET['files'];
 }
 
-$env = ['ZABBIX_VERSION' => ZABBIX_VERSION];
-
-$js = 'if (typeof(window.env) == "undefined") { window.env = {}; }'."\n";
-foreach ($env as $name => $value) {
-	$js .= 'env[\''.$name.'\'] = '.zbx_jsvalue($value).';';
-}
-
-$js .= 'if (typeof(locale) == "undefined") { var locale = {}; }'."\n";
+$js = 'if (typeof(locale) == "undefined") { var locale = {}; }'."\n";
 foreach ($files as $file) {
 	if (isset($tranStrings[$file])) {
 		foreach ($tranStrings[$file] as $origStr => $str) {
