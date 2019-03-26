@@ -3532,7 +3532,7 @@ static int	DBpatch_3000306(void)
 
 static int extract_string_part(char **out, char ch, const char *str, int *index, int length)
 {
-	int	strbegin, part_length, i;
+	int	strbegin, part_length;
 
 	strbegin = *index;
 
