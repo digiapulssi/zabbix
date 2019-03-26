@@ -12,17 +12,19 @@ use TLD_constants qw(:groups :api);
 use Data::Dumper;
 use DateTime;
 
-use constant MAX_CYCLES_TO_PROCESS => 5;
-
-my $slv_item_key_pattern = 'rsm.slv.dns.ns.avail';
-my $rtt_item_key_pattern = 'rsm.dns.udp.rtt';
-my $current_month_latest_cycle = current_month_latest_cycle();
+use constant MAX_CYCLES_TO_PROCESS => 1;
 
 parse_slv_opts();
 fail_if_running();
 set_slv_config(get_rsm_config());
 db_connect();
 init_values();
+
+my $slv_item_key_pattern = 'rsm.slv.dns.ns.avail';
+my $rtt_item_key_pattern = 'rsm.dns.udp.rtt';
+my $current_month_latest_cycle = current_month_latest_cycle();
+my $cfg_minonline = get_macro_dns_probe_online();
+
 process_values();
 send_values();
 slv_exit(SUCCESS);
@@ -122,7 +124,20 @@ sub process_cycles # for a particular slv item
 			last;
 		}
 
-		push_value($tld, $slv_itemkey, $slv_clock, cycle_is_down($rtt_itemids, $slv_clock));
+		my $from = $slv_clock;
+		my $till = $slv_clock + 59;
+		
+		my $online_probe_count = scalar(keys(%{get_probe_times($from, $till, get_probes('DNS'))}));
+
+		if ($online_probe_count < $cfg_minonline)
+		{
+			push_value($tld, $slv_itemkey, $from, UP_INCONCLUSIVE_NO_PROBES,
+				"Up (not enough probes online, $online_probe_count while $cfg_minonline required)");
+		}
+		else
+		{
+			push_value($tld, $slv_itemkey, $from, cycle_is_down($from, $till, $rtt_itemids));
+		}
 	}
 }
 
@@ -154,11 +169,12 @@ sub get_slv_last_clock
 
 sub cycle_is_down
 {
+	my $from = shift;
+	my $till = shift;
 	my $rtt_itemids = shift;
-	my $cycle_start = shift;
 	my $probe_count = scalar(@{$rtt_itemids});
 
-	my $failed_rtt_value_count = get_failed_rtt_value_count($rtt_itemids, $cycle_start, $cycle_start + 60);
+	my $failed_rtt_value_count = get_failed_rtt_value_count($rtt_itemids, $from, $till);
 	my $limit = (SLV_UNAVAILABILITY_LIMIT * 0.01) * $probe_count;
 
 	return ($failed_rtt_value_count > $limit) ? 1 : 0;
