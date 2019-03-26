@@ -93,7 +93,7 @@ class CView {
 	/**
 	 * Creates a new view based on provided template file.
 	 *
-	 * @param string $view  Name of a view, located under include/views.
+	 * @param string $view  Name of a view, located under one of directory listed in self::$viewsDir.
 	 * @param array  $data  Deprecated parameter, use set() and get() methods for passing variables to views.
 	 *
 	 * @throws Exception if file does not exist.
