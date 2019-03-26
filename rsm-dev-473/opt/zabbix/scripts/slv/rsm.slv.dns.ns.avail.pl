@@ -14,7 +14,7 @@ use DateTime;
 
 use constant MAX_CYCLES_TO_PROCESS => 5;
 
-my $slv_item_key_pattern = 'rsm.slv.dns.ns.downtime';
+my $slv_item_key_pattern = 'rsm.slv.dns.ns.avail';
 my $rtt_item_key_pattern = 'rsm.dns.udp.rtt';
 my $current_month_latest_cycle = current_month_latest_cycle();
 
@@ -68,8 +68,10 @@ sub process_tld
 
 sub get_slv_dns_ns_downtime_items
 {
+	my $hostid = shift;
+
 	return db_select("select itemid,key_ from items".
-		" where hostid=".shift()." and key_ like '$slv_item_key_pattern\[%'");
+		" where hostid=$hostid and key_ like '$slv_item_key_pattern\[%'");
 }
 
 sub process_slv_item
@@ -96,56 +98,31 @@ sub process_cycles # for a particular slv item
 	my $nsip = shift;
 
 	my $rtt_itemids = get_dns_udp_rtt_itemids($nsip); # one item per probe
-
-	my $slv_old_value_and_clock = get_slv_lastvalue_and_clock($slv_itemid);
+	my $slv_clock = get_slv_last_clock($slv_itemid);
 
 	my $n = 0;
-	my $slv_old_value = 0;
-	my $slv_new_clock = 0;
 
 	for (;;)
 	{
 		last if ($n >= MAX_CYCLES_TO_PROCESS);
 		$n++;
 
-		if (defined($slv_old_value_and_clock))
+		if (defined($slv_clock))
 		{
-			$slv_old_value = $slv_old_value_and_clock->[0];
-
-			my $slv_old_clock = $slv_old_value_and_clock->[1]; 
-			$slv_new_clock = $slv_old_clock + 60;
-
-			last if ($slv_new_clock > $current_month_latest_cycle);
-
-			if (month_start($slv_new_clock) != month_start($slv_old_clock))
-			{
-				# new month - reset the downtime value
-				$slv_old_value = 0;
-			}
+			$slv_clock += 60;
 		}
 		else
 		{
-			# no history for slv item
-			# start somewhere
-
-			my $oldest_rtt_clock_this_month = get_oldest_rtt_clock_this_month($rtt_itemids);
-
-			if (defined($oldest_rtt_clock_this_month))
-			{
-				$slv_old_value = 0;
-				$slv_new_clock = cycle_start($oldest_rtt_clock_this_month, 60);
-			}
-			else
-			{
-				$slv_old_value = 0;
-				$slv_new_clock = $current_month_latest_cycle;
-			}
+			$slv_clock = current_month_first_cycle(); #start from beginning of the current month if no slv data yet
 		}
 
-		my $slv_new_value = $slv_old_value + cycle_is_down($rtt_itemids, $slv_new_clock);
+		if ($slv_clock >= $current_month_latest_cycle)
+		{
+			dbg("processed all available data");
+			last;
+		}
 
-		push_value($tld, $slv_itemkey, $slv_new_clock, $slv_new_value);
-		$slv_old_value_and_clock = [$slv_new_value, $slv_new_clock];
+		push_value($tld, $slv_itemkey, $slv_clock, cycle_is_down($rtt_itemids, $slv_clock));
 	}
 }
 
@@ -166,24 +143,13 @@ sub get_dns_udp_rtt_itemids
 	return $itemids;
 }
 
-sub get_slv_lastvalue_and_clock
+sub get_slv_last_clock
 {
 	my $itemid = shift;
 
-	my $rows = db_select("select value,clock from lastvalue where itemid=$itemid");
+	my $rows = db_select("select clock from lastvalue where itemid=$itemid");
 
-	return defined($rows) ? $rows->[0] : undef;
-}
-
-sub get_oldest_rtt_clock_this_month
-{
-	my $rtt_itemids = shift;
-
-	my $rows = db_select("select min(clock) from history where itemid in (".join(',', @{$rtt_itemids}).")".
-		" and clock>=".current_month_first_cycle());
-
-	return undef unless defined($rows) and defined($rows->[0]);
-	return $rows->[0][0];
+	return defined($rows) ? $rows->[0][0] : undef;
 }
 
 sub cycle_is_down
