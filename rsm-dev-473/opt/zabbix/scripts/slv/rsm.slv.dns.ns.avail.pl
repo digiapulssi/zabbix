@@ -115,7 +115,7 @@ sub process_cycles # for a particular slv item
 		}
 		else
 		{
-			$slv_clock = current_month_first_cycle(); #start from beginning of the current month if no slv data yet
+			$slv_clock = current_month_first_cycle(); #start from beginning of the current month if no slv data
 		}
 
 		if ($slv_clock >= $current_month_latest_cycle)
@@ -136,7 +136,18 @@ sub process_cycles # for a particular slv item
 		}
 		else
 		{
-			push_value($tld, $slv_itemkey, $from, cycle_is_down($from, $till, $rtt_itemids));
+			my $rtt_values = get_rtt_values($from, $till, $rtt_itemids);
+			my $probes_with_results = scalar(@{$rtt_values});
+
+			if ($probes_with_results < $cfg_minonline)
+			{
+				push_value($tld, $slv_itemkey, $from, UP_INCONCLUSIVE_NO_DATA,
+					"Up (not enough probes with results, $probes_with_results while $cfg_minonline required)");
+			}
+			else
+			{
+				push_value($tld, $slv_itemkey, $from, cycle_is_down($from, $till, $rtt_itemids));
+			}
 		}
 	}
 }
@@ -190,6 +201,27 @@ sub get_failed_rtt_value_count
 		" and clock between $from and $till and value<=-200");
 
 	return $rows->[0][0];
+}
+
+sub get_rtt_values
+{
+	my $from = shift;
+	my $till = shift;
+	my $rtt_itemids = shift;
+
+	my $rows = db_select("select value from history where itemid in (".join(',', @{$rtt_itemids}).")".
+		" and clock between $from and $till");
+
+	return [] unless defined($rows);
+
+	my @values;
+
+	foreach (@{$rows})
+	{
+		push(\@values, $_->[0]);
+	}
+
+	return \@values;
 }
 
 sub current_month_latest_cycle
