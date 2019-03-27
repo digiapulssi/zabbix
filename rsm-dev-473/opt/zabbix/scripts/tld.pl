@@ -1114,7 +1114,7 @@ sub create_all_slv_ns_items($$$$)
 	my $host_name = shift;
 
 	create_slv_item("DNS NS $ns_name ($ip) availability", "rsm.slv.dns.ns.avail[$ns_name,$ip]",
-			$hostid, VALUE_TYPE_NUM, [get_application_id(APP_SLV_CURMON, $hostid)]);
+			$hostid, VALUE_TYPE_AVAIL, [get_application_id(APP_SLV_PARTTEST, $hostid)]);
 
 	create_slv_item("DNS minutes of $ns_name ($ip) downtime", "rsm.slv.dns.ns.downtime[$ns_name,$ip]",
 			$hostid, VALUE_TYPE_NUM, [get_application_id(APP_SLV_CURMON, $hostid)]);

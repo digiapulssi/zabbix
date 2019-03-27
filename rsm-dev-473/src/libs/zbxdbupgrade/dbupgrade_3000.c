@@ -3602,7 +3602,7 @@ static int	create_slv_dns_ns_avail_item(const char *tld, const char *hostid, cha
 			"'DNS NS %s (%s) availability','rsm.slv.dns.ns.avail[%s,%s]','60','90','365',"
 			"'0','0','','','0','0',"
 			"'','0','','',"
-			"'1','',NULL,NULL,'','','','0',"
+			"'1','',NULL,'110','','','','0',"
 			"'0','','','','','0',NULL,'','',"
 			"'0','30','0','0','','0')",
 			itemid, hostid, ns, ip, ns, ip))
@@ -3612,7 +3612,7 @@ static int	create_slv_dns_ns_avail_item(const char *tld, const char *hostid, cha
 
 	if (ZBX_DB_OK > DBexecute(
 		"insert into items_applications (itemappid,applicationid,itemid) VALUES ('" ZBX_FS_UI64 "',"
-			"(SELECT applicationid FROM applications WHERE hostid='%s' AND name='SLV current month'),"
+			"(SELECT applicationid FROM applications WHERE hostid='%s' AND name='SLV particular test'),"
 			ZBX_FS_UI64")", DBget_maxid("items_applications"), hostid, itemid))
 	{
 		return FAIL;
