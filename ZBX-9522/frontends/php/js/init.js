@@ -17,24 +17,31 @@
  ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  **/
 
+/**
+ * An object that is used to namespace objects,
+ * allows to retrieve and write objects via arbitrary path.
+ */
+window.ZABBIX = Object.create({
+	/**
+	 * @param {string} path  Dot separated path. Each segment is used as object key.
+	 * @param {mixed} value  Optional value to be written into path only if path held undefined before.
+	 *
+	 * @return {mixed}  Value underlaying the path is returned.
+	 */
+	namespace: function(path, value) {
+		var ref = path.split('.').reduce(function(obj, pt, idx, src) {
+			var last = idx + 1 == src.length;
 
-var ZABBIX = ZABBIX || {};
+			if (typeof obj[pt] === 'undefined') {
+				obj[pt] = last ? value : {};
+			}
 
-ZABBIX.namespace = function(namespace) {
-	var parts = namespace.split('.'),
-		parent = this,
-		i;
+			return obj[pt];
+		}, this);
 
-	for (i = 0; i < parts.length; i++) {
-		if (typeof parent[parts[i]] === 'undefined') {
-			parent[parts[i]] = {};
-		}
-
-		parent = parent[parts[i]];
+		return ref;
 	}
-
-	return parent;
-};
+});
 
 jQuery(function($) {
 
