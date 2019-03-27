@@ -29,7 +29,7 @@ window.ZABBIX = Object.create({
 	 * @return {mixed}  Value underlaying the path is returned.
 	 */
 	namespace: function(path, value) {
-		var ref = path.split('.').reduce(function(obj, pt, idx, src) {
+		return path.split('.').reduce(function(obj, pt, idx, src) {
 			var last = idx + 1 == src.length;
 
 			if (typeof obj[pt] === 'undefined') {
@@ -38,8 +38,6 @@ window.ZABBIX = Object.create({
 
 			return obj[pt];
 		}, this);
-
-		return ref;
 	}
 });
 
