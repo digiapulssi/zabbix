@@ -63,7 +63,7 @@ static size_t		max_buffer_len;	/* error message buffer size */
  ******************************************************************************/
 static int	is_number_delimiter(char c)
 {
-	return 0 == isdigit(c) && '.' != c && 0 == isalpha((unsigned char)c) ? SUCCEED : FAIL;
+	return 0 == isdigit((unsigned char)c) && '.' != c && 0 == isalpha((unsigned char)c) ? SUCCEED : FAIL;
 }
 
 /******************************************************************************

@@ -252,7 +252,7 @@ static void	zbx_translate_message_params(char **message, HINSTANCE hLib)
 
 		dwMessageId = atoi(pend);
 
-		while ('\0' != *pend && 0 != isdigit(*pend))
+		while ('\0' != *pend && 0 != isdigit((unsigned char)*pend))
 			pend++;
 
 		offset = pend - *message - 1;

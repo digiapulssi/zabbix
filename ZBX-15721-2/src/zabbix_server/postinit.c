@@ -140,7 +140,7 @@ static void	preprocess_trigger_name(DB_TRIGGER *trigger, int *historical)
 
 			if (ZBX_HIST_MACRO_NONE != (macro_type = is_historical_macro(macro)))
 			{
-				if (0 != isdigit(*(trigger->description + token.loc.r - 1)))
+				if (0 != isdigit((unsigned char)*(trigger->description + token.loc.r - 1)))
 					macro_len = token.data.macro.name.r - token.data.macro.name.l;
 				else
 					macro_len = token.data.macro.name.r - token.data.macro.name.l + 1;

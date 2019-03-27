@@ -441,7 +441,7 @@ int	GET_SENSOR(AGENT_REQUEST *request, AGENT_RESULT *result)
 		return SYSINFO_RET_FAIL;
 	}
 
-	if (ZBX_DO_ONE != do_task && 0 != isdigit(name[strlen(name) - 1]))
+	if (ZBX_DO_ONE != do_task && 0 != isdigit((unsigned char)name[strlen(name) - 1]))
 		do_task = ZBX_DO_ONE;
 
 	if (ZBX_DO_ONE != do_task && 0 == isalpha((unsigned char)name[strlen(name) - 1]))

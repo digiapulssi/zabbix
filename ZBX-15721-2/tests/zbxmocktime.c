@@ -51,7 +51,7 @@
  ******************************************************************************/
 static const char	*ts_get_component_end(const char *text)
 {
-	while (0 != isdigit(*text))
+	while (0 != isdigit((unsigned char)*text))
 		text++;
 
 	return text;

@@ -776,7 +776,7 @@ static int	time_parse(int *time, const char *text, int len, int *parsed_len)
 	const char	*ptr;
 	int		hours, minutes;
 
-	for (ptr = text; 0 < len && 0 != isdigit(*ptr) && 2 >= ptr - text; len--, ptr++)
+	for (ptr = text; 0 < len && 0 != isdigit((unsigned char)*ptr) && 2 >= ptr - text; len--, ptr++)
 		;
 
 	if (SUCCEED != is_uint_n_range(text, ptr - text, &hours, sizeof(hours), 0, 24))
@@ -785,7 +785,7 @@ static int	time_parse(int *time, const char *text, int len, int *parsed_len)
 	if (0 >= len-- || ':' != *ptr++)
 		return FAIL;
 
-	for (text = ptr; 0 < len && 0 != isdigit(*ptr) && 2 >= ptr - text; len--, ptr++)
+	for (text = ptr; 0 < len && 0 != isdigit((unsigned char)*ptr) && 2 >= ptr - text; len--, ptr++)
 		;
 
 	if (2 != ptr - text)
@@ -1070,7 +1070,7 @@ static int	scheduler_parse_filter_r(zbx_scheduler_filter_t **filter, const char 
 	zbx_scheduler_filter_t	*filter_new;
 
 	pstart = pend = text;
-	while (0 != isdigit(*pend) && 0 < *len)
+	while (0 != isdigit((unsigned char)*pend) && 0 < *len)
 	{
 		pend++;
 		(*len)--;
@@ -1093,7 +1093,7 @@ static int	scheduler_parse_filter_r(zbx_scheduler_filter_t **filter, const char 
 				pend++;
 				(*len)--;
 			}
-			while (0 != isdigit(*pend) && 0 < *len);
+			while (0 != isdigit((unsigned char)*pend) && 0 < *len);
 
 			/* empty or too long value, fail */
 			if (pend == pstart || pend - pstart > var_len)
@@ -1129,7 +1129,7 @@ static int	scheduler_parse_filter_r(zbx_scheduler_filter_t **filter, const char 
 			pend++;
 			(*len)--;
 		}
-		while (0 != isdigit(*pend) && 0 < *len);
+		while (0 != isdigit((unsigned char)*pend) && 0 < *len);
 
 		/* empty or too long step, fail */
 		if (pend == pstart || pend - pstart > var_len)
@@ -2030,7 +2030,7 @@ int	zbx_interval_preproc(const char *interval_str, int *simple_interval, zbx_cus
 		interval_str = delim + 1;
 		delim = strchr(interval_str, ';');
 
-		if (0 != isdigit(*interval_str))
+		if (0 != isdigit((unsigned char)*interval_str))
 		{
 			zbx_flexible_interval_t	*new_interval;
 
@@ -2264,7 +2264,7 @@ int	is_ip4(const char *ip)
 
 	while ('\0' != *p)
 	{
-		if (0 != isdigit(*p))
+		if (0 != isdigit((unsigned char)*p))
 		{
 			octet = octet * 10 + (*p - '0');
 			digits++;
@@ -2652,10 +2652,10 @@ int	is_double(const char *str)
 		if ('-' == *str || '+' == *str)	/* check exponent sign */
 			str++;
 
-		if (0 == isdigit(*str))		/* check exponent */
+		if (0 == isdigit((unsigned char)*str))		/* check exponent */
 			return FAIL;
 
-		while (0 != isdigit(*str))
+		while (0 != isdigit((unsigned char)*str))
 			str++;
 	}
 
@@ -2691,10 +2691,10 @@ int	is_time_suffix(const char *str, int *value, int length)
 	int		len = length;
 	int		value_tmp = 0, c, factor = 1;
 
-	if ('\0' == *str || 0 >= len || 0 == isdigit(*str))
+	if ('\0' == *str || 0 >= len || 0 == isdigit((unsigned char)*str))
 		return FAIL;
 
-	while ('\0' != *str && 0 < len && 0 != isdigit(*str))
+	while ('\0' != *str && 0 < len && 0 != isdigit((unsigned char)*str))
 	{
 		c = (int)(unsigned char)(*str - '0');
 
@@ -2814,7 +2814,7 @@ int	is_int_prefix(const char *str)
 	if ('-' == str[i] || '+' == str[i])
 		i++;
 
-	if (0 == isdigit(str[i]))
+	if (0 == isdigit((unsigned char)str[i]))
 		return FAIL;
 
 	return SUCCEED;
@@ -2852,7 +2852,7 @@ int	is_uint_n_range(const char *str, size_t n, void *value, size_t size, zbx_uin
 
 	while ('\0' != *str && 0 < n--)
 	{
-		if (0 == isdigit(*str))
+		if (0 == isdigit((unsigned char)*str))
 			return FAIL;	/* not a digit */
 
 		c = (zbx_uint64_t)(unsigned char)(*str - '0');

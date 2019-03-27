@@ -107,9 +107,9 @@ static int	smtp_readln(zbx_socket_t *s, const char **buf)
 {
 	while (NULL != (*buf = zbx_tcp_recv_line(s)) &&
 			4 <= strlen(*buf) &&
-			0 != isdigit((*buf)[0]) &&
-			0 != isdigit((*buf)[1]) &&
-			0 != isdigit((*buf)[2]) &&
+			0 != isdigit((unsigned char)(*buf)[0]) &&
+			0 != isdigit((unsigned char)(*buf)[1]) &&
+			0 != isdigit((unsigned char)(*buf)[2]) &&
 			'-' == (*buf)[3])
 		;
 

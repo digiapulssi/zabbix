@@ -2305,7 +2305,7 @@ void	calc_timestamp(const char *line, int *timestamp, const char *format)
 
 	for (i = 0; '\0' != format[i] && '\0' != line[i]; i++)
 	{
-		if (0 == isdigit(line[i]))
+		if (0 == isdigit((unsigned char)line[i]))
 			continue;
 
 		num = (int)line[i] - 48;

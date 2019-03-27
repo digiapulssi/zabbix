@@ -1293,9 +1293,9 @@ int	zbx_jsonpath_next(const char *path, const char **pnext, zbx_strloc_t *loc, i
 	SKIP_WHITESPACE_NEXT(next);
 
 	/* process array index component */
-	if (0 != isdigit(*next))
+	if (0 != isdigit((unsigned char)*next))
 	{
-		for (pos = 1; 0 != isdigit(next[pos]); pos++)
+		for (pos = 1; 0 != isdigit((unsigned char)next[pos]); pos++)
 			;
 
 		loc->l = next - path;

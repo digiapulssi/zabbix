@@ -950,7 +950,7 @@ static int	item_preproc_xpath_op(zbx_variant_t *value, const char *params, char 
 			/* so simply check the if the result starts with digit (accounting for -inf) */
 			if (*(ptr = buffer) == '-')
 				ptr++;
-			if (0 != isdigit(*ptr))
+			if (0 != isdigit((unsigned char)*ptr))
 			{
 				del_zeros(buffer);
 				zbx_variant_set_str(value, zbx_strdup(NULL, buffer));

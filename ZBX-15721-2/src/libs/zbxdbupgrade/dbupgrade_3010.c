@@ -828,7 +828,7 @@ static int	DBpatch_3010026_expression_get_token(const char *expression, int offs
 			}
 			break;
 		case '{':
-			while (0 != isdigit(expression[++offset]))
+			while (0 != isdigit((unsigned char)expression[++offset]))
 				;
 			if ('}' == expression[offset])
 			{

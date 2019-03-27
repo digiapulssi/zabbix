@@ -36,7 +36,7 @@ static int	parse_log_level_options(const char *opt, size_t len, unsigned int *sc
 		zbx_error("invalid runtime control option: %s", opt);
 		return FAIL;
 	}
-	else if (0 != isdigit(*(++rtc_options)))
+	else if (0 != isdigit((unsigned char)*(++rtc_options)))
 	{
 		/* convert PID */
 		if (FAIL == is_ushort(rtc_options, &num) || 0 == num)

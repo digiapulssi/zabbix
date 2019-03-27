@@ -551,9 +551,9 @@ static zbx_mock_error_t	zbx_yaml_path_next(const char **pnext, const char **key,
 		;
 
 	/* process array index component */
-	if (0 != isdigit(*next))
+	if (0 != isdigit((unsigned char)*next))
 	{
-		for (pos = 1; 0 != isdigit(next[pos]); pos++)
+		for (pos = 1; 0 != isdigit((unsigned char)next[pos]); pos++)
 			;
 
 		*key = next;

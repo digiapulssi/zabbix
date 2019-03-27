@@ -308,7 +308,7 @@ static void	DCexpand_trigger_expression(char **expression)
 			continue;
 		}
 
-		for (r = l + 1; 0 != isdigit((*expression)[r]); r++)
+		for (r = l + 1; 0 != isdigit((unsigned char)(*expression)[r]); r++)
 			;
 
 		if ('}' != (*expression)[r])

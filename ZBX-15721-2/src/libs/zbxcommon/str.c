@@ -3207,7 +3207,7 @@ int	zbx_strcmp_natural(const char *s1, const char *s2)
 
 	for (;'\0' != *s1 && '\0' != *s2; s1++, s2++)
 	{
-		if (0 == isdigit(*s1) || 0 == isdigit(*s2))
+		if (0 == isdigit((unsigned char)*s1) || 0 == isdigit((unsigned char)*s2))
 		{
 			if (0 != (ret = *s1 - *s2))
 				return ret;
@@ -3216,11 +3216,11 @@ int	zbx_strcmp_natural(const char *s1, const char *s2)
 		}
 
 		value1 = 0;
-		while (0 != isdigit(*s1))
+		while (0 != isdigit((unsigned char)*s1))
 			value1 = value1 * 10 + *s1++ - '0';
 
 		value2 = 0;
-		while (0 != isdigit(*s2))
+		while (0 != isdigit((unsigned char)*s2))
 			value2 = value2 * 10 + *s2++ - '0';
 
 		if (0 != (ret = value1 - value2))
@@ -3377,7 +3377,7 @@ static int	zbx_token_parse_objectid(const char *expression, const char *macro, z
 		if ('\0' == *ptr)
 			return FAIL;
 
-		if (0 == isdigit(*ptr))
+		if (0 == isdigit((unsigned char)*ptr))
 			return FAIL;
 	}
 
@@ -3797,7 +3797,7 @@ int	zbx_token_find(const char *expression, int pos, zbx_token_t *token, zbx_toke
 			case ZBX_TOKEN_SEARCH_REFERENCES:
 				while (NULL != (dollar = strchr(dollar, '$')) && (NULL == ptr || ptr > dollar))
 				{
-					if (0 == isdigit(dollar[1]))
+					if (0 == isdigit((unsigned char)dollar[1]))
 					{
 						dollar++;
 						continue;
@@ -3896,7 +3896,8 @@ static size_t	zbx_no_function(const char *expr)
 		{
 			ptr += len;	/* skip to the position after and/or/not operator */
 		}
-		else if (ptr > expr && 0 != isdigit(*(ptr - 1)) && NULL != strchr(ZBX_UNIT_SYMBOLS, *ptr))
+		else if (ptr > expr && 0 != isdigit((unsigned char)*(ptr - 1)) &&
+				NULL != strchr(ZBX_UNIT_SYMBOLS, *ptr))
 		{
 			ptr++;	/* skip unit suffix symbol if it's preceded by a digit */
 		}
@@ -4022,7 +4023,7 @@ int	zbx_number_parse(const char *number, int *len)
 
 	while (1)
 	{
-		if (0 != isdigit(number[*len]))
+		if (0 != isdigit((unsigned char)number[*len]))
 		{
 			(*len)++;
 			digits++;
@@ -4098,7 +4099,7 @@ int	zbx_number_find(const char *str, size_t pos, zbx_strloc_t *number_loc)
 
 	for (s = str + pos; '\0' != *s; s++)	/* find start of number */
 	{
-		if (0 == isdigit(*s) && ('.' != *s || 0 == isdigit(s[1])))
+		if (0 == isdigit((unsigned char)*s) && ('.' != *s || 0 == isdigit((unsigned char)s[1])))
 			continue;
 
 		if (s != str && '{' == *(s - 1) && NULL != (e = strchr(s, '}')))
@@ -4127,7 +4128,7 @@ int	zbx_number_find(const char *str, size_t pos, zbx_strloc_t *number_loc)
 					e--;
 
 				/* check that minus is not preceded by function, parentheses or (suffixed) number */
-				if ('}' != *e && ')' != *e && '.' != *e && 0 == isdigit(*e))
+				if ('}' != *e && ')' != *e && '.' != *e && 0 == isdigit((unsigned char)*e))
 					s--;
 			}
 			else	/* nothing before minus, it's definitely unary */

@@ -1272,8 +1272,9 @@ static int	DBpatch_3030093(void)
 		{
 			zbx_chrcpy_alloc(&sql, &sql_alloc, &sql_offset, ';');
 
-			if (0 != isdigit(*delay_flex) && NULL != (next = strchr(delay_flex, '/')))	/* flexible */
+			if (0 != isdigit((unsigned char)*delay_flex) && NULL != (next = strchr(delay_flex, '/')))
 			{
+				/* flexible */
 				delay = atoi(delay_flex);
 				DBpatch_conv_sec(&delay, &suffix);
 				zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset, "%d%s", delay, suffix);
@@ -1388,7 +1389,7 @@ static int	DBpatch_3030102(void)
 	{
 		zbx_strcpy_alloc(&sql, &sql_alloc, &sql_offset, "update items set lifetime='");
 
-		if (0 != isdigit(*row[1]))
+		if (0 != isdigit((unsigned char)*row[1]))
 		{
 			value = atoi(row[1]);
 			DBpatch_conv_day_limit_25y(&value, &suffix);
