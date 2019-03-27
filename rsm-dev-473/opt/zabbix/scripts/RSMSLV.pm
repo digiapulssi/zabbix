@@ -103,7 +103,8 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		validate_tld validate_service
 		get_templated_nsips db_exec tld_interface_enabled
 		tld_interface_enabled_create_cache tld_interface_enabled_delete_cache
-		db_select db_select_binds set_slv_config get_cycle_bounds get_rollweek_bounds get_downtime_bounds
+		db_select db_select_binds set_slv_config
+		current_month_first_cycle month_start get_cycle_bounds get_rollweek_bounds get_downtime_bounds
 		db_explain
 		get_probe_times probe_offline_at probes2tldhostids
 		slv_max_cycles
@@ -121,7 +122,7 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		float_value_exists
 		sql_time_condition get_incidents get_downtime get_downtime_prepare get_downtime_execute
 		history_table
-		get_lastvalue get_itemids_by_hostids get_nsip_values
+		get_lastvalue get_lastvalues_by_itemids get_itemids_by_hostids get_nsip_values
 		get_valuemaps get_statusmaps get_detailed_result
 		get_avail_valuemaps
 		get_result_string get_tld_by_trigger truncate_from truncate_till alerts_enabled
@@ -1406,6 +1407,18 @@ sub db_exec
 sub set_slv_config
 {
 	$config = shift;
+}
+
+sub current_month_first_cycle
+{
+	return month_start(time());
+}
+
+sub month_start
+{
+	my $dt = DateTime->from_epoch('epoch' => shift());
+	$dt->truncate('to' => 'month');
+	return $dt->epoch();
 }
 
 # Get time bounds of the last cycle guaranteed to have all probe results.
@@ -2810,6 +2823,31 @@ sub get_lastvalue($$$$)
 	}
 
 	return E_FAIL;
+}
+
+sub get_lastvalues_by_itemids
+{
+	my $itemids = shift;
+	my $value_type = shift;
+
+	my $table = ($value_type == ITEM_VALUE_TYPE_FLOAT || $value_type == ITEM_VALUE_TYPE_UINT64)
+			? 'lastvalue' : 'lastvalue_str';
+
+	my $rows = db_select("select itemid,value,clock from $table where itemid in (".
+			join(',', @{$itemids}).")");
+
+	return [] unless defined($rows);
+
+	my $lastvalues = {};
+
+	foreach my $row (@{$rows})
+	{
+		my ($itemid, $value, $clock) = @{$row};
+
+		$lastvalues->{$itemid} = {'value' => $value, 'clock' => $clock};
+	}
+
+	return $lastvalues;
 }
 
 #

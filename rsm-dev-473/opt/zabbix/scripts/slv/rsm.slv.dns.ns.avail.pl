@@ -198,15 +198,3 @@ sub current_month_latest_cycle
 	# we don't know the rollweek bounds yet so we assume it ends at least few minutes back
 	return cycle_start(time(), 60) - ROLLWEEK_SHIFT_BACK;
 }
-
-sub current_month_first_cycle
-{
-	return month_start(time());
-}
-
-sub month_start
-{
-	my $dt = DateTime->from_epoch('epoch' => shift());
-	$dt->truncate('to' => 'month');
-	return $dt->epoch();
-}
