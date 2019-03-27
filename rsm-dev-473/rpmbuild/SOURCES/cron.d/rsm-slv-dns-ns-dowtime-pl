@@ -1,1 +1,1 @@
-* * * * * root sleep 13; /opt/zabbix/scripts/slv/rsm.slv.dns.ns.downtime.pl >> /var/log/zabbix/rsm.slv.err 2>&1
+* * * * * root sleep 14; /opt/zabbix/scripts/slv/rsm.slv.dns.ns.downtime.pl >> /var/log/zabbix/rsm.slv.err 2>&1
