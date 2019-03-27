@@ -444,7 +444,7 @@ int	GET_SENSOR(AGENT_REQUEST *request, AGENT_RESULT *result)
 	if (ZBX_DO_ONE != do_task && 0 != isdigit(name[strlen(name) - 1]))
 		do_task = ZBX_DO_ONE;
 
-	if (ZBX_DO_ONE != do_task && 0 == isalpha(name[strlen(name) - 1]))
+	if (ZBX_DO_ONE != do_task && 0 == isalpha((unsigned char)name[strlen(name) - 1]))
 	{
 		SET_MSG_RESULT(result, zbx_strdup(NULL, "Generic sensor name must be specified for selected mode."));
 		return SYSINFO_RET_FAIL;

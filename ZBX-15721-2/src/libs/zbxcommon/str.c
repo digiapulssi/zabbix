@@ -4065,7 +4065,7 @@ int	zbx_suffixed_number_parse(const char *number, int *len)
 	if (FAIL == zbx_number_parse(number, len))
 		return FAIL;
 
-	if (0 != isalpha(number[*len]) && NULL != strchr(ZBX_UNIT_SYMBOLS, number[*len]))
+	if (0 != isalpha((unsigned char)number[*len]) && NULL != strchr(ZBX_UNIT_SYMBOLS, number[*len]))
 		(*len)++;
 
 	return SUCCEED;
