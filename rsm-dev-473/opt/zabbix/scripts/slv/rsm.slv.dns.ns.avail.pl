@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# Minutes of DNS downtime during running month for particular nameservers
+# Availability of particular nameservers
 
 BEGIN { our $MYDIR = $0; $MYDIR =~ s,(.*)/.*/.*,$1,; $MYDIR = '..' if ($MYDIR eq $0); }
 use lib $MYDIR;
