@@ -20,7 +20,7 @@
 
 
 require_once dirname(__FILE__).'/include/config.inc.php';
-require_once dirname(__FILE__).'/../../opt/zabbix/scripts/CSlaReport.php';
+require_once dirname(__FILE__).'/include/classes/services/CSlaReport.php';
 
 //		VAR			TYPE	OPTIONAL FLAGS	VALIDATION	EXCEPTION
 $fields = [
