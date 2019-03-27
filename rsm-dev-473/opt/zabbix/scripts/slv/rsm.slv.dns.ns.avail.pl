@@ -12,21 +12,22 @@ use TLD_constants qw(:groups :api);
 use Data::Dumper;
 use DateTime;
 
-use constant MAX_CYCLES_TO_PROCESS => 1;
+use constant MAX_CYCLES_TO_PROCESS => 5;
 
 parse_slv_opts();
 fail_if_running();
 set_slv_config(get_rsm_config());
 db_connect();
-init_values();
 
 my $slv_item_key_pattern = 'rsm.slv.dns.ns.avail';
 my $rtt_item_key_pattern = 'rsm.dns.udp.rtt';
 my $current_month_latest_cycle = current_month_latest_cycle();
 my $cfg_minonline = get_macro_dns_probe_online();
 
+init_values();
 process_values();
 send_values();
+
 slv_exit(SUCCESS);
 
 sub process_values
@@ -188,7 +189,7 @@ sub cycle_is_down
 	my $failed_rtt_value_count = get_failed_rtt_value_count($rtt_itemids, $from, $till);
 	my $limit = (SLV_UNAVAILABILITY_LIMIT * 0.01) * $probe_count;
 
-	return ($failed_rtt_value_count > $limit) ? 1 : 0;
+	return ($failed_rtt_value_count > $limit) ? DOWN : UP;
 }
 
 sub get_failed_rtt_value_count
