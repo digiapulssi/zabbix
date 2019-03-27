@@ -530,7 +530,7 @@ static zbx_mock_error_t	zbx_yaml_path_next(const char **pnext, const char **key,
 	{
 		*key = next;
 
-		while (0 != isalnum(*next) || '_' == *next)
+		while (0 != isalnum((unsigned char)*next) || '_' == *next)
 			next++;
 
 		if (*key == next)

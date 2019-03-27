@@ -2429,7 +2429,7 @@ int	zbx_validate_hostname(const char *hostname)
 	const char	*p;
 
 	/* the first character must be an alphanumeric character */
-	if (0 == isalnum(*hostname))
+	if (0 == isalnum((unsigned char)*hostname))
 		return FAIL;
 
 	/* check only up to the first 'len' characters, the 1st character is already successfully checked */
@@ -2439,7 +2439,7 @@ int	zbx_validate_hostname(const char *hostname)
 			return FAIL;
 
 		/* check for allowed characters */
-		if (0 != isalnum(*p) || '-' == *p || '_' == *p)
+		if (0 != isalnum((unsigned char)*p) || '-' == *p || '_' == *p)
 			component = 1;
 		else if ('.' == *p && 1 == component)
 			component = 0;

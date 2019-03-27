@@ -1274,7 +1274,7 @@ int	zbx_jsonpath_next(const char *path, const char **pnext, zbx_strloc_t *loc, i
 
 		loc->l = next - path;
 
-		while (0 != isalnum(*next) || '_' == *next)
+		while (0 != isalnum((unsigned char)*next) || '_' == *next)
 			next++;
 
 		if ((pos = next - path) == loc->l)

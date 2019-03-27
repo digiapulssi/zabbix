@@ -42,7 +42,7 @@ void	zbx_http_url_encode(const char *source, char **result)
 
 	while ('\0' != *source)
 	{
-		if (0 == isalnum(*source) && NULL == strchr("-._~", *source))
+		if (0 == isalnum((unsigned char)*source) && NULL == strchr("-._~", *source))
 		{
 			/* Percent-encoding */
 			*target++ = '%';
