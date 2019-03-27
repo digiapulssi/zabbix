@@ -1302,6 +1302,12 @@
 			}
 			else {
 				pos = findEmptyPosition($obj, data, type);
+				if (!pos) {
+					$('<div class="msg-bad">' + data.options['message-exhausted'] + '</div>').prependTo(
+						data.dialogue.body
+					).fadeOut(5000);
+					return;
+				}
 			}
 
 			$placeholder = $('<div>').css({
@@ -1400,10 +1406,14 @@
 
 		// Go y by row and try to position widget in each space.
 		var	max_col = data['options']['max-columns'] - pos['width'],
+			max_row = data['options']['max-rows'] - pos['height'],
 			found = false,
 			x, y;
 
 		for (y = 0; !found; y++) {
+			if (y > max_row) {
+				return false;
+			}
 			for (x = 0; x <= max_col && !found; x++) {
 				pos['x'] = x;
 				pos['y'] = y;
@@ -1974,6 +1984,7 @@
 			var default_options = {
 				'widget-height': 70,
 				'widget-min-rows': 2,
+				'message-exhausted': 'Free space exhausted',
 				'max-rows': 64,
 				'max-columns': 12,
 				'rows': 0,
