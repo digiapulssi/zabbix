@@ -2318,7 +2318,7 @@ int	is_ip6(const char *ip)
 
 	while ('\0' != *p)
 	{
-		if (0 != isxdigit(*p))
+		if (0 != isxdigit((unsigned char)*p))
 		{
 			xdigits++;
 			only_xdigits = 1;
@@ -3051,7 +3051,7 @@ int	is_uhex(const char *str)
 
 	for (; '\0' != *str; str++)
 	{
-		if (0 == isxdigit(*str))
+		if (0 == isxdigit((unsigned char)*str))
 			break;
 
 		res = SUCCEED;
@@ -3088,10 +3088,10 @@ int	is_hex_string(const char *str)
 
 	while ('\0' != *str)
 	{
-		if (0 == isxdigit(*str))
+		if (0 == isxdigit((unsigned char)*str))
 			return FAIL;
 
-		if (0 == isxdigit(*(str + 1)))
+		if (0 == isxdigit((unsigned char)*(str + 1)))
 			return FAIL;
 
 		if ('\0' == *(str + 2))

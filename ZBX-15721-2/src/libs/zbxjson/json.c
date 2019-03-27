@@ -697,7 +697,7 @@ static int	zbx_is_valid_json_hex(const char *p)
 
 	for (i = 0; i < 4; ++i, ++p)
 	{
-		if (0 == isxdigit(*p))
+		if (0 == isxdigit((unsigned char)*p))
 			return FAIL;
 	}
 
