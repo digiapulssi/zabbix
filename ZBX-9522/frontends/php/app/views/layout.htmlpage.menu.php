@@ -51,10 +51,10 @@ if (!$data['user']['is_guest']) {
 }
 
 $icons->addItem(
-	(new CLink(SPACE, 'index.php?reconnect=1'))
+	(new CLink(SPACE, 'javascript:;'))
 		->addClass(ZBX_STYLE_TOP_NAV_SIGNOUT)
 		->setAttribute('title', _('Sign out'))
-		->addSID()
+		->onClick('ZABBIX.logout()')
 );
 
 // 1st level menu

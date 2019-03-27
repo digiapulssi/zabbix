@@ -38,6 +38,10 @@ window.ZABBIX = Object.create({
 
 			return obj[pt];
 		}, this);
+	},
+	logout: function() {
+		this.namespace('instances.localStorage').truncate();
+		redirect('index.php?reconnect=1', 'post', 'sid', true);
 	}
 });
 
