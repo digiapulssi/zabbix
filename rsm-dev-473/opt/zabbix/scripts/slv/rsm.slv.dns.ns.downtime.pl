@@ -12,7 +12,7 @@ use TLD_constants qw(:groups :api);
 use Data::Dumper;
 use DateTime;
 
-use constant MAX_CYCLES_TO_PROCESS => 1440;
+use constant MAX_CYCLES_TO_PROCESS => 5;
 
 my $avail_key_pattern = 'rsm.slv.dns.ns.avail';
 my $downtime_key_pattern = 'rsm.slv.dns.ns.downtime';
