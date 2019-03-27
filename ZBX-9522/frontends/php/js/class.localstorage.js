@@ -251,3 +251,5 @@ ZBX_LocalStorage.prototype.mapCallback = function(callback) {
 		}
 	}
 }
+
+ZABBIX.namespace('instances.localStorage', new ZBX_LocalStorage('1'));

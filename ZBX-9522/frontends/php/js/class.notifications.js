@@ -502,12 +502,14 @@ ZBX_Notifications.toStorableList = function(list) {
 	return listObj;
 }
 
-// DEV INIT PART
-var LS = new ZBX_LocalStorage('1');
-var BT = new ZBX_BrowserTab(LS);
-var NN = new ZBX_Notifications(LS, BT);
+ZABBIX.namespace('instances.notifications', new ZBX_Notifications(
+	ZABBIX.namespace('instances.localStorage'),
+	ZABBIX.namespace('instances.browserTab')
+));
 
 jQuery(function() {
-	document.body.appendChild(NN.dom.node);
-	jQuery(NN.dom.node).draggable();
+	var notificationsNode = ZABBIX.namespace('instances.notifications.dom.node');
+
+	document.body.appendChild(notificationsNode);
+	jQuery(notificationsNode).draggable();
 });

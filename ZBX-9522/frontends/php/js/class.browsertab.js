@@ -17,6 +17,7 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
+
 /**
  * Amount of seconds for keep-alive interval.
  */
@@ -198,3 +199,6 @@ ZBX_BrowserTab.prototype.register = function() {
 	}
 }
 
+ZABBIX.namespace('instances.browserTab', new ZBX_BrowserTab(
+	ZABBIX.namespace('instances.localStorage')
+));
