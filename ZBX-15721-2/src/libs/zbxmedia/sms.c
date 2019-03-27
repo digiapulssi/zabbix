@@ -178,7 +178,7 @@ static int	read_gsm(int fd, const char *expect, char *error, int max_error_len, 
 
 		while (0 < nbytes_total)
 		{
-			if (0 == isspace(ebuf[-nbytes_total]))
+			if (0 == isspace((unsigned char)ebuf[-nbytes_total]))
 				goto check_result;
 
 			nbytes_total--;

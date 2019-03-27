@@ -67,7 +67,7 @@ static void	parse_db_monitor_item_params(const char *params, char **dsn, char **
 
 	for (; '\0' != *params; params = pnext)
 	{
-		while (0 != isspace(*params))
+		while (0 != isspace((unsigned char)*params))
 			params++;
 
 		pvalue = strchr(params, '=');
@@ -82,7 +82,7 @@ static void	parse_db_monitor_item_params(const char *params, char **dsn, char **
 		if (pvalue > pnext || pvalue == params)
 			continue;
 
-		for (pend = pvalue - 1; 0 != isspace(*pend); pend--)
+		for (pend = pvalue - 1; 0 != isspace((unsigned char)*pend); pend--)
 			;
 		pend++;
 
@@ -98,7 +98,7 @@ static void	parse_db_monitor_item_params(const char *params, char **dsn, char **
 			continue;
 
 		pvalue++;
-		while (0 != isspace(*pvalue))
+		while (0 != isspace((unsigned char)*pvalue))
 			pvalue++;
 
 		if (pvalue > pnext)
@@ -107,7 +107,7 @@ static void	parse_db_monitor_item_params(const char *params, char **dsn, char **
 		if ('\0' == *pvalue)
 			continue;
 
-		for (pend = pnext - 1; 0 != isspace(*pend); pend--)
+		for (pend = pnext - 1; 0 != isspace((unsigned char)*pend); pend--)
 			;
 		pend++;
 

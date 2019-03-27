@@ -619,7 +619,7 @@ static void	zbx_tls_parameter_not_empty(char **param)
 	{
 		while ('\0' != *value)
 		{
-			if (0 == isspace(*value++))
+			if (0 == isspace((unsigned char)*value++))
 				return;
 		}
 
