@@ -503,7 +503,7 @@ ZBX_Notifications.toStorableList = function(list) {
 }
 
 // DEV INIT PART
-var LS = new ZBX_LocalStorage(env.ZABBIX_VERSION);
+var LS = new ZBX_LocalStorage('1');
 var BT = new ZBX_BrowserTab(LS);
 var NN = new ZBX_Notifications(LS, BT);
 
