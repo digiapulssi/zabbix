@@ -501,3 +501,13 @@ ZBX_Notifications.toStorableList = function(list) {
 
 	return listObj;
 }
+
+// DEV INIT PART
+var LS = new ZBX_LocalStorage(env.ZABBIX_VERSION);
+var BT = new ZBX_BrowserTab(LS);
+var NN = new ZBX_Notifications(LS, BT);
+
+jQuery(function() {
+	document.body.appendChild(NN.dom.node);
+	jQuery(NN.dom.node).draggable();
+});

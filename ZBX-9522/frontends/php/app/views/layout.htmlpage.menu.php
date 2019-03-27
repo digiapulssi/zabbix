@@ -51,11 +51,10 @@ if (!$data['user']['is_guest']) {
 }
 
 $icons->addItem(
-	(new CTag('a', true))
+	(new CLink(SPACE, 'index.php?reconnect=1'))
 		->addClass(ZBX_STYLE_TOP_NAV_SIGNOUT)
-		->setAttribute('href', 'javascript:;')
 		->setAttribute('title', _('Sign out'))
-		->setAttribute('onclick', 'App.logout()')
+		->addSID()
 );
 
 // 1st level menu
