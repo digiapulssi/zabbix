@@ -96,7 +96,8 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		get_macro_dns_update_time get_macro_rdds_update_time get_tld_items get_hostid
 		get_rtt_low
 		get_macro_epp_rtt_low get_macro_probe_avail_limit get_itemid_by_key get_itemid_by_host
-		get_itemid_by_hostid get_itemid_like_by_hostid get_itemids_by_host_and_keypart get_lastclock get_tlds
+		get_itemid_by_hostid get_itemid_like_by_hostid get_itemids_by_host_and_keypart get_lastclock
+		get_tlds get_tlds_and_hostids
 		get_oldest_clock
 		get_probes get_nsips get_nsip_items tld_exists tld_service_enabled db_connect db_disconnect
 		validate_tld validate_service
@@ -562,6 +563,27 @@ sub get_tlds(;$$$)
 	}
 
 	return \@tlds;
+}
+
+# get all tlds and their hostids or a single tld with its hostid
+sub get_tlds_and_hostids(;$)
+{
+	my $tld = shift;
+	my $tld_cond = '';
+
+	if (defined($tld))
+	{
+		$tld_cond = " and h.host='$tld'";
+	}
+
+	return db_select(
+		"select distinct h.host,h.hostid".
+		" from hosts h,hosts_groups hg".
+		" where h.hostid=hg.hostid".
+			" and hg.groupid=".TLDS_GROUPID.
+			" and h.status=0".
+			$tld_cond.
+		" order by h.host");
 }
 
 # $probes_cache{$server_key}{$name}{$service} = {$host => $hostid, ...}

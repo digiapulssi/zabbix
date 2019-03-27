@@ -38,26 +38,6 @@ sub process_values
 	}
 }
 
-sub get_tlds_and_hostids
-{
-	my $tld = shift;
-	my $tld_cond = '';
-
-	if (defined($tld))
-	{
-		$tld_cond = " and h.host='$tld'";
-	}
-
-	return db_select(
-		"select distinct h.host,h.hostid".
-		" from hosts h,hosts_groups hg".
-		" where h.hostid=hg.hostid".
-			" and hg.groupid=".TLDS_GROUPID.
-			" and h.status=0".
-			$tld_cond.
-		" order by h.host");
-}
-
 sub process_tld
 {
 	my $tld = shift;
