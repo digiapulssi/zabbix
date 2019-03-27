@@ -30,7 +30,6 @@ require_once dirname(__FILE__).'/include/page_header.php';
 
 //		VAR			TYPE	OPTIONAL FLAGS	VALIDATION	EXCEPTION
 $fields = array(
-	'export' =>			array(T_ZBX_INT, O_OPT,	P_ACT,	null,		null),
 	// filter
 	'filter_set' =>		array(T_ZBX_STR, O_OPT,  null,	null,		null),
 	'filter_search' =>	array(T_ZBX_STR, O_OPT,  null,	null,		null),
@@ -93,7 +92,7 @@ else {
 if ($data['filter_search']) {
 	$master = $DB;
 
-	foreach ($DB['SERVERS'] as $server) {
+	foreach ($DB['SERVERS'] as $server_nr => $server) {
 		if (!multiDBconnect($server, $error)) {
 			show_error_message(_($server['NAME'].': '.$error));
 			continue;
@@ -607,6 +606,13 @@ if ($data['filter_search']) {
 
 			$data['url'] = $server['URL'];
 			$data['server'] = $server['NAME'];
+			$data['server_nr'] = $server_nr;
+			$data['source_url'] = base64_encode('rsm.slareports.php?' . http_build_query([
+				'filter_search' => $data['filter_search'],
+				'filter_year' => $data['filter_year'],
+				'filter_month' => $data['filter_month'],
+				'filter_set' => 1
+			]));
 			break;
 		} else {
 			continue;

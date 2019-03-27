@@ -3930,6 +3930,6 @@ DBPATCH_ADD(3000305, 0, 0)	/* add DNS downtime trigger to existing tld hosts */
 DBPATCH_ADD(3000306, 0, 0)	/* add RDDS downtime triggers to existing tld hosts */
 DBPATCH_ADD(3000307, 0, 0)	/* add "DNS Resolution RTT (performed/failed/pfailed)" items to existing tld hosts */
 DBPATCH_ADD(3000308, 0, 0)	/* add "RDDS Resolution RTT (performed/failed/pfailed)" items to existing tld hosts */
-DBPATCH_ADD(3000309, 0, 0)	/* create sla_reports table*/
+DBPATCH_ADD(3000309, 0, 0)	/* create sla_reports table */
 
 DBPATCH_END()
