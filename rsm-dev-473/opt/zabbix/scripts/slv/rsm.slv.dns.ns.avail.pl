@@ -137,7 +137,7 @@ sub process_cycles # for a particular slv item
 					}
 				}
 
-				my $probe_count = scalar($rtt_itemids);
+				my $probe_count = scalar(@{$rtt_itemids});
 				my $limit = (SLV_UNAVAILABILITY_LIMIT * 0.01) * $probe_count;
 
 				push_value($tld, $slv_itemkey, $from, ($down_rtt_count > $limit) ? DOWN : UP);
