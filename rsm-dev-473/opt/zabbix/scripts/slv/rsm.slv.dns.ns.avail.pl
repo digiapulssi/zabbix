@@ -32,9 +32,9 @@ slv_exit(SUCCESS);
 
 sub process_values
 {
-	foreach (@{get_tlds_and_hostids(opt('tld') ? getopt('tld') : undef)})
+	foreach my $tld (@{get_tlds_and_hostids(opt('tld') ? getopt('tld') : undef)})
 	{
-		process_tld(@$_);
+		process_tld(@{$tld});
 	}
 }
 
@@ -147,7 +147,20 @@ sub process_cycles # for a particular slv item
 			}
 			else
 			{
-				push_value($tld, $slv_itemkey, $from, cycle_is_down($from, $till, $rtt_itemids));
+				my $down_rtt_count = 0;
+
+				foreach my $rtt_value (@{$rtt_values})
+				{
+					if ($rtt_value <= -200)
+					{
+						$down_rtt_count++;
+					}
+				}
+
+				my $probe_count = scalar($rtt_itemids);
+				my $limit = (SLV_UNAVAILABILITY_LIMIT * 0.01) * $probe_count;
+
+				push_value($tld, $slv_itemkey, $from, ($down_rtt_count > $limit) ? DOWN : UP);
 			}
 		}
 	}
@@ -157,14 +170,14 @@ sub get_dns_udp_rtt_itemids
 {
 	my $nsip = shift;
 
-	my $items = db_select("select itemid,key_ from items".
+	my $rows = db_select("select itemid,key_ from items".
 		" where key_ like '$rtt_item_key_pattern\[\%$nsip]' and templateid is not null");
 
 	my $itemids = [];
 
-	foreach (@{$items})
+	foreach my $row (@{$rows})
 	{
-		push($itemids, $_->[0]);
+		push($itemids, $row->[0]);
 	}
 
 	return $itemids;
@@ -177,31 +190,6 @@ sub get_slv_last_clock
 	my $rows = db_select("select clock from lastvalue where itemid=$itemid");
 
 	return defined($rows) ? $rows->[0][0] : undef;
-}
-
-sub cycle_is_down
-{
-	my $from = shift;
-	my $till = shift;
-	my $rtt_itemids = shift;
-	my $probe_count = scalar(@{$rtt_itemids});
-
-	my $failed_rtt_value_count = get_failed_rtt_value_count($rtt_itemids, $from, $till);
-	my $limit = (SLV_UNAVAILABILITY_LIMIT * 0.01) * $probe_count;
-
-	return ($failed_rtt_value_count > $limit) ? DOWN : UP;
-}
-
-sub get_failed_rtt_value_count
-{
-	my $rtt_itemids = shift;
-	my $from = shift;
-	my $till = shift;
-
-	my $rows = db_select("select count(1) from history where itemid in (".join(',', @{$rtt_itemids}).")".
-		" and clock between $from and $till and value<=-200");
-
-	return $rows->[0][0];
 }
 
 sub get_rtt_values
@@ -217,9 +205,9 @@ sub get_rtt_values
 
 	my @values;
 
-	foreach (@{$rows})
+	foreach my $row (@{$rows})
 	{
-		push(\@values, $_->[0]);
+		push(\@values, $row->[0]);
 	}
 
 	return \@values;
