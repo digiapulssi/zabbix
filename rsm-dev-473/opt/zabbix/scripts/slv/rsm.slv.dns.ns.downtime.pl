@@ -12,7 +12,7 @@ use TLD_constants qw(:groups :api);
 use Data::Dumper;
 use DateTime;
 
-use constant MAX_CYCLES_TO_PROCESS => 5;
+use constant MAX_CYCLES_TO_PROCESS => 1440;
 
 my $avail_key_pattern = 'rsm.slv.dns.ns.avail';
 my $downtime_key_pattern = 'rsm.slv.dns.ns.downtime';
@@ -41,9 +41,7 @@ sub process_tld
 	my $tld = shift;
 	my $hostid = shift;
 
-	my $items = get_ns_items($tld, $hostid);
-
-	print Dumper($items);
+	process_ns_items($tld, $hostid, get_ns_items($tld, $hostid));
 }
 
 sub get_ns_items
@@ -72,7 +70,7 @@ sub get_ns_items
 		fail("got different number of ns avail and downtime items for tld $tld");
 	}
 
-	my $items = {};
+	my $items_by_nsip = {};
 	
 	foreach my $row (@{$rows_avail})
 	{
@@ -81,7 +79,7 @@ sub get_ns_items
 
 		if ($itemkey =~ /\[(.+,.+)\]$/)
 		{
-			$items->{$1} = {'avail_itemid' => $itemid};
+			$items_by_nsip->{$1} = {'avail' => $itemid};
 		}
 		else
 		{
@@ -96,13 +94,14 @@ sub get_ns_items
 
 		if ($itemkey =~ /\[(.+,.+)\]$/)
 		{
-			if (defined($items->{$1}))
+			if (defined($items_by_nsip->{$1}))
 			{
-				$items->{$1}{'downtime_itemid'} = $itemid
+				$items_by_nsip->{$1}{'downtime'} = $itemid;
+				$items_by_nsip->{$1}{'downtime_key'} = $itemkey;
 			}
 			else
 			{
-				fail("no ns avail items for ns,ip pair '$1'");
+				fail("no ns avail item for ns,ip pair '$1'");
 			}
 		}
 		else
@@ -111,5 +110,59 @@ sub get_ns_items
 		}
 	}
 
-	return $items;
+	return $items_by_nsip;
+}
+
+sub process_ns_items
+{
+	my $tld = shift;
+	my $hostid = shift;
+	my $items_by_nsip = shift;
+
+	for my $nsip (keys($items_by_nsip))
+	{
+		my $items = $items_by_nsip->{$nsip};
+
+		my $lastvalues = get_lastvalues_by_itemids([$items->{'avail'}, $items->{'downtime'}],
+				ITEM_VALUE_TYPE_UINT64);
+
+		process_avail_downtime_item_pair($tld, $nsip, $items->{'avail'}, $lastvalues->{$items->{'avail'}},
+				$items->{'downtime'}, $lastvalues->{$items->{'downtime'}}, $items->{'downtime_key'});
+	}
+}
+
+sub process_avail_downtime_item_pair
+{
+	my $tld = shift;
+	my $nsip = shift;
+	my $avail_itemid = shift;
+	my $avail_item = shift;
+	my $downtime_itemid = shift;
+	my $downtime_item = shift;
+	my $downtime_key = shift;
+
+	fail("avail item not defined for $nsip") unless defined($avail_item);
+	fail("downtime itemid not defined for $nsip") unless defined($downtime_itemid);
+
+	if (!defined($downtime_item))
+	{
+		$downtime_item = {'clock' => current_month_first_cycle() - 60, 'value' => 0}
+	}
+
+	my $clock = $downtime_item->{'clock'} + 60;
+	my $n = 0;
+
+	while ($n < MAX_CYCLES_TO_PROCESS and $clock <= $avail_item->{'clock'})
+	{
+		my $rows = db_select("select value from history where itemid='$avail_itemid' and clock='$clock'");
+
+		fail("cannot obtain value for itemid $avail_itemid, clock $clock") unless defined($rows);
+
+		my $new_downtime_value = $downtime_item->{'value'} + ($avail_item->{'value'} == DOWN ? 1 : 0);
+
+		push_value($tld, $downtime_key, $clock, $new_downtime_value);
+
+		$clock += 60;
+		$n++;
+	}
 }
