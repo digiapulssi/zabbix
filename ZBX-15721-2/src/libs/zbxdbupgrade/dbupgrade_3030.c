@@ -780,7 +780,7 @@ static void	DBpatch_3030060_append_pairs(zbx_db_insert_t *db_insert, zbx_uint64_
 		*ptr = '\0';
 
 		/* parse line */
-		value = strchr(key, separator);
+		value = strchr(key, (unsigned char)separator);
 
 		/* if separator is absent and empty values are allowed, consider that value is empty */
 		if (0 != allow_empty && NULL == value)

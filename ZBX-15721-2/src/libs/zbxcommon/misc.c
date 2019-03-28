@@ -1858,7 +1858,7 @@ static int	parse_simple_interval(const char *str, int *len, char sep, int *value
 	const char	*delim;
 
 	if (SUCCEED != is_time_suffix(str, value,
-			(int)(NULL == (delim = strchr(str, sep)) ? ZBX_LENGTH_UNLIMITED : delim - str)))
+			(int)(NULL == (delim = strchr(str, (unsigned char)sep)) ? ZBX_LENGTH_UNLIMITED : delim - str)))
 	{
 		return FAIL;
 	}
@@ -2610,8 +2610,11 @@ int	is_double_suffix(const char *str, unsigned char flags)
 	if (FAIL == zbx_number_parse(str, &len))
 		return FAIL;
 
-	if ('\0' != *(str += len) && 0 != (flags & ZBX_FLAG_DOUBLE_SUFFIX) && NULL != strchr(ZBX_UNIT_SYMBOLS, *str))
+	if ('\0' != *(str += len) && 0 != (flags & ZBX_FLAG_DOUBLE_SUFFIX) &&
+			NULL != strchr(ZBX_UNIT_SYMBOLS, (unsigned char)*str))
+	{
 		str++;		/* allow valid suffix if flag is enabled */
+	}
 
 	return '\0' == *str ? SUCCEED : FAIL;
 }
@@ -3286,7 +3289,7 @@ int	str2uint64(const char *str, const char *suffixes, zbx_uint64_t *value)
 	sz = strlen(str);
 	p = str + sz - 1;
 
-	if (NULL != strchr(suffixes, *p))
+	if (NULL != strchr(suffixes, (unsigned char)*p))
 	{
 		factor = suffix2factor(*p);
 

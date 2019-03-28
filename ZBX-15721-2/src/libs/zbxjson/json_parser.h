@@ -21,7 +21,7 @@
 #define ZABBIX_JSON_PARSER_H
 
 #define SKIP_WHITESPACE(src)	\
-	while ('\0' != *(src) && NULL != strchr(ZBX_WHITESPACE, *(src))) (src)++
+	while ('\0' != *(src) && NULL != strchr(ZBX_WHITESPACE, (unsigned char)*(src))) (src)++
 
 #define SKIP_WHITESPACE_NEXT(src)\
 	(src)++; \

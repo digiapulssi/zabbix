@@ -417,7 +417,7 @@ static int	parse_commandline(int argc, char **argv, ZBX_TASK_EX *t)
 
 		if (1 < opt_count[(unsigned char)ch])
 		{
-			if (NULL == strchr(shortopts, ch))
+			if (NULL == strchr(shortopts, (unsigned char)ch))
 				zbx_error("option \"--%s\" specified multiple times", longopts[i].name);
 			else
 				zbx_error("option \"-%c\" or \"--%s\" specified multiple times", ch, longopts[i].name);

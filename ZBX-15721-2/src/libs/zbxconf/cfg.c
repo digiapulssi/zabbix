@@ -406,7 +406,7 @@ static int	__parse_cfg_file(const char *cfg_file, struct cfg_line *cfg, int leve
 		{
 			/* check if line length exceeds limit (max. 2048 bytes) */
 			len = strlen(line);
-			if (MAX_STRING_LEN < len && NULL == strchr("\r\n", line[MAX_STRING_LEN]))
+			if (MAX_STRING_LEN < len && NULL == strchr("\r\n", (unsigned char)line[MAX_STRING_LEN]))
 				goto line_too_long;
 
 			zbx_ltrim(line, ZBX_CFG_LTRIM_CHARS);

@@ -762,7 +762,7 @@ static int	regexp_match_ex_substring_list(const char *string, char *pattern, int
 
 	for (s = pattern; '\0' != *s && ZBX_REGEXP_MATCH != ret;)
 	{
-		if (NULL != (c = strchr(s, delimiter)))
+		if (NULL != (c = strchr(s, (unsigned char)delimiter)))
 			*c = '\0';
 
 		ret = regexp_match_ex_substring(string, s, case_sensitive);

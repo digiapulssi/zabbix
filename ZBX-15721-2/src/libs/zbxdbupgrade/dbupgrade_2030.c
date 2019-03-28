@@ -910,7 +910,7 @@ static int	DBpatch_2030094(void)
 
 		for (p = row[1]; '\0' != *p; p++)
 		{
-			if (NULL == strchr("#&|", *p))
+			if (NULL == strchr("#&|", (unsigned char)*p))
 			{
 				if (' ' != *p || (0 != expr_offset && ' ' != expr[expr_offset - 1]))
 					zbx_chrcpy_alloc(&expr, &expr_alloc, &expr_offset, *p);
@@ -1124,10 +1124,10 @@ static int	DBpatch_2030095(void)
 
 		for (p = row[1]; '\0' != *p; p++)
 		{
-			if (NULL != strchr(ZBX_WHITESPACE, *p))
+			if (NULL != strchr(ZBX_WHITESPACE, (unsigned char)*p))
 			{
-				if (' ' != *p || (0 != params_offset &&
-						NULL == strchr(ZBX_WHITESPACE, params[params_offset - 1])))
+				if (' ' != *p || (0 != params_offset && NULL == strchr(ZBX_WHITESPACE,
+						(unsigned char)params[params_offset - 1])))
 				{
 					zbx_chrcpy_alloc(&params, &params_alloc, &params_offset, *p);
 				}
@@ -1135,7 +1135,7 @@ static int	DBpatch_2030095(void)
 				continue;
 			}
 
-			if (NULL != strchr("#&|", *p))
+			if (NULL != strchr("#&|", (unsigned char)*p))
 			{
 				if ('#' == *p && 0 != params_offset && '{' == params[params_offset - 1])
 				{
@@ -1143,8 +1143,8 @@ static int	DBpatch_2030095(void)
 					continue;
 				}
 
-				if (('&' == *p || '|' == *p) && 0 != params_offset &&
-						NULL == strchr(ZBX_WHITESPACE, params[params_offset - 1]))
+				if (('&' == *p || '|' == *p) && 0 != params_offset && NULL == strchr(ZBX_WHITESPACE,
+						(unsigned char)params[params_offset - 1]))
 				{
 					zbx_chrcpy_alloc(&params, &params_alloc, &params_offset, ' ');
 				}
@@ -1162,7 +1162,7 @@ static int	DBpatch_2030095(void)
 						break;
 				}
 
-				if (('&' == *p || '|' == *p) && NULL == strchr(ZBX_WHITESPACE, *(p + 1)))
+				if (('&' == *p || '|' == *p) && NULL == strchr(ZBX_WHITESPACE, (unsigned char)*(p + 1)))
 					zbx_chrcpy_alloc(&params, &params_alloc, &params_offset, ' ');
 
 				continue;

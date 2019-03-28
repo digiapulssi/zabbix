@@ -312,7 +312,7 @@ static void	parse_traps(int flag)
 
 		c += 7;	/* c now points to the delimiter between "ZBXTRAP" and address */
 
-		while ('\0' != *c && NULL != strchr(ZBX_WHITESPACE, *c))
+		while ('\0' != *c && NULL != strchr(ZBX_WHITESPACE, (unsigned char)*c))
 			c++;
 
 		/* c now points to the address */
@@ -333,7 +333,7 @@ static void	parse_traps(int flag)
 		addr = c;
 		pzdate = pzbegin;
 
-		while ('\0' != *c && NULL == strchr(ZBX_WHITESPACE, *c))
+		while ('\0' != *c && NULL == strchr(ZBX_WHITESPACE, (unsigned char)*c))
 			c++;
 
 		pzaddr = c;

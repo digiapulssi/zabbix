@@ -486,7 +486,7 @@ int	zbx_rtrim(char *str, const char *charlist)
 	if (NULL == str || '\0' == *str)
 		return count;
 
-	for (p = str + strlen(str) - 1; p >= str && NULL != strchr(charlist, *p); p--)
+	for (p = str + strlen(str) - 1; p >= str && NULL != strchr(charlist, (unsigned char)*p); p--)
 	{
 		*p = '\0';
 		count++;
@@ -516,7 +516,7 @@ void	zbx_ltrim(char *str, const char *charlist)
 	if (NULL == str || '\0' == *str)
 		return;
 
-	for (p = str; '\0' != *p && NULL != strchr(charlist, *p); p++)
+	for (p = str; '\0' != *p && NULL != strchr(charlist, (unsigned char)*p); p++)
 		;
 
 	if (p == str)
@@ -568,7 +568,7 @@ void	zbx_remove_chars(char *str, const char *charlist)
 
 	for (p = str; '\0' != *p; p++)
 	{
-		if (NULL == strchr(charlist, *p))
+		if (NULL == strchr(charlist, (unsigned char)*p))
 			*str++ = *p;
 	}
 
@@ -1018,7 +1018,7 @@ size_t	zbx_get_escape_string_len(const char *src, const char *charlist)
 
 	for (; '\0' != *src; src++, sz++)
 	{
-		if (NULL != strchr(charlist, *src))
+		if (NULL != strchr(charlist, (unsigned char)*src))
 			sz++;
 	}
 
@@ -1050,7 +1050,7 @@ char	*zbx_dyn_escape_string(const char *src, const char *charlist)
 
 	for (d = dst; '\0' != *src; src++)
 	{
-		if (NULL != strchr(charlist, *src))
+		if (NULL != strchr(charlist, (unsigned char)*src))
 			*d++ = '\\';
 
 		*d++ = *src;
@@ -2437,7 +2437,7 @@ void	zbx_trim_str_list(char *list, char delimiter)
 	while ('\0' != *in)
 	{
 		/* trim leading spaces from list item */
-		while ('\0' != *in && NULL != strchr(whitespace, *in))
+		while ('\0' != *in && NULL != strchr(whitespace, (unsigned char)*in))
 			in++;
 
 		/* copy list item */
@@ -2447,7 +2447,7 @@ void	zbx_trim_str_list(char *list, char delimiter)
 		/* trim trailing spaces from list item */
 		if (out > list)
 		{
-			while (NULL != strchr(whitespace, *(--out)))
+			while (NULL != strchr(whitespace, (unsigned char)*(--out)))
 				;
 			out++;
 		}
@@ -3892,12 +3892,12 @@ static size_t	zbx_no_function(const char *expr)
 		else if ((0 == strncmp("and", ptr, len = ZBX_CONST_STRLEN("and")) ||
 				0 == strncmp("not", ptr, len = ZBX_CONST_STRLEN("not")) ||
 				0 == strncmp("or", ptr, len = ZBX_CONST_STRLEN("or"))) &&
-				NULL != strchr("()" ZBX_WHITESPACE, ptr[len]))
+				NULL != strchr("()" ZBX_WHITESPACE, (unsigned char)ptr[len]))
 		{
 			ptr += len;	/* skip to the position after and/or/not operator */
 		}
 		else if (ptr > expr && 0 != isdigit((unsigned char)*(ptr - 1)) &&
-				NULL != strchr(ZBX_UNIT_SYMBOLS, *ptr))
+				NULL != strchr(ZBX_UNIT_SYMBOLS, (unsigned char)*ptr))
 		{
 			ptr++;	/* skip unit suffix symbol if it's preceded by a digit */
 		}
@@ -4066,7 +4066,7 @@ int	zbx_suffixed_number_parse(const char *number, int *len)
 	if (FAIL == zbx_number_parse(number, len))
 		return FAIL;
 
-	if (0 != isalpha((unsigned char)number[*len]) && NULL != strchr(ZBX_UNIT_SYMBOLS, number[*len]))
+	if (0 != isalpha((unsigned char)number[*len]) && NULL != strchr(ZBX_UNIT_SYMBOLS, (unsigned char)number[*len]))
 		(*len)++;
 
 	return SUCCEED;
@@ -4124,7 +4124,7 @@ int	zbx_number_find(const char *str, size_t pos, zbx_strloc_t *number_loc)
 			{
 				e = s - 2;
 
-				if (e > str && NULL != strchr(ZBX_UNIT_SYMBOLS, *e))
+				if (e > str && NULL != strchr(ZBX_UNIT_SYMBOLS, (unsigned char)*e))
 					e--;
 
 				/* check that minus is not preceded by function, parentheses or (suffixed) number */
@@ -4831,7 +4831,7 @@ int	str_in_list(const char *list, const char *value, char delimiter)
 
 	while (SUCCEED != ret)
 	{
-		if (NULL != (end = strchr(list, delimiter)))
+		if (NULL != (end = strchr(list, (unsigned char)delimiter)))
 		{
 			ret = (len == (size_t)(end - list) && 0 == strncmp(list, value, len) ? SUCCEED : FAIL);
 			list = end + 1;
@@ -4986,7 +4986,7 @@ void	zbx_strsplit(const char *src, char delimiter, char **left, char **right)
 {
 	char	*delimiter_ptr;
 
-	if (NULL == (delimiter_ptr = strchr(src, delimiter)))
+	if (NULL == (delimiter_ptr = strchr(src, (unsigned char)delimiter)))
 	{
 		*left = zbx_strdup(NULL, src);
 		*right = NULL;

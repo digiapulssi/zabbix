@@ -1679,10 +1679,10 @@ int	zbx_parse_ipmi_command(const char *command, char *c_name, int *val, char *er
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() command:'%s'", __function_name, command);
 
-	while ('\0' != *command && NULL != strchr(" \t", *command))
+	while ('\0' != *command && NULL != strchr(" \t", (unsigned char)*command))
 		command++;
 
-	for (p = command; '\0' != *p && NULL == strchr(" \t", *p); p++)
+	for (p = command; '\0' != *p && NULL == strchr(" \t", (unsigned char)*p); p++)
 		;
 
 	if (0 == (sz_c_name = p - command))
@@ -1700,7 +1700,7 @@ int	zbx_parse_ipmi_command(const char *command, char *c_name, int *val, char *er
 	memcpy(c_name, command, sz_c_name);
 	c_name[sz_c_name] = '\0';
 
-	while ('\0' != *p && NULL != strchr(" \t", *p))
+	while ('\0' != *p && NULL != strchr(" \t", (unsigned char)*p))
 		p++;
 
 	if ('\0' == *p || 0 == strcasecmp(p, "on"))
