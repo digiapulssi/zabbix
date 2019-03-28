@@ -79,7 +79,7 @@ sub get_ns_items
 
 		if ($itemkey =~ /\[(.+,.+)\]$/)
 		{
-			$items_by_nsip->{$1} = {'avail' => $itemid};
+			$items_by_nsip->{$1} = {'avail_itemid' => $itemid};
 		}
 		else
 		{
@@ -96,7 +96,7 @@ sub get_ns_items
 		{
 			if (defined($items_by_nsip->{$1}))
 			{
-				$items_by_nsip->{$1}{'downtime'} = $itemid;
+				$items_by_nsip->{$1}{'downtime_itemid'} = $itemid;
 				$items_by_nsip->{$1}{'downtime_key'} = $itemkey;
 			}
 			else
@@ -123,44 +123,69 @@ sub process_ns_items
 	{
 		my $items = $items_by_nsip->{$nsip};
 
-		my $lastvalues = get_lastvalues_by_itemids([$items->{'avail'}, $items->{'downtime'}],
-				ITEM_VALUE_TYPE_UINT64);
-
-		process_avail_downtime_item_pair($tld, $nsip, $items->{'avail'}, $lastvalues->{$items->{'avail'}},
-				$items->{'downtime'}, $lastvalues->{$items->{'downtime'}}, $items->{'downtime_key'});
+		calculate_downtime_values($tld, $nsip,
+				$items->{'avail_itemid'}, $items->{'downtime_itemid'}, $items->{'downtime_key'});
 	}
 }
 
-sub process_avail_downtime_item_pair
+sub calculate_downtime_values
 {
 	my $tld = shift;
 	my $nsip = shift;
 	my $avail_itemid = shift;
-	my $avail_item = shift;
 	my $downtime_itemid = shift;
-	my $downtime_item = shift;
 	my $downtime_key = shift;
 
-	fail("avail item not defined for $nsip") unless defined($avail_item);
-	fail("downtime itemid not defined for $nsip") unless defined($downtime_itemid);
+	my $avail_clock;
+	my $avail_value;
 
-	if (!defined($downtime_item))
+	if (SUCCESS != get_lastvalue($avail_itemid, ITEM_VALUE_TYPE_UINT64, \$avail_value, \$avail_clock))
 	{
-		$downtime_item = {'clock' => current_month_first_cycle() - 60, 'value' => 0}
+		fail("cannot get lastvalue for avail item $avail_itemid");
+	}
+	
+	my $downtime_value;
+	my $downtime_clock;
+
+	if (SUCCESS != get_lastvalue($downtime_itemid, ITEM_VALUE_TYPE_UINT64, \$downtime_value, \$downtime_clock))
+	{
+		$downtime_value = 0;
+		$downtime_clock = current_month_first_cycle() - 60;
 	}
 
-	my $clock = $downtime_item->{'clock'} + 60;
-	my $n = 0;
-
-	while ($n < MAX_CYCLES_TO_PROCESS and $clock <= $avail_item->{'clock'})
+	if ($downtime_clock >= $avail_clock)
 	{
-		my $month_changed = (month_start($clock) != month_start($downtime_item->{'clock'}) ? 1 : 0);
-		my $new_downtime_value = ($month_changed ? 0 : $downtime_item->{'value'}) 
-				+ ($avail_item->{'value'} == DOWN ? 1 : 0);
+		dbg("no new data for tld '$tld' nsip '$nsip'");
+		return;
+	}
+
+	my $clock_first = $downtime_clock + 60;
+	my $clock_last = $downtime_clock + (60 * MAX_CYCLES_TO_PROCESS);
+
+	if ($clock_last > $avail_clock)
+	{
+		$clock_last = $avail_clock;
+	}
+
+	my $rows = db_select("select clock,value from history_uint where itemid=$avail_itemid".
+			" and clock between $clock_first and $clock_last");
+
+	if (!defined($rows))
+	{
+		fail("cannot obtain values for avail item on tld '$tld' nsip '$nsip");
+	}
+
+	foreach my $row (@{$rows})
+	{
+		my $clock = $row->[0];
+		my $prev_clock = $clock - 60;
+		my $month_changed = (month_start($prev_clock) != month_start($clock) ? 1 : 0);
+		my $avail_value = $row->[1];
+		my $new_downtime_value = ($month_changed ? 0 : $downtime_value) + ($avail_value == DOWN ? 1 : 0);
 
 		push_value($tld, $downtime_key, $clock, $new_downtime_value);
 
+		$downtime_value = $new_downtime_value;
 		$clock += 60;
-		$n++;
 	}
 }
