@@ -2012,9 +2012,9 @@ bad:
  ******************************************************************************/
 int	zbx_is_utf8(const char *text)
 {
-	unsigned int	utf32;
-	unsigned char	*utf8;
-	size_t		i, mb_len, expecting_bytes = 0;
+	unsigned int		utf32;
+	const unsigned char	*utf8;
+	size_t			i, mb_len, expecting_bytes = 0;
 
 	while ('\0' != *text)
 	{
@@ -2031,7 +2031,7 @@ int	zbx_is_utf8(const char *text)
 
 		/* multibyte sequence */
 
-		utf8 = (unsigned char *)text;
+		utf8 = (const unsigned char *)text;
 
 		if (0xc0 == (*text & 0xe0))		/* 2-bytes multibyte sequence */
 			expecting_bytes = 1;
