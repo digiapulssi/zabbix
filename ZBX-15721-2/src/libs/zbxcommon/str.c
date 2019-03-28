@@ -1739,7 +1739,7 @@ void	zbx_strlower(char *str)
 void	zbx_strupper(char *str)
 {
 	for (; '\0' != *str; str++)
-		*str = toupper(*str);
+		*str = toupper((unsigned char)*str);
 }
 
 #ifdef _WINDOWS
