@@ -2825,31 +2825,6 @@ sub get_lastvalue($$$$)
 	return E_FAIL;
 }
 
-sub get_lastvalues_by_itemids
-{
-	my $itemids = shift;
-	my $value_type = shift;
-
-	my $table = ($value_type == ITEM_VALUE_TYPE_FLOAT || $value_type == ITEM_VALUE_TYPE_UINT64)
-			? 'lastvalue' : 'lastvalue_str';
-
-	my $rows = db_select("select itemid,value,clock from $table where itemid in (".
-			join(',', @{$itemids}).")");
-
-	return [] unless defined($rows);
-
-	my $lastvalues = {};
-
-	foreach my $row (@{$rows})
-	{
-		my ($itemid, $value, $clock) = @{$row};
-
-		$lastvalues->{$itemid} = {'value' => $value, 'clock' => $clock};
-	}
-
-	return $lastvalues;
-}
-
 #
 # returns array of itemids: [itemid1, itemid2 ...]
 #
