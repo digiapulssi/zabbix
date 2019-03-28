@@ -195,6 +195,17 @@ sub get_rtt_values
 
 sub current_month_latest_cycle
 {
+	my $now;
+
+	if (opt('now'))
+	{
+		$now = getopt('now');
+	}
+	else
+	{
+		$now = time();
+	}
+
 	# we don't know the rollweek bounds yet so we assume it ends at least few minutes back
-	return cycle_start(time(), 60) - ROLLWEEK_SHIFT_BACK;
+	return cycle_start($now, 60) - ROLLWEEK_SHIFT_BACK;
 }
