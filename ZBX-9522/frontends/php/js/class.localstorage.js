@@ -228,7 +228,15 @@ ZBX_LocalStorage.prototype.readKey = function(key) {
 	this.ensureKey(key);
 
 	try {
-		return this.unwrap(localStorage.getItem(this.toAbsKey(key))).payload;
+		var absKey = this.toAbsKey(key);
+
+		// A copy of default value is retured if key has no data.
+		var item = localStorage.getItem(absKey);
+		if (item === null) {
+			return this.unwrap(this.wrap(this.keys[key])).payload;
+		}
+
+		return this.unwrap(item).payload;
 	} catch (e) {
 		console.warn('failed to parse storage item "'+key+'"');
 		this.truncate();
@@ -285,9 +293,6 @@ ZBX_LocalStorage.prototype.truncate = function() {
 		}
 	}
 
-	for (var key in this.keys) {
-		this.writeKey(key, this.keys[key]);
-	}
 	console.warn('Zabbix local storage has been truncated.');
 }
 
