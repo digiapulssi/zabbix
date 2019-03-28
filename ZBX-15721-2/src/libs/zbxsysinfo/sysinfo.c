@@ -477,7 +477,7 @@ static int	zbx_check_user_parameter(const char *param, char *error, int max_erro
 			if (c != suppressed_chars)
 				zbx_strcpy_alloc(&buf, &buf_alloc, &buf_offset, ", ");
 
-			if (0 != isprint(*c))
+			if (0 != isprint((unsigned char)*c))
 				zbx_chrcpy_alloc(&buf, &buf_alloc, &buf_offset, *c);
 			else
 				zbx_snprintf_alloc(&buf, &buf_alloc, &buf_offset, "0x%02x", (unsigned int)(*c));
