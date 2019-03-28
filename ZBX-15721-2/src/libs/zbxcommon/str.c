@@ -1733,7 +1733,7 @@ char	*zbx_unicode_to_utf8_static(const wchar_t *wide_string, char *utf8_string, 
 void	zbx_strlower(char *str)
 {
 	for (; '\0' != *str; str++)
-		*str = tolower(*str);
+		*str = tolower((unsigned char)*str);
 }
 
 void	zbx_strupper(char *str)
