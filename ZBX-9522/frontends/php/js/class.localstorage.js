@@ -17,8 +17,10 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-
 ZBX_LocalStorage.defines = {
+	PREFIX_SEPARATOR: ':',
+	KEEP_ALIVE_INTERVAL: 30,
+	KEY_SESSIONS: 'sessions',
 	EVT_WRITE: 0,
 	EVT_CHANGE: 1,
 	EVT_MAP: 2
@@ -38,7 +40,8 @@ function ZBX_LocalStorage(version, prefix) {
 	if (ZBX_LocalStorage.intsance) {
 		return ZBX_LocalStorage.intsance;
 	}
-	ZBX_LocalStorage.prefix = prefix + ':';
+	ZBX_LocalStorage.sessionid = prefix;
+	ZBX_LocalStorage.prefix = prefix + ZBX_LocalStorage.defines.PREFIX_SEPARATOR;
 	ZBX_LocalStorage.intsance = this;
 	ZBX_LocalStorage.signature = (Math.random() % 9e6).toString(36).substr(2);
 
@@ -81,6 +84,43 @@ function ZBX_LocalStorage(version, prefix) {
 	if (this.readKey('version') != this.keys.version) {
 		this.truncate();
 	}
+
+	this.keepAlive();
+	setInterval(this.keepAlive, ZBX_LocalStorage.defines.KEEP_ALIVE_INTERVAL * 1000);
+}
+
+/**
+ * Keeps alive local storage sessions.
+ * Removes inactive session.
+ */
+ZBX_LocalStorage.prototype.keepAlive = function() {
+	var timestamp = Math.floor(+new Date / 1000);
+	var sessions = JSON.parse(localStorage.getItem(ZBX_LocalStorage.defines.KEY_SESSIONS) || '{}');
+
+	var aliveIds = [];
+	var expiredTimestamp = timestamp - 2 * ZBX_LocalStorage.defines.KEEP_ALIVE_INTERVAL;
+
+	for (var id in sessions) {
+		if (sessions[id] < expiredTimestamp) {
+			delete sessions[id];
+		}
+		else {
+			aliveIds.push(id);
+		}
+	}
+
+	for (var i = 0; i < localStorage.length; i++) {
+		var pts = localStorage.key(i).split(ZBX_LocalStorage.defines.PREFIX_SEPARATOR);
+		if (pts.length < 2) {
+			continue;
+		}
+		if (-1 === aliveIds.indexOf(pts[0])) {
+			localStorage.removeItem(localStorage.key(i));
+		}
+	}
+
+	sessions[ZBX_LocalStorage.sessionid] = timestamp;
+	localStorage.setItem(ZBX_LocalStorage.defines.KEY_SESSIONS, JSON.stringify(sessions));
 }
 
 /**
@@ -259,9 +299,20 @@ ZBX_LocalStorage.prototype.onWrite = function(callback) {
  */
 ZBX_LocalStorage.prototype.onUpdate = function(callback) {
 	window.addEventListener('storage', function(event) {
+		// This key is for internal use only.
+		if (event.key === ZBX_LocalStorage.defines.KEY_SESSIONS) {
+			return;
+		}
+
 		// This means, storage has been truncated.
 		if (event.key === null || event.key === '') {
 			return this.mapCallback(callback);
+		}
+
+		// I do not know why this may happen, but it does.
+		// Null cannot be accepted, because we should be able to unwrap the value.
+		if (event.newValue === null) {
+			return;
 		}
 
 		// Not only IE dispatches this event 'onwrite' instead of 'onchange',
