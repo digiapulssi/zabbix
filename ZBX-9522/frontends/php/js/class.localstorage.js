@@ -120,7 +120,7 @@ ZBX_LocalStorage.prototype.keepAlive = function() {
 	}
 
 	sessions[ZBX_LocalStorage.sessionid] = timestamp;
-	localStorage.setItem(ZBX_LocalStorage.defines.KEY_SESSIONS, this.stringify(sessions));
+	localStorage.setItem(ZBX_LocalStorage.defines.KEY_SESSIONS, ZBX_LocalStorage.stringify(sessions));
 }
 
 /**
@@ -247,7 +247,7 @@ ZBX_LocalStorage.prototype.readKey = function(key) {
  *
  * @return {string} Valid JSON string.
  */
-ZBX_LocalStorage.prototype.stringify = function(value) {
+ZBX_LocalStorage.stringify = function(value) {
 	return window.Prototype ? Object.toJSON(value) : JSON.stringify(value);
 }
 
@@ -257,7 +257,7 @@ ZBX_LocalStorage.prototype.stringify = function(value) {
  * @return {string}
  */
 ZBX_LocalStorage.prototype.wrap = function(value) {
-	return this.stringify({
+	return ZBX_LocalStorage.stringify({
 		payload: value,
 		signature: ZBX_LocalStorage.signature
 	});
