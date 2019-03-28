@@ -130,7 +130,7 @@ sub process_cycles # for a particular slv item
 
 				foreach my $rtt_value (@{$rtt_values})
 				{
-					if ($rtt_value <= -200)
+					if ($rtt_value <= -200 or $rtt_value > 500)
 					{
 						$down_rtt_count++;
 					}
