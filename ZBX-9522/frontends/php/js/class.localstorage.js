@@ -120,7 +120,7 @@ ZBX_LocalStorage.prototype.keepAlive = function() {
 	}
 
 	sessions[ZBX_LocalStorage.sessionid] = timestamp;
-	localStorage.setItem(ZBX_LocalStorage.defines.KEY_SESSIONS, JSON.stringify(sessions));
+	localStorage.setItem(ZBX_LocalStorage.defines.KEY_SESSIONS, this.stringify(sessions));
 }
 
 /**
@@ -197,10 +197,6 @@ ZBX_LocalStorage.prototype.toAbsKey = function(key) {
  * @param {string} value
  */
 ZBX_LocalStorage.prototype.writeKey = function(key, value) {
-	if (value instanceof Array) {
-		throw 'Arrays are not supported. Unsuccessful key: ' + key;
-	}
-
 	if (typeof value === 'undefined') {
 		throw 'Value may not be undefined, use null instead';
 	}
@@ -241,12 +237,27 @@ ZBX_LocalStorage.prototype.readKey = function(key) {
 }
 
 /**
+ * This method exists because Prototype.js defines Array.prototype.toJSON method.
+ * Which then is invoked by JSON.stringify producing unexpected result.
+ * Since Prototype.js itself depends on it's implementation,
+ * it is decided to not delete Array.prototype.toJSON.
+ * Prototype.js provides Object.prototype.toJSON.
+ *
+ * @param {mixed} value
+ *
+ * @return {string} Valid JSON string.
+ */
+ZBX_LocalStorage.prototype.stringify = function(value) {
+	return window.Prototype ? Object.toJSON(value) : JSON.stringify(value);
+}
+
+/**
  * @param {mixed} value
  *
  * @return {string}
  */
 ZBX_LocalStorage.prototype.wrap = function(value) {
-	return JSON.stringify({
+	return this.stringify({
 		payload: value,
 		signature: ZBX_LocalStorage.signature
 	});
