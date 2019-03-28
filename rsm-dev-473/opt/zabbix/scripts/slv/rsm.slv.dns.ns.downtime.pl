@@ -158,7 +158,9 @@ sub process_avail_downtime_item_pair
 
 		fail("cannot obtain value for itemid $avail_itemid, clock $clock") unless defined($rows);
 
-		my $new_downtime_value = $downtime_item->{'value'} + ($avail_item->{'value'} == DOWN ? 1 : 0);
+		my $month_changed = (month_start($clock) != month_start($downtime_item->{'clock'}) ? 1 : 0);
+		my $new_downtime_value = ($month_changed ? 0 : $downtime_item->{'value'}) 
+				+ ($avail_item->{'value'} == DOWN ? 1 : 0);
 
 		push_value($tld, $downtime_key, $clock, $new_downtime_value);
 
