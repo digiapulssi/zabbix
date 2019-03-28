@@ -27,15 +27,13 @@ ZBX_Notification.ease = 500;
  * Detached DOM node is created.
  * Closing time is scheduled.
  *
- * @see srvToStore
- *
  * @param {object} options
  *        {number} options.ttl  The timeout for this message is determined server side.
  *        {string} options.html
  */
 function ZBX_Notification(options) {
 	this.uid = options.uid;
-	this.node = this.makeNode(options.html, options.uid);
+	this.node = this.makeNode(options);
 	this.ttl = options.ttl;
 	this.timeoutid = this.setTimeout(options.ttl);
 	this.onTimeout = function() {};
@@ -63,12 +61,26 @@ ZBX_Notification.prototype.setTimeout = function(seconds) {
 /**
  * Renders this message object.
  *
+ * @depends {BBCode}
+ *
  * @return {HTMLElement}  Detached DOM node.
  */
-ZBX_Notification.prototype.makeNode = function(htmlString, uid) {
-	var parse = document.createElement('div');
-	parse.innerHTML = htmlString;
-	var node = parse.firstChild;
+ZBX_Notification.prototype.makeNode = function(obj) {
+	var node = document.createElement('li');
+
+	var indicator = document.createElement('div');
+	indicator.className = 'notif-indic ' + obj.severity_style;
+	node.appendChild(indicator);
+
+	var titleNode = document.createElement('h4');
+	titleNode.innerHTML = BBCode.Parse(obj.title);
+	node.appendChild(titleNode);
+
+	obj.body.forEach(function(line) {
+		var p = document.createElement('p');
+		p.innerHTML = BBCode.Parse(line);
+		node.appendChild(p)
+	});
 
 	node.snooze_icon = document.createElement('div');
 	node.snooze_icon.className = 'notif-indic-snooze';
@@ -124,40 +136,3 @@ ZBX_Notification.prototype.remove = function(ease, cb) {
 		cb && cb()
 	}
 }
-
-/**
- * Method that transforms notification object received from server
- * into format that is used for for notification instance.
- *
- * @depends {BBCode}
- *
- * @return {object}
- */
-ZBX_Notification.srvToStore = function(obj) {
-	var node = document.createElement('li');
-
-	var indicator = document.createElement('div');
-	indicator.className = 'notif-indic ' + obj.severity_style;
-	node.appendChild(indicator);
-
-	var titleNode = document.createElement('h4');
-	titleNode.innerHTML = BBCode.Parse(obj.title);
-	node.appendChild(titleNode);
-
-	obj.body.forEach(function(line) {
-		var p = document.createElement('p');
-		p.innerHTML = BBCode.Parse(line);
-		node.appendChild(p)
-	});
-
-	return {
-		html: node.outerHTML,
-		priority: obj.priority,
-		ttl: obj.ttl,
-		uid: obj.uid,
-		id: obj.id,
-		file: obj.file,
-		snoozed: obj.snoozed
-	};
-}
-

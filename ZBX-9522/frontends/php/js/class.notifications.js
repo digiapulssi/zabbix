@@ -496,7 +496,7 @@ ZBX_Notifications.toStorableList = function(list) {
 
 	var listObj = {};
 	list.forEach(function(rawNotif) {
-		listObj[rawNotif.uid] = ZBX_Notification.srvToStore(rawNotif);
+		listObj[rawNotif.uid] = rawNotif;
 	});
 
 	return listObj;
