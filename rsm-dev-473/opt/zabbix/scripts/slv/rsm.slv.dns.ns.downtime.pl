@@ -12,15 +12,14 @@ use TLD_constants qw(:groups :api);
 use Data::Dumper;
 use DateTime;
 
-use constant MAX_CYCLES_TO_PROCESS => 5;
-
-my $avail_key_pattern = 'rsm.slv.dns.ns.avail';
-my $downtime_key_pattern = 'rsm.slv.dns.ns.downtime';
-
 parse_slv_opts();
 fail_if_running();
 set_slv_config(get_rsm_config());
 db_connect();
+
+my $avail_key_pattern = 'rsm.slv.dns.ns.avail';
+my $downtime_key_pattern = 'rsm.slv.dns.ns.downtime';
+my $max_cycles_to_process = (opt('cycles') ? getopt('cycles') : 5);
 
 init_values();
 process_values();
@@ -160,7 +159,7 @@ sub calculate_downtime_values
 	}
 
 	my $clock_first = $downtime_clock + 60;
-	my $clock_last = $downtime_clock + (60 * MAX_CYCLES_TO_PROCESS);
+	my $clock_last = $downtime_clock + (60 * $max_cycles_to_process);
 
 	if ($clock_last > $avail_clock)
 	{
