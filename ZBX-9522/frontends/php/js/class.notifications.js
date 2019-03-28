@@ -513,3 +513,4 @@ jQuery(function() {
 	document.body.appendChild(notificationsNode);
 	jQuery(notificationsNode).draggable();
 });
+

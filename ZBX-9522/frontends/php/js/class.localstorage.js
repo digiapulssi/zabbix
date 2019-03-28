@@ -27,16 +27,18 @@ ZBX_LocalStorage.defines = {
 /**
  * Local storage wrapper. Implements singleton.
  *
- * @param {string} version  Mandatory parameter - zabbix version.
+ * @param {string} version  Mandatory parameter.
+ * @param {string} prefix  Used to distinct keys between sessions within same domain.
  */
-function ZBX_LocalStorage(version) {
-	if (!version) {
-		throw 'Local storage instantiation must be versioned.';
+function ZBX_LocalStorage(version, prefix) {
+	if (!version || !prefix) {
+		throw 'Local storage instantiation must be versioned, and prefixed.';
 	}
 
 	if (ZBX_LocalStorage.intsance) {
 		return ZBX_LocalStorage.intsance;
 	}
+	ZBX_LocalStorage.prefix = prefix + ':';
 	ZBX_LocalStorage.intsance = this;
 	ZBX_LocalStorage.signature = (Math.random() % 9e6).toString(36).substr(2);
 
@@ -121,6 +123,34 @@ ZBX_LocalStorage.prototype.ensureKey = function(key) {
 }
 
 /**
+ * Transforms absolute key into relative key.
+ *
+ * @param {string} absKey
+ *
+ * @return {string|null}  Relative key if found.
+ */
+ZBX_LocalStorage.prototype.fromAbsKey = function(absKey) {
+	var match = absKey.match('^'+ZBX_LocalStorage.prefix+'(.*)');
+
+	if (match !== null) {
+		match = match[1];
+	}
+
+	return match;
+}
+
+/**
+ * Transform key into absolute key.
+ *
+ * @param {string} key
+ *
+ * @return {string}
+ */
+ZBX_LocalStorage.prototype.toAbsKey = function(key) {
+	return ZBX_LocalStorage.prefix+key;
+}
+
+/**
  * Writes an underlaying value.
  *
  * @param {string} key
@@ -137,7 +167,7 @@ ZBX_LocalStorage.prototype.writeKey = function(key, value) {
 
 	this.ensureKey(key);
 
-	localStorage.setItem(key, this.wrap(value));
+	localStorage.setItem(this.toAbsKey(key), this.wrap(value));
 	this.onWriteCb && this.onWriteCb(key, value, ZBX_LocalStorage.defines.EVT_WRITE);
 }
 
@@ -162,7 +192,7 @@ ZBX_LocalStorage.prototype.readKey = function(key) {
 	this.ensureKey(key);
 
 	try {
-		return this.unwrap(localStorage.getItem(key)).payload;
+		return this.unwrap(localStorage.getItem(this.toAbsKey(key))).payload;
 	} catch (e) {
 		console.warn('failed to parse storage item "'+key+'"');
 		this.truncate();
@@ -197,7 +227,13 @@ ZBX_LocalStorage.prototype.unwrap = function(value) {
  * @param {string} value
  */
 ZBX_LocalStorage.prototype.truncate = function() {
-	localStorage.clear();
+	for (var i = 0; i < localStorage.length; i++) {
+		var key = this.fromAbsKey(localStorage.key(i));
+		if (key) {
+			localStorage.removeItem(localStorage.key(i));
+		}
+	}
+
 	for (var key in this.keys) {
 		this.writeKey(key, this.keys[key]);
 	}
@@ -233,7 +269,7 @@ ZBX_LocalStorage.prototype.onUpdate = function(callback) {
 		// So we need to sign all payloads.
 		var value = this.unwrap(event.newValue);
 		if (value.signature !== ZBX_LocalStorage.signature) {
-			callback(event.key, value.payload, ZBX_LocalStorage.defines.EVT_CHANGE);
+			callback(this.fromAbsKey(event.key), value.payload, ZBX_LocalStorage.defines.EVT_CHANGE);
 		}
 	}.bind(this));
 }
@@ -245,11 +281,15 @@ ZBX_LocalStorage.prototype.onUpdate = function(callback) {
  */
 ZBX_LocalStorage.prototype.mapCallback = function(callback) {
 	for (var i = 0; i < localStorage.length; i++) {
-		var key = localStorage.key(i);
+		var key = this.fromAbsKey(localStorage.key(i));
 		if (this.hasKey(key)) {
 			callback(key, this.readKey(key), ZBX_LocalStorage.defines.EVT_MAP);
 		}
 	}
 }
 
-ZABBIX.namespace('instances.localStorage', new ZBX_LocalStorage('1'));
+ZABBIX.namespace(
+	'instances.localStorage',
+	new ZBX_LocalStorage('1', document.head.querySelector('[name="csrf-token"]').content)
+);
+
