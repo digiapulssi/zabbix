@@ -21,7 +21,6 @@ ZBX_LocalStorage.defines = {
 	PREFIX_SEPARATOR: ':',
 	KEEP_ALIVE_INTERVAL: 30,
 	KEY_SESSIONS: 'sessions',
-	EVT_WRITE: 0,
 	EVT_CHANGE: 1,
 	EVT_MAP: 2
 }
@@ -214,8 +213,6 @@ ZBX_LocalStorage.prototype.writeKey = function(key, value) {
 		sessionStorage.setItem(this.toAbsKey(key), value);
 	}
 	localStorage.setItem(this.toAbsKey(key), value);
-
-	this.onWriteCb && this.onWriteCb(key, value, ZBX_LocalStorage.defines.EVT_WRITE);
 }
 
 /**
@@ -306,16 +303,6 @@ ZBX_LocalStorage.prototype.truncate = function() {
 	}
 
 	console.warn('Zabbix local storage has been truncated.');
-}
-
-/**
- * Since storage event is not fired for current session.
- * This binding can be used to explicitly proxy update events for current session as well.
- *
- * @param {callable} callback
- */
-ZBX_LocalStorage.prototype.onWrite = function(callback) {
-	this.onWriteCb = callback;
 }
 
 /**
