@@ -53,13 +53,13 @@ $widget->addItem($filterForm);
 if ($data['tld']) {
 	$infoBlock = (new CTable(null, 'filter info-block'))
 		->addRow([[
-		bold(_('Month')), ':', SPACE, date('F', mktime(0, 0, 0, $data['filter_month'], 1, $data['filter_year'])), BR(),
-		bold(_('Generation time')), ':', SPACE, date('dS F Y, H:i:s e', time()), BR(),
-		bold(_('TLD')), ':', SPACE, $data['tld']['name'], BR(),
-		bold(_('Server')), ':', SPACE, new CLink($this->data['server'],
-			$this->data['url'].'rsm.rollingweekstatus.php?sid='.$this->data['sid'].'&set_sid=1'
-		)
-	]]);
+				bold(_('Month')), ':', SPACE, date('F', mktime(0, 0, 0, $data['filter_month'], 1, $data['filter_year'])), BR(),
+				bold(_('Generation time')), ':', SPACE, date('dS F Y, H:i:s e', time()), BR(),
+				bold(_('TLD')), ':', SPACE, $data['tld']['name'], BR(),
+				bold(_('Server')), ':', SPACE, new CLink($this->data['server'],
+					$this->data['url'].'rsm.rollingweekstatus.php?sid='.$this->data['sid'].'&set_sid=1'
+				)
+			]]);
 	$widget->additem($infoBlock);
 }
 
@@ -91,9 +91,28 @@ foreach ($data['services'] as $name => $service) {
 	));
 }
 
+// Append download button.
+$download_button = $data['tld']
+	? (new CButton('download-report', 'Download XML'))->onClick(sprintf(
+		'javascript: document.location = "rsm.slareports-download.php?%s"',
+		http_build_query([
+			'action' => 'download-xml',
+			'server' => $data['server_nr'],
+			'tld' => $data['tld']['host'],
+			'year' => $data['filter_year'],
+			'month' => $data['filter_month'],
+			'source_url' => $data['source_url']
+		])
+	))
+	: (new CButton('download-report', 'Download XML'))->setEnabled(false);
+
 $form->addItem([
-	$table
+	$table,
+	(new CDiv())
+		->addItem($download_button)
+		->addClass('action-buttons')
 ]);
+
 // append form to widget
 $widget->addItem($form);
 

@@ -3659,13 +3659,13 @@ static int	create_slv_dns_ns_downtime_item(const char *tld, const char *hostid, 
 }
 
 static int	foreach_probe_nsip_pair(const char *tld, const char *hostid,
-				int (*fun)(const char *tld, const char *hostid, char *ns, char *ip))
+		int (*func)(const char *tld, const char *hostid, char *ns, char *ip))
 {
 	DB_RESULT	result;
 	DB_ROW		row;
 	char	 	*ns, *ip;
 
-	if (NULL == tld || 0 == tld[0] || NULL == hostid || NULL == fun)
+	if (NULL == tld || 0 == tld[0] || NULL == hostid || NULL == func)
 		return FAIL;
 
 	result = DBselect("select distinct key_ from items i"
@@ -3681,29 +3681,7 @@ static int	foreach_probe_nsip_pair(const char *tld, const char *hostid,
 		if (SUCCEED != extract_nsip_pair_from_rtt_item_key(row[0], &ns, &ip))
 			return FAIL;
 
-		if (SUCCEED != fun(tld, hostid, ns, ip))
-			return FAIL;
-	}
-
-	DBfree_result(result);
-
-	return SUCCEED;
-}
-
-static int	DBpatch_3000307(void)
-{
-	DB_RESULT	result;
-	DB_ROW		row;
-
-	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
-		return SUCCEED;
-
-	result = DBselect("select h.host,h.hostid from hosts h inner join hosts_groups hg on h.hostid=hg.hostid"
-				" where hg.groupid=140");
-
-	while (NULL != (row = DBfetch(result)))
-	{
-		if (SUCCEED != foreach_probe_nsip_pair(row[0], row[1], &create_slv_dns_ns_downtime_item))
+		if (SUCCEED != func(tld, hostid, ns, ip))
 			return FAIL;
 	}
 
@@ -3788,7 +3766,7 @@ static int	create_ratio_of_failed_tests_triggers(zbx_uint64_t itemid, const char
 	return SUCCEED;
 }
 
-static int	DBpatch_3000308(void)
+static int	DBpatch_3000307(void)
 {
 	int		ret = FAIL;
 	DB_RESULT	hosts_result;
@@ -3897,7 +3875,7 @@ out:
 	return ret;
 }
 
-static int	DBpatch_3000309(void)
+static int	DBpatch_3000308(void)
 {
 	int		ret = FAIL;
 	DB_RESULT	hosts_result;
@@ -3988,7 +3966,7 @@ out:
 	return ret;
 }
 
-static int	DBpatch_3000310(void)
+static int	DBpatch_3000309(void)
 {
 	const ZBX_TABLE table =
 			{"sla_reports", "hostid,year,month", 0,
@@ -4014,6 +3992,28 @@ static int	DBpatch_3000310(void)
 	{
 		return FAIL;
 	}
+
+	return SUCCEED;
+}
+
+static int	DBpatch_3000310(void)
+{
+	DB_RESULT	result;
+	DB_ROW		row;
+
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	result = DBselect("select h.host,h.hostid from hosts h inner join hosts_groups hg on h.hostid=hg.hostid"
+				" where hg.groupid=140");
+
+	while (NULL != (row = DBfetch(result)))
+	{
+		if (SUCCEED != foreach_probe_nsip_pair(row[0], row[1], &create_slv_dns_ns_downtime_item))
+			return FAIL;
+	}
+
+	DBfree_result(result);
 
 	return SUCCEED;
 }
@@ -4253,10 +4253,10 @@ DBPATCH_ADD(3000303, 0, 0)	/* increase "value" field of "lastvalue" table by dou
 DBPATCH_ADD(3000304, 0, 0)	/* update and add new RSM.SLV.* macros */
 DBPATCH_ADD(3000305, 0, 0)	/* add DNS downtime trigger to existing tld hosts */
 DBPATCH_ADD(3000306, 0, 0)	/* add RDDS downtime triggers to existing tld hosts */
-DBPATCH_ADD(3000307, 0, 0)	/* add rsm.slv.dns.ns.downtime to tld hosts */
-DBPATCH_ADD(3000308, 0, 0)	/* add "DNS Resolution RTT (performed/failed/pfailed)" items to existing tld hosts */
-DBPATCH_ADD(3000309, 0, 0)	/* add "RDDS Resolution RTT (performed/failed/pfailed)" items to existing tld hosts */
-DBPATCH_ADD(3000310, 0, 0)	/* create sla_reports table*/
+DBPATCH_ADD(3000307, 0, 0)	/* add "DNS Resolution RTT (performed/failed/pfailed)" items to existing tld hosts */
+DBPATCH_ADD(3000308, 0, 0)	/* add "RDDS Resolution RTT (performed/failed/pfailed)" items to existing tld hosts */
+DBPATCH_ADD(3000309, 0, 0)	/* create sla_reports table */
+DBPATCH_ADD(3000310, 0, 0)	/* add rsm.slv.dns.ns.downtime to tld hosts */
 DBPATCH_ADD(3000311, 0, 0)	/* rename macro RSM.SLV.NS.AVAIL into RSM.SLV.NS.DOWNTIME */
 DBPATCH_ADD(3000312, 0, 0)	/* add nameserver downtime triggers to tld hosts */
 DBPATCH_ADD(3000313, 0, 0)	/* add nameserver availability items to tld hosts */
