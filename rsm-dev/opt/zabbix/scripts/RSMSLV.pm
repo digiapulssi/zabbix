@@ -102,8 +102,8 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		validate_tld validate_service
 		get_templated_nsips db_exec tld_interface_enabled
 		tld_interface_enabled_create_cache tld_interface_enabled_delete_cache
-		db_select db_select_binds set_slv_config get_cycle_bounds get_rollweek_bounds get_downtime_bounds
-		db_explain
+		db_select db_select_col db_select_row db_select_value db_select_binds db_explain
+		set_slv_config get_cycle_bounds get_rollweek_bounds get_downtime_bounds
 		get_probe_times probe_offline_at probes2tldhostids
 		slv_max_cycles
 		get_probe_online_key_itemid
@@ -1228,12 +1228,49 @@ sub db_select($;$)
 	return $rows_ref;
 }
 
+sub db_select_col($;$)
+{
+	my $sql = shift;
+	my $bind_values = shift; # optional; reference to an array
+
+	my $rows = db_select($sql, $bind_values);
+
+	fail("query returned more than one column") if (scalar(@{$rows}) > 0 && scalar(@{$rows->[0]}) > 1);
+
+	return [map($_->[0], @{$rows})];
+}
+
+sub db_select_row($;$)
+{
+	my $sql = shift;
+	my $bind_values = shift; # optional; reference to an array
+
+	my $rows = db_select($sql, $bind_values);
+
+	fail("query did not return any row") if (scalar(@{$rows}) == 0);
+	fail("query returned more than one row") if (scalar(@{$rows}) > 1);
+
+	return $rows->[0];
+}
+
+sub db_select_value($;$)
+{
+	my $sql = shift;
+	my $bind_values = shift; # optional; reference to an array
+
+	my $row = db_select_row($sql, $bind_values);
+
+	fail("query returned more than one value") if (scalar(@{$row}) > 1);
+
+	return $row->[0];
+}
+
 sub db_explain($$)
 {
-	my $sql    = shift;
-	my $params = shift; # optional; reference to an array
+	my $sql = shift;
+	my $bind_values = shift; # optional; reference to an array
 
-	my $rows = db_select("explain $sql", $params);
+	my $rows = db_select("explain $sql", $bind_values);
 
 	my @header = (
 		"id",
