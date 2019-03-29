@@ -218,7 +218,7 @@
 					.on('change', function(e) {
 						if (e.target.value == <?= HTTPTEST_STEP_RETRIEVE_MODE_HEADERS ?>) {
 							post_fields.addClass('disabled');
-							post_field_inputs.attr('disabled', 'disabled');
+							post_field_inputs.prop('disabled', true);
 						}
 						else {
 							post_fields.removeClass('disabled');
