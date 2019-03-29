@@ -247,6 +247,7 @@ ZBX_LocalStorage.prototype.readKey = function(key) {
 	} catch (e) {
 		console.warn('failed to parse storage item "'+key+'"');
 		this.truncate();
+		this.truncateBackup();
 		return null;
 	}
 }
@@ -317,8 +318,6 @@ ZBX_LocalStorage.prototype.truncate = function() {
 			localStorage.removeItem(absKey);
 		}
 	}
-
-	console.warn('Zabbix local storage has been truncated.');
 }
 
 /**

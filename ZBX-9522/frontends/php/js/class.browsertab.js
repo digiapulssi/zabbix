@@ -145,9 +145,9 @@ ZBX_BrowserTab.prototype.handleBeforeUnload = function() {
 
 	this.onUnloadCbs.forEach(function(c) {c(this)}.bind(this));
 
-	// This prop needs to be freed earlier, because it seems scripts do continue execution after this call.
-	// Without this line it seems that focus event fired, thus it writes this tab id again back into store.
-	delete this.store;
+	window.removeEventListener('beforeunload', this.handleBeforeUnload.bind(this));
+	window.removeEventListener('focus', this.handleFocus.bind(this));
+	window.removeEventListener('blur', this.handleBlur.bind(this));
 }
 
 /**
