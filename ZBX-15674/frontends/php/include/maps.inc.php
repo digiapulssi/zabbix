@@ -648,7 +648,7 @@ function getHostGroupsInfo($selement, $i, $show_unack) {
 		];
 		$hasStatus = true;
 	}
-	elseif ($i['disabled'] == count($selement['hosts'])) {
+	elseif ($selement['hosts'] && ($i['disabled'] == count($selement['hosts']))) {
 		if (!$hasProblem) {
 			$info['icon_type'] = SYSMAP_ELEMENT_ICON_DISABLED;
 			$info['iconid'] = $selement['iconid_disabled'];
@@ -736,7 +736,7 @@ function getMapsInfo($selement, $i, $show_unack) {
 		];
 		$hasStatus = true;
 	}
-	elseif ($i['disabled'] == count($selement['hosts'])) {
+	elseif ($selement['hosts'] && ($i['disabled'] == count($selement['hosts']))) {
 		if (!$hasProblem) {
 			$info['icon_type'] = SYSMAP_ELEMENT_ICON_DISABLED;
 			$info['iconid'] = $selement['iconid_disabled'];
