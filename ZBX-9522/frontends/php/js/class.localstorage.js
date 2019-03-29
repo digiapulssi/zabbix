@@ -372,6 +372,6 @@ ZBX_LocalStorage.prototype.mapCallback = function(callback) {
 
 ZABBIX.namespace(
 	'instances.localStorage',
-	new ZBX_LocalStorage('1', document.head.querySelector('[name="csrf-token"]').content)
+	new ZBX_LocalStorage('1', cookie.read('localstoragePath'))
 );
 

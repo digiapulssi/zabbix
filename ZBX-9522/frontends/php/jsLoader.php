@@ -234,6 +234,7 @@ $tranStrings = [
 ];
 
 if (empty($_GET['files'])) {
+	header('Set-Cookie: localstoragePath='.crc32($_COOKIE['zbx_sessionid']));
 	$files = [
 		'prototype.js',
 		'jquery.js',
