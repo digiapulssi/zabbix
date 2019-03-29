@@ -42,6 +42,7 @@ window.ZABBIX = Object.create({
 	logout: function() {
 		var ls = this.namespace('instances.localStorage');
 		ls && ls.truncate();
+		ls && ls.truncateBackup();
 
 		redirect('index.php?reconnect=1', 'post', 'sid', true);
 	}

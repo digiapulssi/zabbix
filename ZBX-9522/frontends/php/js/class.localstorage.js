@@ -288,6 +288,22 @@ ZBX_LocalStorage.prototype.unwrap = function(value) {
 }
 
 /**
+ * Backup keys are removed.
+ *
+ * @param {string} value
+ */
+ZBX_LocalStorage.prototype.truncateBackup = function() {
+	for (var i = 0; i < sessionStorage.length; i++) {
+		var absKey = sessionStorage.key(i);
+		var key = this.fromAbsKey(absKey);
+
+		if (key && this.keysToBackup[key]) {
+			sessionStorage.removeItem(absKey);
+		}
+	}
+}
+
+/**
  * Removes all local storage and creates default objects.
  * Backup keys are not removed.
  *
