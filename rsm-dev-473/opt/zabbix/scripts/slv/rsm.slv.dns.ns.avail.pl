@@ -22,6 +22,7 @@ my $rtt_item_key_pattern = 'rsm.dns.udp.rtt';
 my $current_month_latest_cycle = current_month_latest_cycle();
 my $cfg_minonline = get_macro_dns_probe_online();
 my $max_cycles_to_process = (opt('cycles') ? getopt('cycles') : 5);
+my $dns_rtt_low = get_rtt_low('dns', PROTO_UDP);
 
 init_values();
 process_values();
@@ -130,7 +131,7 @@ sub process_cycles # for a particular slv item
 
 				foreach my $rtt_value (@{$rtt_values})
 				{
-					if (is_service_error('dns', $rtt_value, 500))
+					if (is_service_error('dns', $rtt_value, $dns_rtt_low))
 					{
 						$down_rtt_count++;
 					}
