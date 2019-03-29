@@ -78,7 +78,13 @@ function ZBX_LocalStorage(version, prefix) {
 		'notifications.alarm.start': '',
 		// Notification end id is written when notification has completed it's alert.
 		// It is then checked if these keys are equal to know that we do not play notification again.
-		'notifications.alarm.end': '',
+		'notifications.alarm.end': ''
+	}
+
+	// This subset of keys will be written also into session storage.
+	// This way we surrvive data across page reloads in case of single tab.
+	this.keysToBackup = {
+		'notifications.alarm.end': true
 	}
 
 	if (this.readKey('version') != this.keys.version) {
@@ -203,7 +209,12 @@ ZBX_LocalStorage.prototype.writeKey = function(key, value) {
 
 	this.ensureKey(key);
 
-	localStorage.setItem(this.toAbsKey(key), this.wrap(value));
+	value = this.wrap(value);
+	if (this.keysToBackup[key]) {
+		sessionStorage.setItem(this.toAbsKey(key), value);
+	}
+	localStorage.setItem(this.toAbsKey(key), value);
+
 	this.onWriteCb && this.onWriteCb(key, value, ZBX_LocalStorage.defines.EVT_WRITE);
 }
 
@@ -231,10 +242,9 @@ ZBX_LocalStorage.prototype.readKey = function(key) {
 		var absKey = this.toAbsKey(key);
 
 		// A copy of default value is retured if key has no data.
-		var item = localStorage.getItem(absKey);
-		if (item === null) {
-			return this.unwrap(this.wrap(this.keys[key])).payload;
-		}
+		var item = localStorage.getItem(absKey)
+			|| this.keysToBackup[key] && sessionStorage.getItem(absKey)
+			|| this.wrap(this.keys[key]);
 
 		return this.unwrap(item).payload;
 	} catch (e) {
@@ -282,14 +292,16 @@ ZBX_LocalStorage.prototype.unwrap = function(value) {
 
 /**
  * Removes all local storage and creates default objects.
+ * Backup keys are not removed.
  *
  * @param {string} value
  */
 ZBX_LocalStorage.prototype.truncate = function() {
 	for (var i = 0; i < localStorage.length; i++) {
-		var key = this.fromAbsKey(localStorage.key(i));
-		if (key) {
-			localStorage.removeItem(localStorage.key(i));
+		var absKey = localStorage.key(i);
+
+		if (this.fromAbsKey(absKey)) {
+			localStorage.removeItem(absKey);
 		}
 	}
 
