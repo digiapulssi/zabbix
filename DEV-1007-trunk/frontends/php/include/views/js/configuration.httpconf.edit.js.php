@@ -222,7 +222,7 @@
 						}
 						else {
 							post_fields.removeClass('disabled');
-							post_field_inputs.removeAttr('disabled');
+							post_field_inputs.prop('disabled', false);
 							pairManager.refresh();
 						}
 					})
