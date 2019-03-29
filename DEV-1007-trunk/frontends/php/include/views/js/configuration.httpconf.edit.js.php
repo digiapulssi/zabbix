@@ -481,10 +481,10 @@
 			var httpFieldsDisabled = ($(this).val() == <?= HTTPTEST_AUTH_NONE ?>);
 
 			$('#http_user')
-				.attr('disabled', httpFieldsDisabled)
+				.prop('disabled', httpFieldsDisabled)
 				.closest('li').toggle(!httpFieldsDisabled);
 			$('#http_password')
-				.attr('disabled', httpFieldsDisabled)
+				.prop('disabled', httpFieldsDisabled)
 				.closest('li').toggle(!httpFieldsDisabled);
 		});
 

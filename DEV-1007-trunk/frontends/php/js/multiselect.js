@@ -164,7 +164,7 @@ jQuery(function($) {
 				if (ms.options.disabled === false) {
 					$obj.attr('aria-disabled', true);
 					$('.multiselect-list', $obj).addClass('disabled');
-					$('.multiselect-button > button', $wrapper).attr('disabled', 'disabled');
+					$('.multiselect-button > button', $wrapper).prop('disabled', true);
 					$('input[type=text]', $wrapper).remove();
 					cleanAvailable($obj, ms.values);
 					$('.available', $wrapper).remove();
@@ -189,7 +189,7 @@ jQuery(function($) {
 					var $input = makeMultiSelectInput($obj);
 					$obj.removeAttr('aria-disabled');
 					$('.multiselect-list', $obj).removeClass('disabled');
-					$('.multiselect-button > button', $wrapper).removeAttr('disabled');
+					$('.multiselect-button > button', $wrapper).prop('disabled', false);
 					$obj.append($input);
 					makeSuggsetionsBlock($obj);
 
@@ -381,7 +381,7 @@ jQuery(function($) {
 				});
 
 				if (options.disabled) {
-					popupButton.attr('disabled', true);
+					popupButton.prop('disabled', true);
 				}
 
 				popupButton.click(function(event) {
