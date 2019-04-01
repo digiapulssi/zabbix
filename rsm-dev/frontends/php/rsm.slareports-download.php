@@ -20,6 +20,11 @@
 
 
 require_once dirname(__FILE__).'/include/config.inc.php';
+
+if (!file_exists(dirname(__FILE__).'/include/classes/services/CSlaReport.php')) {
+	CSession::setValue('messageError', _('SLA Report generation file is missing.'));
+	redirect(base64_decode(getRequest('source_url')));
+}
 require_once dirname(__FILE__).'/include/classes/services/CSlaReport.php';
 
 //		VAR			TYPE	OPTIONAL FLAGS	VALIDATION	EXCEPTION
@@ -42,10 +47,9 @@ $tlds = API::Host()->get([
 ]);
 
 if (($tld = reset($tlds)) === false) {
-	require_once dirname(__FILE__).'/include/page_header.php';
-	show_error_message(_s('No permissions to referred host "%1$s" or it does not exist!', getRequest('tld')));
-	require_once dirname(__FILE__).'/include/page_footer.php';
-	exit;
+	CSession::setValue('messageError',
+		_s('No permissions to referred host "%1$s" or it does not exist!', getRequest('tld')));
+	redirect(base64_decode(getRequest('source_url')));
 }
 
 $month = (int) getRequest('month');
