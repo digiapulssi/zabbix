@@ -811,7 +811,7 @@ function validate_trigger_expression(formname, dialogueid) {
 
 function redirect(uri, method, needle, invert_needle, add_sid) {
 	method = (method || 'get').toLowerCase();
-	add_sid = (typeof add_sid === 'undefined' || add_sid) && (method != 'get');
+	add_sid = (method != 'get' && (typeof add_sid === 'undefined' || add_sid));
 
 	var url = new Curl(uri, add_sid);
 
