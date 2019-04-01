@@ -82,6 +82,11 @@ class CView {
 	static $viewsDir = ['local/app/views', 'app/views', 'include/views'];
 
 	/**
+	 * @var string - currently set view.
+	 */
+	static $view;
+
+	/**
 	 * Web layout mode enabled flag.
 	 *
 	 * @static
@@ -121,6 +126,7 @@ class CView {
 		foreach (self::$viewsDir as $dir) {
 			$this->filePath = $dir.'/'.$view.'.php';
 			if (file_exists($this->filePath)) {
+				self::$view = $view;
 				$found = true;
 				break;
 			}
