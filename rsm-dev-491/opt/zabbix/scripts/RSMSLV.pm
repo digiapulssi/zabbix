@@ -3898,10 +3898,13 @@ sub recalculate_downtime($$$$)
 		push(@eventids, $eventid);
 	}
 
-	# TODO: save last auditid
-	# ...
-
-	return if (scalar(@eventids) == 0);
+	# NB! Don't save last auditid yet, if history needs to be altered! Altering history may fail!
+	if (scalar(@eventids) == 0)
+	{
+		# TODO: save last auditid
+		# ...
+		return;
+	}
 
 	# get data about affected incidents
 
@@ -4016,8 +4019,13 @@ sub recalculate_downtime($$$$)
 			# NB! Even if this is beginning of the month, we have to make sure that we have data from the
 			# beginning of the period that has to be recalculated.
 
-			$sql = "select value from history_uint where itemid = ? and clock = ? limit 1";
+			$sql = "select value from history_uint where itemid = ? and clock = ?";
 			$rows = db_select($sql, [$downtime_itemids{$itemid_avail}, cycle_start($from - $delay, $delay)]);
+
+			if (scalar @{$rows}) > 1)
+			{
+				fail("got more than one history entry");
+			}
 
 			if (scalar(@{$rows}) == 0)
 			{
@@ -4082,6 +4090,9 @@ sub recalculate_downtime($$$$)
 		#";
 		#$params = [$itemid];
 	}
+
+	# TODO: save last auditid
+	# ...
 }
 
 sub usage
