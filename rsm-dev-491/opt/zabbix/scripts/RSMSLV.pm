@@ -139,7 +139,7 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		cycle_start
 		cycle_end
 		update_slv_rtt_monthly_stats
-		omgomgomg
+		recalculate_downtime
 		usage);
 
 # configuration, set in set_slv_config()
@@ -3835,7 +3835,7 @@ sub update_slv_rtt_monthly_stats($$$$$$$$)
 	send_values();
 }
 
-sub omgomgomg($$$)
+sub recalculate_downtime($$$)
 {
 	my $item_key_avail    = shift;
 	my $item_key_downtime = shift;
