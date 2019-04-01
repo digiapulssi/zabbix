@@ -187,14 +187,16 @@ if ($page['type'] == PAGE_TYPE_HTML) {
 
 	// show GUI messages in pages with menus and in fullscreen mode
 	$showGuiMessaging = (!defined('ZBX_PAGE_NO_MENU') || $_REQUEST['fullscreen'] == 1) ? 1 : 0;
-	$path = 'jsLoader.php?ver='.ZABBIX_VERSION.'&amp;lang='.CWebUser::$data['lang'].'&showGuiMessaging='.$showGuiMessaging;
-	$pageHeader->addJsFile($path);
-
-	if (!empty($page['scripts']) && is_array($page['scripts'])) {
-		foreach ($page['scripts'] as $script) {
-			$path .= '&amp;files[]='.$script;
-		}
+	if (CView::$view !== 'general.login') {
+		$path = 'jsLoader.php?ver='.ZABBIX_VERSION.'&amp;lang='.CWebUser::$data['lang'].'&showGuiMessaging='.$showGuiMessaging;
 		$pageHeader->addJsFile($path);
+
+		if (!empty($page['scripts']) && is_array($page['scripts'])) {
+			foreach ($page['scripts'] as $script) {
+				$path .= '&amp;files[]='.$script;
+			}
+			$pageHeader->addJsFile($path);
+		}
 	}
 
 	$pageHeader->display();

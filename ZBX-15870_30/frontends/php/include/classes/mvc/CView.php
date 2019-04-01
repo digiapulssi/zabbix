@@ -65,6 +65,11 @@ class CView {
 	static $viewsDir = ['local/app/views', 'app/views', 'include/views'];
 
 	/**
+	 * @var string - currently set view.
+	 */
+	static $view;
+
+	/**
 	 * Creates a new view based on provided template file.
 	 * @param string $view name of a view, located under include/views
 	 * @param array $data deprecated parameter, use set() and get() methods for passing variables to views
@@ -84,6 +89,7 @@ class CView {
 		foreach (self::$viewsDir as $dir) {
 			$this->filePath = $dir.'/'.$view.'.php';
 			if (file_exists($this->filePath)) {
+				self::$view = $view;
 				$found = true;
 				break;
 			}
