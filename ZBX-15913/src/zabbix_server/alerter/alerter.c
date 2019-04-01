@@ -100,7 +100,6 @@ int	execute_action(DB_ALERT *alert, DB_MEDIATYPE *mediatype, char *error, int ma
 		{
 			char	*pstart, *pend;
 
-
 			for (pstart = mediatype->exec_params; NULL != (pend = strchr(pstart, '\n')); pstart = pend + 1)
 			{
 				char	*param_esc, *param = NULL;
