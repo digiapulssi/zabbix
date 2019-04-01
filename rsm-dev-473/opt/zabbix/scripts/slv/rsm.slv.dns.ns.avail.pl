@@ -207,5 +207,5 @@ sub current_month_latest_cycle
 	}
 
 	# we don't know the rollweek bounds yet so we assume it ends at least few minutes back
-	return cycle_start($now, 60) - ROLLWEEK_SHIFT_BACK;
+	return cycle_start($now, 60) - AVAIL_SHIFT_BACK;
 }
