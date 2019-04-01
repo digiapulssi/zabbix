@@ -154,6 +154,8 @@ static size_t	__zbx_json_stringsize(const char *string, zbx_json_type_t type)
 		{
 			case '"':  /* quotation mark */
 			case '\\': /* reverse solidus */
+			/* We do not escape '/' (solidus). https://www.rfc-editor.org/errata_search.php?rfc=4627 */
+			/* says: "/" and "\/" are both allowed and both produce the same result. */
 			case '\b': /* backspace */
 			case '\f': /* formfeed */
 			case '\n': /* newline */
@@ -196,6 +198,8 @@ static char	*__zbx_json_insstring(char *p, const char *string, zbx_json_type_t t
 				*p++ = '\\';
 				*p++ = '\\';
 				break;
+			/* We do not escape '/' (solidus). https://www.rfc-editor.org/errata_search.php?rfc=4627 */
+			/* says: "/" and "\/" are both allowed and both produce the same result. */
 			case '\b':		/* backspace */
 				*p++ = '\\';
 				*p++ = 'b';
