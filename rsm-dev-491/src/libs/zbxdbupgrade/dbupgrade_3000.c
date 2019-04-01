@@ -3836,6 +3836,19 @@ static int	DBpatch_3000309(void)
 	return SUCCEED;
 }
 
+static int	DBpatch_3000310(void)
+{
+	if (ZBX_DB_OK > DBexecute(
+			"update auditlog"
+			" set resourceid = substring_index(details,':',1)"
+			" where resourcetype = 32 and resourceid = 0"))
+	{
+		return FAIL;
+	}
+
+	return SUCCEED;
+}
+
 #endif
 
 DBPATCH_START(3000)
@@ -3931,5 +3944,6 @@ DBPATCH_ADD(3000306, 0, 0)	/* add RDDS downtime triggers to existing tld hosts *
 DBPATCH_ADD(3000307, 0, 0)	/* add "DNS Resolution RTT (performed/failed/pfailed)" items to existing tld hosts */
 DBPATCH_ADD(3000308, 0, 0)	/* add "RDDS Resolution RTT (performed/failed/pfailed)" items to existing tld hosts */
 DBPATCH_ADD(3000309, 0, 0)	/* create sla_reports table */
+DBPATCH_ADD(3000310, 0, 0)	/* fill auditlog.resourceid for "Marked/Unmarked as false positive" logs */
 
 DBPATCH_END()
