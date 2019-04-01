@@ -97,7 +97,9 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		get_rdds_delay get_epp_delay get_macro_epp_probe_online get_macro_epp_rollweek_sla
 		get_macro_dns_update_time get_macro_rdds_update_time get_tld_items get_hostid
 		get_rtt_low
-		get_macro_epp_rtt_low get_macro_probe_avail_limit get_itemid_by_key get_itemid_by_host
+		get_macro_epp_rtt_low get_macro_probe_avail_limit
+		get_macro_incident_dns_fail get_macro_incident_rdds_fail
+		get_itemid_by_key get_itemid_by_host
 		get_itemid_by_hostid get_itemid_like_by_hostid get_itemids_by_host_and_keypart get_lastclock get_tlds
 		get_oldest_clock
 		get_probes get_nsips get_nsip_items tld_exists tld_service_enabled db_connect db_disconnect
@@ -347,6 +349,16 @@ sub get_macro_epp_rtt_low
 sub get_macro_probe_avail_limit
 {
 	return __get_macro('{$RSM.PROBE.AVAIL.LIMIT}');
+}
+
+sub get_macro_incident_dns_fail()
+{
+	return __get_macro('{$RSM.INCIDENT.DNS.FAIL}');
+}
+
+sub get_macro_incident_rdds_fail()
+{
+	return __get_macro('{$RSM.INCIDENT.RDDS.FAIL}');
 }
 
 sub get_itemid_by_key
@@ -3835,12 +3847,12 @@ sub update_slv_rtt_monthly_stats($$$$$$$$)
 	send_values();
 }
 
-sub recalculate_downtime($$$)
+sub recalculate_downtime($$$$)
 {
 	my $item_key_avail    = shift;
 	my $item_key_downtime = shift;
+	my $threshold         = shift;
 	my $delay             = shift;
-	my $threshold         = 3; # TODO: threshold depends on service
 
 	fail("not supported when running in --dry-run mode") if (opt('dry-run'));
 
