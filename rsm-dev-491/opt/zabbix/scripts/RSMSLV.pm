@@ -76,6 +76,8 @@ use constant DEFAULT_SLV_MAX_CYCLES => 10;	# maximum cycles to process by SLV sc
 use constant USE_CACHE_FALSE => 0;
 use constant USE_CACHE_TRUE  => 1;
 
+use constant AUDIT_RESOURCE_INCIDENT => 32;
+
 our ($result, $dbh, $tld, $server_key);
 
 our %OPTS; # specified command-line options
@@ -137,6 +139,7 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		cycle_start
 		cycle_end
 		update_slv_rtt_monthly_stats
+		omgomgomg
 		usage);
 
 # configuration, set in set_slv_config()
@@ -3549,6 +3552,25 @@ sub get_end_of_prev_month($)
 	return $dt->epoch();
 }
 
+sub get_month_bounds(;$)
+{
+	my $now = shift // time();
+
+	require DateTime;
+
+	my $from;
+	my $till;
+
+	my $dt = DateTime->from_epoch('epoch' => $now);
+	$dt->truncate('to' => 'month');
+	$from = $dt->epoch();
+	$dt->add('months' => 1);
+	$dt->subtract('seconds' => 1);
+	$till = $dt->epoch();
+
+	return ($from, $till);
+}
+
 sub get_slv_rtt_cycle_stats($$$$)
 {
 	my $tld         = shift;
@@ -3811,6 +3833,243 @@ sub update_slv_rtt_monthly_stats($$$$$$$$)
 	}
 
 	send_values();
+}
+
+sub omgomgomg($$$)
+{
+	my $item_key_avail    = shift;
+	my $item_key_downtime = shift;
+	my $delay             = shift;
+	my $threshold         = 3; # TODO: threshold depends on service
+
+	fail("not supported when running in --dry-run mode") if (opt('dry-run'));
+
+	my $sql;
+	my $params;
+	my $rows;
+
+	# TODO: get last auditid
+	my $last_auditlog_auditid = 0;
+
+	# get unprocessed auditlog entries
+
+	$sql = "
+		select
+			if(resourcetype = ?, resourceid, 0) as auditlog_eventid,
+			count(*),
+			max(auditid)
+		from
+			auditlog
+		where
+			auditid > ?
+		group by
+			auditlog_eventid
+	";
+	$params = [AUDIT_RESOURCE_INCIDENT, $last_auditlog_auditid];
+	$rows = db_select($sql, $params);
+
+	return if (scalar(@{$rows}) == 0);
+
+	# get list of events.eventid (incidents) that changed their "false positive" state
+
+	my @eventids = ();
+
+	foreach my $row (@{$rows})
+	{
+		my ($eventid, $count, $max_auditid) = @{$row};
+
+		$last_auditlog_auditid = $max_auditid if ($last_auditlog_auditid < $max_auditid);
+
+		next if ($eventid == 0); # this is not AUDIT_RESOURCE_INCIDENT
+		next if ($count % 2 == 0); # marked + unmarked, no need to recalculate
+
+		push(@eventids, $eventid);
+	}
+
+	# TODO: save last auditid
+	# ...
+
+	return if (scalar(@eventids) == 0);
+
+	# get data about affected incidents
+
+	my $eventids_placeholder = join(",", ("?") x scalar(@eventids));
+	$sql = "
+		select
+			events.eventid,
+			events.false_positive,
+			events.clock,
+			(
+				select clock
+				from events as events_inner
+				where
+					events_inner.source = events.source and
+					events_inner.object = events.object and
+					events_inner.objectid = events.objectid and
+					events_inner.value = ? and
+					events_inner.eventid > events.eventid
+				order by events_inner.eventid asc
+				limit 1
+			) as clock2,
+			function_items.hostid,
+			function_items.itemid,
+			function_items.key_
+		from
+			events
+			left join (
+				select distinct
+					functions.triggerid,
+					items.hostid,
+					items.itemid,
+					items.key_
+				from
+					functions
+					left join items on items.itemid = functions.itemid
+			) as function_items on function_items.triggerid = events.objectid
+		where
+			events.source = ? and
+			events.object = ? and
+			events.value = ? and
+			events.eventid in ($eventids_placeholder)
+		order by
+			clock asc
+	";
+	$params = [TRIGGER_VALUE_FALSE, EVENT_SOURCE_TRIGGERS, EVENT_OBJECT_TRIGGER, TRIGGER_VALUE_TRUE, @eventids];
+	$rows = db_select($sql, $params);
+
+	my $requested_rows = scalar(@eventids);
+	my $returned_rows  = scalar(@{$rows});
+	if ($returned_rows != $requested_rows)
+	{
+		# some hints for debugging:
+		# * $rows aren't filtered by $item_key_avail yet, right?
+		# * function_items got more than 1 row for a trigger?
+		# * events.source, events.object or events.value in DB has unexpected value?
+		fail("mismatch between numbers of requested rows ($requested_rows) and returned rows ($returned_rows)");
+	}
+
+	# mapping between "rsm.slv.xxx.avail" and "rsm.slv.xxx.downtime" items
+	# $downtime_itemids{$itemid_avail} = $itemid_downtime;
+	my %downtime_itemids = ();
+
+	# ranges of "false positive" availability values; these ranges start before incident actually started
+	# $false_positives{$itemid_avail} = [[$from, $till], ...]
+	my %false_positives = ();
+
+	# periods that have to be recalculated; downtime for each month has to be recalculated till the end of the month
+	# $periods{$itemid_avail} = {$month_start_1 => $from_1, $month_start_2 => $from_2, ...}
+	my %periods = ();
+
+	foreach my $row (@{$rows})
+	{
+		my ($eventid, $false_positive, $from, $till, $hostid, $itemid_avail, $key) = @{$row};
+
+		if ($key ne $item_key_avail)
+		{
+			dbg("skipping incident $eventid (\$item_key_avail = '$item_key_avail', \$key = '$key')");
+			next;
+		}
+
+		if (!exists($downtime_itemids{$itemid_avail}))
+		{
+			$sql = "select itemid from items where hostid = ? and key_ = ?";
+			$downtime_itemids{$itemid_avail} = db_select_value($sql, [$hostid, $item_key_downtime]);
+		}
+
+		if ($false_positive)
+		{
+			push(@{$false_positives{$itemid_avail}}, [$from - $delay * ($threshold - 1), $till]);
+		}
+
+		while ($from <= $till)
+		{
+			my ($month_start, $month_end) = get_month_bounds($from);
+
+			if (!exists($periods{$itemid_avail}{$month_start}) || $from < $periods{$itemid_avail}{$month_start})
+			{
+				$periods{$itemid_avail}{$month_start} = $from;
+			}
+
+			$from = cycle_end($month_end + $delay, $delay);
+		}
+	}
+
+	foreach my $itemid_avail (keys(%periods))
+	{
+		foreach my $from (values(%{$periods{$itemid_avail}}))
+		{
+			my ($month_from, $month_till) = get_month_bounds($from);
+			my $till = cycle_start($month_till, $delay);
+
+			# NB! Even if this is beginning of the month, we have to make sure that we have data from the
+			# beginning of the period that has to be recalculated.
+
+			$sql = "select value from history_uint where itemid = ? and clock = ? limit 1";
+			$rows = db_select($sql, [$downtime_itemids{$itemid_avail}, cycle_start($from - $delay, $delay)]);
+
+			if (scalar(@{$rows}) == 0)
+			{
+				#wrn("skipping incident $eventid (cannot alter history, false-positive flag changed for a too old incident)");
+				next;
+			}
+
+			my $downtime_value = $rows->[0][0];
+
+			if (cycle_start($from, $delay) == cycle_start($month_from, $delay))
+			{
+				$downtime_value = 0;
+			}
+
+			$sql = "select clock, value from history_uint where itemid = ? and clock between ? and ? order by clock asc";
+			$rows = db_select($sql, [$itemid_avail, $from - $delay * ($threshold - 1), $till]);
+
+			my %avail = map { $_->[0] => $_->[1] } @{$rows};
+
+			# $false_positives{$itemid_avail} = [[$from, $till], ...]
+			foreach my $false_positive (@{$false_positives{$itemid_avail}})
+			{
+				for (my $clock = $false_positive->[0]; $clock <= $false_positive->[1]; $clock += $delay)
+				{
+					printf("%d = %d\n", $clock, $avail{$clock});
+				}
+				print "\n";
+			}
+
+			my %downtime = ();
+		}
+
+
+
+
+
+
+
+
+		#my ($from_month, undef) = get_month_bounds($from);
+		#my ($till_month, undef) = get_month_bounds($till);
+
+
+
+
+
+
+		# $false_positive from $started till $ended
+		# group by $triggerid
+		# split $started and $ended into months, if needed
+
+		#...;
+
+
+		# TODO: update lastvalue, if necessary
+		#$sql = "
+		#	update
+		#		lastvalue
+		#		inner join history_uint on history_uint.itemid = lastvalue.itemid and history_uint.clock = lastvalue.clock
+		#	set lastvalue.value = history_uint.value
+		#	where lastvalue.itemid = ?
+		#";
+		#$params = [$itemid];
+	}
 }
 
 sub usage
