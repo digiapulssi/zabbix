@@ -2077,8 +2077,8 @@ static void	escalation_recover(DB_ESCALATION *escalation, const DB_ACTION *actio
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() escalationid:" ZBX_FS_UI64 " status:%s",
 			__function_name, escalation->escalationid, zbx_escalation_status_string(escalation->status));
 
-	if (SUCCEED == esc_recovery_register(esc_recovery, escalation->actionid, event->trigger.triggerid,
-			r_event->eventid))
+	if (EVENT_SOURCE_TRIGGERS != event->source || SUCCEED == esc_recovery_register(esc_recovery,
+			escalation->actionid, event->trigger.triggerid, r_event->eventid))
 	{
 		escalation_execute_recovery_operations(event, r_event, action);
 	}
