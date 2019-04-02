@@ -1444,6 +1444,8 @@ sub db_exec($;$)
 
 sub db_mass_update($$$$$)
 {
+	# Function for updating LOTS of rows (hundreds, thousands or even tens of thousands) in a single query.
+	#
 	# Example usage:
 	#
 	# <code>
@@ -1487,7 +1489,7 @@ sub db_mass_update($$$$$)
 	my $fields        = shift; # names of fields that are present in $values
 	my $values        = shift; # values for filtering/updating
 	my $filter_fields = shift; # fields from $values that are used for filtering
-	my $filter_values = shift; # additional filter values
+	my $filter_values = shift; # additional filter values; may be undef or empty array
 
 	my $update_fields = [];
 
@@ -1514,9 +1516,12 @@ sub db_mass_update($$$$$)
 		. " inner join ($subquery) as update_values on "
 		. join(" and ", map("$table.$_=update_values.$_", @{$filter_fields}))
 		. " set "
-		. join(",", map("$table.$_=update_values.$_", @{$update_fields}))
-		. " where "
-		. join(" and ", map($table . "." . $_->[0] . "=?", @{$filter_values}));
+		. join(",", map("$table.$_=update_values.$_", @{$update_fields}));
+
+	if (defined($filter_values) && scalar(@{$filter_values}) > 0)
+	{
+		$sql .= " where " . join(" and ", map($table . "." . $_->[0] . "=?", @{$filter_values}));
+	}
 
 	my @params = (
 		map(@{$_}, @{$values}),
