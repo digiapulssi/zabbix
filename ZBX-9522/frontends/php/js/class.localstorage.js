@@ -289,6 +289,15 @@ ZBX_LocalStorage.prototype.unwrap = function(value) {
 }
 
 /**
+ * After this method call local storage will not perform any further writes.
+ */
+ZBX_LocalStorage.prototype.destruct = function() {
+	this.writeKey = function() {}
+	this.truncate();
+	this.truncateBackup();
+}
+
+/**
  * Backup keys are removed.
  *
  * @param {string} value
@@ -311,13 +320,9 @@ ZBX_LocalStorage.prototype.truncateBackup = function() {
  * @param {string} value
  */
 ZBX_LocalStorage.prototype.truncate = function() {
-	for (var i = 0; i < localStorage.length; i++) {
-		var absKey = localStorage.key(i);
-
-		if (this.fromAbsKey(absKey)) {
-			localStorage.removeItem(absKey);
-		}
-	}
+	this.iterator().forEach(function(keyVariants) {
+		localStorage.removeItem(keyVariants.absKey);
+	});
 }
 
 /**
@@ -361,12 +366,37 @@ ZBX_LocalStorage.prototype.onUpdate = function(callback) {
  * @param {callable} callback
  */
 ZBX_LocalStorage.prototype.mapCallback = function(callback) {
-	for (var i = 0; i < localStorage.length; i++) {
-		var key = this.fromAbsKey(localStorage.key(i));
-		if (this.hasKey(key)) {
-			callback(key, this.readKey(key), ZBX_LocalStorage.defines.EVT_MAP);
+	this.iterator().forEach(function(keyVariants) {
+		if (this.hasKey(keyVariants.key)) {
+			callback(keyVariants.key, this.readKey(keyVariants.key), ZBX_LocalStorage.defines.EVT_MAP);
 		}
+	}.bind(this));
+}
+
+/**
+ * Returns list of keys found in localStorage relevant for current session.
+ *
+ * @return {array}
+ */
+ZBX_LocalStorage.prototype.iterator = function() {
+	var length = localStorage.length;
+	var list = [];
+
+	for (var i = 0; i < length; i++) {
+		var absKey = localStorage.key(i);
+		var key = this.fromAbsKey(absKey);
+
+		if (!key) {
+			continue;
+		}
+
+		list.push({
+			absKey: absKey,
+			key: key
+		});
 	}
+
+	return list;
 }
 
 ZABBIX.namespace(
