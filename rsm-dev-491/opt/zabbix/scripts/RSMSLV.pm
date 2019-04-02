@@ -1280,7 +1280,7 @@ sub db_select_value($;$)
 	return $row->[0];
 }
 
-sub db_explain($$)
+sub db_explain($;$)
 {
 	my $sql = shift;
 	my $bind_values = shift; # optional; reference to an array
@@ -1398,9 +1398,10 @@ sub db_select_binds
 	return \@rows;
 }
 
-sub db_exec
+sub db_exec($;$)
 {
 	$_global_sql = shift;
+	$_global_sql_bind_values = shift; # optional; reference to an array
 
 	if ($get_stats)
 	{
@@ -1410,12 +1411,20 @@ sub db_exec
 	my $sth = $dbh->prepare($_global_sql)
 		or fail("cannot prepare [$_global_sql]: ", $dbh->errstr);
 
-	dbg("[$_global_sql]");
+	if (defined($_global_sql_bind_values))
+	{
+		dbg("[$_global_sql] ", join(',', @{$_global_sql_bind_values}));
 
-	my ($total);
+		$sth->execute(@{$_global_sql_bind_values})
+			or fail("cannot execute [$_global_sql]: ", $sth->errstr);
+	}
+	else
+	{
+		dbg("[$_global_sql]");
 
-	$sth->execute()
-		or fail("cannot execute [$_global_sql]: ", $sth->errstr);
+		$sth->execute()
+			or fail("cannot execute [$_global_sql]: ", $sth->errstr);
+	}
 
 	if ($get_stats)
 	{
@@ -1431,6 +1440,90 @@ sub db_exec
 	}
 
 	return $sth->{mysql_insertid};
+}
+
+sub db_mass_update($$$$$)
+{
+	# Example usage:
+	#
+	# <code>
+	# db_mass_update(
+	# 	"history_uint",
+	# 	["clock", "value"],
+	# 	[[1546300800, 1], [1546300860, 2], [1546300920, 3]],
+	# 	["clock"],
+	# 	[["itemid", 10052]]
+	# );
+	# </code>
+	#
+	# Does all following updates, but in a single query:
+	#
+	# <code>
+	# update history_uint set value = 1 where itemid = 10052 and clock = 1546300800;
+	# update history_uint set value = 2 where itemid = 10052 and clock = 1546300860;
+	# update history_uint set value = 3 where itemid = 10052 and clock = 1546300920;
+	# </code>
+	#
+	# Following calls would have the same effect:
+	#
+	# <code>
+	# db_mass_update(
+	# 	"tbl",
+	# 	["col1", "col2", "col3"],
+	# 	[["val1", "val2", "val3"]],
+	# 	["col1", "col2"],
+	# 	[["col4", "val4"], ["col5", "val5"]]
+	# );
+	# </code>
+	#
+	# <code>
+	# update tbl set col3 = val3 where (col1 = val1 and col2 = val2) and (col4 = val4 and col5 = val5);
+	# </code>
+	#
+	# Fields from $values that are listed in $filter_fields are used for filtering.
+	# Fields from $values that are not listed in $filter_fields are updated.
+
+	my $table         = shift; # table name
+	my $fields        = shift; # names of fields that are present in $values
+	my $values        = shift; # values for filtering/updating
+	my $filter_fields = shift; # fields from $values that are used for filtering
+	my $filter_values = shift; # additional filter values
+
+	my $update_fields = [];
+
+	foreach my $field (@{$fields})
+	{
+		push(@{$update_fields}, $field) if (!grep($field eq $_, @{$filter_fields}));
+	}
+
+	my $subquery;
+
+	foreach (@{$values})
+	{
+		if (!defined($subquery))
+		{
+			$subquery = "select " . join(",", map("? as $_", @{$fields}));
+		}
+		else
+		{
+			$subquery .= " union select " . join(",", map("?", @{$fields}));
+		}
+	}
+
+	my $sql = "update $table"
+		. " inner join ($subquery) as update_values on "
+		. join(" and ", map("$table.$_=update_values.$_", @{$filter_fields}))
+		. " set "
+		. join(",", map("$table.$_=update_values.$_", @{$update_fields}))
+		. " where "
+		. join(" and ", map($table . "." . $_->[0] . "=?", @{$filter_values}));
+
+	my @params = (
+		map(@{$_}, @{$values}),
+		map($_->[1], @{$filter_values})
+	);
+
+	db_exec($sql, \@params);
 }
 
 sub set_slv_config
