@@ -82,6 +82,92 @@ static void	add_message_alert(const DB_EVENT *event, const DB_EVENT *r_event, zb
 		zbx_uint64_t userid, zbx_uint64_t mediatypeid, const char *subject, const char *message,
 		zbx_uint64_t ackid);
 
+
+/**
+ * Force multiple problem generation triggers to have only one recovery escalation per action.
+ *
+ * This is done by caching of recovered escalation data and skipping escalation recovery
+ * operations if another escalation created by the same trigger and action was recovered
+ * by the same recovery event.
+ *
+ * The cached escalation recovery records older than 1 hour will be removed.
+ */
+typedef struct
+{
+	zbx_uint64_t	triggerid;
+	zbx_uint64_t	r_eventid;
+	zbx_uint64_t	actionid;
+	time_t		clock;
+}
+zbx_esc_recovery_t;
+
+#define ZBX_esc_recovery_TTL	SEC_PER_HOUR
+
+static zbx_hashset_t	esc_recovery;
+
+static zbx_hash_t	esc_recovery_hash_func(const void *d)
+{
+	const zbx_esc_recovery_t	*er = (const zbx_esc_recovery_t *)d;
+	zbx_hash_t	hash;
+
+	hash = ZBX_DEFAULT_UINT64_HASH_FUNC(&er->actionid);
+	hash = ZBX_DEFAULT_STRING_HASH_ALGO(&er->r_eventid, sizeof(er->r_eventid), hash);
+	return ZBX_DEFAULT_STRING_HASH_ALGO(&er->triggerid, sizeof(er->triggerid), hash);
+}
+
+static int	esc_recovery_compare_func(const void *d1, const void *d2)
+{
+	const zbx_esc_recovery_t	*er1 = (const zbx_esc_recovery_t *)d1;
+	const zbx_esc_recovery_t	*er2 = (const zbx_esc_recovery_t *)d2;
+
+	ZBX_RETURN_IF_NOT_EQUAL(er1->actionid, er2->actionid);
+	ZBX_RETURN_IF_NOT_EQUAL(er1->triggerid, er2->triggerid);
+	ZBX_RETURN_IF_NOT_EQUAL(er1->r_eventid, er2->r_eventid);
+	return 0;
+}
+
+static void	esc_recovery_init()
+{
+	zbx_hashset_create(&esc_recovery, 0, esc_recovery_hash_func, esc_recovery_compare_func);
+}
+
+static void	esc_recovery_destroy()
+{
+	zbx_hashset_destroy(&esc_recovery);
+}
+
+static int	esc_recovery_register(zbx_uint64_t actionid, zbx_uint64_t triggerid, zbx_uint64_t r_eventid)
+{
+	zbx_esc_recovery_t	er_local;
+
+	er_local.actionid = actionid;
+	er_local.triggerid = triggerid;
+	er_local.r_eventid = r_eventid;
+
+	if (NULL != zbx_hashset_search(&esc_recovery, &er_local))
+		return FAIL;
+
+	er_local.clock = time(NULL);
+	zbx_hashset_insert(&esc_recovery, &er_local, sizeof(er_local));
+
+	return SUCCEED;
+}
+
+static void	esc_recovery_cleanup()
+{
+	zbx_hashset_iter_t	iter;
+	zbx_esc_recovery_t	*er;
+	time_t			now;
+
+	now = time(NULL);
+	zbx_hashset_iter_reset(&esc_recovery, &iter);
+	while (NULL != (er = (zbx_esc_recovery_t *)zbx_hashset_iter_next(&iter)))
+	{
+		if (ZBX_esc_recovery_TTL < now - er->clock)
+			zbx_hashset_iter_remove(&iter);
+	}
+}
+
 /******************************************************************************
  *                                                                            *
  * Function: check_perm2system                                                *
@@ -2022,7 +2108,17 @@ static void	escalation_recover(DB_ESCALATION *escalation, const DB_ACTION *actio
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() escalationid:" ZBX_FS_UI64 " status:%s",
 			__function_name, escalation->escalationid, zbx_escalation_status_string(escalation->status));
 
-	escalation_execute_recovery_operations(event, r_event, action);
+	if (SUCCEED == esc_recovery_register(escalation->actionid, event->trigger.triggerid, r_event->eventid))
+	{
+		escalation_execute_recovery_operations(event, r_event, action);
+	}
+	else
+	{
+		zabbix_log(LOG_LEVEL_DEBUG, "%s() skipping recovery operations because escalation created by action "
+				ZBX_FS_UI64 " and trigger " ZBX_FS_UI64 " has been already recovered by event "
+				ZBX_FS_UI64, __function_name, escalation->actionid, event->trigger.triggerid,
+				r_event->eventid);
+	}
 
 	escalation->status = ESCALATION_STATUS_COMPLETED;
 
@@ -2643,6 +2739,8 @@ ZBX_THREAD_ENTRY(escalator_thread, args)
 	zbx_setproctitle("%s #%d [connecting to the database]", get_process_type_string(process_type), process_num);
 	last_stat_time = time(NULL);
 
+	esc_recovery_init();
+
 	DBconnect(ZBX_DB_CONNECT_NORMAL);
 
 	for (;;)
@@ -2691,5 +2789,8 @@ ZBX_THREAD_ENTRY(escalator_thread, args)
 		}
 
 		zbx_sleep_loop(sleeptime);
+		esc_recovery_cleanup();
 	}
+
+	esc_recovery_destroy();
 }
