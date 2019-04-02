@@ -128,7 +128,8 @@ if (!CWebUser::$data['alias'] || CWebUser::$data['alias'] == ZBX_GUEST_USER) {
 				$messages = array_pop($messages);
 				$_REQUEST['message'] = $messages['message'];
 			}
-			$loginForm = new CView('general.login');
+
+			$loginForm = (new CView('general.login'))->disableJS();
 			$loginForm->render();
 	}
 }

@@ -43,31 +43,30 @@ class CView {
 	private $scripts;
 
 	/**
-	 * @var array - Java code for inclusions on page
+	 * @var array - Javascript code for inclusions on page
 	 */
 	private $jsIncludePost = [];
 
 	/**
-	 * @var array - Java Script files for inclusions on page, pre-processed by PHP
+	 * @var array - Javascript files for inclusions on page, pre-processed by PHP
 	 */
 	private $jsIncludeFiles = [];
 
 	/**
-	 * @var array - Java Script files for inclusions on page, included as <script src="..."></script>
+	 * @var array - Javascript files for inclusions on page, included as <script src="..."></script>
 	 */
 	private $jsFiles = [];
+
+	/**
+	 * @var bool - Don't add javascript files to the page
+	 */
+	public static $js_disabled = false;
 
 	/**
 	 * @array - directories where views are stored, ordered by priority
 	 * include/views should be removed once we fully move to MVC
 	 */
-//	static $viewsDir = array('app/local/views', 'app/views', 'include/views');
 	static $viewsDir = ['local/app/views', 'app/views', 'include/views'];
-
-	/**
-	 * @var string - currently set view.
-	 */
-	static $view;
 
 	/**
 	 * Creates a new view based on provided template file.
@@ -89,7 +88,6 @@ class CView {
 		foreach (self::$viewsDir as $dir) {
 			$this->filePath = $dir.'/'.$view.'.php';
 			if (file_exists($this->filePath)) {
-				self::$view = $view;
 				$found = true;
 				break;
 			}
@@ -234,5 +232,16 @@ class CView {
 	 */
 	public function getAddedJS() {
 		return $this->jsFiles;
+	}
+
+	/**
+	 * Don't add javascript files to the page
+	 *
+	 * @return CView
+	 */
+	public function disableJS() {
+		self::$js_disabled = true;
+
+		return $this;
 	}
 }
