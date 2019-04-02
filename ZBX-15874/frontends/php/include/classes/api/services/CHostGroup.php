@@ -288,8 +288,8 @@ class CHostGroup extends CApiService {
 			$sub_sql_parts['from']['hg'] = 'hosts_groups hg';
 			$sub_sql_parts['where']['g-hg'] = 'g.groupid=hg.groupid';
 
-			$sqlParts['where'][] = 'EXISTS ('.
-				'SELECT NULL'.
+			$sqlParts['where'][] = '('.
+				'SELECT DISTINCT g.groupid'.
 				' FROM '.implode(',', $sub_sql_parts['from']).
 				' WHERE '.implode(' AND ', array_unique($sub_sql_parts['where'])).
 			')';
