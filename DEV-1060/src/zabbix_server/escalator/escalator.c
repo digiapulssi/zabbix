@@ -89,8 +89,6 @@ static void	add_message_alert(const DB_EVENT *event, const DB_EVENT *r_event, zb
  * This is done by caching of recovered escalation data and skipping escalation recovery
  * operations if another escalation created by the same trigger and action was recovered
  * by the same recovery event.
- *
- * The cached escalation recovery records older than 1 hour will be removed.
  */
 typedef struct
 {
@@ -100,10 +98,6 @@ typedef struct
 	time_t		clock;
 }
 zbx_esc_recovery_t;
-
-#define ZBX_esc_recovery_TTL	SEC_PER_HOUR
-
-static zbx_hashset_t	esc_recovery;
 
 static zbx_hash_t	esc_recovery_hash_func(const void *d)
 {
@@ -126,17 +120,8 @@ static int	esc_recovery_compare_func(const void *d1, const void *d2)
 	return 0;
 }
 
-static void	esc_recovery_init()
-{
-	zbx_hashset_create(&esc_recovery, 0, esc_recovery_hash_func, esc_recovery_compare_func);
-}
-
-static void	esc_recovery_destroy()
-{
-	zbx_hashset_destroy(&esc_recovery);
-}
-
-static int	esc_recovery_register(zbx_uint64_t actionid, zbx_uint64_t triggerid, zbx_uint64_t r_eventid)
+static int	esc_recovery_register(zbx_hashset_t *esc_recovery, zbx_uint64_t actionid, zbx_uint64_t triggerid,
+		zbx_uint64_t r_eventid)
 {
 	zbx_esc_recovery_t	er_local;
 
@@ -144,28 +129,12 @@ static int	esc_recovery_register(zbx_uint64_t actionid, zbx_uint64_t triggerid, 
 	er_local.triggerid = triggerid;
 	er_local.r_eventid = r_eventid;
 
-	if (NULL != zbx_hashset_search(&esc_recovery, &er_local))
+	if (NULL != zbx_hashset_search(esc_recovery, &er_local))
 		return FAIL;
 
-	er_local.clock = time(NULL);
-	zbx_hashset_insert(&esc_recovery, &er_local, sizeof(er_local));
+	zbx_hashset_insert(esc_recovery, &er_local, sizeof(er_local));
 
 	return SUCCEED;
-}
-
-static void	esc_recovery_cleanup()
-{
-	zbx_hashset_iter_t	iter;
-	zbx_esc_recovery_t	*er;
-	time_t			now;
-
-	now = time(NULL);
-	zbx_hashset_iter_reset(&esc_recovery, &iter);
-	while (NULL != (er = (zbx_esc_recovery_t *)zbx_hashset_iter_next(&iter)))
-	{
-		if (ZBX_esc_recovery_TTL < now - er->clock)
-			zbx_hashset_iter_remove(&iter);
-	}
 }
 
 /******************************************************************************
@@ -2094,21 +2063,23 @@ static void	escalation_execute(DB_ESCALATION *escalation, const DB_ACTION *actio
  *                                                                            *
  * Purpose: process escalation recovery                                       *
  *                                                                            *
- * Parameters: escalation - [IN/OUT] the escalation to recovery               *
- *             action     - [IN]     the action                               *
- *             event      - [IN]     the event                                *
- *             r_event    - [IN]     the recovery event                       *
+ * Parameters: escalation   - [IN/OUT] the escalation to recovery             *
+ *             action       - [IN]     the action                             *
+ *             event        - [IN]     the event                              *
+ *             r_event      - [IN]     the recovery event                     *
+ *             esc_recovery - [IN/OUT] the recovered escalations              *
  *                                                                            *
  ******************************************************************************/
 static void	escalation_recover(DB_ESCALATION *escalation, const DB_ACTION *action, const DB_EVENT *event,
-		const DB_EVENT *r_event)
+		const DB_EVENT *r_event, zbx_hashset_t *esc_recovery)
 {
 	const char	*__function_name = "escalation_recover";
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() escalationid:" ZBX_FS_UI64 " status:%s",
 			__function_name, escalation->escalationid, zbx_escalation_status_string(escalation->status));
 
-	if (SUCCEED == esc_recovery_register(escalation->actionid, event->trigger.triggerid, r_event->eventid))
+	if (SUCCEED == esc_recovery_register(esc_recovery, escalation->actionid, event->trigger.triggerid,
+			r_event->eventid))
 	{
 		escalation_execute_recovery_operations(event, r_event, action);
 	}
@@ -2279,7 +2250,7 @@ static void	add_ack_escalation_r_eventids(zbx_vector_ptr_t *escalations, zbx_vec
 }
 
 static int	process_db_escalations(int now, int *nextcheck, zbx_vector_ptr_t *escalations,
-		zbx_vector_uint64_t *eventids, zbx_vector_uint64_t *actionids)
+		zbx_vector_uint64_t *eventids, zbx_vector_uint64_t *actionids, zbx_hashset_t *esc_recovery)
 {
 	int				i, ret;
 	zbx_vector_uint64_t		escalationids;
@@ -2416,7 +2387,7 @@ static int	process_db_escalations(int now, int *nextcheck, zbx_vector_ptr_t *esc
 			if (0 == escalation->esc_step)
 				escalation_execute(escalation, action, event);
 
-			escalation_recover(escalation, action, event, r_event);
+			escalation_recover(escalation, action, event, r_event, esc_recovery);
 		}
 		else if (escalation->nextcheck <= now)
 		{
@@ -2581,6 +2552,7 @@ static int	process_escalations(int now, int *nextcheck, unsigned int escalation_
 
 	zbx_vector_ptr_t	escalations;
 	zbx_vector_uint64_t	actionids, eventids;
+	zbx_hashset_t		esc_recovery;
 
 	DB_ESCALATION		*escalation;
 
@@ -2589,6 +2561,7 @@ static int	process_escalations(int now, int *nextcheck, unsigned int escalation_
 	zbx_vector_ptr_create(&escalations);
 	zbx_vector_uint64_create(&actionids);
 	zbx_vector_uint64_create(&eventids);
+	zbx_hashset_create(&esc_recovery, 0, esc_recovery_hash_func, esc_recovery_compare_func);
 
 	/* Selection of escalations to be processed:                                                          */
 	/*                                                                                                    */
@@ -2679,7 +2652,8 @@ static int	process_escalations(int now, int *nextcheck, unsigned int escalation_
 
 		if (escalations.values_num >= ZBX_ESCALATIONS_PER_STEP)
 		{
-			ret += process_db_escalations(now, nextcheck, &escalations, &eventids, &actionids);
+			ret += process_db_escalations(now, nextcheck, &escalations, &eventids, &actionids,
+					&esc_recovery);
 			zbx_vector_ptr_clear_ext(&escalations, zbx_ptr_free);
 			zbx_vector_uint64_clear(&actionids);
 			zbx_vector_uint64_clear(&eventids);
@@ -2689,10 +2663,11 @@ static int	process_escalations(int now, int *nextcheck, unsigned int escalation_
 
 	if (0 < escalations.values_num)
 	{
-		ret += process_db_escalations(now, nextcheck, &escalations, &eventids, &actionids);
+		ret += process_db_escalations(now, nextcheck, &escalations, &eventids, &actionids, &esc_recovery);
 		zbx_vector_ptr_clear_ext(&escalations, zbx_ptr_free);
 	}
 
+	zbx_hashset_destroy(&esc_recovery);
 	zbx_vector_ptr_destroy(&escalations);
 	zbx_vector_uint64_destroy(&actionids);
 	zbx_vector_uint64_destroy(&eventids);
@@ -2738,8 +2713,6 @@ ZBX_THREAD_ENTRY(escalator_thread, args)
 #endif
 	zbx_setproctitle("%s #%d [connecting to the database]", get_process_type_string(process_type), process_num);
 	last_stat_time = time(NULL);
-
-	esc_recovery_init();
 
 	DBconnect(ZBX_DB_CONNECT_NORMAL);
 
@@ -2789,8 +2762,5 @@ ZBX_THREAD_ENTRY(escalator_thread, args)
 		}
 
 		zbx_sleep_loop(sleeptime);
-		esc_recovery_cleanup();
 	}
-
-	esc_recovery_destroy();
 }
