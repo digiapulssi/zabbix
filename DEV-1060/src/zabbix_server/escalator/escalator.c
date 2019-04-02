@@ -95,7 +95,6 @@ typedef struct
 	zbx_uint64_t	triggerid;
 	zbx_uint64_t	r_eventid;
 	zbx_uint64_t	actionid;
-	time_t		clock;
 }
 zbx_esc_recovery_t;
 
