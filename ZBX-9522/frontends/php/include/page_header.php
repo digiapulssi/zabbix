@@ -189,14 +189,17 @@ if ($page['type'] == PAGE_TYPE_HTML) {
 	$showGuiMessaging = (!defined('ZBX_PAGE_NO_MENU') || $_REQUEST['fullscreen'] == 1)
 		? intval(!CWebUser::isGuest())
 		: 0;
-	$path = 'jsLoader.php?ver='.ZABBIX_VERSION.'&amp;lang='.CWebUser::$data['lang'].'&showGuiMessaging='.$showGuiMessaging;
-	$pageHeader->addJsFile($path);
 
-	if (!empty($page['scripts']) && is_array($page['scripts'])) {
-		foreach ($page['scripts'] as $script) {
-			$path .= '&amp;files[]='.$script;
-		}
+	if (CView::$js_loader_disabled !== true) {
+		$path = 'jsLoader.php?ver='.ZABBIX_VERSION.'&amp;lang='.CWebUser::$data['lang'].'&showGuiMessaging='.$showGuiMessaging;
 		$pageHeader->addJsFile($path);
+
+		if (!empty($page['scripts']) && is_array($page['scripts'])) {
+			foreach ($page['scripts'] as $script) {
+				$path .= '&amp;files[]='.$script;
+			}
+			$pageHeader->addJsFile($path);
+		}
 	}
 
 	$pageHeader->display();
