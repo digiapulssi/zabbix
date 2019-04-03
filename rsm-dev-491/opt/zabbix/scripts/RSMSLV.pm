@@ -4283,13 +4283,13 @@ sub recalculate_downtime($$$$$)
 			#	printf("%2d | %d | %d\n", $downtime_values[$i][0], $avail{$downtime_values[$i][0]}, $downtime_values[$i][1]);
 			#}
 
-			#db_mass_update(
-			#	"history_uint",
-			#	["clock", "value"],
-			#	\@downtime_values,
-			#	["clock"],
-			#	[['itemid', $downtime_itemids{$itemid_avail}]]
-			#);
+			db_mass_update(
+				"history_uint",
+				["clock", "value"],
+				\@downtime_values,
+				["clock"],
+				[['itemid', $downtime_itemids{$itemid_avail}]]
+			);
 
 			printf("fail    - %d\n", $incident_fail);
 			printf("recover - %d\n", $incident_recover);
@@ -4301,7 +4301,7 @@ sub recalculate_downtime($$$$$)
 		# TODO: update lastvalue, if necessary
 		#$sql = "
 		#	update
-		#		lastvalue
+		#		lastvaluer
 		#		inner join history_uint on history_uint.itemid = lastvalue.itemid and history_uint.clock = lastvalue.clock
 		#	set lastvalue.value = history_uint.value
 		#	where lastvalue.itemid = ?
