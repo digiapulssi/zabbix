@@ -58,9 +58,9 @@ class CView {
 	private $jsFiles = [];
 
 	/**
-	 * @var bool - Don't add javascript files to the page
+	 * @var bool - Don't include jsLoader to the page
 	 */
-	public static $js_disabled = false;
+	public static $js_loader_disabled = false;
 
 	/**
 	 * @array - directories where views are stored, ordered by priority
@@ -235,12 +235,12 @@ class CView {
 	}
 
 	/**
-	 * Don't add javascript files to the page
+	 * Don't include jsLoader to the page.
 	 *
 	 * @return CView
 	 */
-	public function disableJS() {
-		self::$js_disabled = true;
+	public function disableJsLoader() {
+		self::$js_loader_disabled = true;
 
 		return $this;
 	}
