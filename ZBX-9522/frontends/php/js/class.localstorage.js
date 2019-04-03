@@ -36,12 +36,12 @@ function ZBX_LocalStorage(version, prefix) {
 		throw 'Local storage instantiation must be versioned, and prefixed.';
 	}
 
-	if (ZBX_LocalStorage.intsance) {
-		return ZBX_LocalStorage.intsance;
+	if (ZBX_LocalStorage.instance) {
+		return ZBX_LocalStorage.instance;
 	}
 	ZBX_LocalStorage.sessionid = prefix;
 	ZBX_LocalStorage.prefix = prefix + ZBX_LocalStorage.defines.PREFIX_SEPARATOR;
-	ZBX_LocalStorage.intsance = this;
+	ZBX_LocalStorage.instance = this;
 	ZBX_LocalStorage.signature = (Math.random() % 9e6).toString(36).substr(2);
 
 	this.keys = {

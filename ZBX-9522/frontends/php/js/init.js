@@ -30,7 +30,7 @@ window.ZABBIX = Object.create({
 	 */
 	namespace: function(path, value) {
 		return path.split('.').reduce(function(obj, pt, idx, src) {
-			var last = idx + 1 == src.length;
+			var last = (idx + 1 == src.length);
 
 			if (typeof obj[pt] === 'undefined') {
 				obj[pt] = last ? value : {};
