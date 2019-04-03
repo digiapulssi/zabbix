@@ -3,6 +3,7 @@ Changes for 3.0.27rc1
 New features:
 
 Bug fixes:
+........S. [ZBX-13347] fixed possible crash in history syncer process when processing discovered item value (vso)
 
 --------------------------------------------------------------------------------
 Changes for 3.0.26
