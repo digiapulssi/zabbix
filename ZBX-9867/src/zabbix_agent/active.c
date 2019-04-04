@@ -2109,5 +2109,10 @@ ZBX_THREAD_ENTRY(active_checks_thread, args)
 	ZBX_DO_EXIT();
 
 	zbx_thread_exit(EXIT_SUCCESS);
+#else
+#if defined(HAVE_POLARSSL) || defined(HAVE_GNUTLS) || defined(HAVE_OPENSSL)
+	zbx_tls_free();
+#endif
+	exit(EXIT_SUCCESS);
 #endif
 }

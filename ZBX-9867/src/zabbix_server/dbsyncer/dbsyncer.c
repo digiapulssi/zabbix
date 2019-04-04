@@ -31,7 +31,7 @@
 
 extern int		CONFIG_HISTSYNCER_FREQUENCY;
 extern unsigned char	process_type, program_type;
-extern int		server_num, process_num, sig_exiting;
+extern int		server_num, process_num;
 
 /******************************************************************************
  *                                                                            *
@@ -76,7 +76,7 @@ ZBX_THREAD_ENTRY(dbsyncer_thread, args)
 		zbx_problems_export_init("history-syncer", process_num);
 	}
 
-	while (0 == sig_exiting)
+	for (;;)
 	{
 		sec = zbx_time();
 		zbx_update_env(sec);
@@ -115,15 +115,14 @@ ZBX_THREAD_ENTRY(dbsyncer_thread, args)
 			last_stat_time = time(NULL);
 		}
 
-		if (0 == sig_exiting)
-			zbx_sleep_loop(sleeptime);
+		if (0 != sleeptime && 1 != ZBX_IS_RUNNING())
+			break;
+
+		zbx_sleep_loop(sleeptime);
 	}
 
+	DBclose();
 	zbx_free(stats);
-
-#if defined(HAVE_POLARSSL) || defined(HAVE_GNUTLS) || defined(HAVE_OPENSSL)
-	zbx_tls_free_on_signal();
-#endif
 	exit(EXIT_SUCCESS);
 
 #undef STAT_INTERVAL

@@ -478,5 +478,7 @@ ZBX_THREAD_ENTRY(collector_thread, args)
 	ZBX_DO_EXIT();
 
 	zbx_thread_exit(EXIT_SUCCESS);
+#else
+	exit(EXIT_SUCCESS);
 #endif
 }
