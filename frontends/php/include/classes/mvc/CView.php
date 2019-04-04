@@ -43,25 +43,29 @@ class CView {
 	private $scripts;
 
 	/**
-	 * @var array - Java code for inclusions on page
+	 * @var array - Javascript code for inclusions on page
 	 */
 	private $jsIncludePost = [];
 
 	/**
-	 * @var array - Java Script files for inclusions on page, pre-processed by PHP
+	 * @var array - Javascript files for inclusions on page, pre-processed by PHP
 	 */
 	private $jsIncludeFiles = [];
 
 	/**
-	 * @var array - Java Script files for inclusions on page, included as <script src="..."></script>
+	 * @var array - Javascript files for inclusions on page, included as <script src="..."></script>
 	 */
 	private $jsFiles = [];
+
+	/**
+	 * @var bool - Don't include jsLoader to the page
+	 */
+	public static $js_loader_disabled = false;
 
 	/**
 	 * @array - directories where views are stored, ordered by priority
 	 * include/views should be removed once we fully move to MVC
 	 */
-//	static $viewsDir = array('app/local/views', 'app/views', 'include/views');
 	static $viewsDir = ['local/app/views', 'app/views', 'include/views'];
 
 	/**
@@ -228,5 +232,16 @@ class CView {
 	 */
 	public function getAddedJS() {
 		return $this->jsFiles;
+	}
+
+	/**
+	 * Don't include jsLoader to the page.
+	 *
+	 * @return CView
+	 */
+	public function disableJsLoader() {
+		self::$js_loader_disabled = true;
+
+		return $this;
 	}
 }
