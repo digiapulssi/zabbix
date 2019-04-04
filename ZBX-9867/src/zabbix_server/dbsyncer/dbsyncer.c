@@ -27,10 +27,11 @@
 #include "dbcache.h"
 #include "dbsyncer.h"
 #include "export.h"
+#include "../../libs/zbxcrypto/tls.h"
 
 extern int		CONFIG_HISTSYNCER_FREQUENCY;
 extern unsigned char	process_type, program_type;
-extern int		server_num, process_num;
+extern int		server_num, process_num, sig_exiting;
 
 /******************************************************************************
  *                                                                            *
@@ -75,7 +76,7 @@ ZBX_THREAD_ENTRY(dbsyncer_thread, args)
 		zbx_problems_export_init("history-syncer", process_num);
 	}
 
-	for (;;)
+	while (0 == sig_exiting)
 	{
 		sec = zbx_time();
 		zbx_update_env(sec);
@@ -118,6 +119,11 @@ ZBX_THREAD_ENTRY(dbsyncer_thread, args)
 	}
 
 	zbx_free(stats);
+
+#if defined(HAVE_POLARSSL) || defined(HAVE_GNUTLS) || defined(HAVE_OPENSSL)
+	zbx_tls_free_on_signal();
+#endif
+	exit(EXIT_SUCCESS);
 
 #undef STAT_INTERVAL
 }

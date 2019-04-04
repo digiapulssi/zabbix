@@ -25,14 +25,15 @@
 #include "sigcommon.h"
 #include "../../libs/zbxcrypto/tls.h"
 
-int	sig_parent_pid = -1;
-int	sig_exiting = 0;
+extern unsigned char	process_type;
+int			sig_parent_pid = -1, sig_exiting;
 
 static void	log_fatal_signal(int sig, siginfo_t *siginfo, void *context)
 {
 	SIG_CHECK_PARAMS(sig, siginfo, context);
 
-	zabbix_log(LOG_LEVEL_CRIT, "Got signal [signal:%d(%s),reason:%d,refaddr:%p]. Crashing ...",
+	zabbix_log(LOG_LEVEL_CRIT, "%s got signal [signal:%d(%s),reason:%d,refaddr:%p]. Crashing ...",
+			0 == SIG_PARENT_PROCESS ? get_process_type_string(process_type) : "main process",
 			sig, get_signal_name(sig),
 			SIG_CHECKED_FIELD(siginfo, si_code),
 			SIG_CHECKED_FIELD_TYPE(siginfo, si_addr, void *));
@@ -106,8 +107,9 @@ static void	terminate_signal_handler(int sig, siginfo_t *siginfo, void *context)
 	{
 		zabbix_log((sig_parent_pid == SIG_CHECKED_FIELD(siginfo, si_pid) || SIGINT == sig ?
 				LOG_LEVEL_DEBUG : LOG_LEVEL_WARNING),
-				"Got signal [signal:%d(%s),sender_pid:%d,sender_uid:%d,"
+				"%s got signal [signal:%d(%s),sender_pid:%d,sender_uid:%d,"
 				"reason:%d]. %s ...",
+				get_process_type_string(process_type),
 				sig, get_signal_name(sig),
 				SIG_CHECKED_FIELD(siginfo, si_pid),
 				SIG_CHECKED_FIELD(siginfo, si_uid),
@@ -119,7 +121,15 @@ static void	terminate_signal_handler(int sig, siginfo_t *siginfo, void *context)
 		if (SIGINT == sig)
 			return;
 
-		exit_with_failure();
+		sig_exiting = 1;
+
+		switch (process_type)
+		{
+			case ZBX_PROCESS_TYPE_HISTSYNCER:
+				break;
+			default:
+				exit_with_failure();
+		}
 	}
 	else
 	{
