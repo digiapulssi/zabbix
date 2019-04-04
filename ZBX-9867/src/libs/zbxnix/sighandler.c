@@ -125,6 +125,9 @@ static void	terminate_signal_handler(int sig, siginfo_t *siginfo, void *context)
 
 		switch (process_type)
 		{
+			case ZBX_PROCESS_TYPE_COLLECTOR:
+			case ZBX_PROCESS_TYPE_LISTENER:
+			case ZBX_PROCESS_TYPE_ACTIVE_CHECKS:
 			case ZBX_PROCESS_TYPE_HISTSYNCER:
 				break;
 			default:
