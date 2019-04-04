@@ -115,7 +115,8 @@ ZBX_THREAD_ENTRY(dbsyncer_thread, args)
 			last_stat_time = time(NULL);
 		}
 
-		zbx_sleep_loop(sleeptime);
+		if (0 == sig_exiting)
+			zbx_sleep_loop(sleeptime);
 	}
 
 	zbx_free(stats);
