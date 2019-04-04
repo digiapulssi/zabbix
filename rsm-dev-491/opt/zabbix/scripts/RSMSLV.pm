@@ -1455,7 +1455,7 @@ sub db_exec($;$)
 
 sub db_mass_update($$$$$)
 {
-	# Function for updating LOTS of rows (hundreds, thousands or even tens of thousands) in a single query.
+	# Function for updating LOTS of rows (hundreds, thousands or even tens of thousands) in batches.
 	#
 	# Example usage:
 	#
@@ -1509,37 +1509,44 @@ sub db_mass_update($$$$$)
 		push(@{$update_fields}, $field) if (!grep($field eq $_, @{$filter_fields}));
 	}
 
-	my $subquery;
+	$dbh->begin_work() or fail($dbh->errstr);
 
-	foreach (@{$values})
+	while (my @values_batch = splice(@{$values}, 0, 1000))
 	{
-		if (!defined($subquery))
+		my $subquery;
+
+		foreach (@values_batch)
 		{
-			$subquery = "select " . join(",", map("? as $_", @{$fields}));
+			if (!defined($subquery))
+			{
+				$subquery = "select " . join(",", map("? as $_", @{$fields}));
+			}
+			else
+			{
+				$subquery .= " union select " . join(",", map("?", @{$fields}));
+			}
 		}
-		else
+
+		my $sql = "update $table"
+			. " inner join ($subquery) as update_values on "
+			. join(" and ", map("$table.$_=update_values.$_", @{$filter_fields}))
+			. " set "
+			. join(",", map("$table.$_=update_values.$_", @{$update_fields}));
+
+		if (defined($filter_values) && scalar(@{$filter_values}) > 0)
 		{
-			$subquery .= " union select " . join(",", map("?", @{$fields}));
+			$sql .= " where " . join(" and ", map($table . "." . $_->[0] . "=?", @{$filter_values}));
 		}
+
+		my @params = (
+			map(@{$_}, @values_batch),
+			map($_->[1], @{$filter_values})
+		);
+
+		db_exec($sql, \@params);
 	}
 
-	my $sql = "update $table"
-		. " inner join ($subquery) as update_values on "
-		. join(" and ", map("$table.$_=update_values.$_", @{$filter_fields}))
-		. " set "
-		. join(",", map("$table.$_=update_values.$_", @{$update_fields}));
-
-	if (defined($filter_values) && scalar(@{$filter_values}) > 0)
-	{
-		$sql .= " where " . join(" and ", map($table . "." . $_->[0] . "=?", @{$filter_values}));
-	}
-
-	my @params = (
-		map(@{$_}, @{$values}),
-		map($_->[1], @{$filter_values})
-	);
-
-	db_exec($sql, \@params);
+	$dbh->commit() or fail($dbh->errstr);
 }
 
 sub set_slv_config
@@ -4213,7 +4220,7 @@ sub recalculate_downtime($$$$$)
 
 			my @downtime_values = ();
 
-			my $downtime_value = $rows->[$itemid_avail][$month_start];
+			my $downtime_value = $downtimes{$itemid_avail}{$month_start};
 			my $is_incident = 0;
 			my $counter = 0;
 
@@ -4301,7 +4308,7 @@ sub recalculate_downtime($$$$$)
 		# TODO: update lastvalue, if necessary
 		#$sql = "
 		#	update
-		#		lastvaluer
+		#		lastvalue
 		#		inner join history_uint on history_uint.itemid = lastvalue.itemid and history_uint.clock = lastvalue.clock
 		#	set lastvalue.value = history_uint.value
 		#	where lastvalue.itemid = ?
