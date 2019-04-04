@@ -4033,46 +4033,43 @@ sub recalculate_downtime($$$$$$)
 	# get data about affected incidents
 
 	my $eventids_placeholder = join(",", ("?") x scalar(@eventids));
-	$sql = "
-		select
-			events.eventid,
-			events.false_positive,
-			events.clock,
-			(
-				select clock
-				from events as events_inner
-				where
-					events_inner.source = events.source and
-					events_inner.object = events.object and
-					events_inner.objectid = events.objectid and
-					events_inner.value = ? and
-					events_inner.eventid > events.eventid
-				order by events_inner.eventid asc
-				limit 1
-			) as clock2,
-			function_items.hostid,
-			function_items.itemid,
-			function_items.key_
-		from
-			events
-			left join (
-				select distinct
-					functions.triggerid,
-					items.hostid,
-					items.itemid,
-					items.key_
-				from
-					functions
-					left join items on items.itemid = functions.itemid
-			) as function_items on function_items.triggerid = events.objectid
-		where
-			events.source = ? and
-			events.object = ? and
-			events.value = ? and
-			events.eventid in ($eventids_placeholder)
-		order by
-			clock asc
-	";
+	$sql = "select" .
+			" events.eventid," .
+			"events.false_positive," .
+			"events.clock," .
+			"(" .
+				"select clock" .
+				" from events as events_inner" .
+				" where" .
+					" events_inner.source=events.source and" .
+					" events_inner.object=events.object and" .
+					" events_inner.objectid=events.objectid and" .
+					" events_inner.value=? and" .
+					" events_inner.eventid>events.eventid" .
+				" order by events_inner.eventid asc" .
+				" limit 1" .
+			") as clock2," .
+			"function_items.hostid," .
+			"function_items.itemid," .
+			"function_items.key_" .
+		" from" .
+			" events" .
+			" left join (" .
+				"select distinct" .
+					" functions.triggerid," .
+					"items.hostid," .
+					"items.itemid," .
+					"items.key_" .
+				" from" .
+					" functions" .
+					" left join items on items.itemid=functions.itemid" .
+			") as function_items on function_items.triggerid=events.objectid" .
+		" where" .
+			" events.source=? and" .
+			" events.object=? and" .
+			" events.value=? and" .
+			" events.eventid in ($eventids_placeholder)" .
+		" order by clock asc";
 	$params = [TRIGGER_VALUE_FALSE, EVENT_SOURCE_TRIGGERS, EVENT_OBJECT_TRIGGER, TRIGGER_VALUE_TRUE, @eventids];
 	$rows = db_select($sql, $params);
 
