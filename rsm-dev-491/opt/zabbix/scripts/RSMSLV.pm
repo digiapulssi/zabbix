@@ -3963,8 +3963,9 @@ sub update_slv_rtt_monthly_stats($$$$$$$$)
 	send_values();
 }
 
-sub recalculate_downtime($$$$$)
+sub recalculate_downtime($$$$$$)
 {
+	my $auditlog_log_file = shift;
 	my $item_key_avail    = shift;
 	my $item_key_downtime = shift;
 	my $incident_fail     = shift; # how many cycles have to fail to start the incident
@@ -3973,12 +3974,27 @@ sub recalculate_downtime($$$$$)
 
 	fail("not supported when running in --dry-run mode") if (opt('dry-run'));
 
+	# get last auditid
+
+	my $last_auditlog_auditid = 0;
+
+	if (-e $auditlog_log_file)
+	{
+		my $error;
+
+		if (read_file($auditlog_log_file, \$last_auditlog_auditid, \$error) != SUCCESS)
+		{
+			fail("cannot read file \"$auditlog_log_file\": $error");
+		}
+	}
+
+	dbg("last_auditlog_auditid = $last_auditlog_auditid");
+
+	# declare some common variables
+
 	my $sql;
 	my $params;
 	my $rows;
-
-	# TODO: get last auditid
-	my $last_auditlog_auditid = 0;
 
 	# get unprocessed auditlog entries
 
@@ -4010,8 +4026,7 @@ sub recalculate_downtime($$$$$)
 	# NB! Don't save last auditid yet, if history needs to be altered! Altering history can fail!
 	if (scalar(@eventids) == 0)
 	{
-		# TODO: save last auditid
-		# ...
+		write_file($auditlog_log_file, $last_auditlog_auditid);
 		return;
 	}
 
@@ -4121,6 +4136,7 @@ sub recalculate_downtime($$$$$)
 
 		if ($false_positive)
 		{
+			# TODO: handle cases when incident that is marked as false-positive hasn't ended yet
 			my $false_positive_range = [
 				$from - $delay * ($incident_fail - 1),
 				$till - $delay * ($incident_recover - 1)
@@ -4224,9 +4240,9 @@ sub recalculate_downtime($$$$$)
 			my $is_incident = 0;
 			my $counter = 0;
 
-			# Start the loop few cycles before $from to find out if $from cycle is incident.
+			# Start the loop few cycles before $from to find out if $from cycle is in incident.
 			# This may happen if $from is the first cycle of the month.
-			# Potential bug - if incident has "up, down, up, down, up, down, ..." pattern.
+			# Potential bug - if incident has "up, down, up, down, up, down, ..." pattern, it won't be detected.
 
 			for (my $clock = $from - $delay * ($incident_fail - 1); $clock <= $till; $clock += $delay)
 			{
@@ -4285,11 +4301,6 @@ sub recalculate_downtime($$$$$)
 				}
 			}
 
-			#for (my $i = 0; $i < scalar(@downtime_values); $i++)
-			#{
-			#	printf("%2d | %d | %d\n", $downtime_values[$i][0], $avail{$downtime_values[$i][0]}, $downtime_values[$i][1]);
-			#}
-
 			db_mass_update(
 				"history_uint",
 				["clock", "value"],
@@ -4316,8 +4327,7 @@ sub recalculate_downtime($$$$$)
 		#$params = [$itemid];
 	}
 
-	# TODO: save last auditid
-	# ...
+	write_file($auditlog_log_file, $last_auditlog_auditid);
 }
 
 sub usage
