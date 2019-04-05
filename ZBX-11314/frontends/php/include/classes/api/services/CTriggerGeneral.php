@@ -556,6 +556,8 @@ abstract class CTriggerGeneral extends CApiService {
 				$trigger['correlation_mode'] = ZBX_TRIGGER_CORRELATION_NONE;
 			}
 
+			$trigger = $this->checkTriggerTags($trigger);
+
 			switch ($trigger['correlation_mode']) {
 				case ZBX_TRIGGER_CORRELATION_NONE:
 					if (!array_key_exists('correlation_tag', $trigger)) {
@@ -576,11 +578,7 @@ abstract class CTriggerGeneral extends CApiService {
 						));
 					}
 
-					if (!array_key_exists('correlation_tag', $trigger) || $trigger['correlation_tag'] === '') {
-						self::exception(ZBX_API_ERROR_PARAMETERS,
-							_s('Incorrect value for field "%1$s": %2$s.', 'correlation_tag', _('cannot be empty'))
-						);
-					}
+					$this->checkTriggerCorrelationTag($trigger);
 					break;
 
 				default:
@@ -599,9 +597,95 @@ abstract class CTriggerGeneral extends CApiService {
 
 			$this->checkTriggerExpressions($trigger);
 			$this->checkIfExistsOnHost($trigger);
-			$trigger = $this->checkTriggerTags($trigger);
 		}
 		unset($trigger);
+	}
+
+	/**
+	 * Validate if correlation tag is set and is matching at least one of specified tags. If tag name contains macro,
+	 * that's considered as valid case.
+	 *
+	 * @param array $trigger
+	 * @param array $db_trigger
+	 *
+	 * @throws APIException if validation failed.
+	 */
+	protected function checkTriggerCorrelationTag(array $trigger, array $db_trigger = null) {
+		$supported_host_tag_macros = [
+			'{HOST.ID}', '{HOST.HOST}', '{HOST.NAME}', '{HOST.CONN}', '{HOST.DNS}', '{HOST.IP}', '{HOST.PORT}',
+			'{ITEM.VALUE}', '{ITEM.LASTVALUE}',
+			'{INVENTORY.ALIAS}', '{INVENTORY.ASSET.TAG}', '{INVENTORY.CHASSIS}', '{INVENTORY.CONTACT}',
+			'{PROFILE.CONTACT}', '{INVENTORY.CONTRACT.NUMBER}', '{INVENTORY.DEPLOYMENT.STATUS}', '{INVENTORY.HARDWARE}',
+			'{PROFILE.HARDWARE}', '{INVENTORY.HARDWARE.FULL}', '{INVENTORY.HOST.NETMASK}', '{INVENTORY.HW.DATE.EXPIRY}',
+			'{INVENTORY.HOST.ROUTER}', '{INVENTORY.HW.ARCH}', '{INVENTORY.HW.DATE.DECOMM}', '{INVENTORY.HOST.NETWORKS}',
+			'{INVENTORY.HW.DATE.INSTALL}', '{INVENTORY.HW.DATE.PURCHASE}', '{INVENTORY.INSTALLER.NAME}',
+			'{INVENTORY.LOCATION}', '{PROFILE.LOCATION}', '{INVENTORY.LOCATION.LAT}', '{INVENTORY.TYPE.FULL}',
+			'{INVENTORY.LOCATION.LON}', '{INVENTORY.MACADDRESS.A}', '{PROFILE.MACADDRESS}', '{INVENTORY.MACADDRESS.B}',
+			'{INVENTORY.MODEL}', '{INVENTORY.NAME}', '{PROFILE.NAME}', '{INVENTORY.NOTES}', '{PROFILE.NOTES}',
+			'{INVENTORY.OOB.IP}', '{INVENTORY.OOB.NETMASK}', '{INVENTORY.OOB.ROUTER}', '{INVENTORY.OS}', '{PROFILE.OS}',
+			'{INVENTORY.OS.FULL}', '{INVENTORY.OS.SHORT}', '{INVENTORY.POC.PRIMARY.CELL}',
+			'{INVENTORY.POC.PRIMARY.EMAIL}', '{INVENTORY.POC.PRIMARY.NAME}', '{INVENTORY.POC.PRIMARY.NOTES}',
+			'{INVENTORY.POC.PRIMARY.PHONE.A}', '{INVENTORY.POC.PRIMARY.PHONE.B}', '{INVENTORY.POC.PRIMARY.SCREEN}',
+			'{INVENTORY.POC.SECONDARY.CELL}', '{INVENTORY.POC.SECONDARY.EMAIL}', '{INVENTORY.POC.SECONDARY.NAME}',
+			'{INVENTORY.POC.SECONDARY.NOTES}', '{INVENTORY.POC.SECONDARY.PHONE.A}', '{INVENTORY.SERIALNO.B}',
+			'{INVENTORY.POC.SECONDARY.SCREEN}', '{INVENTORY.SERIALNO.A}', '{PROFILE.SERIALNO}', '{PROFILE.TAG}',
+			'{INVENTORY.SITE.ADDRESS.A}', '{INVENTORY.SITE.ADDRESS.B}', '{INVENTORY.POC.SECONDARY.PHONE.B}',
+			'{INVENTORY.SITE.ADDRESS.C}', '{INVENTORY.SITE.CITY}', '{INVENTORY.SITE.COUNTRY}', '{PROFILE.SOFTWARE}',
+			'{INVENTORY.SITE.NOTES}', '{INVENTORY.SITE.RACK}', '{INVENTORY.SITE.STATE}', '{INVENTORY.SITE.ZIP}',
+			'{INVENTORY.SOFTWARE}', '{INVENTORY.SOFTWARE.APP.A}', '{INVENTORY.SOFTWARE.APP.B}', '{INVENTORY.TYPE}',
+			'{INVENTORY.SOFTWARE.APP.D}', '{INVENTORY.SOFTWARE.APP.E}', '{INVENTORY.SOFTWARE.FULL}', '{INVENTORY.TAG}',
+			'{INVENTORY.SOFTWARE.APP.C}', '{PROFILE.DEVICETYPE}', '{INVENTORY.VENDOR}', '{INVENTORY.URL.A}',
+			'{INVENTORY.URL.B}', '{INVENTORY.URL.C}'
+		];
+
+		if (array_key_exists('tags', $trigger)) {
+			$effective_event_tags = $trigger['tags'];
+		}
+		elseif ($db_trigger !== null) {
+			$effective_event_tags = $db_trigger['tags'];
+		}
+		else {
+			$effective_event_tags = [];
+		}
+
+		$is_correlation_tag_present = false;
+		$allow_lld_macros = (get_class($this) === 'CTriggerPrototype');
+		$macro_parser = new CMacroParser($supported_host_tag_macros);
+		$user_macro_parser = new CUserMacroParser();
+		$lld_macro_parser = new CLLDMacroParser();
+
+		// Correlation tag must be non-empty.
+		if (!array_key_exists('correlation_tag', $trigger) || $trigger['correlation_tag'] === '') {
+			self::exception(ZBX_API_ERROR_PARAMETERS,
+				_s('Incorrect value for field "%1$s": %2$s.', 'correlation_tag', _('cannot be empty'))
+			);
+		}
+
+		// Correlation tag must be used in trigger's tag section. If tag name contains macros, that's also valid case.
+		foreach ($effective_event_tags as $tag) {
+			if ($tag['tag'] === $trigger['correlation_tag']) {
+				$is_correlation_tag_present = true;
+				break;
+			}
+			else {
+				for ($pos = 0; isset($tag['tag'][$pos]); $pos++) {
+					if (($allow_lld_macros && $lld_macro_parser->parse($tag['tag'], $pos) == CParser::PARSE_SUCCESS)
+							|| $user_macro_parser->parse($tag['tag'], $pos) == CParser::PARSE_SUCCESS
+							|| $macro_parser->parse($tag['tag'], $pos) == CParser::PARSE_SUCCESS) {
+						$is_correlation_tag_present = true;
+						break(2);
+					}
+				}
+			}
+		}
+
+		if ($is_correlation_tag_present === false) {
+			self::exception(ZBX_API_ERROR_PARAMETERS,
+				_s('Incorrect value for field "%1$s": %2$s.', 'correlation_tag',
+					_('does not match any of specified tags')
+				)
+			);
+		}
 	}
 
 	/**
@@ -797,6 +881,8 @@ abstract class CTriggerGeneral extends CApiService {
 					break;
 			}
 
+			$trigger = $this->checkTriggerTags($trigger);
+
 			switch ($trigger['correlation_mode']) {
 				case ZBX_TRIGGER_CORRELATION_NONE:
 					if ($trigger['correlation_tag'] !== '') {
@@ -807,11 +893,7 @@ abstract class CTriggerGeneral extends CApiService {
 					break;
 
 				case ZBX_TRIGGER_CORRELATION_TAG:
-					if ($trigger['correlation_tag'] === '') {
-						self::exception(ZBX_API_ERROR_PARAMETERS,
-							_s('Incorrect value for field "%1$s": %2$s.', 'correlation_tag', _('cannot be empty'))
-						);
-					}
+					$this->checkTriggerCorrelationTag($trigger, $_db_trigger);
 					break;
 
 				default:
@@ -840,8 +922,6 @@ abstract class CTriggerGeneral extends CApiService {
 			}
 
 			$db_triggers[$tnum] = $_db_trigger;
-
-			$trigger = $this->checkTriggerTags($trigger);
 		}
 		unset($trigger);
 	}
