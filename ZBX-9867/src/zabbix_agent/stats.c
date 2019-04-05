@@ -468,7 +468,8 @@ ZBX_THREAD_ENTRY(collector_thread, args)
 			collect_vmstat_data(&collector->vmstat);
 #endif
 		zbx_setproctitle("collector [idle 1 sec]");
-		zbx_sleep(1);
+		if (ZBX_IS_RUNNING())
+			zbx_sleep(1);
 	}
 
 #ifdef _WINDOWS
