@@ -115,7 +115,10 @@ ZBX_THREAD_ENTRY(dbsyncer_thread, args)
 			last_stat_time = time(NULL);
 		}
 
-		if (0 != sleeptime && 1 != ZBX_IS_RUNNING())
+		if (ZBX_SYNC_MORE == more)
+			continue;
+
+		if (!ZBX_IS_RUNNING())
 			break;
 
 		zbx_sleep_loop(sleeptime);
