@@ -62,6 +62,8 @@ void	zbx_child_fork(pid_t *pid)
 	sigaddset(&mask, SIGTERM);
 	sigaddset(&mask, SIGINT);
 	sigaddset(&mask, SIGCHLD);
+	sigaddset(&mask, SIGQUIT);
+
 	sigprocmask(SIG_BLOCK, &mask, &orig_mask);
 
 	/* set process id instead of returning, this is to avoid race condition when signal arrives before return */
