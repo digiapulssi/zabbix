@@ -106,7 +106,7 @@ static void	terminate_signal_handler(int sig, siginfo_t *siginfo, void *context)
 	if (!SIG_PARENT_PROCESS)
 	{
 		zabbix_log((sig_parent_pid == SIG_CHECKED_FIELD(siginfo, si_pid) || SIGINT == sig ?
-				LOG_LEVEL_DEBUG : LOG_LEVEL_WARNING),
+				LOG_LEVEL_WARNING : LOG_LEVEL_WARNING),
 				"%s got signal [signal:%d(%s),sender_pid:%d,sender_uid:%d,"
 				"reason:%d]. %s ...",
 				get_process_type_string(process_type),
@@ -120,6 +120,9 @@ static void	terminate_signal_handler(int sig, siginfo_t *siginfo, void *context)
 		/* process will send terminate signals instead      */
 		if (SIGINT == sig)
 			return;
+
+		if (SIGQUIT == sig)
+			exit_with_failure();
 
 		sig_exiting = 1;
 
@@ -151,7 +154,7 @@ static void	terminate_signal_handler(int sig, siginfo_t *siginfo, void *context)
 #if defined(HAVE_POLARSSL) || defined(HAVE_GNUTLS) || defined(HAVE_OPENSSL)
 			zbx_tls_free_on_signal();
 #endif
-			zbx_on_exit();
+			zbx_on_exit(SUCCEED);
 		}
 	}
 }
@@ -179,7 +182,7 @@ static void	child_signal_handler(int sig, siginfo_t *siginfo, void *context)
 #if defined(HAVE_POLARSSL) || defined(HAVE_GNUTLS) || defined(HAVE_OPENSSL)
 		zbx_tls_free_on_signal();
 #endif
-		zbx_on_exit();
+		zbx_on_exit(FAIL);
 	}
 }
 

@@ -1220,12 +1220,12 @@ int	MAIN_ZABBIX_ENTRY(int flags)
 	/* all exiting child processes should be caught by signal handlers */
 	THIS_SHOULD_NEVER_HAPPEN;
 
-	zbx_on_exit();
+	zbx_on_exit(FAIL);
 
 	return SUCCEED;
 }
 
-void	zbx_on_exit(void)
+void	zbx_on_exit(int ret)
 {
 	zabbix_log(LOG_LEVEL_DEBUG, "zbx_on_exit() called");
 
@@ -1234,7 +1234,7 @@ void	zbx_on_exit(void)
 
 	if (NULL != threads)
 	{
-		zbx_threads_wait(threads, threads_num);	/* wait for all child processes to exit */
+		zbx_threads_wait(threads, threads_num, ret);	/* wait for all child processes to exit */
 		zbx_free(threads);
 	}
 #ifdef HAVE_PTHREAD_PROCESS_SHARED

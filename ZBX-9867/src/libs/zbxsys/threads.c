@@ -206,7 +206,7 @@ int	zbx_thread_wait(ZBX_THREAD_HANDLE thread)
  *                                                                            *
  *                                                                            *
  ******************************************************************************/
-void	zbx_threads_wait(ZBX_THREAD_HANDLE *threads, int threads_num)
+void	zbx_threads_wait(ZBX_THREAD_HANDLE *threads, int threads_num, int ret)
 {
 	int		i;
 #if !defined(_WINDOWS)
@@ -222,14 +222,21 @@ void	zbx_threads_wait(ZBX_THREAD_HANDLE *threads, int threads_num)
 #endif
 	for (i = 0; i < threads_num; i++)
 	{
-		if (threads[i])
+		if (!threads[i])
+			continue;
+
+		if (SUCCEED != ret)
+			zbx_thread_kill_fatal(threads[i]);
+		else
 			zbx_thread_kill(threads[i]);
 	}
 
 	for (i = 0; i < threads_num; i++)
 	{
-		if (threads[i])
-			zbx_thread_wait(threads[i]);
+		if (!threads[i])
+			continue;
+
+		zbx_thread_wait(threads[i]);
 
 		threads[i] = ZBX_THREAD_HANDLE_NULL;
 	}

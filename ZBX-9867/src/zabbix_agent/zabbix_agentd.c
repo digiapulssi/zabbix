@@ -1096,7 +1096,7 @@ int	MAIN_ZABBIX_ENTRY(int flags)
 	/* all exiting child processes should be caught by signal handlers */
 	THIS_SHOULD_NEVER_HAPPEN;
 #endif
-	zbx_on_exit();
+	zbx_on_exit(SUCCEED);
 
 	return SUCCEED;
 }
@@ -1108,13 +1108,14 @@ int	MAIN_ZABBIX_ENTRY(int flags)
  * Purpose: free service resources allocated by main thread                   *
  *                                                                            *
  ******************************************************************************/
-void	zbx_free_service_resources(void)
+void	zbx_free_service_resources(int ret)
 {
 	if (NULL != threads)
 	{
-		zbx_threads_wait(threads, threads_num);	/* wait for all child processes to exit */
+		zbx_threads_wait(threads, threads_num, ret);	/* wait for all child processes to exit */
 		zbx_free(threads);
 	}
+
 #ifdef HAVE_PTHREAD_PROCESS_SHARED
 	zbx_locks_disable();
 #endif
@@ -1134,11 +1135,11 @@ void	zbx_free_service_resources(void)
 	zabbix_close_log();
 }
 
-void	zbx_on_exit(void)
+void	zbx_on_exit(int ret)
 {
 	zabbix_log(LOG_LEVEL_DEBUG, "zbx_on_exit() called");
 
-	zbx_free_service_resources();
+	zbx_free_service_resources(ret);
 
 #if defined(_WINDOWS) && (defined(HAVE_POLARSSL) || defined(HAVE_GNUTLS) || defined(HAVE_OPENSSL))
 	zbx_tls_free();
