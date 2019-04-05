@@ -124,8 +124,8 @@ ZBX_THREAD_ENTRY(dbsyncer_thread, args)
 		zbx_sleep_loop(sleeptime);
 	}
 
-	DBclose();
 	zbx_free(stats);
+	DBclose();
 	exit(EXIT_SUCCESS);
 
 #undef STAT_INTERVAL
