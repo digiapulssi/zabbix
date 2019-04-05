@@ -3,6 +3,7 @@ Changes for 3.0.27rc1
 New features:
 
 Bug fixes:
+...G...PS. [ZBX-15588] fixed function names that are written to the log file when using LOG_LEVEL_DEBUG (asitals)
 ..F....... [ZBX-15870] fixed redundant jsloader loading in login page (miks)
 ........S. [ZBX-15913] fixed possible crash when sending custom alerts (vso)
 ........S. [ZBX-13347] fixed possible crash in history syncer process when processing discovered item value (vso)
