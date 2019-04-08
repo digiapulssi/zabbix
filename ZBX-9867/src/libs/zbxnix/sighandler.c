@@ -155,6 +155,7 @@ static void	terminate_signal_handler(int sig, siginfo_t *siginfo, void *context)
 			case ZBX_PROCESS_TYPE_IPMIMANAGER:
 			case ZBX_PROCESS_TYPE_ALERTMANAGER:
 			case ZBX_PROCESS_TYPE_PREPROCMAN:
+			case ZBX_PROCESS_TYPE_PREPROCESSOR:
 				break;
 			default:
 				exit_with_failure();
