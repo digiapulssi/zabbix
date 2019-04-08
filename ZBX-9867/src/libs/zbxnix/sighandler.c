@@ -138,6 +138,7 @@ static void	terminate_signal_handler(int sig, siginfo_t *siginfo, void *context)
 			case ZBX_PROCESS_TYPE_PINGER:
 			case ZBX_PROCESS_TYPE_JAVAPOLLER:
 			case ZBX_PROCESS_TYPE_HTTPPOLLER:
+			case ZBX_PROCESS_TYPE_TRAPPER:
 				break;
 			default:
 				exit_with_failure();
