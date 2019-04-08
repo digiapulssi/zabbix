@@ -1282,7 +1282,6 @@ ZBX_THREAD_ENTRY(trapper_thread, args)
 					zbx_socket_strerror());
 		}
 	}
-
 #if defined(HAVE_POLARSSL) || defined(HAVE_GNUTLS) || defined(HAVE_OPENSSL)
 	zbx_tls_free();
 #endif

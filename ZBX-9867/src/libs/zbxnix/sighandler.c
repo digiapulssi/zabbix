@@ -142,6 +142,7 @@ static void	terminate_signal_handler(int sig, siginfo_t *siginfo, void *context)
 			case ZBX_PROCESS_TYPE_SNMPTRAPPER:
 			case ZBX_PROCESS_TYPE_PROXYPOLLER:
 			case ZBX_PROCESS_TYPE_ESCALATOR:
+			case ZBX_PROCESS_TYPE_DISCOVERER:
 				break;
 			default:
 				exit_with_failure();
