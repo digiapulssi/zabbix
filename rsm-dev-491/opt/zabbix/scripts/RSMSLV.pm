@@ -4104,19 +4104,49 @@ sub recalculate_downtime($$$$$$)
 	# $downtimes{$itemid_avail} = {$month_start_1 => $downtime_1, $month_start_2 => $downtime_2, ...}
 	my %downtimes = ();
 
+	# value of lastvalue.clock
+	# $lastvalue_clocks{$itemid_downtime} = $clock;
+	my %lastvalue_clocks = ();
+
 	foreach my $row (@{$rows})
 	{
 		my ($eventid, $false_positive, $from, $till, $hostid, $itemid_avail, $item_key) = @{$row};
+		my $active = !defined($till);
 
 		if ($item_key ne $item_key_avail)
 		{
 			next;
 		}
 
+		if (!exists($downtime_itemids{$itemid_avail}))
+		{
+			$sql = "select itemid from items where hostid=? and key_=?";
+			my $itemid_downtime = db_select_value($sql, [$hostid, $item_key_downtime]);
+			$downtime_itemids{$itemid_avail} = $itemid_downtime;
+
+			$sql = "select clock from lastvalue where itemid=?";
+			$lastvalue_clocks{$itemid_downtime} = db_select_value($sql, [$itemid_downtime]);
+		}
+
+		if ($active)
+		{
+			$till = $lastvalue_clocks{$downtime_itemids{$itemid_avail}};
+		}
+
+		if ($false_positive)
+		{
+			my $false_positive_range = [
+				$from - $delay * ($incident_fail - 1),
+				$active ? $till : ($till - $delay * ($incident_recover - 1))
+			];
+			push(@{$false_positives{$itemid_avail}}, $false_positive_range);
+		}
+
 		if (opt("debug"))
 		{
 			require DateTime;
 			dbg("incident  - " . $eventid);
+			dbg("active    - " . ($active ? "yes" : "no"));
 			dbg("false pos - " . $false_positive);
 			dbg("from      - " . DateTime->from_epoch('epoch' => $from));
 			dbg("till      - " . DateTime->from_epoch('epoch' => $till));
@@ -4125,30 +4155,14 @@ sub recalculate_downtime($$$$$$)
 			dbg("item key  - " . $item_key);
 		}
 
-		if (!exists($downtime_itemids{$itemid_avail}))
-		{
-			$sql = "select itemid from items where hostid = ? and key_ = ?";
-			$downtime_itemids{$itemid_avail} = db_select_value($sql, [$hostid, $item_key_downtime]);
-		}
-
-		if ($false_positive)
-		{
-			# TODO: handle cases when incident that is marked as false-positive hasn't ended yet
-			my $false_positive_range = [
-				$from - $delay * ($incident_fail - 1),
-				$till - $delay * ($incident_recover - 1)
-			];
-			push(@{$false_positives{$itemid_avail}}, $false_positive_range);
-		}
-
 		while ($from <= $till)
 		{
 			my ($month_start, $month_end) = get_month_bounds($from);
 
 			if (!exists($periods{$itemid_avail}{$month_start}))
 			{
-				# NB! Even if this is beginning of the month, we have to make sure that we have data from the
-				# beginning of the period that has to be recalculated.
+				# NB! Even if this is beginning of the month, we have to make sure that we have data
+				# from the beginning of the period that has to be recalculated.
 
 				$sql = "select value from history_uint where itemid = ? and clock = ?";
 				$params = [$downtime_itemids{$itemid_avail}, cycle_start($from - $delay, $delay)];
@@ -4198,6 +4212,11 @@ sub recalculate_downtime($$$$$$)
 		{
 			my $from = $periods{$itemid_avail}{$month_start};
 			my $till = cycle_start(get_end_of_month($from), $delay);
+
+			if ($till > $lastvalue_clocks{$downtime_itemids{$itemid_avail}})
+			{
+				$till = $lastvalue_clocks{$downtime_itemids{$itemid_avail}};
+			}
 
 			if (opt("debug"))
 			{
