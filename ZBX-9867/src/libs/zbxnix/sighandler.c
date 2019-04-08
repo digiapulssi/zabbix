@@ -129,9 +129,6 @@ static void	terminate_signal_handler(int sig, siginfo_t *siginfo, void *context)
 
 		switch (process_type)
 		{
-			case ZBX_PROCESS_TYPE_COLLECTOR:
-			case ZBX_PROCESS_TYPE_LISTENER:
-			case ZBX_PROCESS_TYPE_ACTIVE_CHECKS:
 			case ZBX_PROCESS_TYPE_HISTSYNCER:
 			case ZBX_PROCESS_TYPE_POLLER:
 			case ZBX_PROCESS_TYPE_UNREACHABLE:
@@ -151,6 +148,11 @@ static void	terminate_signal_handler(int sig, siginfo_t *siginfo, void *context)
 			case ZBX_PROCESS_TYPE_CONFSYNCER:
 			case ZBX_PROCESS_TYPE_HEARTBEAT:
 			case ZBX_PROCESS_TYPE_SELFMON:
+			case ZBX_PROCESS_TYPE_VMWARE:
+			case ZBX_PROCESS_TYPE_COLLECTOR:
+			case ZBX_PROCESS_TYPE_LISTENER:
+			case ZBX_PROCESS_TYPE_ACTIVE_CHECKS:
+			case ZBX_PROCESS_TYPE_TASKMANAGER:
 				break;
 			default:
 				exit_with_failure();
