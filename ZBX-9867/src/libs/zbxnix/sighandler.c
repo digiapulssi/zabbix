@@ -25,7 +25,6 @@
 #include "sigcommon.h"
 #include "../../libs/zbxcrypto/tls.h"
 
-extern unsigned char	process_type;
 int			sig_parent_pid = -1;
 volatile sig_atomic_t	sig_exiting;
 
@@ -33,8 +32,7 @@ static void	log_fatal_signal(int sig, siginfo_t *siginfo, void *context)
 {
 	SIG_CHECK_PARAMS(sig, siginfo, context);
 
-	zabbix_log(LOG_LEVEL_CRIT, "%s got signal [signal:%d(%s),reason:%d,refaddr:%p]. Crashing ...",
-			0 == SIG_PARENT_PROCESS ? get_process_type_string(process_type) : "main process",
+	zabbix_log(LOG_LEVEL_CRIT, "Got signal [signal:%d(%s),reason:%d,refaddr:%p]. Crashing ...",
 			sig, get_signal_name(sig),
 			SIG_CHECKED_FIELD(siginfo, si_code),
 			SIG_CHECKED_FIELD_TYPE(siginfo, si_addr, void *));
@@ -108,9 +106,8 @@ static void	terminate_signal_handler(int sig, siginfo_t *siginfo, void *context)
 	{
 		zabbix_log((sig_parent_pid == SIG_CHECKED_FIELD(siginfo, si_pid) || SIGINT == sig ?
 				LOG_LEVEL_DEBUG : LOG_LEVEL_WARNING),
-				"%s got signal [signal:%d(%s),sender_pid:%d,sender_uid:%d,"
+				"Got signal [signal:%d(%s),sender_pid:%d,sender_uid:%d,"
 				"reason:%d]. %s ...",
-				get_process_type_string(process_type),
 				sig, get_signal_name(sig),
 				SIG_CHECKED_FIELD(siginfo, si_pid),
 				SIG_CHECKED_FIELD(siginfo, si_uid),
@@ -126,40 +123,6 @@ static void	terminate_signal_handler(int sig, siginfo_t *siginfo, void *context)
 			exit_with_failure();
 
 		sig_exiting = 1;
-
-		switch (process_type)
-		{
-			case ZBX_PROCESS_TYPE_HISTSYNCER:
-			case ZBX_PROCESS_TYPE_POLLER:
-			case ZBX_PROCESS_TYPE_UNREACHABLE:
-			case ZBX_PROCESS_TYPE_IPMIPOLLER:
-			case ZBX_PROCESS_TYPE_PINGER:
-			case ZBX_PROCESS_TYPE_JAVAPOLLER:
-			case ZBX_PROCESS_TYPE_HTTPPOLLER:
-			case ZBX_PROCESS_TYPE_TRAPPER:
-			case ZBX_PROCESS_TYPE_SNMPTRAPPER:
-			case ZBX_PROCESS_TYPE_PROXYPOLLER:
-			case ZBX_PROCESS_TYPE_ESCALATOR:
-			case ZBX_PROCESS_TYPE_DISCOVERER:
-			case ZBX_PROCESS_TYPE_ALERTER:
-			case ZBX_PROCESS_TYPE_TIMER:
-			case ZBX_PROCESS_TYPE_HOUSEKEEPER:
-			case ZBX_PROCESS_TYPE_CONFSYNCER:
-			case ZBX_PROCESS_TYPE_HEARTBEAT:
-			case ZBX_PROCESS_TYPE_SELFMON:
-			case ZBX_PROCESS_TYPE_VMWARE:
-			case ZBX_PROCESS_TYPE_COLLECTOR:
-			case ZBX_PROCESS_TYPE_LISTENER:
-			case ZBX_PROCESS_TYPE_ACTIVE_CHECKS:
-			case ZBX_PROCESS_TYPE_TASKMANAGER:
-			case ZBX_PROCESS_TYPE_IPMIMANAGER:
-			case ZBX_PROCESS_TYPE_ALERTMANAGER:
-			case ZBX_PROCESS_TYPE_PREPROCMAN:
-			case ZBX_PROCESS_TYPE_PREPROCESSOR:
-				break;
-			default:
-				exit_with_failure();
-		}
 	}
 	else
 	{
