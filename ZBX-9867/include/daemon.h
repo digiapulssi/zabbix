@@ -24,8 +24,8 @@
 #	error "This module allowed only for Unix OS"
 #endif
 
-extern char	*CONFIG_PID_FILE;
-extern int	sig_exiting;
+extern char			*CONFIG_PID_FILE;
+extern volatile sig_atomic_t	sig_exiting;
 #include "threads.h"
 
 int	daemon_start(int allow_root, const char *user, unsigned int flags);

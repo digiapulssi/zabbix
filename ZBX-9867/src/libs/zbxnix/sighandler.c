@@ -26,7 +26,8 @@
 #include "../../libs/zbxcrypto/tls.h"
 
 extern unsigned char	process_type;
-int			sig_parent_pid = -1, sig_exiting;
+int			sig_parent_pid = -1;
+volatile sig_atomic_t	sig_exiting;
 
 static void	log_fatal_signal(int sig, siginfo_t *siginfo, void *context)
 {
@@ -149,6 +150,7 @@ static void	terminate_signal_handler(int sig, siginfo_t *siginfo, void *context)
 			case ZBX_PROCESS_TYPE_HOUSEKEEPER:
 			case ZBX_PROCESS_TYPE_CONFSYNCER:
 			case ZBX_PROCESS_TYPE_HEARTBEAT:
+			case ZBX_PROCESS_TYPE_SELFMON:
 				break;
 			default:
 				exit_with_failure();
