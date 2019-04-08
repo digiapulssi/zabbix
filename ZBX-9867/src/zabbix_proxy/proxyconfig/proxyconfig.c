@@ -155,7 +155,7 @@ ZBX_THREAD_ENTRY(proxyconfig_thread, args)
 
 	zbx_set_sigusr_handler(zbx_proxyconfig_sigusr_handler);
 
-	for (;;)
+	while (ZBX_IS_RUNNING())
 	{
 		sec = zbx_time();
 		zbx_update_env(sec);
@@ -171,4 +171,7 @@ ZBX_THREAD_ENTRY(proxyconfig_thread, args)
 
 		zbx_sleep_loop(CONFIG_PROXYCONFIG_FREQUENCY);
 	}
+
+	DBclose();
+	exit(EXIT_SUCCESS);
 }

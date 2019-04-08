@@ -82,7 +82,7 @@ ZBX_THREAD_ENTRY(dbconfig_thread, args)
 
 	DBconnect(ZBX_DB_CONNECT_NORMAL);
 
-	for (;;)
+	while (ZBX_IS_RUNNING())
 	{
 		sec = zbx_time();
 		zbx_update_env(sec);
@@ -100,4 +100,7 @@ ZBX_THREAD_ENTRY(dbconfig_thread, args)
 
 		zbx_sleep_loop(CONFIG_CONFSYNCER_FREQUENCY);
 	}
+
+	DBclose();
+	exit(EXIT_SUCCESS);
 }
