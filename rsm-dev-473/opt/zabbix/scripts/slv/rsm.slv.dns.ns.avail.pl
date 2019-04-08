@@ -10,7 +10,6 @@ use RSM;
 use RSMSLV;
 use TLD_constants qw(:groups :api);
 use Data::Dumper;
-use DateTime;
 
 parse_slv_opts();
 fail_if_running();
@@ -19,6 +18,19 @@ db_connect();
 
 my $slv_item_key_pattern = 'rsm.slv.dns.ns.avail';
 my $rtt_item_key_pattern = 'rsm.dns.udp.rtt';
+
+my $now;
+
+if (opt('now'))
+{
+	$now = getopt('now');
+}
+else
+{
+	$now = time();
+}
+
+
 my $current_month_latest_cycle = current_month_latest_cycle();
 my $cfg_minonline = get_macro_dns_probe_online();
 my $max_cycles_to_process = (opt('cycles') ? getopt('cycles') : 5);
@@ -53,8 +65,7 @@ sub get_slv_dns_ns_downtime_items
 {
 	my $hostid = shift;
 
-	return db_select("select itemid,key_ from items".
-		" where hostid=$hostid and key_ like '$slv_item_key_pattern\[%'");
+	return db_select("select itemid,key_ from items where hostid=$hostid and key_ like '$slv_item_key_pattern\[%'");
 }
 
 sub process_slv_item
@@ -81,7 +92,10 @@ sub process_cycles # for a particular slv item
 	my $nsip = shift;
 
 	my $rtt_itemids = get_dns_udp_rtt_itemids($nsip); # one item per probe
-	my $slv_clock = get_slv_last_clock($slv_itemid);
+
+	my $slv_clock;
+
+	get_lastvalue($slv_itemid, ITEM_VALUE_TYPE_UINT64, undef, \$slv_clock);
 
 	my $n = 0;
 
@@ -107,7 +121,7 @@ sub process_cycles # for a particular slv item
 
 		my $from = $slv_clock;
 		my $till = $slv_clock + 59;
-		
+
 		my $online_probe_count = scalar(keys(%{get_probe_times($from, $till, get_probes('DNS'))}));
 
 		if ($online_probe_count < $cfg_minonline)
@@ -150,26 +164,21 @@ sub get_dns_udp_rtt_itemids
 {
 	my $nsip = shift;
 
-	my $rows = db_select("select itemid,key_ from items".
-		" where key_ like '$rtt_item_key_pattern\[\%$nsip]' and templateid is not null");
+	my $rows = db_select(
+		"select itemid,key_".
+		" from items".
+		" where key_ like '$rtt_item_key_pattern\[\%$nsip]'".
+			" and templateid is not null"
+	);
 
 	my $itemids = [];
 
 	foreach my $row (@{$rows})
 	{
-		push($itemids, $row->[0]);
+		push(@{$itemids}, $row->[0]);
 	}
 
 	return $itemids;
-}
-
-sub get_slv_last_clock
-{
-	my $itemid = shift;
-
-	my $rows = db_select("select clock from lastvalue where itemid=$itemid");
-
-	return defined($rows) ? $rows->[0][0] : undef;
 }
 
 sub get_rtt_values
@@ -178,34 +187,25 @@ sub get_rtt_values
 	my $till = shift;
 	my $rtt_itemids = shift;
 
-	my $rows = db_select("select value from history where itemid in (".join(',', @{$rtt_itemids}).")".
-		" and clock between $from and $till");
+	my $rows = db_select(
+		"select value".
+		" from history".
+		" where itemid in (".join(',', @{$rtt_itemids}).")".
+			" and clock between $from and $till"
+	);
 
-	return [] unless defined($rows);
-
-	my @values;
+	my $values = [];
 
 	foreach my $row (@{$rows})
 	{
-		push(\@values, $row->[0]);
+		push(@{$values}, $row->[0]);
 	}
 
-	return \@values;
+	return $values;
 }
 
 sub current_month_latest_cycle
 {
-	my $now;
-
-	if (opt('now'))
-	{
-		$now = getopt('now');
-	}
-	else
-	{
-		$now = time();
-	}
-
 	# we don't know the rollweek bounds yet so we assume it ends at least few minutes back
 	return cycle_start($now, 60) - AVAIL_SHIFT_BACK;
 }

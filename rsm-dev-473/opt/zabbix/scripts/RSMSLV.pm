@@ -1453,6 +1453,8 @@ sub current_month_first_cycle
 
 sub month_start
 {
+	require DateTime;
+
 	my $dt = DateTime->from_epoch('epoch' => shift());
 	$dt->truncate('to' => 'month');
 	return $dt->epoch();
