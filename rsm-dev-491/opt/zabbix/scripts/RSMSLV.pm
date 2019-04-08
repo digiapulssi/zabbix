@@ -4213,9 +4213,11 @@ sub recalculate_downtime($$$$$$)
 			my $from = $periods{$itemid_avail}{$month_start};
 			my $till = cycle_start(get_end_of_month($from), $delay);
 
-			if ($till > $lastvalue_clocks{$downtime_itemids{$itemid_avail}})
+			my $itemid_downtime = $downtime_itemids{$itemid_avail};
+
+			if ($till > $lastvalue_clocks{$itemid_downtime})
 			{
-				$till = $lastvalue_clocks{$downtime_itemids{$itemid_avail}};
+				$till = $lastvalue_clocks{$itemid_downtime};
 			}
 
 			if (opt("debug"))
@@ -4225,7 +4227,7 @@ sub recalculate_downtime($$$$$$)
 				my $from_dt = DateTime->from_epoch('epoch' => $from);
 				my $till_dt = DateTime->from_epoch('epoch' => $till);
 
-				dbg("recalculating history of item $downtime_itemids{$itemid_avail} from $from_dt till $till_dt");
+				dbg("recalculating history of item $itemid_downtime from $from_dt till $till_dt");
 			}
 
 			# get availability in each cycle
@@ -4317,30 +4319,26 @@ sub recalculate_downtime($$$$$$)
 				}
 			}
 
+			dbg("updating history of $item_key_downtime...");
 			db_mass_update(
 				"history_uint",
 				["clock", "value"],
 				\@downtime_values,
 				["clock"],
-				[['itemid', $downtime_itemids{$itemid_avail}]]
+				[['itemid', $itemid_downtime]]
 			);
 
-			printf("fail    - %d\n", $incident_fail);
-			printf("recover - %d\n", $incident_recover);
-			printf("from    - %s\n", DateTime->from_epoch('epoch' => $from));
-			printf("till    - %s\n", DateTime->from_epoch('epoch' => $till));
-			printf("\n");
+			if ($till == $lastvalue_clocks{$itemid_downtime})
+			{
+				dbg("updating lastvalue of $item_key_downtime...");
+				$sql = "update" .
+						" lastvalue" .
+						" inner join history_uint on history_uint.itemid = lastvalue.itemid and history_uint.clock = lastvalue.clock" .
+					" set lastvalue.value = history_uint.value" .
+					" where lastvalue.itemid = ?";
+				db_exec($sql, [$itemid_downtime]);
+			}
 		}
-
-		# TODO: update lastvalue, if necessary
-		#$sql = "
-		#	update
-		#		lastvalue
-		#		inner join history_uint on history_uint.itemid = lastvalue.itemid and history_uint.clock = lastvalue.clock
-		#	set lastvalue.value = history_uint.value
-		#	where lastvalue.itemid = ?
-		#";
-		#$params = [$itemid];
 	}
 
 	write_file($auditlog_log_file, $last_auditlog_auditid);
