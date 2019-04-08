@@ -678,6 +678,9 @@ void	zbx_sleep_forever(void)
 
 	do
 	{
+		if (!ZBX_IS_RUNNING())
+			break;
+
 		sleep(1);
 	}
 	while (0 != sleep_remains);
