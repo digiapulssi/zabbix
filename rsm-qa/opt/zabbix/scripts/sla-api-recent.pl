@@ -29,11 +29,11 @@ use constant SUBSTR_KEY_LEN => 20;	# for logging
 use constant DEFAULT_MAX_CHILDREN => 64;
 
 sub process_server($);
-sub process_tld_batch($$$$$);
-sub process_tld($$$$);
+sub process_tld_batch($$$$$$);
+sub process_tld($$$$$);
 sub cycles_to_calculate($$$$$$$$);
 sub get_lastvalues_from_db($$$);
-sub calculate_cycle($$$$$$$$);
+sub calculate_cycle($$$$$$$$$);
 sub get_interfaces($$$);
 sub probe_online_at_init();
 sub get_history_by_itemid($$$);
@@ -186,16 +186,20 @@ sub process_server($)
 	my %probes;
 	my $server_tlds;
 
+	db_connect($server_key);
+
+	my $all_probes_ref = get_probes();
+
 	if (opt('tld'))
 	{
 		$server_tlds = [getopt('tld')];
 	}
 	else
 	{
-		db_connect($server_key);
 		$server_tlds = get_tlds();
-		db_disconnect($server_key);
 	}
+
+	db_disconnect($server_key);
 
 	return unless (scalar(@{$server_tlds}));
 
@@ -232,7 +236,7 @@ sub process_server($)
 		{
 			init_process();
 
-			process_tld_batch($server_tlds, $tldi_begin, $tldi_end, \%child_data, \%probes);
+			process_tld_batch($server_tlds, $tldi_begin, $tldi_end, \%child_data, \%probes, $all_probes_ref);
 
 			finalize_process();
 
@@ -260,13 +264,14 @@ sub process_server($)
 	}
 }
 
-sub process_tld_batch($$$$$)
+sub process_tld_batch($$$$$$)
 {
 	my $tlds = shift;
 	my $tldi_begin = shift;
 	my $tldi_end = shift;
 	my $child_data_ref = shift;
-	my $probes_ref = shift;
+	my $probes_ref = shift;		# probes by services
+	my $all_probes_ref = shift;	# all available probes in the system
 
 	db_connect($server_key);
 
@@ -302,7 +307,13 @@ sub process_tld_batch($$$$$)
 
 		$lastvalues_cache->{'tlds'}{$tld} //= {};
 
-		process_tld($tld, $probes_ref, $lastvalues_db->{'tlds'}{$tld}, $lastvalues_cache->{'tlds'}{$tld});
+		process_tld(
+			$tld,
+			$probes_ref,
+			$all_probes_ref,
+			$lastvalues_db->{'tlds'}{$tld},
+			$lastvalues_cache->{'tlds'}{$tld}
+		);
 
 		$child_data_ref->{$tld} = $lastvalues_cache->{'tlds'}{$tld};
 
@@ -312,10 +323,11 @@ sub process_tld_batch($$$$$)
 	db_disconnect();
 }
 
-sub process_tld($$$$)
+sub process_tld($$$$$)
 {
 	my $tld = shift;
-	my $probes = shift;
+	my $probes_ref = shift;
+	my $all_probes_ref = shift;
 	my $lastvalues_db_tld = shift;
 	my $lastvalues_cache_tld = shift;
 
@@ -363,7 +375,7 @@ sub process_tld($$$$)
 
 		my $interfaces_ref = get_interfaces($tld, $service, $now);
 
-		$probes->{$service} = get_probes($service) unless (defined($probes->{$service}));
+		$probes_ref->{$service} = get_probes($service) unless (defined($probes_ref->{$service}));
 
 		# TODO: RTT limits are currently stored per Server, not per TLD, so we
 		#       shouldn't be collecting them for the periods we aready handled.
@@ -392,7 +404,8 @@ sub process_tld($$$$)
 				$clock,
 				$delays{$service},
 				$rtt_limits{$service},
-				$probes->{$service},
+				$probes_ref->{$service},
+				$all_probes_ref,
 				$interfaces_ref
 			);
 		}
@@ -991,7 +1004,7 @@ sub probe_online_at($$)
 	return $probe_statuses{$probe}{'values'}{$clock};
 }
 
-sub calculate_cycle($$$$$$$$)
+sub calculate_cycle($$$$$$$$$)
 {
 	$tld = shift;		# set globally
 	my $service = shift;
@@ -999,7 +1012,8 @@ sub calculate_cycle($$$$$$$$)
 	my $cycle_clock = shift;
 	my $delay = shift;
 	my $rtt_limit = shift;
-	my $probes_ref = shift;	# probes ('name' => {'hostid' => hostid, 'status' => status}) available for this service
+	my $service_probes_ref = shift;	# probes enabled for the service ('name' => {'hostid' => hostid, 'status' => status}) available for this service
+	my $all_probes_ref = shift;	# same structure but all available probes in the system, for listing in JSON files
 	my $interfaces_ref = shift;
 
 	my $from = cycle_start($cycle_clock, $delay);
@@ -1351,13 +1365,13 @@ sub calculate_cycle($$$$$$$$)
 	}
 
 	# add "Offline" and "No results"
-	foreach my $probe (keys(%{$probes_ref}))
+	foreach my $probe (keys(%{$all_probes_ref}))
 	{
 		my $probe_online;
 
-		if ($probes_ref->{$probe}->{'status'} == HOST_STATUS_MONITORED)
+		if (defined($service_probes_ref->{$probe}) &&
+				$service_probes_ref->{$probe}->{'status'} == HOST_STATUS_MONITORED)
 		{
-			print("getting online at ", ts_full($from), "\n") if ($probe eq 'Zabcity');
 			$probe_online = probe_online_at($probe, $from);
 		}
 		else
