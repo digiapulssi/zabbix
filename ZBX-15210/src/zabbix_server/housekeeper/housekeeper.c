@@ -1067,7 +1067,7 @@ static void	housekeeping_cleanup_host_autoreg_records(zbx_vector_uint64_t *aregi
 
 	sql_offset = 0;
 	zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset, "delete from autoreg_host where");
-	DBadd_condition_alloc(&sql, &sql_alloc, &sql_offset, "objectid", aregids->values, aregids->values_num);
+	DBadd_condition_alloc(&sql, &sql_alloc, &sql_offset, "autoreg_hostid", aregids->values, aregids->values_num);
 	DBexecute("%s", sql);
 
 	DBcommit();
