@@ -1426,12 +1426,14 @@ void	DBregister_host_flush(zbx_vector_ptr_t *autoreg_hosts, zbx_uint64_t proxy_h
 	char			*sql = NULL, *ip_esc, *dns_esc, *host_metadata_esc;
 	size_t			sql_alloc = 256, sql_offset = 0;
 	zbx_timespec_t		ts = {0, 0};
+	zbx_vector_uint64_t	autoreg_hostids;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
 	if (SUCCEED != DBregister_host_active())
 		goto exit;
 
+	zbx_vector_uint64_create(&autoreg_hostids);
 	process_autoreg_hosts(autoreg_hosts, proxy_hostid);
 
 	for (i = 0; i < autoreg_hosts->values_num; i++)
@@ -1491,6 +1493,8 @@ void	DBregister_host_flush(zbx_vector_ptr_t *autoreg_hosts, zbx_uint64_t proxy_h
 			zbx_free(dns_esc);
 			zbx_free(ip_esc);
 		}
+
+		zbx_vector_uint64_append(&autoreg_hostids, autoreg_host->autoreg_hostid);
 	}
 
 	if (0 != create)
@@ -1506,6 +1510,8 @@ void	DBregister_host_flush(zbx_vector_ptr_t *autoreg_hosts, zbx_uint64_t proxy_h
 		zbx_free(sql);
 	}
 
+	DBlock_records("autoreg_host", &autoreg_hostids);
+
 	zbx_vector_ptr_sort(autoreg_hosts, compare_autoreg_host_by_hostid);
 
 	for (i = 0; i < autoreg_hosts->values_num; i++)
@@ -1519,6 +1525,7 @@ void	DBregister_host_flush(zbx_vector_ptr_t *autoreg_hosts, zbx_uint64_t proxy_h
 
 	zbx_process_events(NULL, NULL);
 	zbx_clean_events();
+	zbx_vector_uint64_destroy(&autoreg_hostids);
 exit:
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __function_name);
 }

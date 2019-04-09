@@ -39,6 +39,9 @@ static int	hk_period;
 /* the maximum number of housekeeping periods to be removed per single housekeeping cycle */
 #define HK_MAX_DELETE_PERIODS		4
 
+/* the maximum number of orphaned autoreg_host records houskeeper will lock and try to remove */
+#define ZBX_HK_AUTOREG_HOST_BATCH_SIZE	100
+
 /* global configuration data containing housekeeping configuration */
 static zbx_config_t	cfg;
 
@@ -1018,9 +1021,123 @@ static int	get_housekeeping_period(double time_slept)
 		return (int)time_slept;
 }
 
+/******************************************************************************
+ *                                                                            *
+ * Function: housekeeping_cleanup_host_autoreg_records                        *
+ *                                                                            *
+ * Purpose: remove unused autoreg_host records                                *
+ *                                                                            *
+ * Parameters: aregids - [IN/OUT] the autoreg_host record identifiers         *
+ *                                in - to remove                              *
+ *                                out - removed                               *
+ *                                                                            *
+ ******************************************************************************/
+static void	housekeeping_cleanup_host_autoreg_records(zbx_vector_uint64_t *aregids)
+{
+	DB_ROW		row;
+	DB_RESULT	result;
+	char		*sql = NULL;
+	size_t		sql_alloc = 0, sql_offset = 0;
+	zbx_uint64_t	aregid;
+	int		index;
+
+	DBbegin();
+
+	DBlock_records("autoreg_host", aregids);
+
+	/* Check if there are no new events created between selecting ids and locking them. */
+	/* No need to check for hosts, as hosts cannot be created without events and events */
+	/* can be removed only by housekeeper itself.                                       */
+
+	zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset,
+			"select objectid from events where source=%d and object=%d and",
+			EVENT_SOURCE_AUTO_REGISTRATION, EVENT_OBJECT_ZABBIX_ACTIVE);
+	DBadd_condition_alloc(&sql, &sql_alloc, &sql_offset, "objectid", aregids->values, aregids->values_num);
+
+	result = DBselect("%s", sql);
+	while (NULL != (row = DBfetch(result)))
+	{
+		ZBX_STR2UINT64(aregid, row[0]);
+		if (FAIL != (index = zbx_vector_uint64_bsearch(aregids, aregid, ZBX_DEFAULT_UINT64_COMPARE_FUNC)))
+			zbx_vector_uint64_remove(aregids, index);
+	}
+	DBfree_result(result);
+
+	/* remove the locked and still unused autoreg records */
+
+	sql_offset = 0;
+	zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset, "delete from autoreg_host where");
+	DBadd_condition_alloc(&sql, &sql_alloc, &sql_offset, "objectid", aregids->values, aregids->values_num);
+	DBexecute("%s", sql);
+
+	DBcommit();
+
+	zbx_free(sql);
+
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: housekeeping_cleanup_host_autoreg                                *
+ *                                                                            *
+ * Purpose: perform autoreg_host table cleanup by removing records not        *
+ *          associated with any hosts or events                               *
+ *                                                                            *
+ * Return value: The number of deleted records.                               *
+ *                                                                            *
+ ******************************************************************************/
+static int	housekeeping_cleanup_host_autoreg()
+{
+	const char		*__function_name = "hk_history_delete_queue_prepare_all";
+
+	DB_ROW			row;
+	DB_RESULT		result;
+	zbx_vector_uint64_t	aregids;
+	zbx_uint64_t		aregid;
+	int			deleted_num = 0;
+
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
+
+	zbx_vector_uint64_create(&aregids);
+
+	result = DBselect("select autoreg_hostid from autoreg_host ah"
+				" where not exists (select null from hosts h where h.host=ah.host)"
+					" and not exists (select null from events e where"
+						" e.source=%d and e.object=%d and e.objectid=ah.autoreg_hostid)"
+				" order by autoreg_hostid",
+			EVENT_SOURCE_AUTO_REGISTRATION, EVENT_OBJECT_ZABBIX_ACTIVE);
+
+	while (NULL != (row = DBfetch(result)))
+	{
+		ZBX_STR2UINT64(aregid, row[0]);
+		zbx_vector_uint64_append(&aregids, aregid);
+
+		if (ZBX_HK_AUTOREG_HOST_BATCH_SIZE == aregids.values_num)
+		{
+			housekeeping_cleanup_host_autoreg_records(&aregids);
+			deleted_num += aregids.values_num;
+			zbx_vector_uint64_clear(&aregids);
+		}
+	}
+	DBfree_result(result);
+
+	if (0 != aregids.values_num)
+	{
+		housekeeping_cleanup_host_autoreg_records(&aregids);
+		deleted_num += aregids.values_num;
+	}
+
+	zbx_vector_uint64_destroy(&aregids);
+
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s() deleted:%d", __function_name, deleted_num);
+
+	return deleted_num;
+}
+
 ZBX_THREAD_ENTRY(housekeeper_thread, args)
 {
-	int	now, d_history_and_trends, d_cleanup, d_events, d_problems, d_sessions, d_services, d_audit, sleeptime;
+	int	now, d_history_and_trends, d_cleanup, d_events, d_problems, d_sessions, d_services, d_audit, d_autoreg,
+			sleeptime;
 	double	sec, time_slept, time_now;
 	char	sleeptext[25];
 
@@ -1093,12 +1210,15 @@ ZBX_THREAD_ENTRY(housekeeper_thread, args)
 		zbx_setproctitle("%s [removing deleted items data]", get_process_type_string(process_type));
 		d_cleanup = housekeeping_cleanup();
 
+		zbx_setproctitle("%s [removing old auto registration records]", get_process_type_string(process_type));
+		d_autoreg = housekeeping_cleanup_host_autoreg();
+
 		sec = zbx_time() - sec;
 
 		zabbix_log(LOG_LEVEL_WARNING, "%s [deleted %d hist/trends, %d items/triggers, %d events, %d problems,"
-				" %d sessions, %d alarms, %d audit items in " ZBX_FS_DBL " sec, %s]",
+				" %d sessions, %d alarms, %d audit items, %d autoreg records in " ZBX_FS_DBL " sec, %s]",
 				get_process_type_string(process_type), d_history_and_trends,
-				d_cleanup, d_events, d_problems, d_sessions, d_services, d_audit, sec,
+				d_cleanup, d_events, d_problems, d_sessions, d_services, d_audit, d_autoreg, sec,
 				sleeptext);
 
 		zbx_config_clean(&cfg);
