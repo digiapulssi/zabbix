@@ -18,6 +18,7 @@ use Data::Dumper;
 use Time::HiRes;
 use RSM;
 use Pusher qw(push_to_trapper);
+use Fcntl qw(:flock);
 
 use constant SUCCESS => 0;
 use constant E_FAIL => -1;	# be careful when changing this, some functions depend on current value
@@ -3560,6 +3561,26 @@ sub ts_full
 	return "$str ($ts)";
 }
 
+sub ts_ymd
+{
+	my $ts    = shift // time();
+	my $delim = shift // "-";
+
+	my (undef, undef, undef, $mday, $mon, $year) = localtime($ts);
+
+	return sprintf("%.4d%s%.2d%s%.2d", $year + 1900, $delim, $mon + 1, $delim, $mday);
+}
+
+sub ts_ym
+{
+	my $ts    = shift // time();
+	my $delim = shift // "-";
+
+	my (undef, undef, undef, undef, $mon, $year) = localtime($ts);
+
+	return sprintf("%.4d%s%.2d", $year + 1900, $delim, $mon + 1);
+}
+
 sub selected_period
 {
 	my $from = shift;
@@ -3974,20 +3995,13 @@ sub recalculate_downtime($$$$$$)
 
 	fail("not supported when running in --dry-run mode") if (opt('dry-run'));
 
+	# get service from item's key (DNS or RDDS)
+
+	my $service = uc($item_key_avail =~ s/rsm\.slv\.(.+)\.avail/$1/r);
+
 	# get last auditid
 
-	my $last_auditlog_auditid = 0;
-
-	if (-e $auditlog_log_file)
-	{
-		my $error;
-
-		if (read_file($auditlog_log_file, \$last_auditlog_auditid, \$error) != SUCCESS)
-		{
-			fail("cannot read file \"$auditlog_log_file\": $error");
-		}
-	}
-
+	my $last_auditlog_auditid = __fp_read_last_auditid($auditlog_log_file);
 	dbg("last_auditlog_auditid = $last_auditlog_auditid");
 
 	# declare some common variables
@@ -4026,7 +4040,7 @@ sub recalculate_downtime($$$$$$)
 	# NB! Don't save last auditid yet, if history needs to be altered! Altering history can fail!
 	if (scalar(@eventids) == 0)
 	{
-		write_file($auditlog_log_file, $last_auditlog_auditid);
+		__fp_write_last_auditid($auditlog_log_file, $last_auditlog_auditid);
 		return;
 	}
 
@@ -4050,6 +4064,7 @@ sub recalculate_downtime($$$$$$)
 				" limit 1" .
 			") as clock2," .
 			"function_items.hostid," .
+			"function_items.host," .
 			"function_items.itemid," .
 			"function_items.key_" .
 		" from" .
@@ -4059,10 +4074,12 @@ sub recalculate_downtime($$$$$$)
 					" functions.triggerid," .
 					"items.hostid," .
 					"items.itemid," .
-					"items.key_" .
+					"items.key_," .
+					"hosts.host" .
 				" from" .
 					" functions" .
 					" left join items on items.itemid=functions.itemid" .
+					" left join hosts on hosts.hostid = items.hostid " .
 			") as function_items on function_items.triggerid=events.objectid" .
 		" where" .
 			" events.source=? and" .
@@ -4092,6 +4109,10 @@ sub recalculate_downtime($$$$$$)
 	# $downtime_itemids{$itemid_avail} = $itemid_downtime;
 	my %downtime_itemids = ();
 
+	# mapping between "rsm.slv.xxx.avail" items and hosts
+	# $hosts{$itemid_avail} = $host;
+	my %hosts = ();
+
 	# ranges of "false positive" availability values; these ranges start before incident actually started
 	# $false_positives{$itemid_avail} = [[$from, $till], ...]
 	my %false_positives = ();
@@ -4110,12 +4131,21 @@ sub recalculate_downtime($$$$$$)
 
 	foreach my $row (@{$rows})
 	{
-		my ($eventid, $false_positive, $from, $till, $hostid, $itemid_avail, $item_key) = @{$row};
+		my ($eventid, $false_positive, $from, $till, $hostid, $host, $itemid_avail, $item_key) = @{$row};
 		my $active = !defined($till);
 
 		if ($item_key ne $item_key_avail)
 		{
 			next;
+		}
+
+		if ($false_positive)
+		{
+			__fp_log($host, $service, "incident $eventid marked as false positive");
+		}
+		else
+		{
+			__fp_log($host, $service, "incident $eventid unmarked as false positive");
 		}
 
 		if (!exists($downtime_itemids{$itemid_avail}))
@@ -4126,6 +4156,11 @@ sub recalculate_downtime($$$$$$)
 
 			$sql = "select clock from lastvalue where itemid=?";
 			$lastvalue_clocks{$itemid_downtime} = db_select_value($sql, [$itemid_downtime]);
+		}
+
+		if (!exists($hosts{$itemid_avail}))
+		{
+			$hosts{$itemid_avail} = $host;
 		}
 
 		if ($active)
@@ -4144,12 +4179,11 @@ sub recalculate_downtime($$$$$$)
 
 		if (opt("debug"))
 		{
-			require DateTime;
 			dbg("incident  - " . $eventid);
 			dbg("active    - " . ($active ? "yes" : "no"));
 			dbg("false pos - " . $false_positive);
-			dbg("from      - " . DateTime->from_epoch('epoch' => $from));
-			dbg("till      - " . DateTime->from_epoch('epoch' => $till));
+			dbg("from      - " . ts_full($from));
+			dbg("till      - " . ts_full($till));
 			dbg("host id   - " . $hostid);
 			dbg("item id   - " . $itemid_avail);
 			dbg("item key  - " . $item_key);
@@ -4173,13 +4207,12 @@ sub recalculate_downtime($$$$$$)
 					fail("got more than one history entry (itemid: $params->[0], clock: $params->[1])");
 				}
 
+				my $month = ts_ym($params->[1]);
+				__fp_log($host, $service, "history of $item_key_downtime ($downtime_itemids{$itemid_avail}) for $month needs to be recalculated");
+
 				if (scalar(@{$rows}) == 0)
 				{
-					require DateTime;
-
-					my $month = DateTime->from_epoch('epoch' => $params->[1])->strftime("%Y-%m") . "\n";
-
-					wrn("skipping incident $eventid on month $month (cannot alter history, false-positive flag changed for a too old incident)");
+					__fp_log($host, $service, "skipping because incident $eventid was too long ago, not enough data for recalculating hitsory");
 				}
 				else
 				{
@@ -4212,7 +4245,7 @@ sub recalculate_downtime($$$$$$)
 		{
 			my $from = $periods{$itemid_avail}{$month_start};
 			my $till = cycle_start(get_end_of_month($from), $delay);
-
+			my $host = $hosts{$itemid_avail};
 			my $itemid_downtime = $downtime_itemids{$itemid_avail};
 
 			if ($till > $lastvalue_clocks{$itemid_downtime})
@@ -4220,17 +4253,11 @@ sub recalculate_downtime($$$$$$)
 				$till = $lastvalue_clocks{$itemid_downtime};
 			}
 
-			if (opt("debug"))
-			{
-				require DateTime;
+			my $from_str = ts_full($from);
+			my $till_str = ts_full($till);
+			__fp_log($host, $service, "updating history of $item_key_downtime ($itemid_downtime) from $from_str till $till_str");
 
-				my $from_dt = DateTime->from_epoch('epoch' => $from);
-				my $till_dt = DateTime->from_epoch('epoch' => $till);
-
-				dbg("recalculating history of item $itemid_downtime from $from_dt till $till_dt");
-			}
-
-			# get availability in each cycle
+			# get availability for each cycle
 
 			$sql = "select clock, value from history_uint where itemid = ? and clock between ? and ? order by clock asc";
 			$rows = db_select($sql, [$itemid_avail, $from - $delay * ($incident_fail - 1), $till]);
@@ -4259,13 +4286,14 @@ sub recalculate_downtime($$$$$$)
 			my $counter = 0;
 
 			# Start the loop few cycles before $from to find out if $from cycle is in incident.
-			# This may happen if $from is the first cycle of the month.
+			# This may happen if $from is the first cycle of the month and incident started in previous month.
 			# Potential bug - if incident has "up, down, up, down, up, down, ..." pattern, it won't be detected.
 
 			for (my $clock = $from - $delay * ($incident_fail - 1); $clock <= $till; $clock += $delay)
 			{
 				if (!defined($avail{$clock}))
 				{
+					__fp_log($host, $service, "failed to update history, missing availability data (itemid: $itemid_avail; clock: $clock)");
 					fail("missing availability data (itemid: $itemid_avail; clock: $clock)");
 				}
 
@@ -4319,7 +4347,6 @@ sub recalculate_downtime($$$$$$)
 				}
 			}
 
-			dbg("updating history of $item_key_downtime...");
 			db_mass_update(
 				"history_uint",
 				["clock", "value"],
@@ -4341,12 +4368,64 @@ sub recalculate_downtime($$$$$$)
 		}
 	}
 
-	write_file($auditlog_log_file, $last_auditlog_auditid);
+	__fp_write_last_auditid($auditlog_log_file, $last_auditlog_auditid);
 }
 
 sub usage
 {
 	pod2usage(shift);
+}
+
+#######################################################
+# Internal subs for handling false-positive incidents #
+#######################################################
+
+my $__fp_logfile = "/var/log/zabbix/slv/false-positive.log";
+
+sub __fp_log($$$)
+{
+	my $host    = shift;
+	my $service = shift;
+	my $message = shift;
+
+	my $log_str = sprintf("%s:%s %s %s %s", $$, ts_str(), $host, $service, $message);
+
+	dbg($log_str);
+
+	open(my $fh, ">>", $__fp_logfile) or fail("cannot open file '$__fp_logfile'");
+	flock($fh, LOCK_EX)               or fail("cannot lock file '$__fp_logfile'");
+	print($fh $log_str . "\n")        or fail("cannot write to file '$__fp_logfile'");
+	close($fh)                        or fail("cannot close file '$__fp_logfile'");
+}
+
+sub __fp_read_last_auditid($)
+{
+	my $file = shift;
+
+	my $auditid = 0;
+
+	if (-e $file)
+	{
+		my $error;
+
+		if (read_file($file, \$auditid, \$error) != SUCCESS)
+		{
+			fail("cannot read file \"$file\": $error");
+		}
+	}
+
+	return $auditid;
+}
+
+sub __fp_write_last_auditid($$)
+{
+	my $file    = shift;
+	my $auditid = shift;
+
+	if (write_file($file, $auditid) != SUCCESS)
+	{
+		fail("cannot write file \"$file\"");
+	}
 }
 
 #################
