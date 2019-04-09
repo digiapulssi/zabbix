@@ -318,7 +318,8 @@ zbx_vmware_perf_entity_t	*zbx_vmware_service_get_perf_entity(zbx_vmware_service_
 #define ZBX_XPATH_VMWARE_ABOUT(property)								\
 	"/*/*/*/*/*[local-name()='about']/*[local-name()='" property "']"
 
-#	define ZBX_XPATH_LN(LN)			"/*[local-name()='" LN "']"
+#	define ZBX_XPATH_NN(NN)			"*[local-name()='" NN "']"
+#	define ZBX_XPATH_LN(LN)			"/" ZBX_XPATH_NN(LN)
 #	define ZBX_XPATH_LN1(LN1)		"/" ZBX_XPATH_LN(LN1)
 #	define ZBX_XPATH_LN2(LN1, LN2)		"/" ZBX_XPATH_LN(LN1) ZBX_XPATH_LN(LN2)
 #	define ZBX_XPATH_LN3(LN1, LN2, LN3)	"/" ZBX_XPATH_LN(LN1) ZBX_XPATH_LN(LN2) ZBX_XPATH_LN(LN3)

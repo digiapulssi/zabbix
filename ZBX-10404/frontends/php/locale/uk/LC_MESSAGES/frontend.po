@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Zabbix 3.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-01-13 23:35+0200\n"
+"POT-Creation-Date: 2019-04-07 01:42+0300\n"
 "PO-Revision-Date: 2019-01-10 20:39+0300\n"
 "Last-Translator: Oleksiy <zalex_ua@i.ua>\n"
 "Language-Team: Zabbix translation team\n"
@@ -124,7 +124,7 @@ msgstr[0] "%1$s секунда"
 msgstr[1] "%1$s секунди"
 msgstr[2] "%1$s секунд"
 
-#: app/views/layout.htmlpage.php:106 include/page_header.php:272
+#: app/views/layout.htmlpage.php:106 include/page_header.php:275
 #, c-format
 msgid "%4$s failed login attempt logged. Last failed attempt was from %1$s on %2$s at %3$s."
 msgid_plural "%4$s failed login attempts logged. Last failed attempt was from %1$s on %2$s at %3$s."
@@ -2090,12 +2090,12 @@ msgstr[0] "Не вдалося імпортувати шаблон \"%1$s\", п�
 msgstr[1] "Не вдалося імпортувати шаблон \"%1$s\", приєднані шаблони \"%2$s\" не існують."
 msgstr[2] "Не вдалося імпортувати шаблон \"%1$s\", приєднані шаблони \"%2$s\" не існують."
 
-#: include/classes/mvc/CView.php:219
+#: include/classes/mvc/CView.php:223
 #, c-format
 msgid "Cannot include JS file \"%s\"."
 msgstr "Не вдалося включити JS файл \"%s\"."
 
-#: include/classes/mvc/CView.php:141
+#: include/classes/mvc/CView.php:145
 #, c-format
 msgid "Cannot include view file \"%s\"."
 msgstr "Не вдалося включити файлу вигляду \"%s\"."
@@ -5479,7 +5479,7 @@ msgstr "Формат файлу не підтримується."
 msgid "File is too big, max upload size is %1$s bytes."
 msgstr "Файл занадто великий, максимальний розмір файлу для завантаження %1$s байт."
 
-#: include/classes/mvc/CView.php:93
+#: include/classes/mvc/CView.php:97
 #, c-format
 msgid "File provided to a view does not exist. Tried to find \"%s\"."
 msgstr "Файл вказаний для відображення не існує. Була спроба знайти \"%s\"."
@@ -8301,7 +8301,7 @@ msgstr "Неправильний тег \"%1$s\": %2$s."
 msgid "Invalid third parameter."
 msgstr "Неправильний третій параметр."
 
-#: include/classes/mvc/CView.php:80
+#: include/classes/mvc/CView.php:84
 #, c-format
 msgid "Invalid view name given \"%s\". Allowed chars: \"a-z\" and \".\"."
 msgstr "Отримано помилкове ім'я вигляду \"%s\". Дозволені символи : \"a-z\" та \".\"."
@@ -15454,7 +15454,7 @@ msgstr "Вирівнювання по вертикалі"
 msgid "Vietnamese (vi_VN)"
 msgstr "В'єтнамський (vi_VN)"
 
-#: include/classes/mvc/CView.php:158
+#: include/classes/mvc/CView.php:162
 msgid "View is not rendered."
 msgstr "Перегляд не відтворено."
 

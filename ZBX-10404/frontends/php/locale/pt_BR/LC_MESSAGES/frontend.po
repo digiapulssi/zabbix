@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Zabbix 3.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-01-13 23:35+0200\n"
+"POT-Creation-Date: 2019-04-07 01:42+0300\n"
 "PO-Revision-Date: 2018-11-30 13:51+0300\n"
 "Last-Translator: Adail <the.spaww@gmail.com>\n"
 "Language-Team: Zabbix <info@zabbix.com>\n"
@@ -115,7 +115,7 @@ msgid_plural "%1$s seconds"
 msgstr[0] "%1$s segundo"
 msgstr[1] "%1$s segundos"
 
-#: app/views/layout.htmlpage.php:106 include/page_header.php:272
+#: app/views/layout.htmlpage.php:106 include/page_header.php:275
 #, c-format
 msgid "%4$s failed login attempt logged. Last failed attempt was from %1$s on %2$s at %3$s."
 msgid_plural "%4$s failed login attempts logged. Last failed attempt was from %1$s on %2$s at %3$s."
@@ -2040,12 +2040,12 @@ msgid_plural "Cannot import template \"%1$s\", linked templates \"%2$s\" do not 
 msgstr[0] "Não foi possível importar o template \"%1$s\", vinculado com o template \"%2$s\" que não existe."
 msgstr[1] "Não foi possível importar o template \"%1$s\", vinculado com os templates \"%2$s\" que não existem."
 
-#: include/classes/mvc/CView.php:219
+#: include/classes/mvc/CView.php:223
 #, c-format
 msgid "Cannot include JS file \"%s\"."
 msgstr "Não foi possível incluir o arquivo JS \"%s\"."
 
-#: include/classes/mvc/CView.php:141
+#: include/classes/mvc/CView.php:145
 #, c-format
 msgid "Cannot include view file \"%s\"."
 msgstr "Não foi possível incluir o arquivo de visualização \"%s\"."
@@ -5426,7 +5426,7 @@ msgstr "O formato do arquivo não é suportado."
 msgid "File is too big, max upload size is %1$s bytes."
 msgstr "O arquivo é muito grande, o tamanho máximo para upload é de %1$s bytes."
 
-#: include/classes/mvc/CView.php:93
+#: include/classes/mvc/CView.php:97
 #, c-format
 msgid "File provided to a view does not exist. Tried to find \"%s\"."
 msgstr "O arquivo se referencia a uma visão que não existe. Tentou localizar \"%s\"."
@@ -8244,7 +8244,7 @@ msgstr "Tag inválida \"%1$s\": %2$s."
 msgid "Invalid third parameter."
 msgstr "O terceiro parâmetro é inválido."
 
-#: include/classes/mvc/CView.php:80
+#: include/classes/mvc/CView.php:84
 #, c-format
 msgid "Invalid view name given \"%s\". Allowed chars: \"a-z\" and \".\"."
 msgstr "Nome de visualização inválido \"%s\". Caracteres permitidos: \"a-z\" e \".\"."
@@ -15387,7 +15387,7 @@ msgstr "Alinhamento vertical"
 msgid "Vietnamese (vi_VN)"
 msgstr "Vietnamita (vi_VN)"
 
-#: include/classes/mvc/CView.php:158
+#: include/classes/mvc/CView.php:162
 msgid "View is not rendered."
 msgstr "A visão não foi apresentada."
 
