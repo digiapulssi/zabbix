@@ -783,6 +783,7 @@ class CDiscoveryRule extends CItemGeneral {
 
 	protected function updateReal($items) {
 		$items = zbx_toArray($items);
+		CArrayHelper::sort($items, ['itemid']);
 
 		$ruleIds = zbx_objectValues($items, 'itemid');
 		$exRules = $this->get([
