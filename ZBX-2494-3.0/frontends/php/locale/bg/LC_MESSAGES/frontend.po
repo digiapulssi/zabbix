@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Zabbix 3.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-01-13 23:35+0200\n"
+"POT-Creation-Date: 2019-04-07 01:42+0300\n"
 "PO-Revision-Date: 2018-11-30 09:08+0300\n"
 "Last-Translator: Anonymous Pootle User\n"
 "Language-Team: \n"
@@ -115,7 +115,7 @@ msgid_plural "%1$s seconds"
 msgstr[0] ""
 msgstr[1] ""
 
-#: app/views/layout.htmlpage.php:106 include/page_header.php:272
+#: app/views/layout.htmlpage.php:106 include/page_header.php:275
 #, c-format
 msgid "%4$s failed login attempt logged. Last failed attempt was from %1$s on %2$s at %3$s."
 msgid_plural "%4$s failed login attempts logged. Last failed attempt was from %1$s on %2$s at %3$s."
@@ -2049,12 +2049,12 @@ msgid_plural "Cannot import template \"%1$s\", linked templates \"%2$s\" do not 
 msgstr[0] ""
 msgstr[1] ""
 
-#: include/classes/mvc/CView.php:219
+#: include/classes/mvc/CView.php:223
 #, c-format
 msgid "Cannot include JS file \"%s\"."
 msgstr ""
 
-#: include/classes/mvc/CView.php:141
+#: include/classes/mvc/CView.php:145
 #, c-format
 msgid "Cannot include view file \"%s\"."
 msgstr "Неуспешно свързване с \"view file\" \"%s\"."
@@ -5439,7 +5439,7 @@ msgstr "Формата на файла не се поддържа."
 msgid "File is too big, max upload size is %1$s bytes."
 msgstr "Файлът е прекалено голям, максимален размер на качване %1$s байта."
 
-#: include/classes/mvc/CView.php:93
+#: include/classes/mvc/CView.php:97
 #, c-format
 msgid "File provided to a view does not exist. Tried to find \"%s\"."
 msgstr "Файлът не съществува. Опитвате се да намерите \"%s\"."
@@ -8261,7 +8261,7 @@ msgstr ""
 msgid "Invalid third parameter."
 msgstr ""
 
-#: include/classes/mvc/CView.php:80
+#: include/classes/mvc/CView.php:84
 #, c-format
 msgid "Invalid view name given \"%s\". Allowed chars: \"a-z\" and \".\"."
 msgstr "Невалидно име за преглед дава \"%s\". Позволени символи: \"a-z\" and \".\"."
@@ -15398,7 +15398,7 @@ msgstr "Вертикално подравняване"
 msgid "Vietnamese (vi_VN)"
 msgstr ""
 
-#: include/classes/mvc/CView.php:158
+#: include/classes/mvc/CView.php:162
 msgid "View is not rendered."
 msgstr "Прегледа не се показва."
 

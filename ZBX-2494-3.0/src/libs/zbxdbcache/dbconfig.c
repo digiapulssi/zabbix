@@ -2885,6 +2885,21 @@ static void	DCsync_functions(zbx_dbsync_t *sync)
 
 		function = DCfind_id(&config->functions, functionid, sizeof(ZBX_DC_FUNCTION), &found);
 
+		if (1 == found && function->itemid != itemid)
+		{
+			ZBX_DC_ITEM	*item_last;
+
+			if (NULL != (item_last = zbx_hashset_search(&config->items, &function->itemid)))
+			{
+				item_last->update_triggers = 1;
+				if (NULL != item_last->triggers)
+				{
+					config->items.mem_free_func(item_last->triggers);
+					item_last->triggers = NULL;
+				}
+			}
+		}
+
 		function->triggerid = triggerid;
 		function->itemid = itemid;
 		DCstrpool_replace(found, &function->function, row[2]);
@@ -4437,6 +4452,7 @@ int	DCcheck_proxy_permissions(const char *host, const zbx_socket_t *sock, zbx_ui
 			return FAIL;
 		}
 	}
+#if defined(HAVE_POLARSSL) || defined(HAVE_GNUTLS) || (defined(HAVE_OPENSSL) && defined(HAVE_OPENSSL_WITH_PSK))
 	else if (ZBX_TCP_SEC_TLS_PSK == sock->connection_type)
 	{
 		if (SUCCEED != zbx_tls_get_attr_psk(sock, &attr))
@@ -4446,6 +4462,7 @@ int	DCcheck_proxy_permissions(const char *host, const zbx_socket_t *sock, zbx_ui
 			return FAIL;
 		}
 	}
+#endif
 	else if (ZBX_TCP_SEC_UNENCRYPTED != sock->connection_type)
 	{
 		*error = zbx_strdup(*error, "internal error: invalid connection type");
@@ -4496,6 +4513,7 @@ int	DCcheck_proxy_permissions(const char *host, const zbx_socket_t *sock, zbx_ui
 			return FAIL;
 		}
 	}
+#if defined(HAVE_POLARSSL) || defined(HAVE_GNUTLS) || (defined(HAVE_OPENSSL) && defined(HAVE_OPENSSL_WITH_PSK))
 	else if (ZBX_TCP_SEC_TLS_PSK == sock->connection_type)
 	{
 		if (NULL != dc_host->tls_dc_psk)
@@ -4517,6 +4535,7 @@ int	DCcheck_proxy_permissions(const char *host, const zbx_socket_t *sock, zbx_ui
 			return FAIL;
 		}
 	}
+#endif
 #endif
 	*hostid = dc_host->hostid;
 
@@ -5936,7 +5955,7 @@ unlock:
  ******************************************************************************/
 size_t	DCconfig_get_snmp_items_by_interfaceid(zbx_uint64_t interfaceid, DC_ITEM **items)
 {
-	const char		*__function_name = "DCconfig_get_snmp_items_by_interface";
+	const char		*__function_name = "DCconfig_get_snmp_items_by_interfaceid";
 
 	size_t			items_num = 0, items_alloc = 8;
 	int			i;

@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Zabbix 3.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-01-13 23:35+0200\n"
+"POT-Creation-Date: 2019-04-07 01:42+0300\n"
 "PO-Revision-Date: 2017-04-13 04:52+0300\n"
 "Last-Translator: Đào <nadao@monre.gov.vn>\n"
 "Language-Team: Zabbix <info@zabbix.com>\n"
@@ -106,7 +106,7 @@ msgid "%1$s second"
 msgid_plural "%1$s seconds"
 msgstr[0] "%1$s giây"
 
-#: app/views/layout.htmlpage.php:106 include/page_header.php:272
+#: app/views/layout.htmlpage.php:106 include/page_header.php:275
 #, c-format
 msgid "%4$s failed login attempt logged. Last failed attempt was from %1$s on %2$s at %3$s."
 msgid_plural "%4$s failed login attempts logged. Last failed attempt was from %1$s on %2$s at %3$s."
@@ -1988,12 +1988,12 @@ msgid "Cannot import template \"%1$s\", linked template \"%2$s\" does not exist.
 msgid_plural "Cannot import template \"%1$s\", linked templates \"%2$s\" do not exist."
 msgstr[0] "Không thể import mẫu \"%1$s\", mẫu được liên kết \"%2$s\" không tồn tại."
 
-#: include/classes/mvc/CView.php:219
+#: include/classes/mvc/CView.php:223
 #, c-format
 msgid "Cannot include JS file \"%s\"."
 msgstr "Không thể bao gồm tệp tin JS \"%s\"."
 
-#: include/classes/mvc/CView.php:141
+#: include/classes/mvc/CView.php:145
 #, c-format
 msgid "Cannot include view file \"%s\"."
 msgstr "Không thể xem gộp tập tin \"%s\"."
@@ -5367,7 +5367,7 @@ msgstr "Định dạng tập tin không được hỗ trợ."
 msgid "File is too big, max upload size is %1$s bytes."
 msgstr "Tập tin quá lớn, kích thước tải lên tối đa là %1$s byte."
 
-#: include/classes/mvc/CView.php:93
+#: include/classes/mvc/CView.php:97
 #, c-format
 msgid "File provided to a view does not exist. Tried to find \"%s\"."
 msgstr "Tập tin được cung cấp cho chế độ xem không tồn tại. Thử tìm \"%s\"."
@@ -8175,7 +8175,7 @@ msgstr "Thẻ không hợp lệ \"%1$s\": %2$s."
 msgid "Invalid third parameter."
 msgstr "Tham số thứ ba không hợp lệ."
 
-#: include/classes/mvc/CView.php:80
+#: include/classes/mvc/CView.php:84
 #, c-format
 msgid "Invalid view name given \"%s\". Allowed chars: \"a-z\" and \".\"."
 msgstr "Tên đưa ra \"%s\" không hợp lệ. Cho phép các ký tự: \"a-z\" và \".\"."
@@ -15272,7 +15272,7 @@ msgstr "Căn lề thẳng đứng"
 msgid "Vietnamese (vi_VN)"
 msgstr "Vietnamese (vi_VN)"
 
-#: include/classes/mvc/CView.php:158
+#: include/classes/mvc/CView.php:162
 msgid "View is not rendered."
 msgstr "Xem thì không được hiển thị."
 

@@ -2049,12 +2049,19 @@ void	process_mass_data(zbx_socket_t *sock, zbx_uint64_t proxy_hostid, AGENT_VALU
 #endif
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __function_name);
 
-#if defined(HAVE_POLARSSL) || defined(HAVE_GNUTLS) || defined(HAVE_OPENSSL)
+#if defined(HAVE_POLARSSL) || defined(HAVE_GNUTLS) || (defined(HAVE_OPENSSL) && defined(HAVE_OPENSSL_WITH_PSK))
 	if (0 == proxy_hostid &&
 			((ZBX_TCP_SEC_TLS_CERT == sock->connection_type &&
 				SUCCEED != zbx_tls_get_attr_cert(sock, &attr)) ||
 			(ZBX_TCP_SEC_TLS_PSK == sock->connection_type &&
 				SUCCEED != zbx_tls_get_attr_psk(sock, &attr))))
+	{
+		THIS_SHOULD_NEVER_HAPPEN;
+		return;
+	}
+#elif defined(HAVE_OPENSSL) && !defined(HAVE_OPENSSL_WITH_PSK)
+	if (0 == proxy_hostid && ZBX_TCP_SEC_TLS_CERT == sock->connection_type &&
+			SUCCEED != zbx_tls_get_attr_cert(sock, &attr))
 	{
 		THIS_SHOULD_NEVER_HAPPEN;
 		return;
@@ -2182,6 +2189,7 @@ void	process_mass_data(zbx_socket_t *sock, zbx_uint64_t proxy_hostid, AGENT_VALU
 						continue;
 					}
 				}
+#if defined(HAVE_POLARSSL) || defined(HAVE_GNUTLS) || (defined(HAVE_OPENSSL) && defined(HAVE_OPENSSL_WITH_PSK))
 				else if (ZBX_TCP_SEC_TLS_PSK == sock->connection_type)
 				{
 					if (strlen(items[i].host.tls_psk_identity) != attr.psk_identity_len ||
@@ -2198,6 +2206,7 @@ void	process_mass_data(zbx_socket_t *sock, zbx_uint64_t proxy_hostid, AGENT_VALU
 						continue;
 					}
 				}
+#endif
 #endif
 				flag_host_allow = 1;
 			}
@@ -2598,8 +2607,11 @@ void	process_dhis_data(struct zbx_json_parse *jp)
 		zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_KEY, key_, sizeof(key_));
 		zbx_json_value_by_name_dyn(&jp_row, ZBX_PROTO_TAG_VALUE, &value, &value_alloc);
 
-		if (SUCCEED == zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_DNS, dns, sizeof(dns)) && '\0' != *dns &&
-				FAIL == zbx_validate_hostname(dns))
+		if (FAIL == zbx_json_value_by_name(&jp_row, ZBX_PROTO_TAG_DNS, dns, sizeof(dns)))
+		{
+			*dns = '\0';
+		}
+		else if ('\0' != *dns && FAIL == zbx_validate_hostname(dns))
 		{
 			zabbix_log(LOG_LEVEL_WARNING, "%s(): \"%s\" is not a valid hostname", __function_name, dns);
 			goto next;

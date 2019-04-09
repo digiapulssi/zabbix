@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Zabbix 3.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-01-13 23:35+0200\n"
+"POT-Creation-Date: 2019-04-07 01:42+0300\n"
 "PO-Revision-Date: 2018-12-04 06:21+0300\n"
 "Last-Translator: JONGKWON <jkkim.photo@gmail.com>\n"
 "Language-Team: Zabbix <info@zabbix.com>\n"
@@ -106,7 +106,7 @@ msgid "%1$s second"
 msgid_plural "%1$s seconds"
 msgstr[0] "%1$s 초"
 
-#: app/views/layout.htmlpage.php:106 include/page_header.php:272
+#: app/views/layout.htmlpage.php:106 include/page_header.php:275
 #, c-format
 msgid "%4$s failed login attempt logged. Last failed attempt was from %1$s on %2$s at %3$s."
 msgid_plural "%4$s failed login attempts logged. Last failed attempt was from %1$s on %2$s at %3$s."
@@ -1988,12 +1988,12 @@ msgid "Cannot import template \"%1$s\", linked template \"%2$s\" does not exist.
 msgid_plural "Cannot import template \"%1$s\", linked templates \"%2$s\" do not exist."
 msgstr[0] "템플릿 \"%1$s\"를 가져올 수 없습니다. 링크되어 있는 템플릿 \"%2$s\"가 존재하지 않습니다."
 
-#: include/classes/mvc/CView.php:219
+#: include/classes/mvc/CView.php:223
 #, c-format
 msgid "Cannot include JS file \"%s\"."
 msgstr "\"%s\" JS파일을 읽을 수 없습니다."
 
-#: include/classes/mvc/CView.php:141
+#: include/classes/mvc/CView.php:145
 #, c-format
 msgid "Cannot include view file \"%s\"."
 msgstr "뷰 파일 \"%s\"을 읽을 수 없습니다."
@@ -5368,7 +5368,7 @@ msgstr "파일 포맷이 지원되지 않습니다."
 msgid "File is too big, max upload size is %1$s bytes."
 msgstr "파일 사이즈가 너무 큽니다. 업로드파일 사이즈의 최대치는 %1$s바이트입니다."
 
-#: include/classes/mvc/CView.php:93
+#: include/classes/mvc/CView.php:97
 #, c-format
 msgid "File provided to a view does not exist. Tried to find \"%s\"."
 msgstr "표시되기 위해 생성된 파일이 존재하지 않습니다. \"%s\"를 찾습니다."
@@ -8176,7 +8176,7 @@ msgstr "태그 \"%1$s\": %2$s가 올바르지 않습니다."
 msgid "Invalid third parameter."
 msgstr "3번째의 파라미터가 올바르지 않습니다."
 
-#: include/classes/mvc/CView.php:80
+#: include/classes/mvc/CView.php:84
 #, c-format
 msgid "Invalid view name given \"%s\". Allowed chars: \"a-z\" and \".\"."
 msgstr "표시명 \"%s\"가 올바르지 않습니다. 이용가능한 문자: \"a-z\" 혹은 \".\"."
@@ -15273,7 +15273,7 @@ msgstr "세로 위치"
 msgid "Vietnamese (vi_VN)"
 msgstr "베트남어 (vi_VN)"
 
-#: include/classes/mvc/CView.php:158
+#: include/classes/mvc/CView.php:162
 msgid "View is not rendered."
 msgstr "뷰를 랜더링 할 수 없었습니다."
 
