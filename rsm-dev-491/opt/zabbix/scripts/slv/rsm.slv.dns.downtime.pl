@@ -24,6 +24,18 @@ set_slv_config(get_rsm_config());
 
 db_connect();
 
+if (!opt('dry-run'))
+{
+	recalculate_downtime(
+		"/opt/zabbix/data/rsm.slv.dns.downtime.auditlog.txt",
+		"rsm.slv.dns.avail",
+		"rsm.slv.dns.downtime",
+		get_macro_incident_dns_fail(),
+		get_macro_incident_dns_recover(),
+		get_dns_udp_delay(getopt('now') // time() - AVAIL_SHIFT_BACK)
+	);
+}
+
 # we don't know the cycle bounds yet so we assume it ends at least few minutes back
 my $delay = get_dns_udp_delay(getopt('now') // time() - AVAIL_SHIFT_BACK);
 
