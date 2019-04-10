@@ -18,11 +18,10 @@ use Data::Dumper;
 use Time::Local;
 use POSIX qw(floor);
 use Time::HiRes qw(time);
-use TLD_constants qw(:ec :api :general);
+use TLD_constants qw(:ec :api :general :config);
 use Parallel::ForkManager;
 
 use constant RDDS_SUBSERVICE => 'sub';
-use constant AUDIT_RESOURCE_INCIDENT => 32;
 
 use constant PROBE_STATUS_UP => 'Up';
 use constant PROBE_STATUS_DOWN => 'Down';

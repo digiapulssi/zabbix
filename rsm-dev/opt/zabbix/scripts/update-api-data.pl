@@ -21,8 +21,6 @@ use constant JSON_VALUE_ALARMED_YES => 'Yes';
 use constant JSON_VALUE_ALARMED_NO => 'No';
 use constant JSON_VALUE_ALARMED_DISABLED => 'Disabled';
 
-use constant AUDIT_RESOURCE_INCIDENT => 32;
-
 use constant MAX_CONTINUE_PERIOD => 30;	# minutes (NB! make sure to update this number in the help message)
 
 use constant DEFAULT_INCIDENT_MEASUREMENTS_LIMIT => 3600;	# seconds, maximum period to look back for recent measurement files for an incident

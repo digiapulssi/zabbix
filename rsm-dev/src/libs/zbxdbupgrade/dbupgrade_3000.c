@@ -4161,6 +4161,19 @@ static int	DBpatch_3000313(void)
 	return SUCCEED;
 }
 
+static int	DBpatch_3000314(void)
+{
+	if (ZBX_DB_OK > DBexecute(
+			"update auditlog"
+			" set resourceid=substring_index(details,':',1)"
+			" where resourcetype=32 and resourceid=0"))
+	{
+		return FAIL;
+	}
+
+	return SUCCEED;
+}
+
 #endif
 
 DBPATCH_START(3000)
@@ -4260,5 +4273,6 @@ DBPATCH_ADD(3000310, 0, 0)	/* add rsm.slv.dns.ns.downtime to tld hosts */
 DBPATCH_ADD(3000311, 0, 0)	/* rename macro RSM.SLV.NS.AVAIL into RSM.SLV.NS.DOWNTIME */
 DBPATCH_ADD(3000312, 0, 0)	/* add nameserver downtime triggers to tld hosts */
 DBPATCH_ADD(3000313, 0, 0)	/* add nameserver availability items to tld hosts */
+DBPATCH_ADD(3000314, 0, 0)	/* fill auditlog.resourceid for "Marked/Unmarked as false positive" logs */
 
 DBPATCH_END()

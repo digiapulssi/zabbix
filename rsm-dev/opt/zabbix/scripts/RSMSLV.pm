@@ -10,7 +10,7 @@ use Pod::Usage;
 use Exporter qw(import);
 use Zabbix;
 use Alerts;
-use TLD_constants qw(:api :items :ec :groups);
+use TLD_constants qw(:api :items :ec :groups :config);
 use File::Pid;
 use POSIX qw(floor);
 use Sys::Syslog;
@@ -18,6 +18,7 @@ use Data::Dumper;
 use Time::HiRes;
 use RSM;
 use Pusher qw(push_to_trapper);
+use Fcntl qw(:flock);
 
 use constant SUCCESS => 0;
 use constant E_FAIL => -1;	# be careful when changing this, some functions depend on current value
@@ -95,7 +96,10 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		get_rdds_delay get_epp_delay get_macro_epp_probe_online get_macro_epp_rollweek_sla
 		get_macro_dns_update_time get_macro_rdds_update_time get_tld_items get_hostid
 		get_rtt_low
-		get_macro_epp_rtt_low get_macro_probe_avail_limit get_itemid_by_key get_itemid_by_host
+		get_macro_epp_rtt_low get_macro_probe_avail_limit
+		get_macro_incident_dns_fail get_macro_incident_dns_recover
+		get_macro_incident_rdds_fail get_macro_incident_rdds_recover
+		get_itemid_by_key get_itemid_by_host
 		get_itemid_by_hostid get_itemid_like_by_hostid get_itemids_by_host_and_keypart get_lastclock
 		get_tlds get_tlds_and_hostids
 		get_oldest_clock
@@ -139,6 +143,7 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		cycle_start
 		cycle_end
 		update_slv_rtt_monthly_stats
+		recalculate_downtime
 		usage);
 
 # configuration, set in set_slv_config()
@@ -346,6 +351,26 @@ sub get_macro_epp_rtt_low
 sub get_macro_probe_avail_limit
 {
 	return __get_macro('{$RSM.PROBE.AVAIL.LIMIT}');
+}
+
+sub get_macro_incident_dns_fail()
+{
+	return __get_macro('{$RSM.INCIDENT.DNS.FAIL}');
+}
+
+sub get_macro_incident_dns_recover()
+{
+	return __get_macro('{$RSM.INCIDENT.DNS.RECOVER}');
+}
+
+sub get_macro_incident_rdds_fail()
+{
+	return __get_macro('{$RSM.INCIDENT.RDDS.FAIL}');
+}
+
+sub get_macro_incident_rdds_recover()
+{
+	return __get_macro('{$RSM.INCIDENT.RDDS.RECOVER}');
 }
 
 sub get_itemid_by_key
@@ -1288,7 +1313,7 @@ sub db_select_value($;$)
 	return $row->[0];
 }
 
-sub db_explain($$)
+sub db_explain($;$)
 {
 	my $sql = shift;
 	my $bind_values = shift; # optional; reference to an array
@@ -1406,9 +1431,10 @@ sub db_select_binds
 	return \@rows;
 }
 
-sub db_exec
+sub db_exec($;$)
 {
 	$_global_sql = shift;
+	$_global_sql_bind_values = shift; # optional; reference to an array
 
 	if ($get_stats)
 	{
@@ -1418,12 +1444,20 @@ sub db_exec
 	my $sth = $dbh->prepare($_global_sql)
 		or fail("cannot prepare [$_global_sql]: ", $dbh->errstr);
 
-	dbg("[$_global_sql]");
+	if (defined($_global_sql_bind_values))
+	{
+		dbg("[$_global_sql] ", join(',', @{$_global_sql_bind_values}));
 
-	my ($total);
+		$sth->execute(@{$_global_sql_bind_values})
+			or fail("cannot execute [$_global_sql]: ", $sth->errstr);
+	}
+	else
+	{
+		dbg("[$_global_sql]");
 
-	$sth->execute()
-		or fail("cannot execute [$_global_sql]: ", $sth->errstr);
+		$sth->execute()
+			or fail("cannot execute [$_global_sql]: ", $sth->errstr);
+	}
 
 	if ($get_stats)
 	{
@@ -1439,6 +1473,102 @@ sub db_exec
 	}
 
 	return $sth->{mysql_insertid};
+}
+
+sub db_mass_update($$$$$)
+{
+	# Function for updating LOTS of rows (hundreds, thousands or even tens of thousands) in batches.
+	#
+	# Example usage:
+	#
+	# <code>
+	# db_mass_update(
+	# 	"history_uint",
+	# 	["clock", "value"],
+	# 	[[1546300800, 1], [1546300860, 2], [1546300920, 3]],
+	# 	["clock"],
+	# 	[["itemid", 10052]]
+	# );
+	# </code>
+	#
+	# Does all following updates, but in a single query:
+	#
+	# <code>
+	# update history_uint set value = 1 where itemid = 10052 and clock = 1546300800;
+	# update history_uint set value = 2 where itemid = 10052 and clock = 1546300860;
+	# update history_uint set value = 3 where itemid = 10052 and clock = 1546300920;
+	# </code>
+	#
+	# Following calls would have the same effect:
+	#
+	# <code>
+	# db_mass_update(
+	# 	"tbl",
+	# 	["col1", "col2", "col3"],
+	# 	[["val1", "val2", "val3"]],
+	# 	["col1", "col2"],
+	# 	[["col4", "val4"], ["col5", "val5"]]
+	# );
+	# </code>
+	#
+	# <code>
+	# update tbl set col3 = val3 where (col1 = val1 and col2 = val2) and (col4 = val4 and col5 = val5);
+	# </code>
+	#
+	# Fields from $values that are listed in $filter_fields are used for filtering.
+	# Fields from $values that are not listed in $filter_fields are updated.
+
+	my $table         = shift; # table name
+	my $fields        = shift; # names of fields that are present in $values
+	my $values        = shift; # values for filtering/updating
+	my $filter_fields = shift; # fields from $values that are used for filtering
+	my $filter_values = shift; # additional filter values; may be undef or empty array
+
+	my $update_fields = [];
+
+	foreach my $field (@{$fields})
+	{
+		push(@{$update_fields}, $field) if (!grep($field eq $_, @{$filter_fields}));
+	}
+
+	$dbh->begin_work() or fail($dbh->errstr);
+
+	while (my @values_batch = splice(@{$values}, 0, 1000))
+	{
+		my $subquery;
+
+		foreach (@values_batch)
+		{
+			if (!defined($subquery))
+			{
+				$subquery = "select " . join(",", map("? as $_", @{$fields}));
+			}
+			else
+			{
+				$subquery .= " union select " . join(",", map("?", @{$fields}));
+			}
+		}
+
+		my $sql = "update $table"
+			. " inner join ($subquery) as update_values on "
+			. join(" and ", map("$table.$_=update_values.$_", @{$filter_fields}))
+			. " set "
+			. join(",", map("$table.$_=update_values.$_", @{$update_fields}));
+
+		if (defined($filter_values) && scalar(@{$filter_values}) > 0)
+		{
+			$sql .= " where " . join(" and ", map($table . "." . $_->[0] . "=?", @{$filter_values}));
+		}
+
+		my @params = (
+			map(@{$_}, @values_batch),
+			map($_->[1], @{$filter_values})
+		);
+
+		db_exec($sql, \@params);
+	}
+
+	$dbh->commit() or fail($dbh->errstr);
 }
 
 sub set_slv_config
@@ -2907,7 +3037,7 @@ sub get_itemids_by_key_pattern_and_hosts($$;$)
 	my $bind_values = [$key_pattern, @{$hosts}];
 	my $rows = db_select(
 		"select items.itemid" .
-		" from items left join hosts on hosts.hostid = items.hostid" .
+		" from items left join hosts on hosts.hostid=items.hostid" .
 		" where $item_status_condition" .
 			" items.key_ like ? and" .
 			" hosts.host in ($hosts_placeholder)", $bind_values);
@@ -3466,6 +3596,26 @@ sub ts_full
 	return "$str ($ts)";
 }
 
+sub ts_ymd
+{
+	my $ts    = shift // time();
+	my $delim = shift // "-";
+
+	my (undef, undef, undef, $mday, $mon, $year) = localtime($ts);
+
+	return sprintf("%.4d%s%.2d%s%.2d", $year + 1900, $delim, $mon + 1, $delim, $mday);
+}
+
+sub ts_ym
+{
+	my $ts    = shift // time();
+	my $delim = shift // "-";
+
+	my (undef, undef, undef, undef, $mon, $year) = localtime($ts);
+
+	return sprintf("%.4d%s%.2d", $year + 1900, $delim, $mon + 1);
+}
+
 sub selected_period
 {
 	my $from = shift;
@@ -3584,6 +3734,25 @@ sub get_end_of_prev_month($)
 	$dt->truncate('to' => 'month');
 	$dt->subtract('seconds' => 1);
 	return $dt->epoch();
+}
+
+sub get_month_bounds(;$)
+{
+	my $now = shift // time();
+
+	require DateTime;
+
+	my $from;
+	my $till;
+
+	my $dt = DateTime->from_epoch('epoch' => $now);
+	$dt->truncate('to' => 'month');
+	$from = $dt->epoch();
+	$dt->add('months' => 1);
+	$dt->subtract('seconds' => 1);
+	$till = $dt->epoch();
+
+	return ($from, $till);
 }
 
 sub get_slv_rtt_cycle_stats($$$$)
@@ -3850,9 +4019,526 @@ sub update_slv_rtt_monthly_stats($$$$$$$$)
 	send_values();
 }
 
+sub recalculate_downtime($$$$$$)
+{
+	my $auditlog_log_file = shift;
+	my $item_key_avail    = shift;
+	my $item_key_downtime = shift;
+	my $incident_fail     = shift; # how many cycles have to fail to start the incident
+	my $incident_recover  = shift; # how many cycles have to succeed to recover from the incident
+	my $delay             = shift;
+
+	fail("not supported when running in --dry-run mode") if (opt('dry-run'));
+
+	# get service from item's key (DNS or RDDS)
+
+	my $service = uc($item_key_avail =~ s/rsm\.slv\.(.+)\.avail/$1/r);
+
+	# get last auditid
+
+	my $last_auditlog_auditid = __fp_read_last_auditid($auditlog_log_file);
+	dbg("last_auditlog_auditid = $last_auditlog_auditid");
+
+	# declare some common variables
+
+	my $sql;
+	my $params;
+	my $rows;
+
+	# get unprocessed auditlog entries
+
+	$sql = "select if(resourcetype=?,resourceid,0) as auditlog_eventid,count(*),max(auditid)" .
+		" from auditlog" .
+		" where auditid > ?" .
+		" group by auditlog_eventid";
+
+	$params = [AUDIT_RESOURCE_INCIDENT, $last_auditlog_auditid];
+	$rows = db_select($sql, $params);
+
+	return if (scalar(@{$rows}) == 0);
+
+	# get list of events.eventid (incidents) that changed their "false positive" state
+
+	my @eventids = ();
+
+	foreach my $row (@{$rows})
+	{
+		my ($eventid, $count, $max_auditid) = @{$row};
+
+		$last_auditlog_auditid = $max_auditid if ($last_auditlog_auditid < $max_auditid);
+
+		next if ($eventid == 0); # this is not AUDIT_RESOURCE_INCIDENT
+		next if ($count % 2 == 0); # marked + unmarked, no need to recalculate
+
+		push(@eventids, $eventid);
+	}
+
+	# NB! Don't save last auditid yet, if history needs to be altered! Altering history can fail!
+	if (scalar(@eventids) == 0)
+	{
+		__fp_write_last_auditid($auditlog_log_file, $last_auditlog_auditid);
+		return;
+	}
+
+	# get data about affected incidents
+
+	my $eventids_placeholder = join(",", ("?") x scalar(@eventids));
+	$sql = "select " .
+			"events.eventid," .
+			"events.false_positive," .
+			"events.clock," .
+			"(" .
+				"select clock" .
+				" from events as events_inner" .
+				" where" .
+					" events_inner.source=events.source and" .
+					" events_inner.object=events.object and" .
+					" events_inner.objectid=events.objectid and" .
+					" events_inner.value=? and" .
+					" events_inner.eventid>events.eventid" .
+				" order by events_inner.eventid asc" .
+				" limit 1" .
+			") as clock2," .
+			"function_items.hostid," .
+			"function_items.host," .
+			"function_items.itemid," .
+			"function_items.key_" .
+		" from" .
+			" events" .
+			" left join (" .
+				"select distinct" .
+					" functions.triggerid," .
+					"items.hostid," .
+					"items.itemid," .
+					"items.key_," .
+					"hosts.host" .
+				" from" .
+					" functions" .
+					" left join items on items.itemid=functions.itemid" .
+					" left join hosts on hosts.hostid=items.hostid " .
+			") as function_items on function_items.triggerid=events.objectid" .
+		" where" .
+			" events.source=? and" .
+			" events.object=? and" .
+			" events.value=? and" .
+			" events.eventid in ($eventids_placeholder)" .
+		" order by clock asc";
+	$params = [TRIGGER_VALUE_FALSE, EVENT_SOURCE_TRIGGERS, EVENT_OBJECT_TRIGGER, TRIGGER_VALUE_TRUE, @eventids];
+	$rows = db_select($sql, $params);
+
+	# check if data about all requested events has been retrieved from the DB
+
+	my $requested_rows = scalar(@eventids);
+	my $returned_rows  = scalar(@{$rows});
+	if ($returned_rows != $requested_rows)
+	{
+		# some hints for debugging:
+		# * $rows aren't filtered by $item_key_avail yet, right?
+		# * function_items got more than 1 row for a trigger?
+		# * events.source, events.object or events.value in DB has unexpected value?
+		fail("mismatch between numbers of requested rows ($requested_rows) and returned rows ($returned_rows)");
+	}
+
+	# collect data about time intervals that have to be recalculated
+
+	# mapping between "rsm.slv.xxx.avail" and "rsm.slv.xxx.downtime" items
+	# $downtime_itemids{$itemid_avail} = $itemid_downtime;
+	my %downtime_itemids = ();
+
+	# ranges of "false positive" availability values; these ranges start before incident actually started
+	# $false_positives{$itemid_avail} = [[$from, $till], ...]
+	my %false_positives = ();
+
+	# periods that have to be recalculated; downtime for each month has to be recalculated till the end of the month
+	# $periods{$itemid_avail} = {$month_start_1 => $from_1, $month_start_2 => $from_2, ...}
+	my %periods = ();
+
+	# initial downtime for the period
+	# $downtimes{$itemid_avail} = {$month_start_1 => $downtime_1, $month_start_2 => $downtime_2, ...}
+	my %downtimes = ();
+
+	# value of lastvalue.clock
+	# $lastvalue_clocks{$itemid_downtime} = $clock;
+	my %lastvalue_clocks = ();
+
+	# data about reports that need to be regenerated
+	# $report_updates{$host}{$month_start} = [[$incident_1, $false_positive_1], ...]
+	my %report_updates = ();
+
+	my $prev_month_end = get_end_of_prev_month(time());
+
+	foreach my $row (@{$rows})
+	{
+		my ($eventid, $false_positive, $from, $till, $hostid, $host, $itemid_avail, $item_key) = @{$row};
+		my $active = !defined($till);
+
+		if ($item_key ne $item_key_avail)
+		{
+			next;
+		}
+
+		if (!exists($downtime_itemids{$itemid_avail}))
+		{
+			$sql = "select itemid from items where hostid=? and key_=?";
+			my $itemid_downtime = db_select_value($sql, [$hostid, $item_key_downtime]);
+			$downtime_itemids{$itemid_avail} = $itemid_downtime;
+
+			$sql = "select clock from lastvalue where itemid=?";
+			$lastvalue_clocks{$itemid_downtime} = db_select_value($sql, [$itemid_downtime]);
+		}
+
+		if ($active)
+		{
+			$till = $lastvalue_clocks{$downtime_itemids{$itemid_avail}};
+		}
+
+		if ($false_positive)
+		{
+			my $false_positive_range = [
+				$from - $delay * ($incident_fail - 1),
+				$active ? $till : ($till - $delay * ($incident_recover - 1))
+			];
+			push(@{$false_positives{$itemid_avail}}, $false_positive_range);
+		}
+
+		if (opt("debug"))
+		{
+			dbg("incident  - " . $eventid);
+			dbg("active    - " . ($active ? "yes" : "no"));
+			dbg("false pos - " . $false_positive);
+			dbg("from      - " . ts_full($from));
+			dbg("till      - " . ts_full($till));
+			dbg("host id   - " . $hostid);
+			dbg("item id   - " . $itemid_avail);
+			dbg("item key  - " . $item_key);
+		}
+
+		while ($from <= $till)
+		{
+			my ($month_start, $month_end) = get_month_bounds($from);
+
+			if ($from <= $prev_month_end)
+			{
+				push(@{$report_updates{$host}{$month_start}}, [$eventid, $false_positive]);
+			}
+
+			if (!exists($periods{$itemid_avail}{$month_start}))
+			{
+				# NB! Even if this is beginning of the month, we have to make sure that we have data
+				# from the beginning of the period that has to be recalculated.
+
+				$sql = "select value from history_uint where itemid=? and clock=?";
+				$params = [$downtime_itemids{$itemid_avail}, cycle_start($from - $delay, $delay)];
+				$rows = db_select($sql, $params);
+
+				if (scalar(@{$rows}) > 1)
+				{
+					fail("got more than one history entry (itemid: $params->[0], clock: $params->[1])");
+				}
+
+				my $month = ts_ym($params->[1]);
+				dbg("history of $item_key_downtime ($downtime_itemids{$itemid_avail}) for $month needs to be recalculated");
+
+				if (scalar(@{$rows}) == 0)
+				{
+					dbg("skipping because incident $eventid was too long ago, not enough data for recalculating hitsory");
+				}
+				else
+				{
+					if (cycle_start($from, $delay) == cycle_start($month_start, $delay))
+					{
+						$downtimes{$itemid_avail}{$month_start} = 0;
+					}
+					else
+					{
+						$downtimes{$itemid_avail}{$month_start} = $rows->[0][0];
+					}
+
+					$periods{$itemid_avail}{$month_start} = $from;
+				}
+			}
+			elsif ($from < $periods{$itemid_avail}{$month_start})
+			{
+				fail("something unexpected just happened");
+			}
+
+			$from = cycle_end($month_end + $delay, $delay);
+		}
+	}
+
+	# recalculate downtime
+
+	foreach my $itemid_avail (keys(%periods))
+	{
+		foreach my $month_start (sort { $a <=> $b } keys(%{$periods{$itemid_avail}}))
+		{
+			my $from = $periods{$itemid_avail}{$month_start};
+			my $till = cycle_start(get_end_of_month($from), $delay);
+			my $itemid_downtime = $downtime_itemids{$itemid_avail};
+
+			if ($till > $lastvalue_clocks{$itemid_downtime})
+			{
+				$till = $lastvalue_clocks{$itemid_downtime};
+			}
+
+			my $from_str = ts_full($from);
+			my $till_str = ts_full($till);
+
+			dbg("updating history of $item_key_downtime ($itemid_downtime) from $from_str till $till_str");
+
+			# get availability for each cycle
+
+			$sql = "select clock, value from history_uint where itemid = ? and clock between ? and ? order by clock asc";
+			$rows = db_select($sql, [$itemid_avail, $from - $delay * ($incident_fail - 1), $till]);
+
+			my %avail = map { $_->[0] => $_->[1] } @{$rows};
+
+			# set availability to "up" during false-positive incidents
+
+			foreach my $false_positive (@{$false_positives{$itemid_avail}})
+			{
+				for (my $clock = $false_positive->[0]; $clock <= $false_positive->[1]; $clock += $delay)
+				{
+					if (defined($avail{$clock}))
+					{
+						$avail{$clock} = UP;
+					}
+				}
+			}
+
+			# calculate new downtime values
+
+			my @downtime_values = ();
+
+			my $downtime_value = $downtimes{$itemid_avail}{$month_start};
+			my $is_incident = 0;
+			my $counter = 0;
+
+			# Start the loop few cycles before $from to find out if $from cycle is in incident.
+			# This may happen if $from is the first cycle of the month and incident started in previous month.
+			# Potential bug - if incident has "up, down, up, down, up, down, ..." pattern, it won't be detected.
+
+			for (my $clock = $from - $delay * ($incident_fail - 1); $clock <= $till; $clock += $delay)
+			{
+				if (!defined($avail{$clock}))
+				{
+					fail("failed to update history, missing availability data (itemid: $itemid_avail; clock: $clock)");
+				}
+
+				__fp_update_incident_state($incident_fail, $incident_recover, $avail{$clock}, \$counter, \$is_incident);
+
+				if ($clock >= $from)
+				{
+					if ($is_incident && $avail{$clock} == DOWN)
+					{
+						$downtime_value++;
+					}
+
+					push(@downtime_values, [$clock, $downtime_value]);
+				}
+			}
+
+			# store new downtime values
+
+			db_mass_update(
+				"history_uint",
+				["clock", "value"],
+				\@downtime_values,
+				["clock"],
+				[['itemid', $itemid_downtime]]
+			);
+
+			# update lastvalue if necessary
+
+			if ($till == $lastvalue_clocks{$itemid_downtime})
+			{
+				dbg("updating lastvalue of $item_key_downtime...");
+				$sql = "update" .
+						" lastvalue" .
+						" inner join history_uint on history_uint.itemid=lastvalue.itemid and history_uint.clock=lastvalue.clock" .
+					" set lastvalue.value=history_uint.value" .
+					" where lastvalue.itemid=?";
+				db_exec($sql, [$itemid_downtime]);
+			}
+		}
+	}
+
+	__fp_regenerate_reports($service, \%report_updates);
+	__fp_write_last_auditid($auditlog_log_file, $last_auditlog_auditid);
+}
+
 sub usage
 {
 	pod2usage(shift);
+}
+
+#######################################################
+# Internal subs for handling false-positive incidents #
+#######################################################
+
+my $__fp_logfile = "/var/log/zabbix/false-positive.log";
+
+sub __fp_log($$$)
+{
+	my $host    = shift;
+	my $service = shift;
+	my $message = shift;
+
+	my $log_str = sprintf("[%s:%s] [%s] [%s] %s", $$, ts_str(), $host, $service, $message);
+
+	dbg($log_str);
+
+	open(my $fh, ">>", $__fp_logfile) or fail("cannot open file '$__fp_logfile'");
+	flock($fh, LOCK_EX)               or fail("cannot lock file '$__fp_logfile'");
+	print($fh $log_str . "\n")        or fail("cannot write to file '$__fp_logfile'");
+	close($fh)                        or fail("cannot close file '$__fp_logfile'");
+}
+
+sub __fp_read_last_auditid($)
+{
+	my $file = shift;
+
+	my $auditid = 0;
+
+	if (-e $file)
+	{
+		my $error;
+
+		if (read_file($file, \$auditid, \$error) != SUCCESS)
+		{
+			fail("cannot read file \"$file\": $error");
+		}
+	}
+
+	return $auditid;
+}
+
+sub __fp_write_last_auditid($$)
+{
+	my $file    = shift;
+	my $auditid = shift;
+
+	if (write_file($file, $auditid) != SUCCESS)
+	{
+		fail("cannot write file \"$file\"");
+	}
+}
+
+sub __fp_update_incident_state($$$$$)
+{
+	my $incident_fail    = shift;
+	my $incident_recover = shift;
+	my $avail            = shift;
+	my $counter_ref      = shift;
+	my $is_incident_ref  = shift;
+
+	if (${$is_incident_ref})
+	{
+		if ($avail == DOWN)
+		{
+			${$counter_ref} = 0;
+		}
+		else
+		{
+			if (${$counter_ref} < $incident_recover - 1)
+			{
+				${$counter_ref}++;
+			}
+			else
+			{
+				${$counter_ref} = 0;
+				${$is_incident_ref} = 0;
+			}
+		}
+	}
+	else
+	{
+		if ($avail == DOWN)
+		{
+			if (${$counter_ref} < $incident_fail - 1)
+			{
+				${$counter_ref}++;
+			}
+			else
+			{
+				${$counter_ref} = 0;
+				${$is_incident_ref} = 1;
+			}
+		}
+		else
+		{
+			${$counter_ref} = 0;
+		}
+	}
+}
+
+sub __fp_regenerate_reports($$)
+{
+	my $service        = shift;
+	my $report_updates = shift;
+
+	foreach my $host (sort(keys(%{$report_updates})))
+	{
+		foreach my $month_start (sort {$a <=> $b} keys(%{$report_updates->{$host}}))
+		{
+			__fp_generate_report($host, $month_start);
+
+			my @incidents = ();
+			foreach my $incident (@{$report_updates->{$host}{$month_start}})
+			{
+				if ($incident->[1])
+				{
+					push(@incidents, "incident $incident->[0] was marked as false-positive");
+				}
+				else
+				{
+					push(@incidents, "incident $incident->[0] was unmarked as false-positive");
+				}
+			}
+
+			my $month = ts_ym($month_start);
+			my $reason = join(", ", @incidents);
+
+			__fp_log($host, $service, "regenerated report for $month because $reason");
+		}
+	}
+}
+
+sub __fp_generate_report($$)
+{
+	my $tld = shift;
+	my $ts  = shift;
+
+	my $server_id = get_rsm_server_id($server_key);
+	my ($year, $month) = split("-", ts_ym($ts));
+
+	my $cmd = "./sla-report.php";
+	my @args = ();
+
+	push(@args, "--debug") if opt("debug");
+	push(@args, "--stats") if opt("stats");
+
+	push(@args, "--server-id", int($server_id));
+	push(@args, "--tld"      , $tld);
+	push(@args, "--year"     , int($year));
+	push(@args, "--month"    , int($month));
+
+	dbg("executing $cmd @args");
+	my $out = qx($cmd @args 2>&1);
+
+	if ($out)
+	{
+		dbg("output of $cmd:\n" . $out);
+	}
+
+	if ($? == -1)
+	{
+		fail("failed to regenerate reports, failed to execute $cmd: $!");
+	}
+	if ($? != 0)
+	{
+		fail("failed to regenerate report, command $cmd exited with value " . ($? >> 8));
+	}
 }
 
 #################

@@ -63,6 +63,8 @@ if ((PAGE_TYPE_JS == $page['type']) || (PAGE_TYPE_HTML_BLOCK == $page['type'])) 
 	exit();
 }
 
+$host = getRequest('host');
+
 if (isset($_REQUEST['mark_incident']) && (CWebUser::getType() == USER_TYPE_ZABBIX_ADMIN
 		|| CWebUser::getType() == USER_TYPE_SUPER_ADMIN || CWebUser::getType() == USER_TYPE_TEHNICAL_SERVICE)) {
 	$event = API::Event()->get(array(
@@ -129,16 +131,17 @@ if (isset($_REQUEST['mark_incident']) && (CWebUser::getType() == USER_TYPE_ZABBI
 		show_messages(DBend($res), _('Status updated'), _('Cannot update status'));
 
 		if ($res) {
-			add_audit(
+			add_audit_details(
 				AUDIT_ACTION_UPDATE,
 				AUDIT_RESOURCE_INCIDENT,
+				$event['eventid'],
+				$host,
 				$event['eventid'].': '.$auditLog
 			);
 		}
 	}
 }
 
-$host = getRequest('host');
 $data = [];
 $data['url'] = '';
 $data['sid'] = CWebUser::getSessionCookie();

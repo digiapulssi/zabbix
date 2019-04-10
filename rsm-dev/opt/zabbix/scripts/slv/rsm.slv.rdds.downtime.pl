@@ -24,6 +24,18 @@ set_slv_config(get_rsm_config());
 
 db_connect();
 
+if (!opt('dry-run'))
+{
+	recalculate_downtime(
+		"/opt/zabbix/data/rsm.slv.rdds.downtime.auditlog.txt",
+		"rsm.slv.rdds.avail",
+		"rsm.slv.rdds.downtime",
+		get_macro_incident_rdds_fail(),
+		get_macro_incident_rdds_recover(),
+		get_rdds_delay(getopt('now') // time() - AVAIL_SHIFT_BACK)
+	);
+}
+
 # we don't know the cycle bounds yet so we assume it ends at least few minutes back
 my $delay = get_rdds_delay(getopt('now') // time() - AVAIL_SHIFT_BACK);
 
