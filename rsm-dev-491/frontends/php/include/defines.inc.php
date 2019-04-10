@@ -1322,8 +1322,8 @@ define('RSM_SLV_RDDS_ROLLWEEK',		'rsm.slv.rdds.rollweek');
 define('RSM_SLV_EPP_ROLLWEEK',		'rsm.slv.epp.rollweek');
 
 // SLA monitoring availability items keys
-define('RSM_SLV_DNS_TCP_NS_TESTS_PFAILED',	'rsm.slv.dns.tcp.ns.tests.pfailed');
-define('RSM_SLV_DNS_UDP_NS_TESTS_PFAILED',	'rsm.slv.dns.udp.ns.tests.pfailed');
+define('RSM_SLV_DNS_TCP_RTT_PFAILED',	'rsm.slv.dns.tcp.rtt.pfailed');
+define('RSM_SLV_DNS_UDP_RTT_PFAILED',	'rsm.slv.dns.udp.rtt.pfailed');
 define('RSM_SLV_DNS_AVAIL',					'rsm.slv.dns.avail');
 define('RSM_SLV_DNS_DOWNTIME',				'rsm.slv.dns.downtime');
 define('RSM_SLV_DNS_NS_DOWNTIME',			'rsm.slv.dns.ns.downtime');
@@ -1337,7 +1337,7 @@ define('RSM_SLV_DNS_UDP_UPD_PFAILED',		'rsm.slv.dns.udp.upd.pfailed');
 define('RSM_SLV_DNS_UDP_UPD_FAILED',		'rsm.slv.dns.udp.upd.failed');
 define('RSM_SLV_DNS_UDP_UPD_MAX',			'rsm.slv.dns.udp.upd.max');
 define('RSM_SLV_RDDS_DOWNTIME',				'rsm.slv.rdds.downtime');
-define('RSM_SLV_RDDS_UPD_PFAILED',			'rsm.slv.rdds.test.pfailed');
+define('RSM_SLV_RDDS_RTT_PFAILED',			'rsm.slv.rdds.rtt.pfailed');
 define('RSM_SLV_RDDS_UPD_FAILED',			'rsm.slv.rdds.upd.failed');
 define('RSM_SLV_RDDS_UPD_MAX',				'rsm.slv.rdds.upd.max');
 define('RSM_SLV_EPP_DOWNTIME',				'rsm.slv.epp.downtime');
@@ -1353,7 +1353,6 @@ define('RSM_SLV_EPP_RTT_UPDATE_MAX',		'rsm.slv.epp.rtt.update.max');
 define('RSM_SLV_RDDS_AVAIL',				'rsm.slv.rdds.avail');
 define('RSM_SLV_EPP_AVAIL',					'rsm.slv.epp.avail');
 define('RSM_SLV_DNSSEC_AVAIL',				'rsm.slv.dnssec.avail');
-define('RSM_SLV_RDDS_RTT',					'rsm.slv.rdds.rtt.pfailed');
 
 // "RSM Service Availability" value mapping:
 define('DOWN',	0);	// Down
@@ -1418,7 +1417,7 @@ define('CALCULATED_ITEM_DNS_UDP_RTT_HIGH',		'rsm.configvalue[RSM.DNS.UDP.RTT.HIG
 define('CALCULATED_ITEM_SLV_DNS_NS_RTT_UDP',	'rsm.configvalue[RSM.SLV.DNS.UDP.RTT]');
 define('CALCULATED_ITEM_SLV_DNS_NS_RTT_TCP',	'rsm.configvalue[RSM.SLV.DNS.TCP.RTT]');
 define('CALCULATED_ITEM_SLV_DNS_NS_UPD',		'rsm.configvalue[RSM.SLV.DNS.NS.UPD]');
-define('CALCULATED_ITEM_SLV_DNS_NS',			'rsm.configvalue[RSM.SLV.NS.AVAIL]');
+define('CALCULATED_ITEM_SLV_DNS_NS',			'rsm.configvalue[RSM.SLV.NS.DOWNTIME]');
 define('CALCULATED_ITEM_SLV_RDDS43_RTT',		'rsm.configvalue[RSM.SLV.RDDS43.RTT]');
 define('CALCULATED_ITEM_SLV_RDDS80_RTT',		'rsm.configvalue[RSM.SLV.RDDS80.RTT]');
 define('CALCULATED_ITEM_SLV_RDDS_UPD',			'rsm.configvalue[RSM.SLV.RDDS.UPD]');

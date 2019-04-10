@@ -366,12 +366,13 @@ install -Dm 0644 -p %{SOURCE15} $RPM_BUILD_ROOT%{_prefix}/lib/tmpfiles.d/zabbix-
 # Install policy modules
 %_format MODULES selinux/$x.pp.bz2
 echo $MODULES
-install -d %{buildroot}%{_datadir}/selinux/packages
+install -d $RPM_BUILD_ROOT%{_datadir}/selinux/packages
 install -m 0644 $MODULES \
-    %{buildroot}%{_datadir}/selinux/packages
+    $RPM_BUILD_ROOT%{_datadir}/selinux/packages
 
-install -d %{buildroot}/opt/zabbix/
-cp -r opt/zabbix/* %{buildroot}/opt/zabbix/
+install -d $RPM_BUILD_ROOT/opt/zabbix
+install -d $RPM_BUILD_ROOT/opt/zabbix/data
+cp -r opt/zabbix/* $RPM_BUILD_ROOT/opt/zabbix/
 
 install -d $RPM_BUILD_ROOT%{_sysconfdir}/cron.d/
 cp -r cron.d/* $RPM_BUILD_ROOT%{_sysconfdir}/cron.d/

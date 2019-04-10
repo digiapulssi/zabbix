@@ -126,7 +126,7 @@ if ($data['tld']) {
 		]
 	]);
 
-	$item_keys = [RSM_SLV_DNS_DOWNTIME, RSM_SLV_DNS_TCP_NS_TESTS_PFAILED, RSM_SLV_DNS_UDP_NS_TESTS_PFAILED];
+	$item_keys = [RSM_SLV_DNS_DOWNTIME, RSM_SLV_DNS_TCP_RTT_PFAILED, RSM_SLV_DNS_UDP_RTT_PFAILED];
 	$macro_keys = [RSM_SLV_NS_AVAIL, RSM_SLV_DNS_TCP_RTT, RSM_DNS_TCP_RTT_LOW, RSM_SLV_DNS_UDP_RTT, RSM_DNS_UDP_RTT_LOW];
 
 	foreach ($template_macros as $tmpl_macro) {
@@ -135,7 +135,7 @@ if ($data['tld']) {
 		}
 
 		// Add RDDS item keys and macro if RDDS is enabled.
-		$item_keys = array_merge($item_keys, [RSM_SLV_RDDS_DOWNTIME, RSM_SLV_RDDS_UPD_PFAILED]);
+		$item_keys = array_merge($item_keys, [RSM_SLV_RDDS_DOWNTIME, RSM_SLV_RDDS_RTT_PFAILED]);
 		$macro_keys = array_merge($macro_keys, [RSM_SLV_MACRO_RDDS_AVAIL, RSM_SLV_RDDS_UPD, RSM_RDDS_UPDATE_TIME,
 			RSM_RDDS_RTT_LOW, RSM_SLV_MACRO_RDDS_RTT
 		]);

@@ -561,59 +561,7 @@ switch ($data['item']['key_']) {
 		}
 		break;
 
-	case RSM_SLV_RDDS_RTT:
-		if (getRequest('type') == RSM_SLA_SCREEN_TYPE_GRAPH_1 || getRequest('type') == RSM_SLA_SCREEN_TYPE_GRAPH_2) {
-			if (getRequest('type') == RSM_SLA_SCREEN_TYPE_GRAPH_1) {
-				$graph_name = RDDS_QUERY_RTT_GRAPH_1;
-			}
-			else {
-				$graph_name = RDDS_QUERY_RTT_GRAPH_2;
-			}
-
-			$graphs = API::Graph()->get(array(
-				'output' => array('graphid'),
-				'hostids' => $data['tld']['hostid'],
-				'filter' => array('name' => $graph_name),
-				'limit' => 1
-			));
-
-			$graph = reset($graphs);
-
-			$src ='chart2.php?graphid='.$graph['graphid'].'&period='.$period.'&stime='.$stime.'&curtime='.$curtime;
-
-			$data['screen'] = new CDiv(array(
-				new CDiv(new CImg($src), 'center')
-			));
-		}
-		else {
-			$table = new CTableInfo(_('No date found.'));
-			$table->setHeader(array(
-				_('Date'),
-				_('SLV'),
-				_('Maximum number of expected tests'),
-			));
-
-			$item_values = API::History()->get(array(
-				'output' => API_OUTPUT_EXTEND,
-				'itemids' => $data['item']['itemid'],
-				'time_from' => $start_time,
-				'time_till' => $end_time,
-				'history' => $data['item']['value_type']
-			));
-
-			foreach ($item_values as $item_value) {
-				$table->addRow(array(
-					date(DATE_TIME_FORMAT, $item_value['clock']),
-					$item_value['value'],
-					'-'
-				));
-			}
-
-			$data['screen'] = $table;
-		}
-		break;
-
-	case RSM_SLV_RDDS_UPD_PFAILED:
+	case RSM_SLV_RDDS_RTT_PFAILED:
 		if (getRequest('type') == RSM_SLA_SCREEN_TYPE_GRAPH_1 || getRequest('type') == RSM_SLA_SCREEN_TYPE_GRAPH_2) {
 			if (getRequest('type') == RSM_SLA_SCREEN_TYPE_GRAPH_1) {
 				$graph_name = RDDS_QUERY_RTT_GRAPH_1;
