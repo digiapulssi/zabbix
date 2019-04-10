@@ -103,28 +103,28 @@ $table
 			'-',
 			'-',
 			'-',
-			_s('%1$s %% (queries <= %2$s ms)', $data['values'][RSM_SLV_DNS_TCP_NS_TESTS_PFAILED]['slv'],
+			_s('%1$s %% (queries <= %2$s ms)', $data['values'][RSM_SLV_DNS_TCP_RTT_PFAILED]['slv'],
 				$data['macro'][RSM_DNS_TCP_RTT_LOW]
 			),
 			_s('<= %1$s ms, for at least %2$s %% of queries', $data['macro'][RSM_DNS_TCP_RTT_LOW],
 				$data['macro'][RSM_SLV_DNS_TCP_RTT]
 			)
 		],
-		($data['values'][RSM_SLV_DNS_TCP_NS_TESTS_PFAILED]['slv'] > $data['macro'][RSM_SLV_DNS_TCP_RTT])
+		($data['values'][RSM_SLV_DNS_TCP_RTT_PFAILED]['slv'] > $data['macro'][RSM_SLV_DNS_TCP_RTT])
 			? 'red-bg' : null
 	)->addRow([
 			_('DNS UDP Resolutioin RTT'),
 			'-',
 			'-',
 			'-',
-			_s('%1$s %% (queries <= %2$s ms)', $data['values'][RSM_SLV_DNS_UDP_NS_TESTS_PFAILED]['slv'],
+			_s('%1$s %% (queries <= %2$s ms)', $data['values'][RSM_SLV_DNS_UDP_RTT_PFAILED]['slv'],
 				$data['macro'][RSM_DNS_TCP_RTT_LOW]
 			),
 			_s('<= %1$s ms, for at least %2$s %% of queries', $data['macro'][RSM_DNS_TCP_RTT_LOW],
 				$data['macro'][RSM_SLV_DNS_TCP_RTT]
 			)
 		],
-		($data['values'][RSM_SLV_DNS_UDP_NS_TESTS_PFAILED]['slv'] > $data['macro'][RSM_SLV_DNS_TCP_RTT])
+		($data['values'][RSM_SLV_DNS_UDP_RTT_PFAILED]['slv'] > $data['macro'][RSM_SLV_DNS_TCP_RTT])
 			? 'red-bg' : null
 );
 
@@ -145,14 +145,14 @@ if (array_key_exists(RSM_SLV_RDDS_DOWNTIME, $data['values'])) {
 			'-',
 			'-',
 			'-',
-			_s('%1$s %% (queries <= %2$s ms)', $data['values'][RSM_SLV_RDDS_UPD_PFAILED]['slv'],
+			_s('%1$s %% (queries <= %2$s ms)', $data['values'][RSM_SLV_RDDS_RTT_PFAILED]['slv'],
 				$data['macro'][RSM_RDDS_RTT_LOW]
 			),
 			_s('<= %1$s ms, for at least %2$s %% of the queries', $data['macro'][RSM_RDDS_RTT_LOW],
 				$data['macro'][RSM_SLV_MACRO_RDDS_RTT]
 			)
 		],
-		($data['values'][RSM_SLV_RDDS_UPD_PFAILED]['slv'] > $data['macro'][RSM_SLV_MACRO_RDDS_RTT])
+		($data['values'][RSM_SLV_RDDS_RTT_PFAILED]['slv'] > $data['macro'][RSM_SLV_MACRO_RDDS_RTT])
 			? 'red-bg' : null
 	);
 }
