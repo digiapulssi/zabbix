@@ -1,0 +1,10 @@
+---
+test case: Zero bytes received
+in:
+  fragments: &fragments
+    - ''
+out:
+  fragments: *fragments
+  return: SUCCEED
+  bytes: 0
+...
