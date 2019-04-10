@@ -4146,10 +4146,6 @@ sub recalculate_downtime($$$$$$)
 	# $downtime_itemids{$itemid_avail} = $itemid_downtime;
 	my %downtime_itemids = ();
 
-	# mapping between "rsm.slv.xxx.avail" items and hosts
-	# $hosts{$itemid_avail} = $host;
-	my %hosts = ();
-
 	# ranges of "false positive" availability values; these ranges start before incident actually started
 	# $false_positives{$itemid_avail} = [[$from, $till], ...]
 	my %false_positives = ();
@@ -4166,6 +4162,12 @@ sub recalculate_downtime($$$$$$)
 	# $lastvalue_clocks{$itemid_downtime} = $clock;
 	my %lastvalue_clocks = ();
 
+	# data about reports that need to be regenerated
+	# $report_updates{$host}{$month_start} = [[$incident_1, $false_positive_1], ...]
+	my %report_updates = ();
+
+	my $prev_month_end = get_end_of_prev_month(time());
+
 	foreach my $row (@{$rows})
 	{
 		my ($eventid, $false_positive, $from, $till, $hostid, $host, $itemid_avail, $item_key) = @{$row};
@@ -4176,15 +4178,6 @@ sub recalculate_downtime($$$$$$)
 			next;
 		}
 
-		if ($false_positive)
-		{
-			__fp_log($host, $service, "incident $eventid marked as false positive");
-		}
-		else
-		{
-			__fp_log($host, $service, "incident $eventid unmarked as false positive");
-		}
-
 		if (!exists($downtime_itemids{$itemid_avail}))
 		{
 			$sql = "select itemid from items where hostid=? and key_=?";
@@ -4193,11 +4186,6 @@ sub recalculate_downtime($$$$$$)
 
 			$sql = "select clock from lastvalue where itemid=?";
 			$lastvalue_clocks{$itemid_downtime} = db_select_value($sql, [$itemid_downtime]);
-		}
-
-		if (!exists($hosts{$itemid_avail}))
-		{
-			$hosts{$itemid_avail} = $host;
 		}
 
 		if ($active)
@@ -4230,6 +4218,11 @@ sub recalculate_downtime($$$$$$)
 		{
 			my ($month_start, $month_end) = get_month_bounds($from);
 
+			if ($from <= $prev_month_end)
+			{
+				push(@{$report_updates{$host}{$month_start}}, [$eventid, $false_positive]);
+			}
+
 			if (!exists($periods{$itemid_avail}{$month_start}))
 			{
 				# NB! Even if this is beginning of the month, we have to make sure that we have data
@@ -4245,11 +4238,11 @@ sub recalculate_downtime($$$$$$)
 				}
 
 				my $month = ts_ym($params->[1]);
-				__fp_log($host, $service, "history of $item_key_downtime ($downtime_itemids{$itemid_avail}) for $month needs to be recalculated");
+				dbg("history of $item_key_downtime ($downtime_itemids{$itemid_avail}) for $month needs to be recalculated");
 
 				if (scalar(@{$rows}) == 0)
 				{
-					__fp_log($host, $service, "skipping because incident $eventid was too long ago, not enough data for recalculating hitsory");
+					dbg("skipping because incident $eventid was too long ago, not enough data for recalculating hitsory");
 				}
 				else
 				{
@@ -4282,7 +4275,6 @@ sub recalculate_downtime($$$$$$)
 		{
 			my $from = $periods{$itemid_avail}{$month_start};
 			my $till = cycle_start(get_end_of_month($from), $delay);
-			my $host = $hosts{$itemid_avail};
 			my $itemid_downtime = $downtime_itemids{$itemid_avail};
 
 			if ($till > $lastvalue_clocks{$itemid_downtime})
@@ -4292,7 +4284,8 @@ sub recalculate_downtime($$$$$$)
 
 			my $from_str = ts_full($from);
 			my $till_str = ts_full($till);
-			__fp_log($host, $service, "updating history of $item_key_downtime ($itemid_downtime) from $from_str till $till_str");
+
+			dbg("updating history of $item_key_downtime ($itemid_downtime) from $from_str till $till_str");
 
 			# get availability for each cycle
 
@@ -4330,48 +4323,10 @@ sub recalculate_downtime($$$$$$)
 			{
 				if (!defined($avail{$clock}))
 				{
-					__fp_log($host, $service, "failed to update history, missing availability data (itemid: $itemid_avail; clock: $clock)");
-					fail("missing availability data (itemid: $itemid_avail; clock: $clock)");
+					fail("failed to update history, missing availability data (itemid: $itemid_avail; clock: $clock)");
 				}
 
-				if ($is_incident)
-				{
-					if ($avail{$clock} == DOWN)
-					{
-						$counter = 0;
-					}
-					else
-					{
-						if ($counter < $incident_recover - 1)
-						{
-							$counter++;
-						}
-						else
-						{
-							$counter = 0;
-							$is_incident = 0;
-						}
-					}
-				}
-				else
-				{
-					if ($avail{$clock} == DOWN)
-					{
-						if ($counter < $incident_fail - 1)
-						{
-							$counter++;
-						}
-						else
-						{
-							$counter = 0;
-							$is_incident = 1;
-						}
-					}
-					else
-					{
-						$counter = 0;
-					}
-				}
+				__fp_update_incident_state($incident_fail, $incident_recover, $avail{$clock}, \$counter, \$is_incident);
 
 				if ($clock >= $from)
 				{
@@ -4384,6 +4339,8 @@ sub recalculate_downtime($$$$$$)
 				}
 			}
 
+			# store new downtime values
+
 			db_mass_update(
 				"history_uint",
 				["clock", "value"],
@@ -4391,6 +4348,8 @@ sub recalculate_downtime($$$$$$)
 				["clock"],
 				[['itemid', $itemid_downtime]]
 			);
+
+			# update lastvalue if necessary
 
 			if ($till == $lastvalue_clocks{$itemid_downtime})
 			{
@@ -4405,6 +4364,7 @@ sub recalculate_downtime($$$$$$)
 		}
 	}
 
+	__fp_regenerate_reports($service, \%report_updates);
 	__fp_write_last_auditid($auditlog_log_file, $last_auditlog_auditid);
 }
 
@@ -4417,7 +4377,7 @@ sub usage
 # Internal subs for handling false-positive incidents #
 #######################################################
 
-my $__fp_logfile = "/var/log/zabbix/slv/false-positive.log";
+my $__fp_logfile = "/var/log/zabbix/false-positive.log";
 
 sub __fp_log($$$)
 {
@@ -4425,7 +4385,7 @@ sub __fp_log($$$)
 	my $service = shift;
 	my $message = shift;
 
-	my $log_str = sprintf("%s:%s %s %s %s", $$, ts_str(), $host, $service, $message);
+	my $log_str = sprintf("[%s:%s] [%s] [%s] %s", $$, ts_str(), $host, $service, $message);
 
 	dbg($log_str);
 
@@ -4462,6 +4422,123 @@ sub __fp_write_last_auditid($$)
 	if (write_file($file, $auditid) != SUCCESS)
 	{
 		fail("cannot write file \"$file\"");
+	}
+}
+
+sub __fp_update_incident_state($$$$$)
+{
+	my $incident_fail    = shift;
+	my $incident_recover = shift;
+	my $avail            = shift;
+	my $counter_ref      = shift;
+	my $is_incident_ref  = shift;
+
+	if (${$is_incident_ref})
+	{
+		if ($avail == DOWN)
+		{
+			${$counter_ref} = 0;
+		}
+		else
+		{
+			if (${$counter_ref} < $incident_recover - 1)
+			{
+				${$counter_ref}++;
+			}
+			else
+			{
+				${$counter_ref} = 0;
+				${$is_incident_ref} = 0;
+			}
+		}
+	}
+	else
+	{
+		if ($avail == DOWN)
+		{
+			if (${$counter_ref} < $incident_fail - 1)
+			{
+				${$counter_ref}++;
+			}
+			else
+			{
+				${$counter_ref} = 0;
+				${$is_incident_ref} = 1;
+			}
+		}
+		else
+		{
+			${$counter_ref} = 0;
+		}
+	}
+}
+
+sub __fp_regenerate_reports($$)
+{
+	my $service        = shift;
+	my $report_updates = shift;
+
+	foreach my $host (sort(keys(%{$report_updates})))
+	{
+		foreach my $month_start (sort {$a <=> $b} keys(%{$report_updates->{$host}}))
+		{
+			__fp_generate_report($host, $month_start);
+
+			my @incidents = ();
+			foreach my $incident (@{$report_updates->{$host}{$month_start}})
+			{
+				if ($incident->[1])
+				{
+					push(@incidents, "incident $incident->[0] was marked as false-positive");
+				}
+				else
+				{
+					push(@incidents, "incident $incident->[0] was unmarked as false-positive");
+				}
+			}
+
+			my $month = ts_ym($month_start);
+			my $reason = join(", ", @incidents);
+
+			__fp_log($host, $service, "regenerated report for $month because $reason");
+		}
+	}
+}
+
+sub __fp_generate_report($$)
+{
+	my $tld = shift;
+	my $ts  = shift;
+
+	my $server_id = get_rsm_server_id($server_key);
+	my ($year, $month) = split("-", ts_ym($ts));
+
+	my $cmd = "./sla-report.php";
+	my @args = ();
+
+	push(@args, "--debug") if opt("debug");
+	push(@args, "--stats") if opt("stats");
+
+	push(@args, "--server-id", int($server_id));
+	push(@args, "--tld"      , $tld);
+	push(@args, "--year"     , int($year));
+	push(@args, "--month"    , int($month));
+
+	dbg("executing $cmd @args");
+	my $out = qx($cmd @args 2>&1);
+
+	if ($out)
+	{
+		dbg("output of $cmd:\n" . $out);
+	}
+
+	if ($? == -1)
+	{
+		fail("failed to regenerate reports, failed to execute $cmd: $!");
+	}
+	if ($? != 0)
+	{
+		fail("failed to regenerate report, command $cmd exited with value " . ($? >> 8));
 	}
 }
 
