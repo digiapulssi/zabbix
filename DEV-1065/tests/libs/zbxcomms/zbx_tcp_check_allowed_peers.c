@@ -28,5 +28,40 @@
 
 void	zbx_mock_test_entry(void **state)
 {
-	fail_msg("dummy");
+#define ZBX_TCP_HEADER_DATALEN_LEN	13
+
+	char		*buffer;
+	zbx_socket_t	s;
+	ssize_t		received;
+	int		expected_ret;
+
+	ZBX_UNUSED(state);
+
+	zbx_mock_assert_result_eq("zbx_tcp_connect() return code", SUCCEED,
+			zbx_tcp_connect(&s, NULL, "127.0.0.1", 10050, 0, ZBX_TCP_SEC_UNENCRYPTED, NULL, NULL));
+
+	expected_ret = zbx_mock_str_to_return_code(zbx_mock_get_parameter_string("out.return"));
+	received = zbx_tcp_recv_ext(&s, 0);
+
+	if (FAIL == expected_ret)
+	{
+		zbx_mock_assert_result_eq("zbx_tcp_recv_ext() return code", FAIL, received);
+		zbx_tcp_close(&s);
+		return;
+	}
+
+	zbx_mock_assert_result_eq("zbx_tcp_recv_ext() return code", SUCCEED, SUCCEED_OR_FAIL(received));
+	zbx_mock_assert_uint64_eq("Received bytes", zbx_mock_get_parameter_uint64("out.bytes"), received);
+
+	if (0 == received)
+		return;
+
+	buffer = zbx_yaml_assemble_binary_sequence("out.fragments", received);
+
+	if (0 != memcmp(buffer + ZBX_TCP_HEADER_DATALEN_LEN, s.buffer, received - ZBX_TCP_HEADER_DATALEN_LEN))
+		fail_msg("Received message mismatch expected");
+
+	zbx_tcp_close(&s);
+	zbx_free(buffer);
+#undef ZBX_TCP_HEADER_DATALEN_LEN
 }
