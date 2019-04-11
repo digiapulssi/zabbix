@@ -464,6 +464,7 @@ class CItem extends CItemGeneral {
 	 */
 	protected function updateReal(array $items) {
 		$items = zbx_toArray($items);
+		CArrayHelper::sort($items, ['itemid']);
 
 		$itemids = [];
 		$data = [];
