@@ -1,7 +1,13 @@
 Changes for rsm1.3.0alpha1
 
 New features:
-..F....... [485] added SLA report download button (miks)
+..F.I..... [170] added support for Compliance SLA monitoring (dimir, yurii, asitals, miks, gcalenko)
+
+--------------------------------------------------------------------------------
+Changes for rsm1.2.0rc14
+
+Bug fixes:
+....I..... [sub-486] added listing probes with disabled service as "Offline" to recent measurement files (dimir)
 
 --------------------------------------------------------------------------------
 Changes for rsm1.2.0rc13
