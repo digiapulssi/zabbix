@@ -118,7 +118,7 @@ sub process_ns_items
 	my $hostid = shift;
 	my $items_by_nsip = shift;
 
-	for my $nsip (keys($items_by_nsip))
+	for my $nsip (keys(%{$items_by_nsip}))
 	{
 		my $items = $items_by_nsip->{$nsip};
 
