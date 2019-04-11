@@ -2,6 +2,7 @@ package TLDs;
 
 use strict;
 use warnings;
+use RSM;
 use Zabbix;
 use TLD_constants qw(:general :templates :groups :api :config :tls :items);
 use Data::Dumper;
@@ -790,26 +791,37 @@ sub set_tld_type($$$) {
 	return true;
 }
 
+sub __exec($)
+{
+	my $cmd = shift;
+
+	my $err = `$cmd 2>&1 1>/dev/null`;
+	chomp($err);
+
+	pfail($err) unless ($? == 0);
+}
+
 sub create_cron_jobs($)
 {
 	my $slv_path = shift;
 
 	my $errlog = '/var/log/zabbix/rsm.slv.err';
 
+	use constant CRON_D_PATH => '/etc/cron.d';
 	my $slv_file;
 
-	my $rv = opendir DIR, "/etc/cron.d";
+	my $rv = opendir DIR, CRON_D_PATH;
 
-	pfail("cannot open /etc/cron.d") unless ($rv);
+	pfail("cannot open " . CRON_D_PATH) unless ($rv);
 
 	# first remove current entries
 	while (($slv_file = readdir DIR))
 	{
 		next if ($slv_file !~ /^rsm.slv/ && $slv_file !~ /^rsm.probe/);
 
-		$slv_file = "/etc/cron.d/$slv_file";
+		$slv_file = CRON_D_PATH . "/$slv_file";
 
-		system("/bin/rm -f $slv_file");
+		__exec("/bin/rm -f $slv_file");
 	}
 
 	my $avail_shift = 0;
@@ -844,38 +856,44 @@ sub create_cron_jobs($)
 		my $cron_file = $slv_file;
 		$cron_file =~ s/\./-/g;
 
+		my $err;
+
 		if ($slv_file =~ /\.slv\..*\.rtt\.pl$/)
 		{
 			# monthly RTT data
-			system("echo '* * * * * root sleep $rtt_cur; $slv_path/$slv_file >> $errlog 2>&1' > /etc/cron.d/$cron_file");
+			pfail($err) if (SUCCESS != write_file(CRON_D_PATH . "/$cron_file", "* * * * * root sleep $rtt_cur; $slv_path/$slv_file >> $errlog 2>&1", \$err));
+
 			$rtt_cur += $rtt_step;
 			$rtt_cur = $rtt_shift if ($rtt_cur >= $rtt_limit);
 		}
 		elsif ($slv_file =~ /\.slv\..*\.downtime\.pl$/)
 		{
 			# downtime
-			system("echo '* * * * * root sleep $downtime_cur; $slv_path/$slv_file >> $errlog 2>&1' > /etc/cron.d/$cron_file");
+			pfail($err) if (SUCCESS != write_file(CRON_D_PATH . "/$cron_file", "* * * * * root sleep $downtime_cur; $slv_path/$slv_file >> $errlog 2>&1", \$err));
+
 			$downtime_cur += $downtime_step;
 			$downtime_cur = $downtime_shift if ($downtime_cur >= $downtime_limit);
 		}
 		elsif ($slv_file =~ /\.slv\..*\.avail\.pl$/)
 		{
 			# service availability
-			system("echo '* * * * * root sleep $avail_cur; $slv_path/$slv_file >> $errlog 2>&1' > /etc/cron.d/$cron_file");
+			pfail($err) if (SUCCESS != write_file(CRON_D_PATH . "/$cron_file", "* * * * * root sleep $avail_cur; $slv_path/$slv_file >> $errlog 2>&1", \$err));
+
 			$avail_cur += $avail_step;
 			$avail_cur = $avail_shift if ($avail_cur >= $avail_limit);
 		}
 		elsif ($slv_file =~ /\.slv\..*\.rollweek\.pl$/)
 		{
 			# rolling week
-			system("echo '* * * * * root sleep $rollweek_cur; $slv_path/$slv_file >> $errlog 2>&1' > /etc/cron.d/$cron_file");
+			pfail($err) if (SUCCESS != write_file(CRON_D_PATH . "/$cron_file", "* * * * * root sleep $rollweek_cur; $slv_path/$slv_file >> $errlog 2>&1", \$err));
+
 			$rollweek_cur += $rollweek_step;
 			$rollweek_cur = $rollweek_shift if ($rollweek_cur >= $rollweek_limit);
 		}
 		else
 		{
 			# everything else
-			system("echo '* * * * * root $slv_path/$slv_file >> $errlog 2>&1' > /etc/cron.d/$cron_file");
+			pfail($err) if (SUCCESS != write_file(CRON_D_PATH . "/$cron_file", "* * * * * root $slv_path/$slv_file >> $errlog 2>&1", \$err));
 		}
 	}
 }

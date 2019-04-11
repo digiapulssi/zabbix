@@ -17,9 +17,10 @@ fail_if_running();
 set_slv_config(get_rsm_config());
 db_connect();
 
-my $avail_key_pattern = 'rsm.slv.dns.ns.avail';
-my $downtime_key_pattern = 'rsm.slv.dns.ns.downtime';
-my $max_cycles_to_process = (opt('cycles') ? getopt('cycles') : 5);
+use constant AVAIL_KEY_PATTERN => 'rsm.slv.dns.ns.avail';
+use constant DOWNTIME_KEY_PATTERN => 'rsm.slv.dns.ns.downtime';
+
+my $max_cycles = (opt('cycles') ? getopt('cycles') : slv_max_cycles('dns'));
 
 init_values();
 process_values();
@@ -48,29 +49,31 @@ sub get_ns_items
 	my $tld = shift;
 	my $hostid = shift;
 
-	my $rows_avail = db_select("select itemid,key_ from items".
-		" where hostid=$hostid and key_ like '$avail_key_pattern\[%'");
+	my $rows_avail = db_select(
+		"select itemid,key_".
+		" from items".
+		" where hostid=$hostid".
+			" and key_ like '" . AVAIL_KEY_PATTERN . "[%'"
+	);
 
-	if (!defined($rows_avail))
-	{
-		fail("failed to obtain ns avail items");
-	}
+	fail("failed to obtain ns avail items") unless (scalar(@{$rows_avail}));
 
-	my $rows_downtime = db_select("select itemid,key_ from items".
-		" where hostid=$hostid and key_ like '$downtime_key_pattern\[%'");
+	my $rows_downtime = db_select(
+		"select itemid,key_".
+		" from items".
+		" where hostid=$hostid".
+			" and key_ like '" . DOWNTIME_KEY_PATTERN . "[%'"
+	);
 
-	if (!defined($rows_downtime))
-	{
-		fail("failed to obtain ns downtime items");
-	}
+	fail("failed to obtain ns downtime items") unless (scalar(@{$rows_downtime}));
 
 	if (scalar(@{$rows_avail}) != scalar(@{$rows_downtime}))
 	{
-		fail("got different number of ns avail and downtime items for tld $tld");
+		fail("got different number of ns avail and downtime items");
 	}
 
 	my $items_by_nsip = {};
-	
+
 	foreach my $row (@{$rows_avail})
 	{
 		my $itemid = $row->[0];
@@ -142,7 +145,7 @@ sub calculate_downtime_values
 	{
 		fail("cannot get lastvalue for avail item $avail_itemid");
 	}
-	
+
 	my $downtime_value;
 	my $downtime_clock;
 
@@ -154,32 +157,35 @@ sub calculate_downtime_values
 
 	if ($downtime_clock >= $avail_clock)
 	{
-		dbg("no new data for tld '$tld' nsip '$nsip'");
+		dbg("no new data for nsip '$nsip'");
 		return;
 	}
 
 	my $clock_first = $downtime_clock + 60;
-	my $clock_last = $downtime_clock + (60 * $max_cycles_to_process);
+	my $clock_last = $downtime_clock + (60 * $max_cycles);
 
 	if ($clock_last > $avail_clock)
 	{
 		$clock_last = $avail_clock;
 	}
 
-	my $rows = db_select("select clock,value from history_uint where itemid=$avail_itemid".
-			" and clock between $clock_first and $clock_last");
+	my $rows = db_select(
+		"select clock,value".
+		" from history_uint".
+		" where itemid=$avail_itemid".
+			" and " . sql_time_condition($clock_first, $clock_last)
+	);
 
-	if (!defined($rows))
-	{
-		fail("cannot obtain values for avail item on tld '$tld' nsip '$nsip");
-	}
+	fail("cannot obtain values for ns '$nsip' avail item") unless (scalar(@{$rows}));
 
 	foreach my $row (@{$rows})
 	{
 		my $clock = $row->[0];
+		my $avail_value = $row->[1];
+
 		my $prev_clock = $clock - 60;
 		my $month_changed = (month_start($prev_clock) != month_start($clock) ? 1 : 0);
-		my $avail_value = $row->[1];
+
 		my $new_downtime_value = ($month_changed ? 0 : $downtime_value) + ($avail_value == DOWN ? 1 : 0);
 
 		push_value($tld, $downtime_key, $clock, $new_downtime_value);

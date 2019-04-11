@@ -283,7 +283,7 @@ if (opt('tld'))
 }
 else
 {
-	$tlds_ref = get_tlds(undef, $from, $till);
+	$tlds_ref = get_tlds(undef, $from, USE_CACHE_TRUE);
 }
 
 # Prepare the cache for function tld_service_enabled(). Make sure this is called before creating child processes!

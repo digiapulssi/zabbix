@@ -7,9 +7,16 @@ use File::Path qw(make_path remove_tree);
 use base 'Exporter';
 use Config '%Config';
 
-our @EXPORT = qw(get_rsm_config get_rsm_server_keys get_rsm_server_key get_rsm_server_id get_rsm_local_key
-		get_rsm_local_id rsm_targets_prepare rsm_targets_apply rsm_targets_delete get_db_tls_settings
-		sig_name);
+use constant SUCCESS => 0;
+use constant E_FAIL => -1;	# be careful when changing this, some functions depend on current value
+
+our @EXPORT = qw(
+	SUCCESS E_FAIL
+	get_rsm_config get_rsm_server_keys get_rsm_server_key get_rsm_server_id get_rsm_local_key
+	get_rsm_local_id rsm_targets_prepare rsm_targets_apply rsm_targets_delete get_db_tls_settings
+	write_file read_file
+	sig_name
+);
 
 use constant RSM_SERVER_KEY_PREFIX => 'server_';
 use constant RSM_DEFAULT_CONFIG_FILE => '/opt/zabbix/scripts/rsm.conf';
@@ -252,6 +259,55 @@ sub get_db_tls_settings($)
 	}
 
 	return $db_tls_settings eq "" ? "mysql_ssl=0" : "mysql_ssl=1$db_tls_settings";
+}
+
+sub read_file($$$)
+{
+	my $file = shift;
+	my $buf = shift;
+	my $error = shift;
+
+	my $contents = do
+	{
+		local $/ = undef;
+
+		if (!open my $fh, "<", $file)
+		{
+			$$error = "$!";
+			return E_FAIL;
+		}
+
+		<$fh>;
+	};
+
+	$$buf = $contents;
+
+	return SUCCESS;
+}
+
+sub write_file($$;$)
+{
+	my $file = shift;
+	my $text = shift;
+	my $errbuf = shift;
+
+	my $OUTFILE;
+
+	if (!open($OUTFILE, '>', $file))
+	{
+		$$errbuf = "cannot write to file \"$file\": $!" if (defined($errbuf));
+		return E_FAIL;
+	}
+
+	my $rv = print { $OUTFILE } $text;
+
+	$$errbuf = "cannot write to file \"$file\": $!" if (defined($errbuf));
+
+	close($OUTFILE);
+
+	return E_FAIL unless ($rv);
+
+	return SUCCESS;
 }
 
 my @sig_names;

@@ -2,6 +2,7 @@ package DaWa;
 
 use strict;
 use warnings;
+use RSM;
 use RSMSLV;
 use Text::CSV_XS;
 use File::Path qw(make_path);

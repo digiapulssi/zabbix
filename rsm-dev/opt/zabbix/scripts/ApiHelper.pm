@@ -2,6 +2,7 @@ package ApiHelper;
 
 use strict;
 use warnings;
+use RSM;
 use File::Path qw(make_path);
 use DateTime::Format::RFC3339;
 use base 'Exporter';

@@ -1181,8 +1181,33 @@ sub calculate_cycle($$$$$$$$)
 
 				if (scalar(@{$values{$itemid}}) != 1)
 				{
-					fail("dimir was wrong: item \"$key\" can contain more than 1 value at ",
-						selected_period($from, $till), ": ", join(',', @{$values{$itemid}}));
+					my $msg = "dimir was wrong: item \"$key\" can contain more than 1 value ".
+						selected_period($from, $till) . ": " . join(',', @{$values{$itemid}}) . "\n";
+
+					my $sql =
+						"select hi.itemid,hi.clock,hi.value,hi.ns".
+						" from history_uint hi,items i,hosts h".
+						" where hi.itemid=i.itemid".
+							" and i.hostid=h.hostid".
+							" and i.key_='$key'".
+							" and h.host='$tld'".
+							" and " . sql_time_condition($from, $till);
+
+					my $rows_ref = db_select($sql);
+
+					$msg .= "SQL: $sql\n";
+					$msg .= "---------------------\n";
+					$msg .= "itemid,clock,value,ns\n";
+					$msg .= "---------------------\n";
+
+					foreach (@{$rows_ref})
+					{
+						$msg .= join(',', @{$_}) . "\n";
+					}
+
+					chomp($msg);
+
+					fail($msg);
 				}
 
 				if ($values{$itemid}->[0] == UP)

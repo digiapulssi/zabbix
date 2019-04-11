@@ -20,8 +20,6 @@ use RSM;
 use Pusher qw(push_to_trapper);
 use Fcntl qw(:flock);
 
-use constant SUCCESS => 0;
-use constant E_FAIL => -1;	# be careful when changing this, some functions depend on current value
 use constant E_ID_NONEXIST => -2;
 use constant E_ID_MULTIPLE => -3;
 
@@ -82,7 +80,7 @@ our ($result, $dbh, $tld, $server_key);
 our %OPTS; # specified command-line options
 
 our @EXPORT = qw($result $dbh $tld $server_key
-		SUCCESS E_FAIL E_ID_NONEXIST E_ID_MULTIPLE UP DOWN SLV_UNAVAILABILITY_LIMIT MIN_LOGIN_ERROR
+		E_ID_NONEXIST E_ID_MULTIPLE UP DOWN SLV_UNAVAILABILITY_LIMIT MIN_LOGIN_ERROR
 		UP_INCONCLUSIVE_NO_PROBES
 		UP_INCONCLUSIVE_NO_DATA PROTO_UDP PROTO_TCP
 		MAX_LOGIN_ERROR MIN_INFO_ERROR MAX_INFO_ERROR PROBE_ONLINE_STR
@@ -139,7 +137,6 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		trim
 		parse_opts parse_slv_opts
 		opt getopt setopt unsetopt optkeys ts_str ts_full selected_period
-		write_file read_file
 		cycle_start
 		cycle_end
 		update_slv_rtt_monthly_stats
@@ -543,23 +540,23 @@ sub get_oldest_clock($$$)
 	return $rows_ref->[0]->[0];
 }
 
-# $tlds_cache{$server_key}{$service}{$till} = ["tld1", "tld2", ...];
+# $tlds_cache{$server_key}{$service}{$clock} = ["tld1", "tld2", ...];
 my %tlds_cache = ();
 
 sub get_tlds(;$$$)
 {
 	my $service = shift;	# optionally specify service which must be enabled
-	my $till = shift;	# used only if $service is defined
+	my $clock = shift;	# used only if $service is defined
 	my $use_cache = shift // USE_CACHE_FALSE;
 
 	if ($use_cache != USE_CACHE_FALSE && $use_cache != USE_CACHE_TRUE)
 	{
-		fail("Invalid value for \$use_cache argument - '$use_cache'");
+		fail("invalid value for \$use_cache argument - '$use_cache'");
 	}
 
-	if ($use_cache == USE_CACHE_TRUE && exists($tlds_cache{$server_key}{$service // ''}{$till // 0}))
+	if ($use_cache == USE_CACHE_TRUE && exists($tlds_cache{$server_key}{$service // ''}{$clock // 0}))
 	{
-		return $tlds_cache{$server_key}{$service // ''}{$till // 0};
+		return $tlds_cache{$server_key}{$service // ''}{$clock // 0};
 	}
 
 	my $rows_ref = db_select(
@@ -577,7 +574,7 @@ sub get_tlds(;$$$)
 
 		if (defined($service))
 		{
-			next unless (tld_service_enabled($tld, $service, $till));
+			next unless (tld_service_enabled($tld, $service, $clock));
 		}
 
 		push(@tlds, $tld);
@@ -585,7 +582,7 @@ sub get_tlds(;$$$)
 
 	if ($use_cache == USE_CACHE_TRUE)
 	{
-		$tlds_cache{$server_key}{$service // ''}{$till // 0} = \@tlds;
+		$tlds_cache{$server_key}{$service // ''}{$clock // 0} = \@tlds;
 	}
 
 	return \@tlds;
@@ -3628,48 +3625,6 @@ sub selected_period
 	return "any time";
 }
 
-sub write_file
-{
-	my $file = shift;
-	my $text = shift;
-
-	my $OUTFILE;
-
-	return E_FAIL unless (open($OUTFILE, '>', $file));
-
-	my $rv = print { $OUTFILE } $text;
-
-	close($OUTFILE);
-
-	return E_FAIL unless ($rv);
-
-	return SUCCESS;
-}
-
-sub read_file($$$)
-{
-	my $file = shift;
-	my $buf = shift;
-	my $error = shift;
-
-	my $contents = do
-	{
-		local $/ = undef;
-
-		if (!open my $fh, "<", $file)
-		{
-			$$error = "$!";
-			return E_FAIL;
-		}
-
-		<$fh>;
-	};
-
-	$$buf = $contents;
-
-	return SUCCESS;
-}
-
 sub cycle_start($$)
 {
 	my $now = shift;
@@ -4001,16 +3956,30 @@ sub update_slv_rtt_monthly_stats($$$$$$$$)
 					dbg("\$cycle_start              = $cycle_start");
 					dbg("\$cycle_end                = $cycle_end");
 				}
+
 				fail("\$cycles_till_end_of_month must not be less than 0");
 			}
 
 			$last_performed_value += $rtt_stats->{'performed'};
 			$last_failed_value    += $rtt_stats->{'failed'};
-			$last_pfailed_value    = 100 * $last_failed_value / ($last_performed_value + $cycles_till_end_of_month * $rtt_stats->{'expected'});
 
 			push_value($tld, $slv_item_key_performed, $cycle_start, $last_performed_value);
 			push_value($tld, $slv_item_key_failed   , $cycle_start, $last_failed_value);
-			push_value($tld, $slv_item_key_pfailed  , $cycle_start, $last_pfailed_value);
+
+			my $performed_with_expected = $last_performed_value + $cycles_till_end_of_month * $rtt_stats->{'expected'};
+
+			if ($performed_with_expected == 0)
+			{
+				wrn("performed ($last_performed_value)".
+					" + expected (cycles:$cycles_till_end_of_month * tests:$rtt_stats->{'expected'})".
+					" number of tests is zero");
+			}
+			else
+			{
+				$last_pfailed_value = 100 * $last_failed_value / $performed_with_expected;
+
+				push_value($tld, $slv_item_key_pfailed, $cycle_start, $last_pfailed_value);
+			}
 
 			$last_clock = $cycle_start;
 		}
