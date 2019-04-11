@@ -4163,6 +4163,9 @@ static int	DBpatch_3000313(void)
 
 static int	DBpatch_3000314(void)
 {
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
 	if (ZBX_DB_OK > DBexecute(
 			"update auditlog"
 			" set resourceid=substring_index(details,':',1)"
