@@ -648,17 +648,6 @@ function getHostGroupsInfo($selement, $i, $show_unack) {
 		];
 		$hasStatus = true;
 	}
-	elseif ($i['disabled']) {
-		if (!$hasProblem) {
-			$info['icon_type'] = SYSMAP_ELEMENT_ICON_DISABLED;
-			$info['iconid'] = $selement['iconid_disabled'];
-		}
-		$info['info']['disabled'] = [
-			'msg' => _('DISABLED'),
-			'color' => '960000'
-		];
-		$hasStatus = true;
-	}
 
 	if (!$hasStatus && !$hasProblem) {
 		$info['icon_type'] = SYSMAP_ELEMENT_ICON_OFF;
@@ -736,17 +725,6 @@ function getMapsInfo($selement, $i, $show_unack) {
 		];
 		$hasStatus = true;
 	}
-	elseif ($i['disabled']) {
-		if (!$hasProblem) {
-			$info['icon_type'] = SYSMAP_ELEMENT_ICON_DISABLED;
-			$info['iconid'] = $selement['iconid_disabled'];
-		}
-		$info['info']['disabled'] = [
-			'msg' => _('DISABLED'),
-			'color' => '960000'
-		];
-		$hasStatus = true;
-	}
 
 	if (!$hasStatus && !$hasProblem) {
 		$info['icon_type'] = SYSMAP_ELEMENT_ICON_OFF;
@@ -775,7 +753,7 @@ function getImagesInfo($selement) {
  * recent change markers.
  *
  * @param array $sysmap
- * @param int   $options
+ * @param array $options
  * @param int   $options['severity_min'] Minimum trigger severity, default value is maximal (Disaster)
  *
  * @return array
