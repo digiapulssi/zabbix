@@ -26,6 +26,26 @@
 #include "common.h"
 #include "comms.h"
 
+static void	mock_accept(zbx_socket_t *s)
+{
+	void	*buf;
+
+	switch (s->peer_info.ss_family = zbx_mock_str_to_family(zbx_mock_get_parameter_string("in.family")))
+	{
+		case AF_INET:
+			buf = &((struct sockaddr_in *)&s->peer_info)->sin_addr.s_addr;
+			break;
+		case AF_INET6:
+			buf = ((struct sockaddr_in6 *)&s->peer_info)->sin6_addr.s6_addr;
+			break;
+		default:
+			fail_msg("Unexpected family");
+	}
+
+	if (1 != inet_pton(s->peer_info.ss_family, zbx_mock_get_parameter_string("in.peer"), buf))
+		fail_msg("failed converting address from textual to binary");
+}
+
 void	zbx_mock_test_entry(void **state)
 {
 	zbx_socket_t	s;
@@ -33,8 +53,7 @@ void	zbx_mock_test_entry(void **state)
 
 	ZBX_UNUSED(state);
 
-	s.peer_info.ss_family = AF_INET;
-	inet_pton(s.peer_info.ss_family, zbx_mock_get_parameter_string("in.peer"), &((struct sockaddr_in *)&s.peer_info)->sin_addr.s_addr);
+	mock_accept(&s);
 
 	expected_ret = zbx_mock_str_to_return_code(zbx_mock_get_parameter_string("out.return"));
 	ret = zbx_tcp_check_allowed_peers(&s, zbx_mock_get_parameter_string("in.allowed_peers"));
