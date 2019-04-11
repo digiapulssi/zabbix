@@ -4174,6 +4174,21 @@ static int	DBpatch_3000314(void)
 	return SUCCEED;
 }
 
+static int	DBpatch_3000315(void)
+{
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	if (ZBX_DB_OK > DBexecute(
+			"update items set value_type=3 where key_ like 'rsm.slv.dns.ns.%%' and value_type=0"
+	))
+	{
+		return FAIL;
+	}
+
+	return SUCCEED;
+}
+
 #endif
 
 DBPATCH_START(3000)
@@ -4274,5 +4289,6 @@ DBPATCH_ADD(3000311, 0, 0)	/* rename macro RSM.SLV.NS.AVAIL into RSM.SLV.NS.DOWN
 DBPATCH_ADD(3000312, 0, 0)	/* add nameserver downtime triggers to tld hosts */
 DBPATCH_ADD(3000313, 0, 0)	/* add nameserver availability items to tld hosts */
 DBPATCH_ADD(3000314, 0, 0)	/* fill auditlog.resourceid for "Marked/Unmarked as false positive" logs */
+DBPATCH_ADD(3000315, 0, 0)	/* fix item value_type for rsm.slv.dns.ns.* to uint */
 
 DBPATCH_END()
