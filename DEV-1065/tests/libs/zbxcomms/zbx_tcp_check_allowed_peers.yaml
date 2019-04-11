@@ -1,10 +1,9 @@
 ---
-test case: Zero bytes received
+test case: Single IPv4 connection
 in:
-  fragments: &fragments
-    - ''
+  allowed_peers: '127.0.0.1'
+  peer: '127.0.0.1'
+  
 out:
-  fragments: *fragments
   return: SUCCEED
-  bytes: 0
 ...

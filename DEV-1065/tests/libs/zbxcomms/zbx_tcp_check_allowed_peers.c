@@ -28,40 +28,22 @@
 
 void	zbx_mock_test_entry(void **state)
 {
-#define ZBX_TCP_HEADER_DATALEN_LEN	13
-
-	char		*buffer;
 	zbx_socket_t	s;
-	ssize_t		received;
-	int		expected_ret;
+	int		expected_ret, ret;
 
 	ZBX_UNUSED(state);
 
-	zbx_mock_assert_result_eq("zbx_tcp_connect() return code", SUCCEED,
-			zbx_tcp_connect(&s, NULL, "127.0.0.1", 10050, 0, ZBX_TCP_SEC_UNENCRYPTED, NULL, NULL));
+	s.peer_info.ss_family = AF_INET;
+	inet_pton(s.peer_info.ss_family, zbx_mock_get_parameter_string("in.peer"), &((struct sockaddr_in *)&s.peer_info)->sin_addr.s_addr);
 
 	expected_ret = zbx_mock_str_to_return_code(zbx_mock_get_parameter_string("out.return"));
-	received = zbx_tcp_recv_ext(&s, 0);
+	ret = zbx_tcp_check_allowed_peers(&s, zbx_mock_get_parameter_string("in.allowed_peers"));
 
 	if (FAIL == expected_ret)
 	{
-		zbx_mock_assert_result_eq("zbx_tcp_recv_ext() return code", FAIL, received);
-		zbx_tcp_close(&s);
+		zbx_mock_assert_result_eq("zbx_tcp_recv_ext() return code", FAIL, ret);
 		return;
 	}
 
-	zbx_mock_assert_result_eq("zbx_tcp_recv_ext() return code", SUCCEED, SUCCEED_OR_FAIL(received));
-	zbx_mock_assert_uint64_eq("Received bytes", zbx_mock_get_parameter_uint64("out.bytes"), received);
-
-	if (0 == received)
-		return;
-
-	buffer = zbx_yaml_assemble_binary_sequence("out.fragments", received);
-
-	if (0 != memcmp(buffer + ZBX_TCP_HEADER_DATALEN_LEN, s.buffer, received - ZBX_TCP_HEADER_DATALEN_LEN))
-		fail_msg("Received message mismatch expected");
-
-	zbx_tcp_close(&s);
-	zbx_free(buffer);
-#undef ZBX_TCP_HEADER_DATALEN_LEN
+	zbx_mock_assert_result_eq("zbx_tcp_recv_ext() return code", SUCCEED, ret);
 }
