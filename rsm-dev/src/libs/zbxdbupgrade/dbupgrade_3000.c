@@ -4113,10 +4113,9 @@ static int	DBpatch_3000312(void)
 
 	prefixlen = strlen(key_prefix);
 
-	result = DBselect("select h.hostid,i.itemid,i.key_ from items i"
-			" left join hosts h on i.hostid=h.hostid"
-			" left join hosts_groups hg on hg.groupid=140"
-			" where i.key_ like '%s%%'", key_prefix);
+	result = DBselect("select i.hostid,i.itemid,i.key_"
+			" from items i left join hosts_groups hg on hg.hostid=i.hostid"
+			" where i.key_ like '%s%%' and hg.groupid=140", key_prefix);
 
 	while (NULL != (row = DBfetch(result)))
 	{
