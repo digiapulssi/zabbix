@@ -1180,7 +1180,7 @@ define('ZBX_HAVE_IPV6', true);
 define('ZBX_DISCOVERER_IPRANGE_LIMIT', 65536);
 
 define('ZBX_SOCKET_TIMEOUT',        3);         // socket timeout limit
-define('ZBX_SOCKET_BYTES_LIMIT',    1048576);   // socket response size limit, 1048576 is 1MB in bytes
+define('ZBX_SOCKET_BYTES_LIMIT',    16777216);  // socket response size limit (16MB), 1048576 is 1MB in bytes
 
 // value is also used in servercheck.js file
 define('SERVER_CHECK_INTERVAL', 10);
