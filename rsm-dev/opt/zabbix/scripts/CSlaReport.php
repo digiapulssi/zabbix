@@ -230,6 +230,9 @@ class CSlaReport
 		$itemhostids = [];
 		$itemids_float = [];
 		$itemids_uint = [];
+		$itemids_ns_avail = [];
+		$itemids_meta_ns_downtime = [];
+		$itemids_meta_ns_avail = [];
 
 		foreach ($rows as $row)
 		{
@@ -238,7 +241,20 @@ class CSlaReport
 			$itemkeys[$itemid] = $key;
 			$itemhostids[$itemid] = $hostid;
 
-			if ((int)$type === 0)
+			if (preg_match("/^rsm\.slv\.dns\.ns\.avail\[(.+),(.+)\]$/", $key, $matches))
+			{
+				$hostname   = $matches[1];
+				$ip_address = $matches[2];
+
+				$itemids_meta_ns_avail[$itemid] = [
+					'hostid'    => $hostid,
+					'hostname'  => $hostname,
+					'ipAddress' => $ip_address,
+				];
+
+				array_push($itemids_ns_avail, $itemid);
+			}
+			elseif ((int)$type === 0)
 			{
 				array_push($itemids_float, $itemid);
 			}
@@ -288,19 +304,24 @@ class CSlaReport
 					break;
 
 				default:
-					/*
-					TODO: this might be NS availability item.
+					if (preg_match("/^rsm\.slv\.dns\.ns\.downtime\[(.+),(.+)\]$/", $key, $matches))
+					{
+						$hostname   = $matches[1];
+						$ip_address = $matches[2];
 
-					$ns_host = $key;
-					$ns_ip   = $key;
-					$data[$hostid]["dns"]["ns"][$itemid] = [
-						"hostname"     => $ns_host,
-						"ipAddress"    => $ns_ip,
-						"availability" => $value,
-						"from"         => null,
-						"to"           => null,
-					];
-					*/
+						$data[$hostid]["dns"]["ns"][$itemid] = [
+							"hostname"     => $hostname,
+							"ipAddress"    => $ip_address,
+							"availability" => $value,
+							"from"         => null,
+							"to"           => null,
+						];
+
+						$itemids_meta_ns_downtime[$hostid][$hostname][$ip_address] = $itemid;
+
+						break;
+					}
+
 					throw new Exception("Unhandled item key: '{$key}'");
 					break;
 			}
@@ -308,9 +329,21 @@ class CSlaReport
 
 		// get monthly min and max clocks
 
-		// TODO: min(clock) and max(clock) is needed for NS availability items only.
+		$rows = self::getNsAvailMinMaxClock($itemids_ns_avail, "history_uint", $from, $till);
 
-		$rows = self::getMinMaxClock($itemids_uint, "history_uint", $from, $till);
+		foreach ($rows as $row)
+		{
+			list($itemid_avail, $from, $to) = $row;
+
+			$hostid     = $itemids_meta_ns_avail[$itemid_avail]["hostid"];
+			$hostname   = $itemids_meta_ns_avail[$itemid_avail]["hostname"];
+			$ip_address = $itemids_meta_ns_avail[$itemid_avail]["ipAddress"];
+
+			$itemid_downtime = $itemids_meta_ns_downtime[$hostid][$hostname][$ip_address];
+
+			$data[$hostid]["dns"]["ns"][$itemid_downtime]["from"] = $from;
+			$data[$hostid]["dns"]["ns"][$itemid_downtime]["to"]   = $to;
+		}
 
 		return $data;
 	}
@@ -333,8 +366,7 @@ class CSlaReport
 			}
 			if (count($tld["dns"]["ns"]) === 0)
 			{
-				// TODO: uncomment
-				//throw new Exception("\$data[{$hostid}]['dns']['ns'] is empty array (TLD: '{$tld["host"]}')");
+				throw new Exception("\$data[{$hostid}]['dns']['ns'] is empty array (TLD: '{$tld["host"]}')");
 			}
 			foreach ($tld["dns"]["ns"] as $i => $ns)
 			{
@@ -452,7 +484,6 @@ class CSlaReport
 	# Data retrieval methods
 	################################################################################
 
-	// TODO: replace "foo bar baz" NS availability key pattern
 	private static function getItemIds($all_hostids, $rdds_hostids)
 	{
 		$hostids_placeholder = substr(str_repeat("?,", count($all_hostids)), 0, -1);
@@ -462,7 +493,8 @@ class CSlaReport
 					"hostid in ({$hostids_placeholder}) and" .
 					" (" .
 						"key_ in ('rsm.slv.dns.downtime','rsm.slv.dns.udp.rtt.pfailed','rsm.slv.dns.tcp.rtt.pfailed') or" .
-						" key_ like 'foo bar baz'" .
+						" key_ like 'rsm.slv.dns.ns.downtime[%,%]' or" .
+						" key_ like 'rsm.slv.dns.ns.avail[%,%]'" .
 					")" .
 				")";
 		$params = $all_hostids;
@@ -562,7 +594,7 @@ class CSlaReport
 		return self::dbSelect($sql, $params);
 	}
 
-	private static function getMinMaxClock($itemids, $history_table, $from, $till)
+	private static function getNsAvailMinMaxClock($itemids, $history_table, $from, $till)
 	{
 		if (count($itemids) === 0)
 		{
@@ -573,7 +605,8 @@ class CSlaReport
 		$sql = "select itemid,min(clock),max(clock)" .
 			" from {$history_table}" .
 			" where itemid in ({$itemids_placeholder}) and" .
-				" clock between ? and ?" .
+				" clock between ? and ? and" .
+				" value!=0" .
 			" group by itemid";
 		$params = array_merge($itemids, [$from, $till]);
 		return self::dbSelect($sql, $params);
