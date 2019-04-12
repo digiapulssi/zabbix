@@ -73,9 +73,9 @@ $table->addRow([
 		'-',
 		'-',
 		_s('%d (minutes of downtime)', $data['values'][RSM_SLV_DNS_DOWNTIME]['slv']),
-		_s('%d (minutes of downtime)', $data['macro'][RSM_SLV_NS_AVAIL])
+		_s('%d (minutes of downtime)', $data['macro'][RSM_SLV_NS_DOWNTIME])
 	],
-	($data['values'][RSM_SLV_DNS_DOWNTIME]['slv'] > $data['macro'][RSM_SLV_NS_AVAIL]) ? 'red-bg' : null
+	($data['values'][RSM_SLV_DNS_DOWNTIME]['slv'] > $data['macro'][RSM_SLV_NS_DOWNTIME]) ? 'red-bg' : null
 );
 
 // DNS Name Server availability.
@@ -90,9 +90,9 @@ foreach ($data['values'] as $item) {
 			gmdate('Y-m-d H:i:s e', $item['from']),
 			gmdate('Y-m-d H:i:s e', $item['to']),
 			_s('%1$s (minutes of downtime)', $item['slv']),
-			_s('%1$s (minutes of downtime)', $data['macro'][RSM_SLV_NS_AVAIL])
+			_s('%1$s (minutes of downtime)', $data['macro'][RSM_SLV_NS_DOWNTIME])
 		],
-		($item['slv'] > $data['macro'][RSM_SLV_NS_AVAIL]) ? 'red-bg' : null
+		($item['slv'] > $data['macro'][RSM_SLV_NS_DOWNTIME]) ? 'red-bg' : null
 	);
 }
 

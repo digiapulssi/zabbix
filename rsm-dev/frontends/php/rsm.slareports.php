@@ -127,7 +127,7 @@ if ($data['tld']) {
 	]);
 
 	$item_keys = [RSM_SLV_DNS_DOWNTIME, RSM_SLV_DNS_TCP_RTT_PFAILED, RSM_SLV_DNS_UDP_RTT_PFAILED];
-	$macro_keys = [RSM_SLV_NS_AVAIL, RSM_SLV_DNS_TCP_RTT, RSM_DNS_TCP_RTT_LOW, RSM_SLV_DNS_UDP_RTT, RSM_DNS_UDP_RTT_LOW];
+	$macro_keys = [RSM_SLV_NS_DOWNTIME, RSM_SLV_DNS_TCP_RTT, RSM_DNS_TCP_RTT_LOW, RSM_SLV_DNS_UDP_RTT, RSM_DNS_UDP_RTT_LOW];
 
 	foreach ($template_macros as $tmpl_macro) {
 		if ($tmpl_macro['value'] != 1) {
