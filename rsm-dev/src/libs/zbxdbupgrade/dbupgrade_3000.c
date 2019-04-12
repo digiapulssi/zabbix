@@ -4040,7 +4040,7 @@ static int	DBpatch_3000311(void)
 	return SUCCEED;
 }
 
-static int	create_dns_ns_downtime_trigger(const char *hostid, const char *itemid, const char *nsip,
+static int	create_dns_ns_downtime_trigger(const char *itemid, const char *nsip,
 				const char *percent, const char *coefficient, const char *priority,
 				zbx_uint64_t *triggerid)
 {
@@ -4071,7 +4071,7 @@ static int	create_dns_ns_downtime_trigger(const char *hostid, const char *itemid
 	return SUCCEED;
 }
 
-static int	create_dependent_dns_ns_trigger_chain(const char *hostid, const char *itemid, const char *nsip)
+static int	create_dependent_dns_ns_trigger_chain(const char *itemid, const char *nsip)
 {
 	zbx_uint64_t	triggerid = 0, dependid = 0;
 	int		i;
@@ -4082,7 +4082,7 @@ static int	create_dependent_dns_ns_trigger_chain(const char *hostid, const char 
 		const char	*coefficient = trigger_params[i][1];
 		const char	*priority    = trigger_params[i][2];
 
-		if (SUCCEED != create_dns_ns_downtime_trigger(hostid, itemid, nsip, percent, coefficient,
+		if (SUCCEED != create_dns_ns_downtime_trigger(itemid, nsip, percent, coefficient,
 				priority, &triggerid))
 		{
 			return FAIL;
@@ -4113,13 +4113,13 @@ static int	DBpatch_3000312(void)
 
 	prefixlen = strlen(key_prefix);
 
-	result = DBselect("select i.hostid,i.itemid,i.key_"
+	result = DBselect("select i.itemid,i.key_"
 			" from items i left join hosts_groups hg on hg.hostid=i.hostid"
 			" where i.key_ like '%s%%' and hg.groupid=140", key_prefix);
 
 	while (NULL != (row = DBfetch(result)))
 	{
-		itemkey = zbx_strdup(NULL, row[2]);
+		itemkey = zbx_strdup(NULL, row[1]);
 		itemkeylen = strlen(itemkey);
 
 		if (itemkeylen < (prefixlen + 2)) /* +2 for closing ] and at least on char inside */
@@ -4130,7 +4130,7 @@ static int	DBpatch_3000312(void)
 
 		itemkey[itemkeylen - 1] = 0; /* overwrite closing ] */
 
-		create_dependent_dns_ns_trigger_chain(row[0], row[1], itemkey + prefixlen);
+		create_dependent_dns_ns_trigger_chain(row[0], itemkey + prefixlen);
 
 		zbx_free(itemkey);
 	}
