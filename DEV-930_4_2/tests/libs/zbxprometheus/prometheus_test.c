@@ -16,15 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
-
-typedef struct
-{
-	char	*key;
-	char	*pattern;
-	char	*op;
-}
-zbx_prometheus_condition_test_t;
-
+#include "prometheus_test.h"
 
 static zbx_prometheus_condition_test_t	*prometheus_condition_dup(zbx_prometheus_condition_t *condition)
 {

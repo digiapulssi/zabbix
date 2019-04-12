@@ -16,29 +16,9 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
+#ifndef ITEM_PREPROC_TEST_H
+#define ITEM_PREPROC_TEST_H
 
-#include "common.h"
-#include "../zabbix_server/alerter/alerter_protocol.h"
+int	dc_maintenance_match_tags_test(const zbx_dc_maintenance_t *maintenance, const zbx_vector_ptr_t *tags);
 
-zbx_uint32_t	zbx_alerter_serialize_alert_send(unsigned char **data, zbx_uint64_t mediatypeid, const char *sendto,
-		const char *subject, const char *message)
-{
-	ZBX_UNUSED(data);
-	ZBX_UNUSED(mediatypeid);
-	ZBX_UNUSED(sendto);
-	ZBX_UNUSED(subject);
-	ZBX_UNUSED(message);
-
-	THIS_SHOULD_NEVER_HAPPEN;
-
-	return 0;
-}
-
-void	zbx_alerter_deserialize_result(const unsigned char *data, int *errcode, char **errmsg)
-{
-	ZBX_UNUSED(data);
-	ZBX_UNUSED(errcode);
-	ZBX_UNUSED(errmsg);
-
-	THIS_SHOULD_NEVER_HAPPEN;
-}
+#endif
