@@ -24,7 +24,7 @@ my $config = get_rsm_config();
 set_slv_config($config);
 
 use constant SLV_ITEM_KEY_DNS_DOWNTIME    => "rsm.slv.dns.downtime";
-use constant SLV_ITEM_KEY_DNS_NS_DOWNTIME => "rsm.slv.dns.ns.downtime....[%,%]"; # TODO:
+use constant SLV_ITEM_KEY_DNS_NS_DOWNTIME => "rsm.slv.dns.ns.downtime[%,%]";
 use constant SLV_ITEM_KEY_RDDS_DOWNTIME   => "rsm.slv.rdds.downtime";
 use constant SLV_ITEM_KEY_DNS_UDP_PFAILED => "rsm.slv.dns.udp.rtt.pfailed";
 use constant SLV_ITEM_KEY_DNS_TCP_PFAILED => "rsm.slv.dns.tcp.rtt.pfailed";
@@ -128,7 +128,7 @@ sub get_slrs()
 	my $sql = "select macro, value from globalmacro where macro in (?, ?, ?, ?, ?, ?)";
 	my $params = [
 		'{$RSM.SLV.DNS.DOWNTIME}',
-		'{$RSM.SLV.NS.AVAIL}',
+		'{$RSM.SLV.NS.DOWNTIME}',
 		'{$RSM.SLV.DNS.UDP.RTT}',
 		'{$RSM.SLV.DNS.TCP.RTT}',
 		'{$RSM.SLV.RDDS.DOWNTIME}',
@@ -141,7 +141,7 @@ sub get_slrs()
 		my ($macro, $value) = @{$row};
 
 		$slr{'dns_downtime'}    = $value if ($macro eq '{$RSM.SLV.DNS.DOWNTIME}');
-		$slr{'dns_ns_downtime'} = $value if ($macro eq '{$RSM.SLV.NS.AVAIL}');
+		$slr{'dns_ns_downtime'} = $value if ($macro eq '{$RSM.SLV.NS.DOWNTIME}');
 		$slr{'dns_udp_rtt'}     = $value if ($macro eq '{$RSM.SLV.DNS.UDP.RTT}');
 		$slr{'dns_tcp_rtt'}     = $value if ($macro eq '{$RSM.SLV.DNS.TCP.RTT}');
 		$slr{'rdds_downtime'}   = $value if ($macro eq '{$RSM.SLV.RDDS.DOWNTIME}');
@@ -149,7 +149,7 @@ sub get_slrs()
 	}
 
 	fail('global macro {$RSM.SLV.DNS.DOWNTIME} was not found')  unless (exists($slr{'dns_downtime'}));
-	fail('global macro {$RSM.SLV.NS.AVAIL} was not found')      unless (exists($slr{'dns_ns_downtime'}));
+	fail('global macro {$RSM.SLV.NS.DOWNTIME} was not found')   unless (exists($slr{'dns_ns_downtime'}));
 	fail('global macro {$RSM.SLV.DNS.UDP.RTT} was not found')   unless (exists($slr{'dns_udp_rtt'}));
 	fail('global macro {$RSM.SLV.DNS.TCP.RTT} was not found')   unless (exists($slr{'dns_tcp_rtt'}));
 	fail('global macro {$RSM.SLV.RDDS.DOWNTIME} was not found') unless (exists($slr{'rdds_downtime'}));
@@ -272,3 +272,37 @@ sub get_data($$$$)
 }
 
 main();
+
+__END__
+
+=head1 NAME
+
+sla-monthly-status.pl - get SLV entries that violate SLA.
+
+=head1 SYNOPSIS
+
+sla-monthly-status.pl [--year <year>] [--month <month>] [--debug] [--help]
+
+=head1 OPTIONS
+
+=over 8
+
+=item B<--year> int
+
+Specify year. If year is specified, month also has to be specified.
+
+=item B<--month> int
+
+Specify month. If month is specified, year also has to be specified.
+
+=item B<--debug>
+
+Run the script in debug mode. This means printing more information.
+
+=item B<--help>
+
+Print a brief help message and exit.
+
+=back
+
+=cut
