@@ -187,29 +187,28 @@ if ($page['type'] == PAGE_TYPE_HTML) {
 	}
 
 	$pageHeader
-		->addJsFile((new CUrl('js/browsers.js'))
-			->setArgument('ver', ZABBIX_VERSION)
-			->getUrl()
-		)
+		->addJsFile((new CUrl('js/browsers.js'))->getUrl())
 		->addJsBeforeScripts(
 			'var PHP_TZ_OFFSET = '.date('Z').','.
 				'PHP_ZBX_FULL_DATE_TIME = "'.ZBX_FULL_DATE_TIME.'";'
-		)
-		// Show GUI messages in pages with menus and in fullscreen mode.
-		->addJsFile((new CUrl('jsLoader.php'))
+		);
+	// Show GUI messages in pages with menus and in fullscreen mode.
+	if (CView::$js_loader_disabled !== true) {
+		$pageHeader->addJsFile((new CUrl('jsLoader.php'))
 			->setArgument('ver', ZABBIX_VERSION)
 			->setArgument('lang', CWebUser::$data['lang'])
 			->setArgument('showGuiMessaging', $is_standard_page ? 1 : null)
 			->getUrl()
 		);
 
-	if ($page['scripts']) {
-		$pageHeader->addJsFile((new CUrl('jsLoader.php'))
-			->setArgument('ver', ZABBIX_VERSION)
-			->setArgument('lang', CWebUser::$data['lang'])
-			->setArgument('files', $page['scripts'])
-			->getUrl()
-		);
+		if ($page['scripts']) {
+			$pageHeader->addJsFile((new CUrl('jsLoader.php'))
+				->setArgument('ver', ZABBIX_VERSION)
+				->setArgument('lang', CWebUser::$data['lang'])
+				->setArgument('files', $page['scripts'])
+				->getUrl()
+			);
+		}
 	}
 
 	$pageHeader->display();
