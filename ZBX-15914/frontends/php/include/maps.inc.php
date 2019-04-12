@@ -283,27 +283,22 @@ function getTriggersInfo($selement, $i, $showUnack) {
 		'iconid' => $selement['iconid_off']
 	];
 
-	if ($i['problem'] && ($i['problem_unack'] && $showUnack == EXTACK_OPTION_UNACK
+	if ($i['problem'] && (($i['problem_unack'] && $showUnack == EXTACK_OPTION_UNACK)
 			|| in_array($showUnack, [EXTACK_OPTION_ALL, EXTACK_OPTION_BOTH]))) {
-		// Number of problems.
-		if ($i['expandproblem'] == SYSMAP_PROBLEMS_NUMBER) {
-			if ($i['problem'] == 1) {
-				$msg = _('PROBLEM');
-			}
-			else {
-				$msg = $i['problem'].' '._('Problems');
-			}
-		}
 		// Expand single problem.
-		elseif ($i['expandproblem'] == SYSMAP_SINGLE_PROBLEM) {
-			$msg = $i['problem_title'];
+		if ($i['expandproblem'] == SYSMAP_SINGLE_PROBLEM) {
+			$msg = ($i['problem'] == 1) ? $i['problem_title'] : _s('%1$s problems', $i['problem']);
+		}
+		// Number of problems.
+		elseif ($i['expandproblem'] == SYSMAP_PROBLEMS_NUMBER) {
+			$msg = _n('%1$s problem', '%1$s problems', $i['problem']);
 		}
 		// Number of problems and expand most critical one.
 		elseif ($i['expandproblem'] == SYSMAP_PROBLEMS_NUMBER_CRITICAL) {
 			$msg = $i['problem_title'];
 
 			if ($i['problem'] > 1) {
-				$msg .= "\n".$i['problem'].' '._('Problems');
+				$msg .= "\n"._s('%1$s problems', $i['problem']);
 			}
 		}
 
@@ -369,25 +364,20 @@ function getHostsInfo($selement, $i, $show_unack) {
 
 	if ($i['problem']) {
 		if (in_array($show_unack, [EXTACK_OPTION_ALL, EXTACK_OPTION_BOTH])) {
-			// Number of problems.
-			if ($i['expandproblem'] == SYSMAP_PROBLEMS_NUMBER) {
-				if ($i['problem'] == 1) {
-					$msg = _('PROBLEM');
-				}
-				else {
-					$msg = $i['problem'].' '._('Problems');
-				}
-			}
 			// Expand single problem.
-			elseif ($i['expandproblem'] == SYSMAP_SINGLE_PROBLEM) {
-				$msg = $i['problem_title'];
+			if ($i['expandproblem'] == SYSMAP_SINGLE_PROBLEM) {
+				$msg = ($i['problem'] == 1) ? $i['problem_title'] : _s('%1$s problems', $i['problem']);
+			}
+			// Number of problems.
+			elseif ($i['expandproblem'] == SYSMAP_PROBLEMS_NUMBER) {
+				$msg = _n('%1$s problem', '%1$s problems', $i['problem']);
 			}
 			// Number of problems and expand most critical one.
 			elseif ($i['expandproblem'] == SYSMAP_PROBLEMS_NUMBER_CRITICAL) {
 				$msg = $i['problem_title'];
 
 				if ($i['problem'] > 1) {
-					$msg .= "\n".$i['problem'].' '._('Problems');
+					$msg .= "\n"._s('%1$s problems', $i['problem']);
 				}
 			}
 
@@ -399,7 +389,7 @@ function getHostsInfo($selement, $i, $show_unack) {
 
 		if (in_array($show_unack, [EXTACK_OPTION_UNACK, EXTACK_OPTION_BOTH]) && $i['problem_unack']) {
 			$info['info']['unack'] = [
-				'msg' => $i['problem_unack'].' '._('Unacknowledged'),
+				'msg' => _n('%1$s unacknowledged problem', '%1$s unacknowledged problems', $i['problem_unack']),
 				'color' => getSelementLabelColor(true, false)
 			];
 		}
@@ -462,25 +452,20 @@ function getHostGroupsInfo($selement, $i, $show_unack) {
 
 	if ($i['problem']) {
 		if (in_array($show_unack, [EXTACK_OPTION_ALL, EXTACK_OPTION_BOTH])) {
-			// Number of problems.
-			if ($i['expandproblem'] == SYSMAP_PROBLEMS_NUMBER) {
-				if ($i['problem'] == 1) {
-					$msg = _('PROBLEM');
-				}
-				else {
-					$msg = $i['problem'].' '._('Problems');
-				}
-			}
 			// Expand single problem.
-			elseif ($i['expandproblem'] == SYSMAP_SINGLE_PROBLEM) {
-				$msg = $i['problem_title'];
+			if ($i['expandproblem'] == SYSMAP_SINGLE_PROBLEM) {
+				$msg = ($i['problem'] == 1) ? $i['problem_title'] : _s('%1$s problems', $i['problem']);
+			}
+			// Number of problems.
+			elseif ($i['expandproblem'] == SYSMAP_PROBLEMS_NUMBER) {
+				$msg = _n('%1$s problem', '%1$s problems', $i['problem']);
 			}
 			// Number of problems and expand most critical one.
 			elseif ($i['expandproblem'] == SYSMAP_PROBLEMS_NUMBER_CRITICAL) {
 				$msg = $i['problem_title'];
 
 				if ($i['problem'] > 1) {
-					$msg .= "\n".$i['problem'].' '._('Problems');
+					$msg .= "\n"._s('%1$s problems', $i['problem']);
 				}
 			}
 
@@ -492,7 +477,7 @@ function getHostGroupsInfo($selement, $i, $show_unack) {
 
 		if (in_array($show_unack, [EXTACK_OPTION_UNACK, EXTACK_OPTION_BOTH]) && $i['problem_unack']) {
 			$info['info']['unack'] = [
-				'msg' => $i['problem_unack'].' '._('Unacknowledged'),
+				'msg' => _n('%1$s unacknowledged problem', '%1$s unacknowledged problems', $i['problem_unack']),
 				'color' => getSelementLabelColor(true, false)
 			];
 		}
@@ -550,25 +535,20 @@ function getMapsInfo($selement, $i, $show_unack) {
 
 	if ($i['problem']) {
 		if (in_array($show_unack, [EXTACK_OPTION_ALL, EXTACK_OPTION_BOTH])) {
-			// Number of problems.
-			if ($i['expandproblem'] == SYSMAP_PROBLEMS_NUMBER) {
-				if ($i['problem'] == 1) {
-					$msg = _('PROBLEM');
-				}
-				else {
-					$msg = $i['problem'].' '._('Problems');
-				}
-			}
 			// Expand single problem.
-			elseif ($i['expandproblem'] == SYSMAP_SINGLE_PROBLEM) {
-				$msg = $i['problem_title'];
+			if ($i['expandproblem'] == SYSMAP_SINGLE_PROBLEM) {
+				$msg = ($i['problem'] == 1) ? $i['problem_title'] : _s('%1$s problems', $i['problem']);
+			}
+			// Number of problems.
+			elseif ($i['expandproblem'] == SYSMAP_PROBLEMS_NUMBER) {
+				$msg = _n('%1$s problem', '%1$s problems', $i['problem']);
 			}
 			// Number of problems and expand most critical one.
 			elseif ($i['expandproblem'] == SYSMAP_PROBLEMS_NUMBER_CRITICAL) {
 				$msg = $i['problem_title'];
 
 				if ($i['problem'] > 1) {
-					$msg .= "\n".$i['problem'].' '._('Problems');
+					$msg .= "\n"._s('%1$s problems', $i['problem']);
 				}
 			}
 
@@ -580,7 +560,7 @@ function getMapsInfo($selement, $i, $show_unack) {
 
 		if (in_array($show_unack, [EXTACK_OPTION_UNACK, EXTACK_OPTION_BOTH]) && $i['problem_unack']) {
 			$info['info']['unack'] = [
-				'msg' => $i['problem_unack'].' '._('Unacknowledged'),
+				'msg' => _n('%1$s unacknowledged problem', '%1$s unacknowledged problems', $i['problem_unack']),
 				'color' => getSelementLabelColor(true, false)
 			];
 		}
