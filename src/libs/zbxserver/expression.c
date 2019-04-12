@@ -2387,7 +2387,7 @@ int	substitute_simple_macros(zbx_uint64_t *actionid, const DB_EVENT *event, DB_E
 
 	char			*p, *p_next, *bl, *br, c, *replace_to = NULL, sql[64];
 	const char		*m;
-	int			N_functionid, indexed_macro, require_numeric, ret, res = SUCCEED;
+	int			N_functionid, indexed_macro, require_numeric, require_address, ret, res = SUCCEED;
 	size_t			data_alloc, data_len;
 	DC_INTERFACE		interface;
 	zbx_vector_uint64_t	hostids;
@@ -2425,6 +2425,7 @@ int	substitute_simple_macros(zbx_uint64_t *actionid, const DB_EVENT *event, DB_E
 
 		indexed_macro = 0;
 		require_numeric = 0;
+		require_address = 0;
 
 		/* User macros can have macro closing symbol } in quoted context. */
 		/* We must use user macro parsing function to find macro end.     */
@@ -3525,16 +3526,20 @@ int	substitute_simple_macros(zbx_uint64_t *actionid, const DB_EVENT *event, DB_E
 			{
 				if (SUCCEED == (ret = DCconfig_get_interface(&interface, dc_host->hostid, 0)))
 					replace_to = zbx_strdup(replace_to, interface.ip_orig);
+				require_address = 1;
+
 			}
 			else if	(0 == strcmp(m, MVAR_HOST_DNS))
 			{
 				if (SUCCEED == (ret = DCconfig_get_interface(&interface, dc_host->hostid, 0)))
 					replace_to = zbx_strdup(replace_to, interface.dns_orig);
+				require_address = 1;
 			}
 			else if (0 == strcmp(m, MVAR_HOST_CONN))
 			{
 				if (SUCCEED == (ret = DCconfig_get_interface(&interface, dc_host->hostid, 0)))
 					replace_to = zbx_strdup(replace_to, interface.addr);
+				require_address = 1;
 			}
 		}
 		else if (0 == indexed_macro && 0 != (macro_type & MACRO_TYPE_HTTPTEST_FIELD))
@@ -3579,6 +3584,13 @@ int	substitute_simple_macros(zbx_uint64_t *actionid, const DB_EVENT *event, DB_E
 				wrap_negative_double_suffix(&replace_to, NULL);
 			else if (NULL != error)
 				zbx_snprintf(error, maxerrlen, "Macro '%s' value is not numeric", m);
+		}
+		else if (1 == require_address && NULL != replace_to && NULL != strstr(replace_to, "{$"))
+		{
+			/* Macros should be already expanded. An unexpanded user macro means either unknown */
+			/* macro or macro value validation failure.                                         */
+			zbx_snprintf(error, maxerrlen, "Invalid macro '%s' value", m);
+			res = FAIL;
 		}
 		else if (FAIL == ret)
 		{
