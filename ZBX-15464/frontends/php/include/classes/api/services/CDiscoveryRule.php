@@ -908,8 +908,8 @@ class CDiscoveryRule extends CItemGeneral {
 		}
 	}
 
-	protected function updateReal($items) {
-		$items = zbx_toArray($items);
+	protected function updateReal(array $items) {
+		CArrayHelper::sort($items, ['itemid']);
 
 		$ruleIds = zbx_objectValues($items, 'itemid');
 
@@ -1140,57 +1140,6 @@ class CDiscoveryRule extends CItemGeneral {
 		}
 	}
 
-	protected function inherit(array $items, array $hostids = null) {
-		if (!$items) {
-			return;
-		}
-
-		// Prepare the child discovery rules.
-		$new_items = $this->prepareInheritedItems($items, $hostids);
-		if (!$new_items) {
-			return;
-		}
-
-		$ins_items = [];
-		$upd_items = [];
-		foreach ($new_items as $new_item) {
-			if (array_key_exists('itemid', $new_item)) {
-				$upd_items[] = $new_item;
-			}
-			else {
-				$ins_items[] = $new_item;
-			}
-		}
-
-		// Save the new items.
-		$this->createReal($ins_items);
-		$this->updateReal($upd_items);
-
-		$new_items = array_merge($upd_items, $ins_items);
-
-		// Inheriting items from the templates.
-		$tpl_items = DBselect(
-			'SELECT i.itemid'.
-			' FROM items i,hosts h'.
-			' WHERE i.hostid=h.hostid'.
-				' AND '.dbConditionInt('i.itemid', zbx_objectValues($new_items, 'itemid')).
-				' AND '.dbConditionInt('h.status', [HOST_STATUS_TEMPLATE])
-		);
-
-		$tpl_itemids = [];
-		while ($tpl_item = DBfetch($tpl_items)) {
-			$tpl_itemids[$tpl_item['itemid']] = true;
-		}
-
-		foreach ($new_items as $index => $new_item) {
-			if (!array_key_exists($new_item['itemid'], $tpl_itemids)) {
-				unset($new_items[$index]);
-			}
-		}
-
-		$this->inherit($new_items);
-	}
-
 	/**
 	 * Copies the given discovery rule to the specified host.
 	 *
@@ -1208,7 +1157,7 @@ class CDiscoveryRule extends CItemGeneral {
 			'itemids' => $discoveryid,
 			'output' => ['itemid', 'type', 'snmp_community', 'snmp_oid', 'hostid', 'name', 'key_', 'delay', 'history',
 				'trends', 'status', 'value_type', 'trapper_hosts', 'units', 'snmpv3_securityname',
-				'snmpv3_securitylevel',	'snmpv3_authpassphrase', 'snmpv3_privpassphrase', 'lastlogsize', 'logtimefmt',
+				'snmpv3_securitylevel', 'snmpv3_authpassphrase', 'snmpv3_privpassphrase', 'lastlogsize', 'logtimefmt',
 				'valuemapid', 'params', 'ipmi_sensor', 'authtype', 'username', 'password', 'publickey', 'privatekey',
 				'mtime', 'flags', 'interfaceid', 'port', 'description', 'inventory_link', 'lifetime',
 				'snmpv3_authprotocol', 'snmpv3_privprotocol', 'snmpv3_contextname', 'jmx_endpoint', 'url',
@@ -1689,7 +1638,7 @@ class CDiscoveryRule extends CItemGeneral {
 
 				$items = zbx_toHash($items, 'parent_itemid');
 				foreach ($result as $itemid => $item) {
-					$result[$itemid]['items'] = isset($items[$itemid]) ? $items[$itemid]['rowscount'] : 0;
+					$result[$itemid]['items'] = array_key_exists($itemid, $items) ? $items[$itemid]['rowscount'] : '0';
 				}
 			}
 		}
@@ -1725,7 +1674,9 @@ class CDiscoveryRule extends CItemGeneral {
 
 				$triggers = zbx_toHash($triggers, 'parent_itemid');
 				foreach ($result as $itemid => $item) {
-					$result[$itemid]['triggers'] = isset($triggers[$itemid]) ? $triggers[$itemid]['rowscount'] : 0;
+					$result[$itemid]['triggers'] = array_key_exists($itemid, $triggers)
+						? $triggers[$itemid]['rowscount']
+						: '0';
 				}
 			}
 		}
@@ -1761,7 +1712,9 @@ class CDiscoveryRule extends CItemGeneral {
 
 				$graphs = zbx_toHash($graphs, 'parent_itemid');
 				foreach ($result as $itemid => $item) {
-					$result[$itemid]['graphs'] = isset($graphs[$itemid]) ? $graphs[$itemid]['rowscount'] : 0;
+					$result[$itemid]['graphs'] = array_key_exists($itemid, $graphs)
+						? $graphs[$itemid]['rowscount']
+						: '0';
 				}
 			}
 		}
@@ -1788,7 +1741,9 @@ class CDiscoveryRule extends CItemGeneral {
 				$hostPrototypes = zbx_toHash($hostPrototypes, 'parent_itemid');
 
 				foreach ($result as $itemid => $item) {
-					$result[$itemid]['hostPrototypes'] = isset($hostPrototypes[$itemid]) ? $hostPrototypes[$itemid]['rowscount'] : 0;
+					$result[$itemid]['hostPrototypes'] = array_key_exists($itemid, $hostPrototypes)
+						? $hostPrototypes[$itemid]['rowscount']
+						: '0';
 				}
 			}
 		}

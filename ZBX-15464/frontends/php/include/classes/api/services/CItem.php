@@ -427,7 +427,7 @@ class CItem extends CItemGeneral {
 		}
 		unset($item);
 
-		$this->validateDependentItems($items, __METHOD__);
+		$this->validateDependentItems($items);
 
 		$json = new CJson();
 
@@ -507,14 +507,12 @@ class CItem extends CItemGeneral {
 	 * @param array $items
 	 */
 	protected function updateReal(array $items) {
-		$items = zbx_toArray($items);
+		CArrayHelper::sort($items, ['itemid']);
 
-		$itemids = [];
 		$data = [];
 		foreach ($items as $item) {
 			unset($item['flags']); // flags cannot be changed
 			$data[] = ['values' => $item, 'where' => ['itemid' => $item['itemid']]];
-			$itemids[] = $item['itemid'];
 		}
 		DB::update('items', $data);
 
@@ -554,7 +552,6 @@ class CItem extends CItemGeneral {
 
 		parent::checkInput($items, true);
 		self::validateInventoryLinks($items, true);
-		$this->validateDependentItems($items, __METHOD__);
 
 		$db_items = $this->get([
 			'output' => ['flags', 'type', 'master_itemid', 'authtype', 'allow_traps', 'retrieve_mode'],
@@ -563,7 +560,9 @@ class CItem extends CItemGeneral {
 			'preservekeys' => true
 		]);
 
-		$items = $this->extendFromObjects(zbx_toHash($items, 'itemid'), $db_items, ['flags', 'type']);
+		$items = $this->extendFromObjects(zbx_toHash($items, 'itemid'), $db_items, ['flags', 'type', 'master_itemid']);
+
+		$this->validateDependentItems($items);
 
 		$defaults = DB::getDefaults('items');
 		$clean = [
@@ -594,11 +593,8 @@ class CItem extends CItemGeneral {
 		foreach ($items as &$item) {
 			$type_change = ($item['type'] != $db_items[$item['itemid']]['type']);
 
-			if ($item['type'] != ITEM_TYPE_DEPENDENT && $db_items[$item['itemid']]['master_itemid']) {
-				$item['master_itemid'] = null;
-			}
-			elseif (!array_key_exists('master_itemid', $item)) {
-				$item['master_itemid'] = $db_items[$item['itemid']]['master_itemid'];
+			if ($item['type'] != ITEM_TYPE_DEPENDENT && $db_items[$item['itemid']]['master_itemid'] != 0) {
+				$item['master_itemid'] = 0;
 			}
 
 			if ($type_change && $db_items[$item['itemid']]['type'] == ITEM_TYPE_HTTPAGENT) {
@@ -784,67 +780,6 @@ class CItem extends CItemGeneral {
 		}
 
 		$this->validateItemPreprocessing($item, $method);
-	}
-
-	protected function inherit(array $items, array $hostids = null) {
-		if (!$items) {
-			return;
-		}
-
-		// Prepare the child items.
-		$new_items = $this->prepareInheritedItems($items, $hostids);
-		if (!$new_items) {
-			return;
-		}
-
-		$ins_items = [];
-		$upd_items = [];
-		foreach ($new_items as $new_item) {
-			if (array_key_exists('itemid', $new_item)) {
-				$upd_items[] = $new_item;
-			}
-			else {
-				$ins_items[] = $new_item;
-			}
-		}
-
-		// Save the new items.
-		if ($ins_items) {
-			self::validateInventoryLinks($ins_items, false); // false means 'create'
-			$this->createReal($ins_items);
-		}
-
-		if ($upd_items) {
-			self::validateInventoryLinks($upd_items, true); // true means 'update'
-			$this->updateReal($upd_items);
-		}
-
-		$new_items = array_merge($upd_items, $ins_items);
-
-		// Update master_itemid for inserted or updated inherited dependent items.
-		$this->inheritDependentItems($new_items);
-
-		// Inheriting items from the templates.
-		$tpl_items = DBselect(
-			'SELECT i.itemid'.
-			' FROM items i,hosts h'.
-			' WHERE i.hostid=h.hostid'.
-				' AND '.dbConditionInt('i.itemid', zbx_objectValues($new_items, 'itemid')).
-				' AND '.dbConditionInt('h.status', [HOST_STATUS_TEMPLATE])
-		);
-
-		$tpl_itemids = [];
-		while ($tpl_item = DBfetch($tpl_items)) {
-			$tpl_itemids[$tpl_item['itemid']] = true;
-		}
-
-		foreach ($new_items as $index => $new_item) {
-			if (!array_key_exists($new_item['itemid'], $tpl_itemids)) {
-				unset($new_items[$index]);
-			}
-		}
-
-		$this->inherit($new_items);
 	}
 
 	/**
@@ -1076,12 +1011,9 @@ class CItem extends CItemGeneral {
 				$triggers = zbx_toHash($triggers, 'itemid');
 
 				foreach ($result as $itemid => $item) {
-					if (isset($triggers[$itemid])) {
-						$result[$itemid]['triggers'] = $triggers[$itemid]['rowscount'];
-					}
-					else {
-						$result[$itemid]['triggers'] = 0;
-					}
+					$result[$itemid]['triggers'] = array_key_exists($itemid, $triggers)
+						? $triggers[$itemid]['rowscount']
+						: '0';
 				}
 			}
 		}
@@ -1110,12 +1042,9 @@ class CItem extends CItemGeneral {
 				$graphs = zbx_toHash($graphs, 'itemid');
 
 				foreach ($result as $itemid => $item) {
-					if (isset($graphs[$itemid])) {
-						$result[$itemid]['graphs'] = $graphs[$itemid]['rowscount'];
-					}
-					else {
-						$result[$itemid]['graphs'] = 0;
-					}
+					$result[$itemid]['graphs'] = array_key_exists($itemid, $graphs)
+						? $graphs[$itemid]['rowscount']
+						: '0';
 				}
 			}
 		}
