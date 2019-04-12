@@ -2436,16 +2436,6 @@ static int	process_history_data_value(DC_ITEM *item, zbx_agent_value_t *value)
 			item->host.maintenance_from <= value->ts.sec)
 		return FAIL;
 
-	/* empty values are only allowed for meta information update packets */
-	if (NULL == value->value)
-	{
-		if (0 == value->meta || ITEM_STATE_NOTSUPPORTED == value->state)
-		{
-			THIS_SHOULD_NEVER_HAPPEN;
-			return FAIL;
-		}
-	}
-
 	if (ITEM_STATE_NOTSUPPORTED == value->state ||
 			(NULL != value->value && 0 == strcmp(value->value, ZBX_NOTSUPPORTED)))
 	{
@@ -2498,8 +2488,11 @@ static int	process_history_data_value(DC_ITEM *item, zbx_agent_value_t *value)
 		if (0 != value->meta)
 			set_result_meta(&result, value->lastlogsize, value->mtime);
 
-		item->state = ITEM_STATE_NORMAL;
-		process_item_value(item, &result, &value->ts, NULL);
+		if (0 != ISSET_VALUE(&result) || 0 != ISSET_META(&result))
+		{
+			item->state = ITEM_STATE_NORMAL;
+			process_item_value(item, &result, &value->ts, NULL);
+		}
 
 		free_result(&result);
 	}
@@ -2706,17 +2699,7 @@ static int	parse_history_data_row_value(const struct zbx_json_parse *jp_row, zbx
 	}
 
 	if (SUCCEED == zbx_json_value_by_name_dyn(jp_row, ZBX_PROTO_TAG_VALUE, &tmp, &tmp_alloc))
-	{
 		av->value = zbx_strdup(av->value, tmp);
-	}
-	else
-	{
-		if (0 == av->meta)
-		{
-			/* only meta information update packets can have empty value */
-			goto out;
-		}
-	}
 
 	if (SUCCEED == zbx_json_value_by_name_dyn(jp_row, ZBX_PROTO_TAG_LOGTIMESTAMP, &tmp, &tmp_alloc))
 		av->timestamp = atoi(tmp);
