@@ -339,10 +339,14 @@ class CSlaReport
 			$hostname   = $itemids_meta_ns_avail[$itemid_avail]["hostname"];
 			$ip_address = $itemids_meta_ns_avail[$itemid_avail]["ipAddress"];
 
-			$itemid_downtime = $itemids_meta_ns_downtime[$hostid][$hostname][$ip_address];
+			# if $itemids_meta_ns_downtime doesn't contain info about $hostid, then NS was probably disabled
+			if (array_key_exists($hostid, $itemids_meta_ns_downtime))
+			{
+				$itemid_downtime = $itemids_meta_ns_downtime[$hostid][$hostname][$ip_address];
 
-			$data[$hostid]["dns"]["ns"][$itemid_downtime]["from"] = $from;
-			$data[$hostid]["dns"]["ns"][$itemid_downtime]["to"]   = $to;
+				$data[$hostid]["dns"]["ns"][$itemid_downtime]["from"] = $from;
+				$data[$hostid]["dns"]["ns"][$itemid_downtime]["to"]   = $to;
+			}
 		}
 
 		return $data;
