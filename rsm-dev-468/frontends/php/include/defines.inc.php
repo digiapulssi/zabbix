@@ -1321,8 +1321,6 @@ define('RSM_SLV_RDDS_ROLLWEEK',		'rsm.slv.rdds.rollweek');
 define('RSM_SLV_EPP_ROLLWEEK',		'rsm.slv.epp.rollweek');
 
 // SLA monitoring availability items keys
-define('RSM_SLV_DNS_TCP_RTT_PFAILED',	'rsm.slv.dns.tcp.rtt.pfailed');
-define('RSM_SLV_DNS_UDP_RTT_PFAILED',	'rsm.slv.dns.udp.rtt.pfailed');
 define('RSM_SLV_DNS_AVAIL',					'rsm.slv.dns.avail');
 define('RSM_SLV_DNS_DOWNTIME',				'rsm.slv.dns.downtime');
 define('RSM_SLV_DNS_NS_DOWNTIME',			'rsm.slv.dns.ns.downtime');

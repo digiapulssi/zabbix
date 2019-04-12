@@ -81,7 +81,7 @@ if (($report = DBfetch($reports)) === false) {
 }
 
 if ($report) {
-	$file_name = sprintf('%s-%d-%s.xml', $report['host'], $report['year'], getMonthCaption($report['month']));
+	$file_name = sprintf('%s-%d-%s.xml', $tld['host'], $report['year'], getMonthCaption($report['month']));
 
 	header('Content-Type: text/xml');
 	header("Content-disposition: attachment; filename=\"" . $file_name . "\"");
