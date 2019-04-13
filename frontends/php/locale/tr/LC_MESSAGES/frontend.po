@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Zabbix 3.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-04-07 01:42+0300\n"
+"POT-Creation-Date: 2019-04-14 01:42+0300\n"
 "PO-Revision-Date: 2018-02-04 15:19+0300\n"
 "Last-Translator: Anıl <ozbekanil@gmail.com>\n"
 "Language-Team: Zabbix translation team\n"
@@ -1378,15 +1378,15 @@ msgstr "Kimlik doğrulama yöntemi Zabbix dahili olarak değiştirilemiyor"
 msgid "Cannot clear history"
 msgstr "Geçmiş temizlenemiyor"
 
-#: include/classes/api/services/CDiscoveryRule.php:1323
+#: include/classes/api/services/CDiscoveryRule.php:1324
 msgid "Cannot clone graph prototypes."
 msgstr "Grafik prototipleri klonlanamıyor."
 
-#: include/classes/api/services/CDiscoveryRule.php:1371
+#: include/classes/api/services/CDiscoveryRule.php:1372
 msgid "Cannot clone host prototypes."
 msgstr "Ana makine prototipleri klonlanamıyor."
 
-#: include/classes/api/services/CDiscoveryRule.php:1205
+#: include/classes/api/services/CDiscoveryRule.php:1206
 msgid "Cannot clone item prototypes."
 msgstr "Öğe prototipleri klonlanamıyor."
 
@@ -1503,7 +1503,7 @@ msgstr "Keşfedilen uygulama \"%1$s\" silinemiyor."
 msgid "Cannot delete discovered graph \"%1$s\"."
 msgstr "Keşfedilen grafik \"%1$s\" silinemiyor."
 
-#: include/classes/api/services/CItem.php:578
+#: include/classes/api/services/CItem.php:579
 #, c-format
 msgid "Cannot delete discovered item \"%1$s\"."
 msgstr "Keşfedilen öğe \"%1$s\" silinemiyor."
@@ -1667,11 +1667,11 @@ msgstr "Şablonlanmış grafik silinemiyor."
 msgid "Cannot delete templated host prototype."
 msgstr "Şablonlanmış ana makine prototipi silinemiyor."
 
-#: include/classes/api/services/CItem.php:573
+#: include/classes/api/services/CItem.php:574
 msgid "Cannot delete templated item."
 msgstr "Şablonlanmış öğe silinemiyor."
 
-#: include/classes/api/services/CItemPrototype.php:723
+#: include/classes/api/services/CItemPrototype.php:724
 msgid "Cannot delete templated items"
 msgstr "Şablonlanmış öğeler silinemez"
 
@@ -1905,8 +1905,8 @@ msgstr "\"%2$s\" ekranında kullanılan \"%1$s\" ana makinesi bulunamıyor."
 msgid "Cannot find host group \"%1$s\" for host prototype \"%2$s\" of discovery rule \"%3$s\" on \"%4$s\"."
 msgstr "\"%4$s\" üzerindeki \"%3$s\" keşif kuralının ana makine prototipi \"%2$s\" için ana makine grubu \"%1$s\" bulunamadı."
 
-#: include/classes/api/services/CDiscoveryRule.php:1101
-#: include/classes/api/services/CDiscoveryRule.php:1187
+#: include/classes/api/services/CDiscoveryRule.php:1102
+#: include/classes/api/services/CDiscoveryRule.php:1188
 #: include/classes/api/services/CItemGeneral.php:100 include/items.inc.php:386
 #: include/items.inc.php:439
 #, c-format
@@ -2864,7 +2864,7 @@ msgstr "Koşul"
 msgid "Condition \"%2$s\" is not used in formula \"%3$s\" for action \"%1$s\"."
 msgstr "\"%1$s\" eylemi için \"%3$s\" formülünde \"%2$s\" koşulu kullanılmıyor."
 
-#: include/classes/api/services/CDiscoveryRule.php:961
+#: include/classes/api/services/CDiscoveryRule.php:962
 #, c-format
 msgid "Condition \"%2$s\" is not used in formula \"%3$s\" for discovery rule \"%1$s\"."
 msgstr "\"%1$s\" keşif kuralı için \"%3$s\" formülünde \"%2$s\" durumu kullanılmıyor."
@@ -2874,7 +2874,7 @@ msgstr "\"%1$s\" keşif kuralı için \"%3$s\" formülünde \"%2$s\" durumu kull
 msgid "Condition \"%2$s\" used in formula \"%3$s\" for action \"%1$s\" is not defined."
 msgstr "\"%1$s\" eylemi için \"%3$s\" formülünde kullanılan \"%2$s\" durumu tanımlanmadı."
 
-#: include/classes/api/services/CDiscoveryRule.php:960
+#: include/classes/api/services/CDiscoveryRule.php:961
 #, c-format
 msgid "Condition \"%2$s\" used in formula \"%3$s\" for discovery rule \"%1$s\" is not defined."
 msgstr "\"%1$s\" keşif kuralı için \"%3$s\" formülünde kullanılan \"%2$s\" durumu tanımlanmadı."
@@ -2980,7 +2980,7 @@ msgstr "Makroların yapılandırması"
 msgid "Configuration of maintenance periods"
 msgstr "Bakım dönemleri̇ni̇n yapılandırması"
 
-#: app/controllers/CControllerMediatypeEdit.php:185
+#: app/controllers/CControllerMediatypeEdit.php:188
 #: app/controllers/CControllerMediatypeList.php:111
 msgid "Configuration of media types"
 msgstr "Medya türlerinin yapılandırması"
@@ -3472,8 +3472,7 @@ msgstr "GG:AA:YY"
 msgid "DES"
 msgstr "DES"
 
-#: include/maps.inc.php:491 include/maps.inc.php:571 include/maps.inc.php:657
-#: include/maps.inc.php:745
+#: include/maps.inc.php:491 include/maps.inc.php:571
 msgid "DISABLED"
 msgstr "DEVRE DIŞI"
 
@@ -4063,12 +4062,12 @@ msgstr "Silindi: \"%1$s\" ana makinesi."
 msgid "Deleted: Host prototype \"%1$s\" on \"%2$s\"."
 msgstr "Silindi: \"%2$s\" üzerindeki \"%1$s\" ana makine prototipi."
 
-#: include/classes/api/services/CItem.php:676
+#: include/classes/api/services/CItem.php:677
 #, c-format
 msgid "Deleted: Item \"%1$s\" on \"%2$s\"."
 msgstr "Silindi: \"%2$s\" üzerindeki \"%1$s\" öğesi."
 
-#: include/classes/api/services/CItemPrototype.php:822
+#: include/classes/api/services/CItemPrototype.php:823
 #, c-format
 msgid "Deleted: Item prototype \"%1$s\" on \"%2$s\"."
 msgstr "Silindi: \"%2$s\" üzerindeki \"%1$s\" öğe prototipi."
@@ -4406,7 +4405,7 @@ msgstr "\"%2$s\" üzerinde \"%1$s\" keşif kuralı zaten var."
 msgid "Discovery rule \"%1$s\" already exists."
 msgstr "\"%1$s\" keşif kuralı zaten var."
 
-#: include/classes/api/services/CDiscoveryRule.php:1005
+#: include/classes/api/services/CDiscoveryRule.php:1006
 #, c-format
 msgid "Discovery rule \"%1$s:%2$s\" has incorrect lifetime: \"%3$s\". (min: %4$d, max: %5$d, user macro allowed)"
 msgstr "Keşif kuralı \"%1$s:%2$s\", yanlış kullanım ömrüne sahip: \"%3$s\". (min: %4$d, maks: %5$d, kullanıcı makrosuna izin verildi)"
@@ -4765,12 +4764,12 @@ msgstr "Boş renk."
 msgid "Empty filter condition formula ID for action \"%1$s\"."
 msgstr "\"%1$s\" eylemi için boş filtre koşulu formül ID'si."
 
-#: include/classes/api/services/CDiscoveryRule.php:988
+#: include/classes/api/services/CDiscoveryRule.php:989
 #, c-format
 msgid "Empty filter condition formula ID for discovery rule \"%1$s\"."
 msgstr "\"%1$s\" keşif kuralı için boş filtre koşulu formül ID'si."
 
-#: include/classes/api/services/CDiscoveryRule.php:980
+#: include/classes/api/services/CDiscoveryRule.php:981
 #, c-format
 msgid "Empty filter condition macro for discovery rule \"%1$s\"."
 msgstr "\"%1$s\" keşif kuralı için boş filtre koşul makrosu."
@@ -4795,8 +4794,8 @@ msgstr "Boş ana makine."
 #: include/classes/api/services/CHost.php:1155
 #: include/classes/api/services/CHostPrototype.php:929
 #: include/classes/api/services/CIconMap.php:301
-#: include/classes/api/services/CItem.php:551
-#: include/classes/api/services/CItemPrototype.php:702
+#: include/classes/api/services/CItem.php:552
+#: include/classes/api/services/CItemPrototype.php:703
 #: include/classes/api/services/CMaintenance.php:443
 #: include/classes/api/services/CMap.php:350
 #: include/classes/api/services/CMap.php:376
@@ -4806,7 +4805,7 @@ msgstr "Boş ana makine."
 #: include/classes/api/services/CProxy.php:446
 #: include/classes/api/services/CScreen.php:446
 #: include/classes/api/services/CScreen.php:752
-#: include/classes/api/services/CScreen.php:1225
+#: include/classes/api/services/CScreen.php:1226
 #: include/classes/api/services/CService.php:341
 #: include/classes/api/services/CService.php:376
 #: include/classes/api/services/CService.php:442
@@ -6796,7 +6795,7 @@ msgid "If you think this message is wrong, please consult your administrators ab
 msgstr "Eğer bu mesajın yanlış olduğunu düşünüyorsanız gerekli izinlerin alınması için lütfen yöneticilerinize danışın."
 
 #: image.php:26 include/audit.inc.php:37 include/maps.inc.php:28
-#: include/maps.inc.php:767
+#: include/maps.inc.php:745
 #: include/views/administration.general.image.edit.php:46
 #: include/views/administration.general.image.edit.php:49
 #: include/views/js/monitoring.sysmaps.js.php:21 jsLoader.php:145 map.php:152
@@ -7222,7 +7221,7 @@ msgstr "\"%1$s\" şablon adı için yanlış karakterler kullanıldı."
 msgid "Incorrect conditions for action \"%1$s\"."
 msgstr "\"%1$s\" eylemi için yanlış koşullar."
 
-#: include/classes/api/services/CDiscoveryRule.php:954
+#: include/classes/api/services/CDiscoveryRule.php:955
 #, c-format
 msgid "Incorrect conditions for discovery rule \"%1$s\"."
 msgstr "Keşif kuralı \"%1$s\" için yanlış koşullar."
@@ -7232,7 +7231,7 @@ msgstr "Keşif kuralı \"%1$s\" için yanlış koşullar."
 msgid "Incorrect custom expression \"%2$s\" for action \"%1$s\": %3$s."
 msgstr "\"%1$s\" eylemi için yanlış özel ifade \"%2$s\": %3$s."
 
-#: include/classes/api/services/CDiscoveryRule.php:959
+#: include/classes/api/services/CDiscoveryRule.php:960
 #, c-format
 msgid "Incorrect custom expression \"%2$s\" for discovery rule \"%1$s\": %3$s."
 msgstr "\"%1$s\" keşif kuralı için yanlış özel ifade \"%2$s\": %3$s."
@@ -7281,12 +7280,12 @@ msgstr "Yanlış dosya yüklemesi."
 msgid "Incorrect filter condition formula ID for action \"%1$s\"."
 msgstr "\"%1$s\" eylemi için yanlış süzgeç koşul formülü ID'si."
 
-#: include/classes/api/services/CDiscoveryRule.php:989
+#: include/classes/api/services/CDiscoveryRule.php:990
 #, c-format
 msgid "Incorrect filter condition formula ID for discovery rule \"%1$s\"."
 msgstr "\"%1$s\" keşif kuralı için yanlış süzgeç koşul formülü ID'si."
 
-#: include/classes/api/services/CDiscoveryRule.php:981
+#: include/classes/api/services/CDiscoveryRule.php:982
 #, c-format
 msgid "Incorrect filter condition macro for discovery rule \"%1$s\"."
 msgstr "\"%1$s\" keşif kuralı için yanlış süzgeç koşul makrosu."
@@ -7296,7 +7295,7 @@ msgstr "\"%1$s\" keşif kuralı için yanlış süzgeç koşul makrosu."
 msgid "Incorrect filter condition operator for action \"%1$s\"."
 msgstr "\"%1$s\" eylemi için yanlış süzgeç koşul operatörü."
 
-#: include/classes/api/services/CDiscoveryRule.php:993
+#: include/classes/api/services/CDiscoveryRule.php:994
 #, c-format
 msgid "Incorrect filter condition operator for discovery rule \"%1$s\"."
 msgstr "\"%1$s\" keşif kuralı için yanlış süzgeç koşul operatörü."
@@ -7716,7 +7715,7 @@ msgstr "Yanlış tetikleyici prototipi ifadesi. Tetikleyici prototipi ifade elem
 msgid "Incorrect type of calculation for action \"%1$s\"."
 msgstr "\"%1$s\" eylemi için yanlış hesaplama türü."
 
-#: include/classes/api/services/CDiscoveryRule.php:947
+#: include/classes/api/services/CDiscoveryRule.php:948
 #, c-format
 msgid "Incorrect type of calculation for discovery rule \"%1$s\"."
 msgstr "\"%1$s\" keşif kuralı için yanlış hesaplama türü."
@@ -8321,7 +8320,7 @@ msgstr "\"%2$s\" üzerinde \"%1$s\" öğesi zaten var, başka bir şablondan mir
 msgid "Item \"%1$s\" already exists on \"%2$s\"."
 msgstr "\"%2$s\" üzerinde \"%1$s\" öğesi halihazırda mevcut."
 
-#: include/classes/api/services/CItem.php:852
+#: include/classes/api/services/CItem.php:853
 #, c-format
 msgid "Item \"%1$s\" cannot populate a missing host inventory field number \"%2$d\". Choices are: from 0 (do not populate) to %3$d."
 msgstr "\"%1$s\" öğesi, \"%2$d\" eksik ana makine envanter alanı numarasını dolduramıyor. Seçenekler şunlardır: 0 (doldurma) ve %3$d."
@@ -9078,7 +9077,7 @@ msgstr "Makrolar"
 msgid "Macros updated"
 msgstr "Makrolar güncellendi"
 
-#: include/audit.inc.php:47 include/maps.inc.php:646 include/maps.inc.php:734
+#: include/audit.inc.php:47 include/maps.inc.php:646 include/maps.inc.php:723
 #: include/menu.inc.php:225
 #: include/views/configuration.maintenance.edit.php:205
 #: include/views/js/monitoring.sysmaps.js.php:138
@@ -9849,7 +9848,7 @@ msgstr "Web senaryosu için hiçbir \"%1$s\" verilmedi."
 msgid "No \"%2$s\" given for a filter condition of action \"%1$s\"."
 msgstr "\"%1$s\" eyleminin bir filtre koşulu için hiçbir \"%2$s\" verilmedi."
 
-#: include/classes/api/services/CDiscoveryRule.php:997
+#: include/classes/api/services/CDiscoveryRule.php:998
 #, c-format
 msgid "No \"%2$s\" given for a filter condition of discovery rule \"%1$s\"."
 msgstr "\"%1$s\" keşif kuralının bir filtre koşulu için hiçbir \"%2$s\" verilmedi."
@@ -9864,7 +9863,7 @@ msgstr "\"%1$s\" ana makine prototipi için hiçbir \"%2$s\" verilmemiş."
 msgid "No \"%2$s\" given for the filter of action \"%1$s\"."
 msgstr "\"%1$s\" eylem süzgeci için hiç \"%2$s\" verilmedi."
 
-#: include/classes/api/services/CDiscoveryRule.php:965
+#: include/classes/api/services/CDiscoveryRule.php:966
 #, c-format
 msgid "No \"%2$s\" given for the filter of discovery rule \"%1$s\"."
 msgstr "\"%1$s\" keşif kuralı süzgeci için hiç \"%2$s\" verilmedi."
@@ -10175,8 +10174,8 @@ msgstr "Sistem erişimi için izin yok."
 #: include/classes/api/services/CImage.php:511
 #: include/classes/api/services/CItemGeneral.php:181
 #: include/classes/api/services/CItemGeneral.php:247
-#: include/classes/api/services/CItem.php:568
-#: include/classes/api/services/CItemPrototype.php:720
+#: include/classes/api/services/CItem.php:569
+#: include/classes/api/services/CItemPrototype.php:721
 #: include/classes/api/services/CMaintenance.php:263
 #: include/classes/api/services/CMaintenance.php:288
 #: include/classes/api/services/CMaintenance.php:301
@@ -10198,7 +10197,7 @@ msgstr "Sistem erişimi için izin yok."
 #: include/classes/api/services/CScreenItem.php:396
 #: include/classes/api/services/CScreenItem.php:494
 #: include/classes/api/services/CScreen.php:771
-#: include/classes/api/services/CScreen.php:1238
+#: include/classes/api/services/CScreen.php:1239
 #: include/classes/api/services/CScript.php:287
 #: include/classes/api/services/CScript.php:297
 #: include/classes/api/services/CService.php:1049
@@ -10552,7 +10551,7 @@ msgstr "OEM"
 #: include/classes/screens/CScreenHttpTestDetails.php:187
 #: include/classes/screens/CScreenHttpTest.php:156
 #: include/classes/tree/CServiceTree.php:47 include/maps.inc.php:499
-#: include/maps.inc.php:579 include/maps.inc.php:667 include/maps.inc.php:755
+#: include/maps.inc.php:579 include/maps.inc.php:656 include/maps.inc.php:733
 #: include/triggers.inc.php:170
 #: include/views/monitoring.overview.triggers.php:31
 msgid "OK"
@@ -11462,7 +11461,7 @@ msgstr "Özel anahtar dosyası"
 msgid "Privilege level"
 msgstr "Öncelik seviyesi"
 
-#: include/maps.inc.php:535 include/maps.inc.php:616 include/maps.inc.php:705
+#: include/maps.inc.php:535 include/maps.inc.php:616 include/maps.inc.php:694
 #: include/views/common.filter.trigger.php:38
 #: include/views/js/monitoring.sysmaps.js.php:133
 msgid "Problem"
@@ -11492,7 +11491,7 @@ msgstr "Problem, eğer en az alttakilerden birinde sorun varsa"
 #: app/views/report.services.php:60 app/views/report.services.php:61
 #: app/views/report.services.php:62 app/views/report.services.php:63
 #: chart4.php:165 include/maps.inc.php:529 include/maps.inc.php:610
-#: include/maps.inc.php:699 report2.php:393
+#: include/maps.inc.php:688 report2.php:393
 msgid "Problems"
 msgstr "Problemler"
 
@@ -14186,7 +14185,7 @@ msgstr "Türkçe (tr_TR)"
 msgid "Two elements should be selected"
 msgstr "İki eleman seçilmeli"
 
-#: include/classes/api/services/CItem.php:913
+#: include/classes/api/services/CItem.php:914
 #, c-format
 msgid "Two items (\"%1$s\" and \"%2$s\") cannot populate one host inventory field \"%3$s\", this would lead to a conflict."
 msgstr "İki öğe (\"%1$s\" ve \"%2$s\"), bir ana makine envanter alanını (\"%3$s\") oluşturamaz, bu durum çakışmaya neden olur."
@@ -14356,7 +14355,7 @@ msgstr "Yapılandırma seçilemiyor."
 msgid "Unable to upload file because \"file_uploads\" is disabled."
 msgstr "Dosya yüklenemedi çünkü \"dosya yükleme\" devre dışı."
 
-#: include/maps.inc.php:546 include/maps.inc.php:627 include/maps.inc.php:716
+#: include/maps.inc.php:546 include/maps.inc.php:627 include/maps.inc.php:705
 msgid "Unacknowledged"
 msgstr "Onaylanmamış"
 
@@ -14544,7 +14543,7 @@ msgstr "Grup prototipi için desteklenmeyen \"%1$s\" parametresi."
 msgid "Unsupported parameter \"%2$s\" for a filter condition of action \"%1$s\"."
 msgstr "\"%1$s\" eyleminin bir filtre koşulu için desteklenmeyen parametre \"%2$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:998
+#: include/classes/api/services/CDiscoveryRule.php:999
 #, c-format
 msgid "Unsupported parameter \"%2$s\" for a filter condition of discovery rule \"%1$s\"."
 msgstr "\"%1$s\" keşif kuralının bir filtre koşulu için desteklenmeyen parametre \"%2$s\"."
@@ -14564,7 +14563,7 @@ msgstr "Ana makine %1$s ana makine envanteri için desteklenmeyen parametre \"%2
 msgid "Unsupported parameter \"%2$s\" for the filter of action \"%1$s\"."
 msgstr "\"%1$s\" eyleminin filtresi için desteklenmeyen parametre \"%2$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:966
+#: include/classes/api/services/CDiscoveryRule.php:967
 #, c-format
 msgid "Unsupported parameter \"%2$s\" for the filter of discovery rule \"%1$s\"."
 msgstr "\"%1$s\" keşif kuralının filtresi için desteklenmeyen parametre \"%2$s\"."
@@ -14685,7 +14684,7 @@ msgstr "Güncelleme: %s"
 msgid "Updated: Application \"%1$s\" on \"%2$s\"."
 msgstr "Güncellendi: \"%2$s\" üzerindeki \"%1$s\" uygulaması."
 
-#: include/classes/api/services/CDiscoveryRule.php:864
+#: include/classes/api/services/CDiscoveryRule.php:865
 #, c-format
 msgid "Updated: Discovery rule \"%1$s\" on \"%2$s\"."
 msgstr "Güncellendi: \"%2$s\" üzerindeki \"%1$s\" keşif kuralı."
@@ -14695,12 +14694,12 @@ msgstr "Güncellendi: \"%2$s\" üzerindeki \"%1$s\" keşif kuralı."
 msgid "Updated: Host prototype \"%1$s\" on \"%2$s\"."
 msgstr "Güncellendi: \"%2$s\" üzerindeki \"%1$s\" ana makine prototipi."
 
-#: include/classes/api/services/CItem.php:506
+#: include/classes/api/services/CItem.php:507
 #, c-format
 msgid "Updated: Item \"%1$s\" on \"%2$s\"."
 msgstr "Güncellendi: \"%2$s\" üzerindeki \"%1$s\" öğesi."
 
-#: include/classes/api/services/CItemPrototype.php:672
+#: include/classes/api/services/CItemPrototype.php:673
 #, c-format
 msgid "Updated: Item prototype \"%1$s\" on \"%2$s\"."
 msgstr "Güncellendi: \"%2$s\" üzerindeki \"%1$s\" öğe prototipi."

@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Zabbix 3.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-04-07 01:42+0300\n"
+"POT-Creation-Date: 2019-04-14 01:42+0300\n"
 "PO-Revision-Date: 2019-01-10 20:39+0300\n"
 "Last-Translator: Oleksiy <zalex_ua@i.ua>\n"
 "Language-Team: Zabbix translation team\n"
@@ -1392,15 +1392,15 @@ msgstr "Не вдалося змінити метод аутентифікаці
 msgid "Cannot clear history"
 msgstr "Не вдалося очистити історію"
 
-#: include/classes/api/services/CDiscoveryRule.php:1323
+#: include/classes/api/services/CDiscoveryRule.php:1324
 msgid "Cannot clone graph prototypes."
 msgstr "Не вдалося клонувати прототипи графіків."
 
-#: include/classes/api/services/CDiscoveryRule.php:1371
+#: include/classes/api/services/CDiscoveryRule.php:1372
 msgid "Cannot clone host prototypes."
 msgstr "Не вдалося клонувати прототипи вузлів мережі."
 
-#: include/classes/api/services/CDiscoveryRule.php:1205
+#: include/classes/api/services/CDiscoveryRule.php:1206
 msgid "Cannot clone item prototypes."
 msgstr "Не вдалося клонувати прототипи елементів даних."
 
@@ -1521,7 +1521,7 @@ msgstr "Не вдалося видалити виявлену групу еле�
 msgid "Cannot delete discovered graph \"%1$s\"."
 msgstr "Не вдалося видалити виявлений графік \"%1$s\"."
 
-#: include/classes/api/services/CItem.php:578
+#: include/classes/api/services/CItem.php:579
 #, c-format
 msgid "Cannot delete discovered item \"%1$s\"."
 msgstr "Не вдалося видалити виявлений елемент даних \"%1$s\"."
@@ -1690,11 +1690,11 @@ msgstr "Не вдалося видалити шаблонний графік."
 msgid "Cannot delete templated host prototype."
 msgstr "Не вдалося видалити шаблонний прототип вузла мережі."
 
-#: include/classes/api/services/CItem.php:573
+#: include/classes/api/services/CItem.php:574
 msgid "Cannot delete templated item."
 msgstr "Не вдалося видалити шаблонний елемент даних."
 
-#: include/classes/api/services/CItemPrototype.php:723
+#: include/classes/api/services/CItemPrototype.php:724
 msgid "Cannot delete templated items"
 msgstr "Не вдалося видалити шаблонні елементи даних"
 
@@ -1951,8 +1951,8 @@ msgstr "Не вдалося знайти вузел мережі \"%1$s\" яки
 msgid "Cannot find host group \"%1$s\" for host prototype \"%2$s\" of discovery rule \"%3$s\" on \"%4$s\"."
 msgstr "Не вдалося знайти групу вузлів мережі \"%1$s\" для прототипу вузлів мережі \"%2$s\" правила виявлення \"%3$s\" на \"%4$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:1101
-#: include/classes/api/services/CDiscoveryRule.php:1187
+#: include/classes/api/services/CDiscoveryRule.php:1102
+#: include/classes/api/services/CDiscoveryRule.php:1188
 #: include/classes/api/services/CItemGeneral.php:100 include/items.inc.php:386
 #: include/items.inc.php:439
 #, c-format
@@ -2912,7 +2912,7 @@ msgstr "Умова"
 msgid "Condition \"%2$s\" is not used in formula \"%3$s\" for action \"%1$s\"."
 msgstr "Умова \"%2$s\" не використовується в формулі \"%3$s\" для дії \"%1$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:961
+#: include/classes/api/services/CDiscoveryRule.php:962
 #, c-format
 msgid "Condition \"%2$s\" is not used in formula \"%3$s\" for discovery rule \"%1$s\"."
 msgstr "Умова \"%2$s\" не використовується в формулі \"%3$s\" для правила виявлення \"%1$s\"."
@@ -2922,7 +2922,7 @@ msgstr "Умова \"%2$s\" не використовується в форму�
 msgid "Condition \"%2$s\" used in formula \"%3$s\" for action \"%1$s\" is not defined."
 msgstr "Умову \"%2$s\" яка використовується в формулі \"%3$s\" для дії \"%1$s\" не задано."
 
-#: include/classes/api/services/CDiscoveryRule.php:960
+#: include/classes/api/services/CDiscoveryRule.php:961
 #, c-format
 msgid "Condition \"%2$s\" used in formula \"%3$s\" for discovery rule \"%1$s\" is not defined."
 msgstr "Умову \"%2$s\" яка використовується в формулі \"%3$s\" для правила виявлення \"%1$s\" не задано."
@@ -3028,7 +3028,7 @@ msgstr "Налаштування макросів"
 msgid "Configuration of maintenance periods"
 msgstr "Налаштування періодів обслуговування"
 
-#: app/controllers/CControllerMediatypeEdit.php:185
+#: app/controllers/CControllerMediatypeEdit.php:188
 #: app/controllers/CControllerMediatypeList.php:111
 msgid "Configuration of media types"
 msgstr "Налаштування методів повідомлень"
@@ -3521,8 +3521,7 @@ msgstr "DD.MM.YY"
 msgid "DES"
 msgstr "DES"
 
-#: include/maps.inc.php:491 include/maps.inc.php:571 include/maps.inc.php:657
-#: include/maps.inc.php:745
+#: include/maps.inc.php:491 include/maps.inc.php:571
 msgid "DISABLED"
 msgstr "ДЕЗАКТИВОВАНО"
 
@@ -4113,12 +4112,12 @@ msgstr "Видалено: Вузел мережі \"%1$s\"."
 msgid "Deleted: Host prototype \"%1$s\" on \"%2$s\"."
 msgstr "Видалено: Прототип вузлів мережі \"%1$s\" з \"%2$s\"."
 
-#: include/classes/api/services/CItem.php:676
+#: include/classes/api/services/CItem.php:677
 #, c-format
 msgid "Deleted: Item \"%1$s\" on \"%2$s\"."
 msgstr "Видалено: Елемент даних \"%1$s\" із \"%2$s\"."
 
-#: include/classes/api/services/CItemPrototype.php:822
+#: include/classes/api/services/CItemPrototype.php:823
 #, c-format
 msgid "Deleted: Item prototype \"%1$s\" on \"%2$s\"."
 msgstr "Видалено: Прототип елемента даних \"%1$s\" із \"%2$s\"."
@@ -4456,7 +4455,7 @@ msgstr "Правило виявлення \"%1$s\" вже існує у \"%2$s\"
 msgid "Discovery rule \"%1$s\" already exists."
 msgstr "Правило виявлення \"%1$s\" вже існує."
 
-#: include/classes/api/services/CDiscoveryRule.php:1005
+#: include/classes/api/services/CDiscoveryRule.php:1006
 #, c-format
 msgid "Discovery rule \"%1$s:%2$s\" has incorrect lifetime: \"%3$s\". (min: %4$d, max: %5$d, user macro allowed)"
 msgstr "У правила виявлення \"%1$s:%2$s\" некоректний період зберігання втрачених ресурсів: \"%3$s\". (мін: %4$d, макс: %5$d, допускається макрос користувача)"
@@ -4817,12 +4816,12 @@ msgstr "Пустий колір."
 msgid "Empty filter condition formula ID for action \"%1$s\"."
 msgstr "Пустий ID формули умови фільтру для дії \"%1$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:988
+#: include/classes/api/services/CDiscoveryRule.php:989
 #, c-format
 msgid "Empty filter condition formula ID for discovery rule \"%1$s\"."
 msgstr "Пустий ID формули умови фільтру для правила виявлення \"%1$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:980
+#: include/classes/api/services/CDiscoveryRule.php:981
 #, c-format
 msgid "Empty filter condition macro for discovery rule \"%1$s\"."
 msgstr "Пустий макрос умови фільтру для правила виявлення \"%1$s\"."
@@ -4847,8 +4846,8 @@ msgstr "Пусте ім'я вузла мережі."
 #: include/classes/api/services/CHost.php:1155
 #: include/classes/api/services/CHostPrototype.php:929
 #: include/classes/api/services/CIconMap.php:301
-#: include/classes/api/services/CItem.php:551
-#: include/classes/api/services/CItemPrototype.php:702
+#: include/classes/api/services/CItem.php:552
+#: include/classes/api/services/CItemPrototype.php:703
 #: include/classes/api/services/CMaintenance.php:443
 #: include/classes/api/services/CMap.php:350
 #: include/classes/api/services/CMap.php:376
@@ -4858,7 +4857,7 @@ msgstr "Пусте ім'я вузла мережі."
 #: include/classes/api/services/CProxy.php:446
 #: include/classes/api/services/CScreen.php:446
 #: include/classes/api/services/CScreen.php:752
-#: include/classes/api/services/CScreen.php:1225
+#: include/classes/api/services/CScreen.php:1226
 #: include/classes/api/services/CService.php:341
 #: include/classes/api/services/CService.php:376
 #: include/classes/api/services/CService.php:442
@@ -6855,7 +6854,7 @@ msgid "If you think this message is wrong, please consult your administrators ab
 msgstr "Якщо Ви вважаєте це повідомлення помилковим, то зверніться до вашого адміністратора для отримання необхідних прав доступу."
 
 #: image.php:26 include/audit.inc.php:37 include/maps.inc.php:28
-#: include/maps.inc.php:767
+#: include/maps.inc.php:745
 #: include/views/administration.general.image.edit.php:46
 #: include/views/administration.general.image.edit.php:49
 #: include/views/js/monitoring.sysmaps.js.php:21 jsLoader.php:145 map.php:152
@@ -7281,7 +7280,7 @@ msgstr "Використано некоректні символи в імені
 msgid "Incorrect conditions for action \"%1$s\"."
 msgstr "Некоректні умови для дії \"%1$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:954
+#: include/classes/api/services/CDiscoveryRule.php:955
 #, c-format
 msgid "Incorrect conditions for discovery rule \"%1$s\"."
 msgstr "Некоректні умови для правила виявлення \"%1$s\"."
@@ -7291,7 +7290,7 @@ msgstr "Некоректні умови для правила виявлення
 msgid "Incorrect custom expression \"%2$s\" for action \"%1$s\": %3$s."
 msgstr "Некоректний довільний вираз \"%2$s\" для дії \"%1$s\": %3$s."
 
-#: include/classes/api/services/CDiscoveryRule.php:959
+#: include/classes/api/services/CDiscoveryRule.php:960
 #, c-format
 msgid "Incorrect custom expression \"%2$s\" for discovery rule \"%1$s\": %3$s."
 msgstr "Некоректний довільний вираз \"%2$s\" для правила виявлення \"%1$s\": %3$s."
@@ -7340,12 +7339,12 @@ msgstr "Некоректний завантажуваний файл."
 msgid "Incorrect filter condition formula ID for action \"%1$s\"."
 msgstr "Некоректний ID формули умови фільтру для дії \"%1$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:989
+#: include/classes/api/services/CDiscoveryRule.php:990
 #, c-format
 msgid "Incorrect filter condition formula ID for discovery rule \"%1$s\"."
 msgstr "Некоректний ID формули умови фільтру для правила виявлення \"%1$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:981
+#: include/classes/api/services/CDiscoveryRule.php:982
 #, c-format
 msgid "Incorrect filter condition macro for discovery rule \"%1$s\"."
 msgstr "Некоректний макрос умови фільтру для правила виявлення \"%1$s\"."
@@ -7355,7 +7354,7 @@ msgstr "Некоректний макрос умови фільтру для п�
 msgid "Incorrect filter condition operator for action \"%1$s\"."
 msgstr "Некоректний оператор умови фільтру для дії \"%1$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:993
+#: include/classes/api/services/CDiscoveryRule.php:994
 #, c-format
 msgid "Incorrect filter condition operator for discovery rule \"%1$s\"."
 msgstr "Некоректний оператор умови фільтру для правила виявлення \"%1$s\"."
@@ -7775,7 +7774,7 @@ msgstr "Некоректний вираз прототипу тригера. Е�
 msgid "Incorrect type of calculation for action \"%1$s\"."
 msgstr "Некоректний тип підрахунку для дії \"%1$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:947
+#: include/classes/api/services/CDiscoveryRule.php:948
 #, c-format
 msgid "Incorrect type of calculation for discovery rule \"%1$s\"."
 msgstr "Некоректний тип підрахунку для правила виявлення \"%1$s\"."
@@ -8380,7 +8379,7 @@ msgstr "Елемент даних \"%1$s\" вже існує в \"%2$s\", усп
 msgid "Item \"%1$s\" already exists on \"%2$s\"."
 msgstr "Елемент даних \"%1$s\" вже існує в \"%2$s\"."
 
-#: include/classes/api/services/CItem.php:852
+#: include/classes/api/services/CItem.php:853
 #, c-format
 msgid "Item \"%1$s\" cannot populate a missing host inventory field number \"%2$d\". Choices are: from 0 (do not populate) to %3$d."
 msgstr "Елемент даних \"%1$s\" не може заповнювати відсутнє поле під номером \"%2$d\" інвентарних даних вузла мережі. Оберіть з: від 0 (не заповнювати) до %3$d."
@@ -9143,7 +9142,7 @@ msgstr "Макроси"
 msgid "Macros updated"
 msgstr "Макроси оновлено"
 
-#: include/audit.inc.php:47 include/maps.inc.php:646 include/maps.inc.php:734
+#: include/audit.inc.php:47 include/maps.inc.php:646 include/maps.inc.php:723
 #: include/menu.inc.php:225
 #: include/views/configuration.maintenance.edit.php:205
 #: include/views/js/monitoring.sysmaps.js.php:138
@@ -9919,7 +9918,7 @@ msgstr "Не вказано \"%1$s\" для веб сценарію."
 msgid "No \"%2$s\" given for a filter condition of action \"%1$s\"."
 msgstr "Не вказано \"%2$s\" для умови фільтру в дії \"%1$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:997
+#: include/classes/api/services/CDiscoveryRule.php:998
 #, c-format
 msgid "No \"%2$s\" given for a filter condition of discovery rule \"%1$s\"."
 msgstr "Не вказано \"%2$s\" для умови фільтру в правилі виявлення \"%1$s\"."
@@ -9934,7 +9933,7 @@ msgstr "Не вказано \"%2$s\" для прототипу вузла мер
 msgid "No \"%2$s\" given for the filter of action \"%1$s\"."
 msgstr "Не вказано \"%2$s\" для фільтру в дії \"%1$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:965
+#: include/classes/api/services/CDiscoveryRule.php:966
 #, c-format
 msgid "No \"%2$s\" given for the filter of discovery rule \"%1$s\"."
 msgstr "Не вказано \"%2$s\" для фільтру в правилі виявлення \"%1$s\"."
@@ -10245,8 +10244,8 @@ msgstr "Немає прав доступу до системи."
 #: include/classes/api/services/CImage.php:511
 #: include/classes/api/services/CItemGeneral.php:181
 #: include/classes/api/services/CItemGeneral.php:247
-#: include/classes/api/services/CItem.php:568
-#: include/classes/api/services/CItemPrototype.php:720
+#: include/classes/api/services/CItem.php:569
+#: include/classes/api/services/CItemPrototype.php:721
 #: include/classes/api/services/CMaintenance.php:263
 #: include/classes/api/services/CMaintenance.php:288
 #: include/classes/api/services/CMaintenance.php:301
@@ -10268,7 +10267,7 @@ msgstr "Немає прав доступу до системи."
 #: include/classes/api/services/CScreenItem.php:396
 #: include/classes/api/services/CScreenItem.php:494
 #: include/classes/api/services/CScreen.php:771
-#: include/classes/api/services/CScreen.php:1238
+#: include/classes/api/services/CScreen.php:1239
 #: include/classes/api/services/CScript.php:287
 #: include/classes/api/services/CScript.php:297
 #: include/classes/api/services/CService.php:1049
@@ -10622,7 +10621,7 @@ msgstr "OEM"
 #: include/classes/screens/CScreenHttpTestDetails.php:187
 #: include/classes/screens/CScreenHttpTest.php:156
 #: include/classes/tree/CServiceTree.php:47 include/maps.inc.php:499
-#: include/maps.inc.php:579 include/maps.inc.php:667 include/maps.inc.php:755
+#: include/maps.inc.php:579 include/maps.inc.php:656 include/maps.inc.php:733
 #: include/triggers.inc.php:170
 #: include/views/monitoring.overview.triggers.php:31
 msgid "OK"
@@ -11533,7 +11532,7 @@ msgstr "Файл приватного ключа"
 msgid "Privilege level"
 msgstr "Рівень привілеїв"
 
-#: include/maps.inc.php:535 include/maps.inc.php:616 include/maps.inc.php:705
+#: include/maps.inc.php:535 include/maps.inc.php:616 include/maps.inc.php:694
 #: include/views/common.filter.trigger.php:38
 #: include/views/js/monitoring.sysmaps.js.php:133
 msgid "Problem"
@@ -11563,7 +11562,7 @@ msgstr "Проблема, якщо хоча б у одного із підлег
 #: app/views/report.services.php:60 app/views/report.services.php:61
 #: app/views/report.services.php:62 app/views/report.services.php:63
 #: chart4.php:165 include/maps.inc.php:529 include/maps.inc.php:610
-#: include/maps.inc.php:699 report2.php:393
+#: include/maps.inc.php:688 report2.php:393
 msgid "Problems"
 msgstr "Проблеми"
 
@@ -14268,7 +14267,7 @@ msgstr "Турецька (tr_TR)"
 msgid "Two elements should be selected"
 msgstr "Має бути обрано два елементи"
 
-#: include/classes/api/services/CItem.php:913
+#: include/classes/api/services/CItem.php:914
 #, c-format
 msgid "Two items (\"%1$s\" and \"%2$s\") cannot populate one host inventory field \"%3$s\", this would lead to a conflict."
 msgstr "Два елементи даних (\"%1$s\" та \"%2$s\") не можуть заповнювати одне поле \"%3$s\" інвентарних даних вузла мережі, це призвело б до конфлікту."
@@ -14438,7 +14437,7 @@ msgstr "Неможливо вибрати конфігурацію."
 msgid "Unable to upload file because \"file_uploads\" is disabled."
 msgstr "Неможливо завантажити файл, так як \"file_uploads\" відімкнено."
 
-#: include/maps.inc.php:546 include/maps.inc.php:627 include/maps.inc.php:716
+#: include/maps.inc.php:546 include/maps.inc.php:627 include/maps.inc.php:705
 msgid "Unacknowledged"
 msgstr "Непідтверджено"
 
@@ -14625,7 +14624,7 @@ msgstr "Непідтримуваний параметр \"%1$s\" для прот
 msgid "Unsupported parameter \"%2$s\" for a filter condition of action \"%1$s\"."
 msgstr "Непідтримуваний параметр \"%2$s\" для дії умови фільтру \"%1$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:998
+#: include/classes/api/services/CDiscoveryRule.php:999
 #, c-format
 msgid "Unsupported parameter \"%2$s\" for a filter condition of discovery rule \"%1$s\"."
 msgstr "Непідтримуваний параметр \"%2$s\" для правила виявлення умови фільтру \"%1$s\"."
@@ -14645,7 +14644,7 @@ msgstr "Непідтримуваний параметр \"%2$s\" для інве
 msgid "Unsupported parameter \"%2$s\" for the filter of action \"%1$s\"."
 msgstr "Непідтримуваний параметр \"%2$s\" для фільтру в дії \"%1$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:966
+#: include/classes/api/services/CDiscoveryRule.php:967
 #, c-format
 msgid "Unsupported parameter \"%2$s\" for the filter of discovery rule \"%1$s\"."
 msgstr "Непідтримуваний параметр \"%2$s\" для фільтру в правилі виявлення \"%1$s\"."
@@ -14766,7 +14765,7 @@ msgstr "Оновлено: %s"
 msgid "Updated: Application \"%1$s\" on \"%2$s\"."
 msgstr "Оновлено: Група елементів даних \"%1$s\" на \"%2$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:864
+#: include/classes/api/services/CDiscoveryRule.php:865
 #, c-format
 msgid "Updated: Discovery rule \"%1$s\" on \"%2$s\"."
 msgstr "Оновлено: Прототип вузла мережі \"%1$s\" на \"%2$s\"."
@@ -14776,12 +14775,12 @@ msgstr "Оновлено: Прототип вузла мережі \"%1$s\" на
 msgid "Updated: Host prototype \"%1$s\" on \"%2$s\"."
 msgstr "Оновлено: Прототип вузла мережі \"%1$s\" на \"%2$s\"."
 
-#: include/classes/api/services/CItem.php:506
+#: include/classes/api/services/CItem.php:507
 #, c-format
 msgid "Updated: Item \"%1$s\" on \"%2$s\"."
 msgstr "Оновлено: Елемент даних \"%1$s\" на \"%2$s\"."
 
-#: include/classes/api/services/CItemPrototype.php:672
+#: include/classes/api/services/CItemPrototype.php:673
 #, c-format
 msgid "Updated: Item prototype \"%1$s\" on \"%2$s\"."
 msgstr "Оновлено: Прототип елемента даних \"%1$s\" на \"%2$s\"."

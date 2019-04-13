@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Zabbix 3.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-04-07 01:42+0300\n"
+"POT-Creation-Date: 2019-04-14 01:42+0300\n"
 "PO-Revision-Date: 2016-05-10 20:54+0300\n"
 "Last-Translator: Jan <jan.garaj@gmail.com>\n"
 "Language-Team: Zabbix translation team\n"
@@ -1393,15 +1393,15 @@ msgstr "Nie je možné zmeniť metódu prihlasovania na Zabbix-internal"
 msgid "Cannot clear history"
 msgstr "Nie je možné zmazať históriu"
 
-#: include/classes/api/services/CDiscoveryRule.php:1323
+#: include/classes/api/services/CDiscoveryRule.php:1324
 msgid "Cannot clone graph prototypes."
 msgstr "Nie je možné klonovať prototypy grafov."
 
-#: include/classes/api/services/CDiscoveryRule.php:1371
+#: include/classes/api/services/CDiscoveryRule.php:1372
 msgid "Cannot clone host prototypes."
 msgstr "Nie je možné klonovať prototypy hostov."
 
-#: include/classes/api/services/CDiscoveryRule.php:1205
+#: include/classes/api/services/CDiscoveryRule.php:1206
 msgid "Cannot clone item prototypes."
 msgstr "Nie je možné klonovať prototypy položiek."
 
@@ -1522,7 +1522,7 @@ msgstr "Nie je možné zmazať zistenú aplikáciu \"%1$s\"."
 msgid "Cannot delete discovered graph \"%1$s\"."
 msgstr "Nie je možné zmazať zistený graf \"%1$s\"."
 
-#: include/classes/api/services/CItem.php:578
+#: include/classes/api/services/CItem.php:579
 #, c-format
 msgid "Cannot delete discovered item \"%1$s\"."
 msgstr "Nie je možné zmazať zistenú položku \"%1$s\"."
@@ -1691,11 +1691,11 @@ msgstr "Nie je možné zmazať grafy patriace šablóne."
 msgid "Cannot delete templated host prototype."
 msgstr "Nie je možné zmazať prototyp hosta patriaci šablóne."
 
-#: include/classes/api/services/CItem.php:573
+#: include/classes/api/services/CItem.php:574
 msgid "Cannot delete templated item."
 msgstr "Nie je možné zmazať položku patriacu šablóne."
 
-#: include/classes/api/services/CItemPrototype.php:723
+#: include/classes/api/services/CItemPrototype.php:724
 msgid "Cannot delete templated items"
 msgstr "Nie je možné zmazať položky patriace šablóne"
 
@@ -1953,8 +1953,8 @@ msgstr "Host \"%1$s\" použitý v obrazovke \"%2$s\" nebol nájdený."
 msgid "Cannot find host group \"%1$s\" for host prototype \"%2$s\" of discovery rule \"%3$s\" on \"%4$s\"."
 msgstr "Nemôžem nájsť skupinu \"%1$s\" pre prototyp hosta \"%2$s\" zisťovacieho pravidla \"%3$s\" na \"%4$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:1101
-#: include/classes/api/services/CDiscoveryRule.php:1187
+#: include/classes/api/services/CDiscoveryRule.php:1102
+#: include/classes/api/services/CDiscoveryRule.php:1188
 #: include/classes/api/services/CItemGeneral.php:100 include/items.inc.php:386
 #: include/items.inc.php:439
 #, c-format
@@ -2914,7 +2914,7 @@ msgstr "Podmienka"
 msgid "Condition \"%2$s\" is not used in formula \"%3$s\" for action \"%1$s\"."
 msgstr "Podmienka \"%2$s\" nie je použitá vo formule \"%3$s\" pre akciu \"%1$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:961
+#: include/classes/api/services/CDiscoveryRule.php:962
 #, c-format
 msgid "Condition \"%2$s\" is not used in formula \"%3$s\" for discovery rule \"%1$s\"."
 msgstr "Podmienka \"%2$s\" použitá vo formule \"%3$s\" pre akciu \"%1$s\" nie je definovaná."
@@ -2924,7 +2924,7 @@ msgstr "Podmienka \"%2$s\" použitá vo formule \"%3$s\" pre akciu \"%1$s\" nie 
 msgid "Condition \"%2$s\" used in formula \"%3$s\" for action \"%1$s\" is not defined."
 msgstr "Podmienka \"%2$s\" použitá vo formule \"%3$s\" pre akciu \"%1$s\" nie je definovaná."
 
-#: include/classes/api/services/CDiscoveryRule.php:960
+#: include/classes/api/services/CDiscoveryRule.php:961
 #, c-format
 msgid "Condition \"%2$s\" used in formula \"%3$s\" for discovery rule \"%1$s\" is not defined."
 msgstr "Podmienka \"%2$s\" použitá vo formule \"%3$s\" pre zisťovacie pravidlo \"%1$s\" nie je definovaná."
@@ -3030,7 +3030,7 @@ msgstr "Nastavenie makier"
 msgid "Configuration of maintenance periods"
 msgstr "Nastavenie plánovaných odstávok"
 
-#: app/controllers/CControllerMediatypeEdit.php:185
+#: app/controllers/CControllerMediatypeEdit.php:188
 #: app/controllers/CControllerMediatypeList.php:111
 msgid "Configuration of media types"
 msgstr "Nastavenie typov médií"
@@ -3523,8 +3523,7 @@ msgstr "DD.MM.YY"
 msgid "DES"
 msgstr "DES"
 
-#: include/maps.inc.php:491 include/maps.inc.php:571 include/maps.inc.php:657
-#: include/maps.inc.php:745
+#: include/maps.inc.php:491 include/maps.inc.php:571
 msgid "DISABLED"
 msgstr "VYPNUTÉ"
 
@@ -4115,12 +4114,12 @@ msgstr "Zmazané: Host \"%1$s\"."
 msgid "Deleted: Host prototype \"%1$s\" on \"%2$s\"."
 msgstr "Zmazané: Prototyp hosta \"%1$s\" na \"%2$s\"."
 
-#: include/classes/api/services/CItem.php:676
+#: include/classes/api/services/CItem.php:677
 #, c-format
 msgid "Deleted: Item \"%1$s\" on \"%2$s\"."
 msgstr "Zmazané: Položka \"%1$s\" na \"%2$s\"."
 
-#: include/classes/api/services/CItemPrototype.php:822
+#: include/classes/api/services/CItemPrototype.php:823
 #, c-format
 msgid "Deleted: Item prototype \"%1$s\" on \"%2$s\"."
 msgstr "Zmazané: Prototyp položky \"%1$s\" na \"%2$s\"."
@@ -4458,7 +4457,7 @@ msgstr "Zisťovacie pravidlo \"%1$s\" už existuje na \"%2$s\"."
 msgid "Discovery rule \"%1$s\" already exists."
 msgstr "Zisťovacie pravidlo \"%1$s\" už existuje."
 
-#: include/classes/api/services/CDiscoveryRule.php:1005
+#: include/classes/api/services/CDiscoveryRule.php:1006
 #, c-format
 msgid "Discovery rule \"%1$s:%2$s\" has incorrect lifetime: \"%3$s\". (min: %4$d, max: %5$d, user macro allowed)"
 msgstr "Zisťovacie pravidlo \"%1$s:%2$s\" ma nesprávny lifetime: \"%3$s\". (min: %4$d, max: %5$d, používateľské makro povolené)"
@@ -4819,12 +4818,12 @@ msgstr "Prázdna farba."
 msgid "Empty filter condition formula ID for action \"%1$s\"."
 msgstr "Prázdna filtrovacia podmienka ID vzorca pre akciu \"%1$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:988
+#: include/classes/api/services/CDiscoveryRule.php:989
 #, c-format
 msgid "Empty filter condition formula ID for discovery rule \"%1$s\"."
 msgstr "Prázdna filtrovacia podmienka ID vzorca pre zisťovacie pravidlo \"%1$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:980
+#: include/classes/api/services/CDiscoveryRule.php:981
 #, c-format
 msgid "Empty filter condition macro for discovery rule \"%1$s\"."
 msgstr "Prázdna filtrovacia podmienka makra pre zisťovacie pravidlo \"%1$s\"."
@@ -4849,8 +4848,8 @@ msgstr "Prázdny host."
 #: include/classes/api/services/CHost.php:1155
 #: include/classes/api/services/CHostPrototype.php:929
 #: include/classes/api/services/CIconMap.php:301
-#: include/classes/api/services/CItem.php:551
-#: include/classes/api/services/CItemPrototype.php:702
+#: include/classes/api/services/CItem.php:552
+#: include/classes/api/services/CItemPrototype.php:703
 #: include/classes/api/services/CMaintenance.php:443
 #: include/classes/api/services/CMap.php:350
 #: include/classes/api/services/CMap.php:376
@@ -4860,7 +4859,7 @@ msgstr "Prázdny host."
 #: include/classes/api/services/CProxy.php:446
 #: include/classes/api/services/CScreen.php:446
 #: include/classes/api/services/CScreen.php:752
-#: include/classes/api/services/CScreen.php:1225
+#: include/classes/api/services/CScreen.php:1226
 #: include/classes/api/services/CService.php:341
 #: include/classes/api/services/CService.php:376
 #: include/classes/api/services/CService.php:442
@@ -6857,7 +6856,7 @@ msgid "If you think this message is wrong, please consult your administrators ab
 msgstr "Pokiaľ si myslíte, že táto správa je nesprávna, prosím kontaktuje vášho administrátora pre pridelenie potrebných oprávnení."
 
 #: image.php:26 include/audit.inc.php:37 include/maps.inc.php:28
-#: include/maps.inc.php:767
+#: include/maps.inc.php:745
 #: include/views/administration.general.image.edit.php:46
 #: include/views/administration.general.image.edit.php:49
 #: include/views/js/monitoring.sysmaps.js.php:21 jsLoader.php:145 map.php:152
@@ -7283,7 +7282,7 @@ msgstr "Nesprávne podmienky pre zisťovacie pravidlo \"%1$s\"."
 msgid "Incorrect conditions for action \"%1$s\"."
 msgstr "Nesprávne podmienky pre akciu \"%1$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:954
+#: include/classes/api/services/CDiscoveryRule.php:955
 #, c-format
 msgid "Incorrect conditions for discovery rule \"%1$s\"."
 msgstr "Nesprávne podmienky pre zisťovacie pravidlo \"%1$s\"."
@@ -7293,7 +7292,7 @@ msgstr "Nesprávne podmienky pre zisťovacie pravidlo \"%1$s\"."
 msgid "Incorrect custom expression \"%2$s\" for action \"%1$s\": %3$s."
 msgstr "Nesprávny vlastný výraz \"%2$s\" pre akciu \"%1$s\": %3$s."
 
-#: include/classes/api/services/CDiscoveryRule.php:959
+#: include/classes/api/services/CDiscoveryRule.php:960
 #, c-format
 msgid "Incorrect custom expression \"%2$s\" for discovery rule \"%1$s\": %3$s."
 msgstr "Nesprávny vlastný výraz \"%2$s\" pre zisťovacie pravidlo \"%1$s\": %3$s."
@@ -7342,12 +7341,12 @@ msgstr "Nahraný neplatný súbor."
 msgid "Incorrect filter condition formula ID for action \"%1$s\"."
 msgstr "Nesprávna filtrovacia podmienka ID vzorca pre akciu \"%1$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:989
+#: include/classes/api/services/CDiscoveryRule.php:990
 #, c-format
 msgid "Incorrect filter condition formula ID for discovery rule \"%1$s\"."
 msgstr "Nesprávna filtrovacia podmienka ID vzorca pre zisťovacie pravidlo \"%1$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:981
+#: include/classes/api/services/CDiscoveryRule.php:982
 #, c-format
 msgid "Incorrect filter condition macro for discovery rule \"%1$s\"."
 msgstr "Nesprávna filtrovacia podmienka makra pre zisťovacie pravidlo \"%1$s\"."
@@ -7357,7 +7356,7 @@ msgstr "Nesprávna filtrovacia podmienka makra pre zisťovacie pravidlo \"%1$s\"
 msgid "Incorrect filter condition operator for action \"%1$s\"."
 msgstr "Nesprávna filtrovacia podmienka operátora pre akciu \"%1$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:993
+#: include/classes/api/services/CDiscoveryRule.php:994
 #, c-format
 msgid "Incorrect filter condition operator for discovery rule \"%1$s\"."
 msgstr "Nesprávna filtrovacia podmienka operátora pre zisťovacie pravidlo \"%1$s\"."
@@ -7777,7 +7776,7 @@ msgstr "Neplatný výraz prototypu spúšťača. Elementy výrazu prototypu spú
 msgid "Incorrect type of calculation for action \"%1$s\"."
 msgstr "Nesprávny typ kalkulácie pre akciu \"%1$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:947
+#: include/classes/api/services/CDiscoveryRule.php:948
 #, c-format
 msgid "Incorrect type of calculation for discovery rule \"%1$s\"."
 msgstr "Nesprávny typ výpočtu pre zisťovacie pravidlo \"%1$s\"."
@@ -8382,7 +8381,7 @@ msgstr "Položka \"%1$s\" už existuje na \"%2$s\", zdedená z inej šablóny."
 msgid "Item \"%1$s\" already exists on \"%2$s\"."
 msgstr "Položka \"%1$s\" už existuje na \"%2$s\"."
 
-#: include/classes/api/services/CItem.php:852
+#: include/classes/api/services/CItem.php:853
 #, c-format
 msgid "Item \"%1$s\" cannot populate a missing host inventory field number \"%2$d\". Choices are: from 0 (do not populate) to %3$d."
 msgstr "Položka \"%1$s\" nemôže byť naplnená chýbajúcim inventárnym polom číslo \"%2$d\". Možnosti: od 0 (nenapĺňať) do %3$d."
@@ -9145,7 +9144,7 @@ msgstr "Makrá"
 msgid "Macros updated"
 msgstr "Makrá aktualizované"
 
-#: include/audit.inc.php:47 include/maps.inc.php:646 include/maps.inc.php:734
+#: include/audit.inc.php:47 include/maps.inc.php:646 include/maps.inc.php:723
 #: include/menu.inc.php:225
 #: include/views/configuration.maintenance.edit.php:205
 #: include/views/js/monitoring.sysmaps.js.php:138
@@ -9921,7 +9920,7 @@ msgstr "Žiadne \"%1$s\" dané pre web scenár."
 msgid "No \"%2$s\" given for a filter condition of action \"%1$s\"."
 msgstr "Žiadne \"%2$s\" dané pre filtrovaciu podmienku akcie \"%1$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:997
+#: include/classes/api/services/CDiscoveryRule.php:998
 #, c-format
 msgid "No \"%2$s\" given for a filter condition of discovery rule \"%1$s\"."
 msgstr "Žiadne \"%2$s\" dané pre filtrovaciu podmienku zisťovacieho pravidla \"%1$s\"."
@@ -9936,7 +9935,7 @@ msgstr "Žiadne \"%2$s\" dané pre prototyp hosta \"%1$s\"."
 msgid "No \"%2$s\" given for the filter of action \"%1$s\"."
 msgstr "Žiadne \"%2$s\" dané pre filter akcie \"%1$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:965
+#: include/classes/api/services/CDiscoveryRule.php:966
 #, c-format
 msgid "No \"%2$s\" given for the filter of discovery rule \"%1$s\"."
 msgstr "Žiadne \"%2$s\" dané pre filter zisťovacieho pravidla \"%1$s\"."
@@ -10247,8 +10246,8 @@ msgstr "Žiadne oprávnenia pre prístup do systému."
 #: include/classes/api/services/CImage.php:511
 #: include/classes/api/services/CItemGeneral.php:181
 #: include/classes/api/services/CItemGeneral.php:247
-#: include/classes/api/services/CItem.php:568
-#: include/classes/api/services/CItemPrototype.php:720
+#: include/classes/api/services/CItem.php:569
+#: include/classes/api/services/CItemPrototype.php:721
 #: include/classes/api/services/CMaintenance.php:263
 #: include/classes/api/services/CMaintenance.php:288
 #: include/classes/api/services/CMaintenance.php:301
@@ -10270,7 +10269,7 @@ msgstr "Žiadne oprávnenia pre prístup do systému."
 #: include/classes/api/services/CScreenItem.php:396
 #: include/classes/api/services/CScreenItem.php:494
 #: include/classes/api/services/CScreen.php:771
-#: include/classes/api/services/CScreen.php:1238
+#: include/classes/api/services/CScreen.php:1239
 #: include/classes/api/services/CScript.php:287
 #: include/classes/api/services/CScript.php:297
 #: include/classes/api/services/CService.php:1049
@@ -10624,7 +10623,7 @@ msgstr "OEM"
 #: include/classes/screens/CScreenHttpTestDetails.php:187
 #: include/classes/screens/CScreenHttpTest.php:156
 #: include/classes/tree/CServiceTree.php:47 include/maps.inc.php:499
-#: include/maps.inc.php:579 include/maps.inc.php:667 include/maps.inc.php:755
+#: include/maps.inc.php:579 include/maps.inc.php:656 include/maps.inc.php:733
 #: include/triggers.inc.php:170
 #: include/views/monitoring.overview.triggers.php:31
 msgid "OK"
@@ -11535,7 +11534,7 @@ msgstr "Súbor so súkromným kľúčom"
 msgid "Privilege level"
 msgstr "Úroveň oprávnenia"
 
-#: include/maps.inc.php:535 include/maps.inc.php:616 include/maps.inc.php:705
+#: include/maps.inc.php:535 include/maps.inc.php:616 include/maps.inc.php:694
 #: include/views/common.filter.trigger.php:38
 #: include/views/js/monitoring.sysmaps.js.php:133
 msgid "Problem"
@@ -11565,7 +11564,7 @@ msgstr "Problém, ak najmenej jeden podriadený má problém"
 #: app/views/report.services.php:60 app/views/report.services.php:61
 #: app/views/report.services.php:62 app/views/report.services.php:63
 #: chart4.php:165 include/maps.inc.php:529 include/maps.inc.php:610
-#: include/maps.inc.php:699 report2.php:393
+#: include/maps.inc.php:688 report2.php:393
 msgid "Problems"
 msgstr "Problémy"
 
@@ -14270,7 +14269,7 @@ msgstr "Turecky (tr_TR)"
 msgid "Two elements should be selected"
 msgstr "Musia byť označené dva elementy"
 
-#: include/classes/api/services/CItem.php:913
+#: include/classes/api/services/CItem.php:914
 #, c-format
 msgid "Two items (\"%1$s\" and \"%2$s\") cannot populate one host inventory field \"%3$s\", this would lead to a conflict."
 msgstr "Dve položky (\"%1$s\" and \"%2$s\") nie je možné naplniť jedným inventárnym polom \"%3$s\", viedlo by to ku sporu."
@@ -14440,7 +14439,7 @@ msgstr "Nie je možné vybrať konfiguráciu."
 msgid "Unable to upload file because \"file_uploads\" is disabled."
 msgstr "Nie je možné nahrať súbor, pretože \"file_uploads\" je zakázaný."
 
-#: include/maps.inc.php:546 include/maps.inc.php:627 include/maps.inc.php:716
+#: include/maps.inc.php:546 include/maps.inc.php:627 include/maps.inc.php:705
 msgid "Unacknowledged"
 msgstr "Nepotvrdené"
 
@@ -14627,7 +14626,7 @@ msgstr "Nepodporovaný parameter \"%1$s\" pre prototyp skupiny."
 msgid "Unsupported parameter \"%2$s\" for a filter condition of action \"%1$s\"."
 msgstr "Nepodporovaný parameter \"%2$s\" pre filtrovaciu podmienku akcie \"%1$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:998
+#: include/classes/api/services/CDiscoveryRule.php:999
 #, c-format
 msgid "Unsupported parameter \"%2$s\" for a filter condition of discovery rule \"%1$s\"."
 msgstr "Nepodporovaný parameter \"%2$s\" pre filtrovaciu podmienku zisťovacieho pravidla \"%1$s\"."
@@ -14647,7 +14646,7 @@ msgstr "Nepodporovaný parameter \"%2$s\" pre prototyp hosta %1$s inventár host
 msgid "Unsupported parameter \"%2$s\" for the filter of action \"%1$s\"."
 msgstr "Nepodporovaný parameter \"%2$s\" pre filter akcie \"%1$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:966
+#: include/classes/api/services/CDiscoveryRule.php:967
 #, c-format
 msgid "Unsupported parameter \"%2$s\" for the filter of discovery rule \"%1$s\"."
 msgstr "Nepodporovaný parameter \"%2$s\" pre filter akcie \"%1$s\"."
@@ -14768,7 +14767,7 @@ msgstr "Aktualizované: %s"
 msgid "Updated: Application \"%1$s\" on \"%2$s\"."
 msgstr "Aktualizované: Aplikácia \"%1$s\" na \"%2$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:864
+#: include/classes/api/services/CDiscoveryRule.php:865
 #, c-format
 msgid "Updated: Discovery rule \"%1$s\" on \"%2$s\"."
 msgstr "Aktualizované: Pravidlo zisťovania \"%1$s\" na \"%2$s\"."
@@ -14778,12 +14777,12 @@ msgstr "Aktualizované: Pravidlo zisťovania \"%1$s\" na \"%2$s\"."
 msgid "Updated: Host prototype \"%1$s\" on \"%2$s\"."
 msgstr "Aktualizované: Prototyp hosta \"%1$s\" na \"%2$s\"."
 
-#: include/classes/api/services/CItem.php:506
+#: include/classes/api/services/CItem.php:507
 #, c-format
 msgid "Updated: Item \"%1$s\" on \"%2$s\"."
 msgstr "Aktualizované: Položka \"%1$s\" na \"%2$s\"."
 
-#: include/classes/api/services/CItemPrototype.php:672
+#: include/classes/api/services/CItemPrototype.php:673
 #, c-format
 msgid "Updated: Item prototype \"%1$s\" on \"%2$s\"."
 msgstr "Aktualizované: Prototyp položky \"%1$s\" na \"%2$s\"."

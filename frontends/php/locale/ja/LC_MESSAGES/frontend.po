@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Zabbix 3.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-04-07 01:42+0300\n"
+"POT-Creation-Date: 2019-04-14 01:42+0300\n"
 "PO-Revision-Date: 2018-12-25 01:40+0300\n"
 "Last-Translator: Atsushi <a.tanaka77@gmail.com>\n"
 "Language-Team: Zabbix\n"
@@ -1358,15 +1358,15 @@ msgstr "認証方式をZabbix内部データベースに変更できません"
 msgid "Cannot clear history"
 msgstr "ヒストリを削除できません"
 
-#: include/classes/api/services/CDiscoveryRule.php:1323
+#: include/classes/api/services/CDiscoveryRule.php:1324
 msgid "Cannot clone graph prototypes."
 msgstr "グラフのプロトタイプを複製できません。"
 
-#: include/classes/api/services/CDiscoveryRule.php:1371
+#: include/classes/api/services/CDiscoveryRule.php:1372
 msgid "Cannot clone host prototypes."
 msgstr "ホストのプロトタイプを複製できません。"
 
-#: include/classes/api/services/CDiscoveryRule.php:1205
+#: include/classes/api/services/CDiscoveryRule.php:1206
 msgid "Cannot clone item prototypes."
 msgstr "アイテムのプロトタイプを複製できません。"
 
@@ -1479,7 +1479,7 @@ msgstr "ディスカバリされたアプリケーション\"%1$s\"は削除で�
 msgid "Cannot delete discovered graph \"%1$s\"."
 msgstr "ディスカバリされたグラフ\"%1$s\"は削除できません。"
 
-#: include/classes/api/services/CItem.php:578
+#: include/classes/api/services/CItem.php:579
 #, c-format
 msgid "Cannot delete discovered item \"%1$s\"."
 msgstr "ディスカバリされたアイテム\"%1$s\"は削除できません。"
@@ -1638,11 +1638,11 @@ msgstr "テンプレートのグラフを削除できません。"
 msgid "Cannot delete templated host prototype."
 msgstr "テンプレートのホストのプロトタイプを削除できません。"
 
-#: include/classes/api/services/CItem.php:573
+#: include/classes/api/services/CItem.php:574
 msgid "Cannot delete templated item."
 msgstr "テンプレートのアイテムを削除できません。"
 
-#: include/classes/api/services/CItemPrototype.php:723
+#: include/classes/api/services/CItemPrototype.php:724
 msgid "Cannot delete templated items"
 msgstr "テンプレートのアイテムを削除できません"
 
@@ -1853,8 +1853,8 @@ msgstr "スクリーン\"%2$s\"で使用されているホスト\"%1$s\"が見�
 msgid "Cannot find host group \"%1$s\" for host prototype \"%2$s\" of discovery rule \"%3$s\" on \"%4$s\"."
 msgstr "\"%4$s\"上のディスカバリルール\"%3$s\"のホストのプロトタイプ\"%2$s\"のためのホストグループ\"%1$s\"が見つかりません。"
 
-#: include/classes/api/services/CDiscoveryRule.php:1101
-#: include/classes/api/services/CDiscoveryRule.php:1187
+#: include/classes/api/services/CDiscoveryRule.php:1102
+#: include/classes/api/services/CDiscoveryRule.php:1188
 #: include/classes/api/services/CItemGeneral.php:100 include/items.inc.php:386
 #: include/items.inc.php:439
 #, c-format
@@ -2810,7 +2810,7 @@ msgstr "アクションの実行条件"
 msgid "Condition \"%2$s\" is not used in formula \"%3$s\" for action \"%1$s\"."
 msgstr "アクション\"%1$s\"の条件\"%2$s\"は式\"%3$s\"内で使用されていません。"
 
-#: include/classes/api/services/CDiscoveryRule.php:961
+#: include/classes/api/services/CDiscoveryRule.php:962
 #, c-format
 msgid "Condition \"%2$s\" is not used in formula \"%3$s\" for discovery rule \"%1$s\"."
 msgstr "ディスカバリルール\"%1$s\"の条件\"%2$s\"は式\"%3$s\"内で使用されていません。"
@@ -2820,7 +2820,7 @@ msgstr "ディスカバリルール\"%1$s\"の条件\"%2$s\"は式\"%3$s\"内で
 msgid "Condition \"%2$s\" used in formula \"%3$s\" for action \"%1$s\" is not defined."
 msgstr "アクション\"%1$s\"の式\"%3$s\"内で使用されている条件\"%2$s\"は設定されていません。"
 
-#: include/classes/api/services/CDiscoveryRule.php:960
+#: include/classes/api/services/CDiscoveryRule.php:961
 #, c-format
 msgid "Condition \"%2$s\" used in formula \"%3$s\" for discovery rule \"%1$s\" is not defined."
 msgstr "ディスカバリルール\"%1$s\"の式\"%3$s\"内で使用されている条件\"%2$s\"は設定されていません。"
@@ -2926,7 +2926,7 @@ msgstr "マクロの設定"
 msgid "Configuration of maintenance periods"
 msgstr "メンテナンス期間の設定"
 
-#: app/controllers/CControllerMediatypeEdit.php:185
+#: app/controllers/CControllerMediatypeEdit.php:188
 #: app/controllers/CControllerMediatypeList.php:111
 msgid "Configuration of media types"
 msgstr "メディアタイプの設定"
@@ -3417,8 +3417,7 @@ msgstr "DD.MM.YY"
 msgid "DES"
 msgstr "DES"
 
-#: include/maps.inc.php:491 include/maps.inc.php:571 include/maps.inc.php:657
-#: include/maps.inc.php:745
+#: include/maps.inc.php:491 include/maps.inc.php:571
 msgid "DISABLED"
 msgstr "無効"
 
@@ -4007,12 +4006,12 @@ msgstr "削除: ホスト\"%1$s\"。"
 msgid "Deleted: Host prototype \"%1$s\" on \"%2$s\"."
 msgstr "削除: \"%2$s\"のホストのプロトタイプ\"%1$s\"。"
 
-#: include/classes/api/services/CItem.php:676
+#: include/classes/api/services/CItem.php:677
 #, c-format
 msgid "Deleted: Item \"%1$s\" on \"%2$s\"."
 msgstr "削除: \"%2$s\"のアイテム\"%1$s\"。"
 
-#: include/classes/api/services/CItemPrototype.php:822
+#: include/classes/api/services/CItemPrototype.php:823
 #, c-format
 msgid "Deleted: Item prototype \"%1$s\" on \"%2$s\"."
 msgstr "削除: \"%2$s\"のアイテムのプロトタイプ\"%1$s\"。"
@@ -4350,7 +4349,7 @@ msgstr "ディスカバリルール\"%1$s\"は\"%2$s\"にすでに存在しま�
 msgid "Discovery rule \"%1$s\" already exists."
 msgstr "ディスカバリルール\"%1$s\"はすでに存在します。"
 
-#: include/classes/api/services/CDiscoveryRule.php:1005
+#: include/classes/api/services/CDiscoveryRule.php:1006
 #, c-format
 msgid "Discovery rule \"%1$s:%2$s\" has incorrect lifetime: \"%3$s\". (min: %4$d, max: %5$d, user macro allowed)"
 msgstr "ディスカバリルール\"%1$s:%2$s\"の生存期間が正しくありません: \"%3$s\"。(ユーザーマクロでは最小: %4$d, 最大: %5$d が許可されています)"
@@ -4707,12 +4706,12 @@ msgstr "色の設定が空白です。"
 msgid "Empty filter condition formula ID for action \"%1$s\"."
 msgstr "アクション\"%1$s\"のフィルター条件式IDが空白です。"
 
-#: include/classes/api/services/CDiscoveryRule.php:988
+#: include/classes/api/services/CDiscoveryRule.php:989
 #, c-format
 msgid "Empty filter condition formula ID for discovery rule \"%1$s\"."
 msgstr "ディスカバリルール\"%1$s\"のフィルター条件式IDが空白です。"
 
-#: include/classes/api/services/CDiscoveryRule.php:980
+#: include/classes/api/services/CDiscoveryRule.php:981
 #, c-format
 msgid "Empty filter condition macro for discovery rule \"%1$s\"."
 msgstr "ディスカバリルール\"%1$s\"のフィルター条件マクロが空白です。"
@@ -4737,8 +4736,8 @@ msgstr "ホストが空白です。"
 #: include/classes/api/services/CHost.php:1155
 #: include/classes/api/services/CHostPrototype.php:929
 #: include/classes/api/services/CIconMap.php:301
-#: include/classes/api/services/CItem.php:551
-#: include/classes/api/services/CItemPrototype.php:702
+#: include/classes/api/services/CItem.php:552
+#: include/classes/api/services/CItemPrototype.php:703
 #: include/classes/api/services/CMaintenance.php:443
 #: include/classes/api/services/CMap.php:350
 #: include/classes/api/services/CMap.php:376
@@ -4748,7 +4747,7 @@ msgstr "ホストが空白です。"
 #: include/classes/api/services/CProxy.php:446
 #: include/classes/api/services/CScreen.php:446
 #: include/classes/api/services/CScreen.php:752
-#: include/classes/api/services/CScreen.php:1225
+#: include/classes/api/services/CScreen.php:1226
 #: include/classes/api/services/CService.php:341
 #: include/classes/api/services/CService.php:376
 #: include/classes/api/services/CService.php:442
@@ -6729,7 +6728,7 @@ msgid "If you think this message is wrong, please consult your administrators ab
 msgstr "このメッセージが間違っている場合は、必要な権限を得るために管理者に問い合わせてください"
 
 #: image.php:26 include/audit.inc.php:37 include/maps.inc.php:28
-#: include/maps.inc.php:767
+#: include/maps.inc.php:745
 #: include/views/administration.general.image.edit.php:46
 #: include/views/administration.general.image.edit.php:49
 #: include/views/js/monitoring.sysmaps.js.php:21 jsLoader.php:145 map.php:152
@@ -7155,7 +7154,7 @@ msgstr "テンプレート名\"%1$s\"に使用されている文字列が正し�
 msgid "Incorrect conditions for action \"%1$s\"."
 msgstr "アクション\"%1$s\"の条件式が正しくありません。"
 
-#: include/classes/api/services/CDiscoveryRule.php:954
+#: include/classes/api/services/CDiscoveryRule.php:955
 #, c-format
 msgid "Incorrect conditions for discovery rule \"%1$s\"."
 msgstr "ディスカバリルール\"%1$s\"の条件式が正しくありません。"
@@ -7165,7 +7164,7 @@ msgstr "ディスカバリルール\"%1$s\"の条件式が正しくありませ�
 msgid "Incorrect custom expression \"%2$s\" for action \"%1$s\": %3$s."
 msgstr "アクション\"%1$s\"のカスタム条件式\"%2$s\"が正しくありません： %3$s。"
 
-#: include/classes/api/services/CDiscoveryRule.php:959
+#: include/classes/api/services/CDiscoveryRule.php:960
 #, c-format
 msgid "Incorrect custom expression \"%2$s\" for discovery rule \"%1$s\": %3$s."
 msgstr "ディスカバリルール\"%1$s\"のカスタム条件式\"%2$s\"が正しくありません: %3$s。"
@@ -7214,12 +7213,12 @@ msgstr "アップロードされたファイルが正しくありません。"
 msgid "Incorrect filter condition formula ID for action \"%1$s\"."
 msgstr "アクション\"%1$s\"のフィルター条件式IDが正しくありません。"
 
-#: include/classes/api/services/CDiscoveryRule.php:989
+#: include/classes/api/services/CDiscoveryRule.php:990
 #, c-format
 msgid "Incorrect filter condition formula ID for discovery rule \"%1$s\"."
 msgstr "ディスカバリルール\"%1$s\"のフィルター条件式IDが正しくありません。"
 
-#: include/classes/api/services/CDiscoveryRule.php:981
+#: include/classes/api/services/CDiscoveryRule.php:982
 #, c-format
 msgid "Incorrect filter condition macro for discovery rule \"%1$s\"."
 msgstr "ディスカバリルール\"%1$s\"のフィルター条件マクロが正しくありません。"
@@ -7229,7 +7228,7 @@ msgstr "ディスカバリルール\"%1$s\"のフィルター条件マクロが�
 msgid "Incorrect filter condition operator for action \"%1$s\"."
 msgstr "アクション\"%1$s\"のフィルター条件演算子が正しくありません。"
 
-#: include/classes/api/services/CDiscoveryRule.php:993
+#: include/classes/api/services/CDiscoveryRule.php:994
 #, c-format
 msgid "Incorrect filter condition operator for discovery rule \"%1$s\"."
 msgstr "ディスカバリルール\"%1$s\"のフィルター条件演算子が正しくありません。"
@@ -7649,7 +7648,7 @@ msgstr "トリガーのプロトタイプの条件式が正しくありません
 msgid "Incorrect type of calculation for action \"%1$s\"."
 msgstr "アクション\"%1$s\"の計算のタイプが正しくありません。"
 
-#: include/classes/api/services/CDiscoveryRule.php:947
+#: include/classes/api/services/CDiscoveryRule.php:948
 #, c-format
 msgid "Incorrect type of calculation for discovery rule \"%1$s\"."
 msgstr "ディスカバリルール\"%1$s\"の計算のタイプが正しくありません。"
@@ -8254,7 +8253,7 @@ msgstr "アイテム\"%1$s\"は\"%2$s\"にすでに存在します (他のテン
 msgid "Item \"%1$s\" already exists on \"%2$s\"."
 msgstr "アイテム\"%1$s\"は\"%2$s\"にすでに存在します。"
 
-#: include/classes/api/services/CItem.php:852
+#: include/classes/api/services/CItem.php:853
 #, c-format
 msgid "Item \"%1$s\" cannot populate a missing host inventory field number \"%2$d\". Choices are: from 0 (do not populate) to %3$d."
 msgstr "アイテム\"%1$s\"はフィールド番号が存在しないホストインベントリ\"%2$d\"を自動設定することができません。0 (自動設定しない)から%3$dの間で設定してください。"
@@ -9005,7 +9004,7 @@ msgstr "マクロ"
 msgid "Macros updated"
 msgstr "マクロを更新しました"
 
-#: include/audit.inc.php:47 include/maps.inc.php:646 include/maps.inc.php:734
+#: include/audit.inc.php:47 include/maps.inc.php:646 include/maps.inc.php:723
 #: include/menu.inc.php:225
 #: include/views/configuration.maintenance.edit.php:205
 #: include/views/js/monitoring.sysmaps.js.php:138
@@ -9771,7 +9770,7 @@ msgstr "Webシナリオに\"%1$s\"が定義されていません。"
 msgid "No \"%2$s\" given for a filter condition of action \"%1$s\"."
 msgstr "アクション\"%1$s\"のフィルター条件の\"%2$s\"が定義されていません。"
 
-#: include/classes/api/services/CDiscoveryRule.php:997
+#: include/classes/api/services/CDiscoveryRule.php:998
 #, c-format
 msgid "No \"%2$s\" given for a filter condition of discovery rule \"%1$s\"."
 msgstr "ディスカバリルール\"%1$s\"のフィルター条件の\"%2$s\"が定義されていません。"
@@ -9786,7 +9785,7 @@ msgstr "ホストのプロトタイプ\"%1$s\"に\"%2$s\"が定義されてい�
 msgid "No \"%2$s\" given for the filter of action \"%1$s\"."
 msgstr "アクション\"%1$s\"のフィルターの\"%2$s\"が定義されていません。"
 
-#: include/classes/api/services/CDiscoveryRule.php:965
+#: include/classes/api/services/CDiscoveryRule.php:966
 #, c-format
 msgid "No \"%2$s\" given for the filter of discovery rule \"%1$s\"."
 msgstr "ディスカバリルール\"%1$s\"のフィルターの\"%2$s\"が定義されていません。"
@@ -10097,8 +10096,8 @@ msgstr "システムへのアクセス権がありません。"
 #: include/classes/api/services/CImage.php:511
 #: include/classes/api/services/CItemGeneral.php:181
 #: include/classes/api/services/CItemGeneral.php:247
-#: include/classes/api/services/CItem.php:568
-#: include/classes/api/services/CItemPrototype.php:720
+#: include/classes/api/services/CItem.php:569
+#: include/classes/api/services/CItemPrototype.php:721
 #: include/classes/api/services/CMaintenance.php:263
 #: include/classes/api/services/CMaintenance.php:288
 #: include/classes/api/services/CMaintenance.php:301
@@ -10120,7 +10119,7 @@ msgstr "システムへのアクセス権がありません。"
 #: include/classes/api/services/CScreenItem.php:396
 #: include/classes/api/services/CScreenItem.php:494
 #: include/classes/api/services/CScreen.php:771
-#: include/classes/api/services/CScreen.php:1238
+#: include/classes/api/services/CScreen.php:1239
 #: include/classes/api/services/CScript.php:287
 #: include/classes/api/services/CScript.php:297
 #: include/classes/api/services/CService.php:1049
@@ -10474,7 +10473,7 @@ msgstr "OEM"
 #: include/classes/screens/CScreenHttpTestDetails.php:187
 #: include/classes/screens/CScreenHttpTest.php:156
 #: include/classes/tree/CServiceTree.php:47 include/maps.inc.php:499
-#: include/maps.inc.php:579 include/maps.inc.php:667 include/maps.inc.php:755
+#: include/maps.inc.php:579 include/maps.inc.php:656 include/maps.inc.php:733
 #: include/triggers.inc.php:170
 #: include/views/monitoring.overview.triggers.php:31
 msgid "OK"
@@ -11383,7 +11382,7 @@ msgstr "秘密鍵ファイル"
 msgid "Privilege level"
 msgstr "特権レベル"
 
-#: include/maps.inc.php:535 include/maps.inc.php:616 include/maps.inc.php:705
+#: include/maps.inc.php:535 include/maps.inc.php:616 include/maps.inc.php:694
 #: include/views/common.filter.trigger.php:38
 #: include/views/js/monitoring.sysmaps.js.php:133
 msgid "Problem"
@@ -11413,7 +11412,7 @@ msgstr "子に一つでも障害があった場合に障害として検知"
 #: app/views/report.services.php:60 app/views/report.services.php:61
 #: app/views/report.services.php:62 app/views/report.services.php:63
 #: chart4.php:165 include/maps.inc.php:529 include/maps.inc.php:610
-#: include/maps.inc.php:699 report2.php:393
+#: include/maps.inc.php:688 report2.php:393
 msgid "Problems"
 msgstr "障害"
 
@@ -14092,7 +14091,7 @@ msgstr "トルコ語 (tr_TR)"
 msgid "Two elements should be selected"
 msgstr "2つの要素を選択する必要があります"
 
-#: include/classes/api/services/CItem.php:913
+#: include/classes/api/services/CItem.php:914
 #, c-format
 msgid "Two items (\"%1$s\" and \"%2$s\") cannot populate one host inventory field \"%3$s\", this would lead to a conflict."
 msgstr "2つのアイテム(\"%1$s\"と\"%2$s\")から1つのホストのインベントリフィールド\"%3$s\"を自動的に設定することはできません。"
@@ -14262,7 +14261,7 @@ msgstr "選択した設定は行えません"
 msgid "Unable to upload file because \"file_uploads\" is disabled."
 msgstr "\"file_uploads\"が無効のためファイルをアップロードできません。"
 
-#: include/maps.inc.php:546 include/maps.inc.php:627 include/maps.inc.php:716
+#: include/maps.inc.php:546 include/maps.inc.php:627 include/maps.inc.php:705
 msgid "Unacknowledged"
 msgstr "未対応"
 
@@ -14449,7 +14448,7 @@ msgstr "グループのプロトタイプではパラメータ\"%1$s\"は使用�
 msgid "Unsupported parameter \"%2$s\" for a filter condition of action \"%1$s\"."
 msgstr "アクション\"%1$s\"のフィルター条件ではパラメータ\"%2$s\"は使用できません。"
 
-#: include/classes/api/services/CDiscoveryRule.php:998
+#: include/classes/api/services/CDiscoveryRule.php:999
 #, c-format
 msgid "Unsupported parameter \"%2$s\" for a filter condition of discovery rule \"%1$s\"."
 msgstr "ディスカバリルール\"%1$s\"のフィルター条件ではパラメータ\"%2$s\"はサポートされていません。"
@@ -14469,7 +14468,7 @@ msgstr "ホストのプロトタイプ%1$sのホストインベントリでは�
 msgid "Unsupported parameter \"%2$s\" for the filter of action \"%1$s\"."
 msgstr "アクション\"%1$s\"のフィルターではパラメータ\"%2$s\"は使用できません。"
 
-#: include/classes/api/services/CDiscoveryRule.php:966
+#: include/classes/api/services/CDiscoveryRule.php:967
 #, c-format
 msgid "Unsupported parameter \"%2$s\" for the filter of discovery rule \"%1$s\"."
 msgstr "ディスカバリルール\"%1$s\"のフィルターではパラメータ\"%2$s\"はサポートされていません。"
@@ -14590,7 +14589,7 @@ msgstr "更新時刻: %s"
 msgid "Updated: Application \"%1$s\" on \"%2$s\"."
 msgstr "更新: \"%2$s\"のアプリケーション\"%1$s\"。"
 
-#: include/classes/api/services/CDiscoveryRule.php:864
+#: include/classes/api/services/CDiscoveryRule.php:865
 #, c-format
 msgid "Updated: Discovery rule \"%1$s\" on \"%2$s\"."
 msgstr "更新: \"%2$s\"のディスカバリルール\"%1$s\"。"
@@ -14600,12 +14599,12 @@ msgstr "更新: \"%2$s\"のディスカバリルール\"%1$s\"。"
 msgid "Updated: Host prototype \"%1$s\" on \"%2$s\"."
 msgstr "更新: \"%2$s\"のホストのプロトタイプ\"%1$s\"。"
 
-#: include/classes/api/services/CItem.php:506
+#: include/classes/api/services/CItem.php:507
 #, c-format
 msgid "Updated: Item \"%1$s\" on \"%2$s\"."
 msgstr "更新: \"%2$s\"のアイテム\"%1$s\"。"
 
-#: include/classes/api/services/CItemPrototype.php:672
+#: include/classes/api/services/CItemPrototype.php:673
 #, c-format
 msgid "Updated: Item prototype \"%1$s\" on \"%2$s\"."
 msgstr "更新: \"%2$s\"のアイテムのプロトタイプ\"%1$s\"。"

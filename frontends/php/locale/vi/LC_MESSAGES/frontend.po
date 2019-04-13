@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Zabbix 3.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-04-07 01:42+0300\n"
+"POT-Creation-Date: 2019-04-14 01:42+0300\n"
 "PO-Revision-Date: 2017-04-13 04:52+0300\n"
 "Last-Translator: Đào <nadao@monre.gov.vn>\n"
 "Language-Team: Zabbix <info@zabbix.com>\n"
@@ -1358,15 +1358,15 @@ msgstr "Không thể thay đổi phương thức xác thực thành Zabbix 
 msgid "Cannot clear history"
 msgstr "Không thể xóa lịch sử"
 
-#: include/classes/api/services/CDiscoveryRule.php:1323
+#: include/classes/api/services/CDiscoveryRule.php:1324
 msgid "Cannot clone graph prototypes."
 msgstr "Không thể sao chép đồ thị mẫu."
 
-#: include/classes/api/services/CDiscoveryRule.php:1371
+#: include/classes/api/services/CDiscoveryRule.php:1372
 msgid "Cannot clone host prototypes."
 msgstr "Không thể nhân bản thiết bị mẫu."
 
-#: include/classes/api/services/CDiscoveryRule.php:1205
+#: include/classes/api/services/CDiscoveryRule.php:1206
 msgid "Cannot clone item prototypes."
 msgstr "Không thể nhân bản item mẫu."
 
@@ -1479,7 +1479,7 @@ msgstr "Không thể xóa ứng dụng đã khám phá \"%1$s\"."
 msgid "Cannot delete discovered graph \"%1$s\"."
 msgstr "Không thể xóa đồ thị \"%1$s\"."
 
-#: include/classes/api/services/CItem.php:578
+#: include/classes/api/services/CItem.php:579
 #, c-format
 msgid "Cannot delete discovered item \"%1$s\"."
 msgstr "Không thể xóa item \"%1$s\"."
@@ -1638,11 +1638,11 @@ msgstr "Không thể xóa đồ thị mẫu."
 msgid "Cannot delete templated host prototype."
 msgstr "Không thể xóa thiết bị mẫu."
 
-#: include/classes/api/services/CItem.php:573
+#: include/classes/api/services/CItem.php:574
 msgid "Cannot delete templated item."
 msgstr "Không thể xóa iem mẫu."
 
-#: include/classes/api/services/CItemPrototype.php:723
+#: include/classes/api/services/CItemPrototype.php:724
 msgid "Cannot delete templated items"
 msgstr "Không thể xóa item mẫu"
 
@@ -1853,8 +1853,8 @@ msgstr "Không thể tìm thấy thiết bị \"%1$s\" được sử dụng
 msgid "Cannot find host group \"%1$s\" for host prototype \"%2$s\" of discovery rule \"%3$s\" on \"%4$s\"."
 msgstr "Không thể tìm thấy nhóm thiết bị \"%1$s\" cho thiết bị mẫu \"%2$s\" của quy tắc khám phá \"%3$s\" trên \"%4$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:1101
-#: include/classes/api/services/CDiscoveryRule.php:1187
+#: include/classes/api/services/CDiscoveryRule.php:1102
+#: include/classes/api/services/CDiscoveryRule.php:1188
 #: include/classes/api/services/CItemGeneral.php:100 include/items.inc.php:386
 #: include/items.inc.php:439
 #, c-format
@@ -2810,7 +2810,7 @@ msgstr "Điều kiện"
 msgid "Condition \"%2$s\" is not used in formula \"%3$s\" for action \"%1$s\"."
 msgstr "Điều kiện \"%2$s\" không được sử dụng trong công thức \"%3$s\" cho hoạt động \"%1$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:961
+#: include/classes/api/services/CDiscoveryRule.php:962
 #, c-format
 msgid "Condition \"%2$s\" is not used in formula \"%3$s\" for discovery rule \"%1$s\"."
 msgstr "Điều kiện \"%2$s\" không được sử dụng trong công thức \"%3$s\" cho quy tắc khám phá \"%1$s\"."
@@ -2820,7 +2820,7 @@ msgstr "Điều kiện \"%2$s\" không được sử dụng trong công thức \
 msgid "Condition \"%2$s\" used in formula \"%3$s\" for action \"%1$s\" is not defined."
 msgstr "Điều kiện \"%2$s\" được sử dụng trong công thức \"%3$s\" cho hoạt động \"%1$s\" không được xác định."
 
-#: include/classes/api/services/CDiscoveryRule.php:960
+#: include/classes/api/services/CDiscoveryRule.php:961
 #, c-format
 msgid "Condition \"%2$s\" used in formula \"%3$s\" for discovery rule \"%1$s\" is not defined."
 msgstr "Điều kiện \"%2$s\" được sử dụng trong công thức \"%3$s\" cho quy tắc khám phá \"%1$s\" không được xác định."
@@ -2926,7 +2926,7 @@ msgstr "Cấu hình của macro"
 msgid "Configuration of maintenance periods"
 msgstr "Cấu hình của chu kỳ bảo trì"
 
-#: app/controllers/CControllerMediatypeEdit.php:185
+#: app/controllers/CControllerMediatypeEdit.php:188
 #: app/controllers/CControllerMediatypeList.php:111
 msgid "Configuration of media types"
 msgstr "Cấu hình của phương tiện"
@@ -3417,8 +3417,7 @@ msgstr "DD.MM.YY"
 msgid "DES"
 msgstr "DES"
 
-#: include/maps.inc.php:491 include/maps.inc.php:571 include/maps.inc.php:657
-#: include/maps.inc.php:745
+#: include/maps.inc.php:491 include/maps.inc.php:571
 msgid "DISABLED"
 msgstr "VÔ HIỆU HÓA"
 
@@ -4007,12 +4006,12 @@ msgstr "Đã xóa: Thiết bị \"%1$s\"."
 msgid "Deleted: Host prototype \"%1$s\" on \"%2$s\"."
 msgstr "Đã xóa: Thiết bị mẫu \"%1$s\" trên \"%2$s\"."
 
-#: include/classes/api/services/CItem.php:676
+#: include/classes/api/services/CItem.php:677
 #, c-format
 msgid "Deleted: Item \"%1$s\" on \"%2$s\"."
 msgstr "Đã xóa: Item \"%1$s\" trên \"%2$s\"."
 
-#: include/classes/api/services/CItemPrototype.php:822
+#: include/classes/api/services/CItemPrototype.php:823
 #, c-format
 msgid "Deleted: Item prototype \"%1$s\" on \"%2$s\"."
 msgstr "Đã xóa: Item mẫu \"%1$s\" trên \"%2$s\"."
@@ -4350,7 +4349,7 @@ msgstr "Quy tắc khám phá \"%1$s\" đã tồn tại trên \"%2$s\"."
 msgid "Discovery rule \"%1$s\" already exists."
 msgstr "Quy tắc khám phá \"%1$s\" đã tồn tại."
 
-#: include/classes/api/services/CDiscoveryRule.php:1005
+#: include/classes/api/services/CDiscoveryRule.php:1006
 #, c-format
 msgid "Discovery rule \"%1$s:%2$s\" has incorrect lifetime: \"%3$s\". (min: %4$d, max: %5$d, user macro allowed)"
 msgstr "Quy tắc khám phá \"%1$s:%2$s\" có thời gian tồn tại không chính xác: \"%3$s\". (nhỏ nhất: %4$d, lớn nhất: %5$d, người dùng macro đã cho phép)"
@@ -4707,12 +4706,12 @@ msgstr "Không có màu sắc."
 msgid "Empty filter condition formula ID for action \"%1$s\"."
 msgstr "ID công thức điều kiện lọc trống cho hoạt động \"%1$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:988
+#: include/classes/api/services/CDiscoveryRule.php:989
 #, c-format
 msgid "Empty filter condition formula ID for discovery rule \"%1$s\"."
 msgstr "ID công thức điều kiện lọc trống cho quy tắc khám phá \"%1$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:980
+#: include/classes/api/services/CDiscoveryRule.php:981
 #, c-format
 msgid "Empty filter condition macro for discovery rule \"%1$s\"."
 msgstr "Điều kiện lọc macro rỗng cho quy tắc khám phá \"%1$s\"."
@@ -4737,8 +4736,8 @@ msgstr "Không có thiết bị."
 #: include/classes/api/services/CHost.php:1155
 #: include/classes/api/services/CHostPrototype.php:929
 #: include/classes/api/services/CIconMap.php:301
-#: include/classes/api/services/CItem.php:551
-#: include/classes/api/services/CItemPrototype.php:702
+#: include/classes/api/services/CItem.php:552
+#: include/classes/api/services/CItemPrototype.php:703
 #: include/classes/api/services/CMaintenance.php:443
 #: include/classes/api/services/CMap.php:350
 #: include/classes/api/services/CMap.php:376
@@ -4748,7 +4747,7 @@ msgstr "Không có thiết bị."
 #: include/classes/api/services/CProxy.php:446
 #: include/classes/api/services/CScreen.php:446
 #: include/classes/api/services/CScreen.php:752
-#: include/classes/api/services/CScreen.php:1225
+#: include/classes/api/services/CScreen.php:1226
 #: include/classes/api/services/CService.php:341
 #: include/classes/api/services/CService.php:376
 #: include/classes/api/services/CService.php:442
@@ -6729,7 +6728,7 @@ msgid "If you think this message is wrong, please consult your administrators ab
 msgstr "Nếu bạn nghĩ rằng tin nhắn này là sai, xin vui lòng tham khảo ý kiến các quản trị viên của bạn về việc nhận các điều khoản cần thiết."
 
 #: image.php:26 include/audit.inc.php:37 include/maps.inc.php:28
-#: include/maps.inc.php:767
+#: include/maps.inc.php:745
 #: include/views/administration.general.image.edit.php:46
 #: include/views/administration.general.image.edit.php:49
 #: include/views/js/monitoring.sysmaps.js.php:21 jsLoader.php:145 map.php:152
@@ -7155,7 +7154,7 @@ msgstr "Các ký tự được sử dụng cho tên mẫu \"%1$s\" không c
 msgid "Incorrect conditions for action \"%1$s\"."
 msgstr "Điều kiện cho hoạt động \"%1$s\" không chính xác."
 
-#: include/classes/api/services/CDiscoveryRule.php:954
+#: include/classes/api/services/CDiscoveryRule.php:955
 #, c-format
 msgid "Incorrect conditions for discovery rule \"%1$s\"."
 msgstr "Điều kiện đối với quy tắc khám phá \"%1$s\" không chính xác."
@@ -7165,7 +7164,7 @@ msgstr "Điều kiện đối với quy tắc khám phá \"%1$s\" không chính 
 msgid "Incorrect custom expression \"%2$s\" for action \"%1$s\": %3$s."
 msgstr "Biểu thức tự chọn \"%2$s\" đối với hoạt động \"%1$s\": %3$s không chính xác."
 
-#: include/classes/api/services/CDiscoveryRule.php:959
+#: include/classes/api/services/CDiscoveryRule.php:960
 #, c-format
 msgid "Incorrect custom expression \"%2$s\" for discovery rule \"%1$s\": %3$s."
 msgstr "Biểu thức tự chọn \"%2$s\" đối với quy tắc khám phá \"%1$s\": %3$s không chính xác."
@@ -7214,12 +7213,12 @@ msgstr "Tập tin tải lên không chính xác."
 msgid "Incorrect filter condition formula ID for action \"%1$s\"."
 msgstr "ID công thức điều kiện lọc không chính xác cho hoạt động \"%1$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:989
+#: include/classes/api/services/CDiscoveryRule.php:990
 #, c-format
 msgid "Incorrect filter condition formula ID for discovery rule \"%1$s\"."
 msgstr "ID công thức điều kiện lọc không chính xác đối với quy tắc khám phá \"%1$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:981
+#: include/classes/api/services/CDiscoveryRule.php:982
 #, c-format
 msgid "Incorrect filter condition macro for discovery rule \"%1$s\"."
 msgstr "Điều kiện lọc macro không chính xác cho quy tắc khám phá \"%1$s\"."
@@ -7229,7 +7228,7 @@ msgstr "Điều kiện lọc macro không chính xác cho quy tắc khám phá \
 msgid "Incorrect filter condition operator for action \"%1$s\"."
 msgstr "Điều kiên lọc điều khiển không chính xác cho hoạt động \"%1$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:993
+#: include/classes/api/services/CDiscoveryRule.php:994
 #, c-format
 msgid "Incorrect filter condition operator for discovery rule \"%1$s\"."
 msgstr "Điều kiện lọc điều khiển không chính xác cho quy tắc khám phá \"%1$s\"."
@@ -7649,7 +7648,7 @@ msgstr "Biểu thức trigger mẫu không chính xác. Các phần tử trigger
 msgid "Incorrect type of calculation for action \"%1$s\"."
 msgstr "Kiểu tính toán cho hoạt động \"%1$s\" không chính xác."
 
-#: include/classes/api/services/CDiscoveryRule.php:947
+#: include/classes/api/services/CDiscoveryRule.php:948
 #, c-format
 msgid "Incorrect type of calculation for discovery rule \"%1$s\"."
 msgstr "Kiểu tính toán cho quy tắc khám phá \"%1$s\" không chính xác."
@@ -8254,7 +8253,7 @@ msgstr "Item \"%1$s\" đã tồn tại trên \"%2$s\", kế thừa từ m�
 msgid "Item \"%1$s\" already exists on \"%2$s\"."
 msgstr "Item \"%1$s\" không tồn tại trên \"%2$s\"."
 
-#: include/classes/api/services/CItem.php:852
+#: include/classes/api/services/CItem.php:853
 #, c-format
 msgid "Item \"%1$s\" cannot populate a missing host inventory field number \"%2$d\". Choices are: from 0 (do not populate) to %3$d."
 msgstr "Item \"%1$s\" không thể gán số lượng trường thiết bị lưu trữ đang lỗi \"%2$d\". Các lựa chọn là: từ 0 (không được gán) đến \"%3$d\"."
@@ -9005,7 +9004,7 @@ msgstr "Macros"
 msgid "Macros updated"
 msgstr "Macro đã được cập nhật"
 
-#: include/audit.inc.php:47 include/maps.inc.php:646 include/maps.inc.php:734
+#: include/audit.inc.php:47 include/maps.inc.php:646 include/maps.inc.php:723
 #: include/menu.inc.php:225
 #: include/views/configuration.maintenance.edit.php:205
 #: include/views/js/monitoring.sysmaps.js.php:138
@@ -9771,7 +9770,7 @@ msgstr "Không có \"%1$s\" đưa ra cho web scenario."
 msgid "No \"%2$s\" given for a filter condition of action \"%1$s\"."
 msgstr "Không có \"%2$s\" được đưa ra cho điều kiện lọc của hoạt động \"%1$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:997
+#: include/classes/api/services/CDiscoveryRule.php:998
 #, c-format
 msgid "No \"%2$s\" given for a filter condition of discovery rule \"%1$s\"."
 msgstr "Không có \"%2$s\" cho điều kiện lọc của quy tắc khám phá \"%1$s\"."
@@ -9786,7 +9785,7 @@ msgstr "\"%2$s\" không được đưa ra cho thiết bị mẫu \"%1$s\"."
 msgid "No \"%2$s\" given for the filter of action \"%1$s\"."
 msgstr "Không có \"%2$s\" cho lọc hoạt động \"%1$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:965
+#: include/classes/api/services/CDiscoveryRule.php:966
 #, c-format
 msgid "No \"%2$s\" given for the filter of discovery rule \"%1$s\"."
 msgstr "Không có \"%2$s\" cho lọc quy tắc khám phá \"%1$s\"."
@@ -10097,8 +10096,8 @@ msgstr "Không có quyền truy cập hệ thống."
 #: include/classes/api/services/CImage.php:511
 #: include/classes/api/services/CItemGeneral.php:181
 #: include/classes/api/services/CItemGeneral.php:247
-#: include/classes/api/services/CItem.php:568
-#: include/classes/api/services/CItemPrototype.php:720
+#: include/classes/api/services/CItem.php:569
+#: include/classes/api/services/CItemPrototype.php:721
 #: include/classes/api/services/CMaintenance.php:263
 #: include/classes/api/services/CMaintenance.php:288
 #: include/classes/api/services/CMaintenance.php:301
@@ -10120,7 +10119,7 @@ msgstr "Không có quyền truy cập hệ thống."
 #: include/classes/api/services/CScreenItem.php:396
 #: include/classes/api/services/CScreenItem.php:494
 #: include/classes/api/services/CScreen.php:771
-#: include/classes/api/services/CScreen.php:1238
+#: include/classes/api/services/CScreen.php:1239
 #: include/classes/api/services/CScript.php:287
 #: include/classes/api/services/CScript.php:297
 #: include/classes/api/services/CService.php:1049
@@ -10474,7 +10473,7 @@ msgstr "OEM"
 #: include/classes/screens/CScreenHttpTestDetails.php:187
 #: include/classes/screens/CScreenHttpTest.php:156
 #: include/classes/tree/CServiceTree.php:47 include/maps.inc.php:499
-#: include/maps.inc.php:579 include/maps.inc.php:667 include/maps.inc.php:755
+#: include/maps.inc.php:579 include/maps.inc.php:656 include/maps.inc.php:733
 #: include/triggers.inc.php:170
 #: include/views/monitoring.overview.triggers.php:31
 msgid "OK"
@@ -11383,7 +11382,7 @@ msgstr "Key file riêng"
 msgid "Privilege level"
 msgstr "Cấp đặc quyền"
 
-#: include/maps.inc.php:535 include/maps.inc.php:616 include/maps.inc.php:705
+#: include/maps.inc.php:535 include/maps.inc.php:616 include/maps.inc.php:694
 #: include/views/common.filter.trigger.php:38
 #: include/views/js/monitoring.sysmaps.js.php:133
 msgid "Problem"
@@ -11413,7 +11412,7 @@ msgstr "Vấn đề, nếu ít nhất một phần tử con có vấn 
 #: app/views/report.services.php:60 app/views/report.services.php:61
 #: app/views/report.services.php:62 app/views/report.services.php:63
 #: chart4.php:165 include/maps.inc.php:529 include/maps.inc.php:610
-#: include/maps.inc.php:699 report2.php:393
+#: include/maps.inc.php:688 report2.php:393
 msgid "Problems"
 msgstr "Vấn đề"
 
@@ -14092,7 +14091,7 @@ msgstr "Turkish (tr_TR)"
 msgid "Two elements should be selected"
 msgstr "Hai phần tử phải được lựa chọn"
 
-#: include/classes/api/services/CItem.php:913
+#: include/classes/api/services/CItem.php:914
 #, c-format
 msgid "Two items (\"%1$s\" and \"%2$s\") cannot populate one host inventory field \"%3$s\", this would lead to a conflict."
 msgstr "Hai item (\"%1$s\" và \"%2$s\") không thể gắn vào một trường thiết bị lưu trữ \"%3$s\", điều này sẽ dẫn đến một cuộc xung đột."
@@ -14262,7 +14261,7 @@ msgstr "Không thể lựa chọn cấu hình."
 msgid "Unable to upload file because \"file_uploads\" is disabled."
 msgstr "Không thể tải lên tập tin bởi vì \"file_uploads\" đã bị vô hiệu hóa."
 
-#: include/maps.inc.php:546 include/maps.inc.php:627 include/maps.inc.php:716
+#: include/maps.inc.php:546 include/maps.inc.php:627 include/maps.inc.php:705
 msgid "Unacknowledged"
 msgstr "Không được ghi nhận"
 
@@ -14449,7 +14448,7 @@ msgstr "Không hỗ trợ tham số \"%1$s\" cho nhóm mẫu."
 msgid "Unsupported parameter \"%2$s\" for a filter condition of action \"%1$s\"."
 msgstr "Không hỗ trợ tham số \"%2$s\" cho điều kiện lọc của hoạt động \"%1$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:998
+#: include/classes/api/services/CDiscoveryRule.php:999
 #, c-format
 msgid "Unsupported parameter \"%2$s\" for a filter condition of discovery rule \"%1$s\"."
 msgstr "Tham số không được hỗ trợ \"%2$s\" cho một điều kiện lọc của quy tắc khám phá \"%1$s\"."
@@ -14469,7 +14468,7 @@ msgstr "Không hỗ trợ tham số \"%2$s\" cho thiết bị mẫu %1$s."
 msgid "Unsupported parameter \"%2$s\" for the filter of action \"%1$s\"."
 msgstr "Tham số không được hỗ trợ \"%2$s\" cho bộ lọc của hoạt động \"%1$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:966
+#: include/classes/api/services/CDiscoveryRule.php:967
 #, c-format
 msgid "Unsupported parameter \"%2$s\" for the filter of discovery rule \"%1$s\"."
 msgstr "Tham số không được hỗ trợ \"%2$s\" cho bộ lọc của quy tắc khám phá \"%1$s\"."
@@ -14590,7 +14589,7 @@ msgstr "Đã cập nhật: %s"
 msgid "Updated: Application \"%1$s\" on \"%2$s\"."
 msgstr "Đã cập nhật: Ứng dụng \"%1$s\" trên \"%2$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:864
+#: include/classes/api/services/CDiscoveryRule.php:865
 #, c-format
 msgid "Updated: Discovery rule \"%1$s\" on \"%2$s\"."
 msgstr "Đã cập nhật: Quy tắc khám phá \"%1$s\" trên \"%2$s\"."
@@ -14600,12 +14599,12 @@ msgstr "Đã cập nhật: Quy tắc khám phá \"%1$s\" trên \"%2$s\"."
 msgid "Updated: Host prototype \"%1$s\" on \"%2$s\"."
 msgstr "Đã cập nhật: Thiết bị mẫu \"%1$s\" trên \"%2$s\"."
 
-#: include/classes/api/services/CItem.php:506
+#: include/classes/api/services/CItem.php:507
 #, c-format
 msgid "Updated: Item \"%1$s\" on \"%2$s\"."
 msgstr "Đã cập nhật: Item \"%1$s\" trên \"%2$s\"."
 
-#: include/classes/api/services/CItemPrototype.php:672
+#: include/classes/api/services/CItemPrototype.php:673
 #, c-format
 msgid "Updated: Item prototype \"%1$s\" on \"%2$s\"."
 msgstr "Đã cập nhật: Item mẫu \"%1$s\" trên \"%2$s\"."

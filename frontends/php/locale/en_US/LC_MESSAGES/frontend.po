@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Zabbix 3.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-04-07 01:42+0300\n"
+"POT-Creation-Date: 2019-04-14 01:42+0300\n"
 "PO-Revision-Date: 2019-01-10 20:38+0300\n"
 "Last-Translator: Oleksiy <zalex_ua@i.ua>\n"
 "Language-Team: \n"
@@ -1374,15 +1374,15 @@ msgstr "Cannot change authentication method to Zabbix internal"
 msgid "Cannot clear history"
 msgstr "Cannot clear history"
 
-#: include/classes/api/services/CDiscoveryRule.php:1323
+#: include/classes/api/services/CDiscoveryRule.php:1324
 msgid "Cannot clone graph prototypes."
 msgstr "Cannot clone graph prototypes."
 
-#: include/classes/api/services/CDiscoveryRule.php:1371
+#: include/classes/api/services/CDiscoveryRule.php:1372
 msgid "Cannot clone host prototypes."
 msgstr "Cannot clone host prototypes."
 
-#: include/classes/api/services/CDiscoveryRule.php:1205
+#: include/classes/api/services/CDiscoveryRule.php:1206
 msgid "Cannot clone item prototypes."
 msgstr "Cannot clone item prototypes."
 
@@ -1499,7 +1499,7 @@ msgstr "Cannot delete discovered application \"%1$s\"."
 msgid "Cannot delete discovered graph \"%1$s\"."
 msgstr "Cannot delete discovered graph \"%1$s\"."
 
-#: include/classes/api/services/CItem.php:578
+#: include/classes/api/services/CItem.php:579
 #, c-format
 msgid "Cannot delete discovered item \"%1$s\"."
 msgstr "Cannot delete discovered item \"%1$s\"."
@@ -1663,11 +1663,11 @@ msgstr "Cannot delete templated graphs."
 msgid "Cannot delete templated host prototype."
 msgstr "Cannot delete templated host prototype."
 
-#: include/classes/api/services/CItem.php:573
+#: include/classes/api/services/CItem.php:574
 msgid "Cannot delete templated item."
 msgstr "Cannot delete templated item."
 
-#: include/classes/api/services/CItemPrototype.php:723
+#: include/classes/api/services/CItemPrototype.php:724
 msgid "Cannot delete templated items"
 msgstr "Cannot delete templated items"
 
@@ -1901,8 +1901,8 @@ msgstr "Cannot find host \"%1$s\" used in screen \"%2$s\"."
 msgid "Cannot find host group \"%1$s\" for host prototype \"%2$s\" of discovery rule \"%3$s\" on \"%4$s\"."
 msgstr "Cannot find host group \"%1$s\" for host prototype \"%2$s\" of discovery rule \"%3$s\" on \"%4$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:1101
-#: include/classes/api/services/CDiscoveryRule.php:1187
+#: include/classes/api/services/CDiscoveryRule.php:1102
+#: include/classes/api/services/CDiscoveryRule.php:1188
 #: include/classes/api/services/CItemGeneral.php:100 include/items.inc.php:386
 #: include/items.inc.php:439
 #, c-format
@@ -2860,7 +2860,7 @@ msgstr "Condition"
 msgid "Condition \"%2$s\" is not used in formula \"%3$s\" for action \"%1$s\"."
 msgstr "Condition \"%2$s\" is not used in formula \"%3$s\" for action \"%1$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:961
+#: include/classes/api/services/CDiscoveryRule.php:962
 #, c-format
 msgid "Condition \"%2$s\" is not used in formula \"%3$s\" for discovery rule \"%1$s\"."
 msgstr "Condition \"%2$s\" is not used in formula \"%3$s\" for discovery rule \"%1$s\"."
@@ -2870,7 +2870,7 @@ msgstr "Condition \"%2$s\" is not used in formula \"%3$s\" for discovery rule \"
 msgid "Condition \"%2$s\" used in formula \"%3$s\" for action \"%1$s\" is not defined."
 msgstr "Condition \"%2$s\" used in formula \"%3$s\" for action \"%1$s\" is not defined."
 
-#: include/classes/api/services/CDiscoveryRule.php:960
+#: include/classes/api/services/CDiscoveryRule.php:961
 #, c-format
 msgid "Condition \"%2$s\" used in formula \"%3$s\" for discovery rule \"%1$s\" is not defined."
 msgstr "Condition \"%2$s\" used in formula \"%3$s\" for discovery rule \"%1$s\" is not defined."
@@ -2976,7 +2976,7 @@ msgstr "Configuration of macros"
 msgid "Configuration of maintenance periods"
 msgstr "Configuration of maintenance periods"
 
-#: app/controllers/CControllerMediatypeEdit.php:185
+#: app/controllers/CControllerMediatypeEdit.php:188
 #: app/controllers/CControllerMediatypeList.php:111
 msgid "Configuration of media types"
 msgstr "Configuration of media types"
@@ -3468,8 +3468,7 @@ msgstr "DD.MM.YY"
 msgid "DES"
 msgstr "DES"
 
-#: include/maps.inc.php:491 include/maps.inc.php:571 include/maps.inc.php:657
-#: include/maps.inc.php:745
+#: include/maps.inc.php:491 include/maps.inc.php:571
 msgid "DISABLED"
 msgstr "DISABLED"
 
@@ -4059,12 +4058,12 @@ msgstr "Deleted: Host \"%1$s\"."
 msgid "Deleted: Host prototype \"%1$s\" on \"%2$s\"."
 msgstr "Deleted: Host prototype \"%1$s\" on \"%2$s\"."
 
-#: include/classes/api/services/CItem.php:676
+#: include/classes/api/services/CItem.php:677
 #, c-format
 msgid "Deleted: Item \"%1$s\" on \"%2$s\"."
 msgstr "Deleted: Item \"%1$s\" on \"%2$s\"."
 
-#: include/classes/api/services/CItemPrototype.php:822
+#: include/classes/api/services/CItemPrototype.php:823
 #, c-format
 msgid "Deleted: Item prototype \"%1$s\" on \"%2$s\"."
 msgstr "Deleted: Item prototype \"%1$s\" on \"%2$s\"."
@@ -4402,7 +4401,7 @@ msgstr "Discovery rule \"%1$s\" already exists on \"%2$s\"."
 msgid "Discovery rule \"%1$s\" already exists."
 msgstr "Discovery rule \"%1$s\" already exists."
 
-#: include/classes/api/services/CDiscoveryRule.php:1005
+#: include/classes/api/services/CDiscoveryRule.php:1006
 #, c-format
 msgid "Discovery rule \"%1$s:%2$s\" has incorrect lifetime: \"%3$s\". (min: %4$d, max: %5$d, user macro allowed)"
 msgstr "Discovery rule \"%1$s:%2$s\" has incorrect lifetime: \"%3$s\". (min: %4$d, max: %5$d, user macro allowed)"
@@ -4761,12 +4760,12 @@ msgstr "Empty color."
 msgid "Empty filter condition formula ID for action \"%1$s\"."
 msgstr "Empty filter condition formula ID for action \"%1$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:988
+#: include/classes/api/services/CDiscoveryRule.php:989
 #, c-format
 msgid "Empty filter condition formula ID for discovery rule \"%1$s\"."
 msgstr "Empty filter condition formula ID for discovery rule \"%1$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:980
+#: include/classes/api/services/CDiscoveryRule.php:981
 #, c-format
 msgid "Empty filter condition macro for discovery rule \"%1$s\"."
 msgstr "Empty filter condition macro for discovery rule \"%1$s\"."
@@ -4791,8 +4790,8 @@ msgstr "Empty host."
 #: include/classes/api/services/CHost.php:1155
 #: include/classes/api/services/CHostPrototype.php:929
 #: include/classes/api/services/CIconMap.php:301
-#: include/classes/api/services/CItem.php:551
-#: include/classes/api/services/CItemPrototype.php:702
+#: include/classes/api/services/CItem.php:552
+#: include/classes/api/services/CItemPrototype.php:703
 #: include/classes/api/services/CMaintenance.php:443
 #: include/classes/api/services/CMap.php:350
 #: include/classes/api/services/CMap.php:376
@@ -4802,7 +4801,7 @@ msgstr "Empty host."
 #: include/classes/api/services/CProxy.php:446
 #: include/classes/api/services/CScreen.php:446
 #: include/classes/api/services/CScreen.php:752
-#: include/classes/api/services/CScreen.php:1225
+#: include/classes/api/services/CScreen.php:1226
 #: include/classes/api/services/CService.php:341
 #: include/classes/api/services/CService.php:376
 #: include/classes/api/services/CService.php:442
@@ -6791,7 +6790,7 @@ msgid "If you think this message is wrong, please consult your administrators ab
 msgstr "If you think this message is wrong, please consult your administrators about getting the necessary permissions."
 
 #: image.php:26 include/audit.inc.php:37 include/maps.inc.php:28
-#: include/maps.inc.php:767
+#: include/maps.inc.php:745
 #: include/views/administration.general.image.edit.php:46
 #: include/views/administration.general.image.edit.php:49
 #: include/views/js/monitoring.sysmaps.js.php:21 jsLoader.php:145 map.php:152
@@ -7217,7 +7216,7 @@ msgstr "Incorrect characters used for template name \"%1$s\"."
 msgid "Incorrect conditions for action \"%1$s\"."
 msgstr "Incorrect conditions for action \"%1$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:954
+#: include/classes/api/services/CDiscoveryRule.php:955
 #, c-format
 msgid "Incorrect conditions for discovery rule \"%1$s\"."
 msgstr "Incorrect conditions for discovery rule \"%1$s\"."
@@ -7227,7 +7226,7 @@ msgstr "Incorrect conditions for discovery rule \"%1$s\"."
 msgid "Incorrect custom expression \"%2$s\" for action \"%1$s\": %3$s."
 msgstr "Incorrect custom expression \"%2$s\" for action \"%1$s\": %3$s."
 
-#: include/classes/api/services/CDiscoveryRule.php:959
+#: include/classes/api/services/CDiscoveryRule.php:960
 #, c-format
 msgid "Incorrect custom expression \"%2$s\" for discovery rule \"%1$s\": %3$s."
 msgstr "Incorrect custom expression \"%2$s\" for discovery rule \"%1$s\": %3$s."
@@ -7276,12 +7275,12 @@ msgstr "Incorrect file upload."
 msgid "Incorrect filter condition formula ID for action \"%1$s\"."
 msgstr "Incorrect filter condition formula ID for action \"%1$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:989
+#: include/classes/api/services/CDiscoveryRule.php:990
 #, c-format
 msgid "Incorrect filter condition formula ID for discovery rule \"%1$s\"."
 msgstr "Incorrect filter condition formula ID for discovery rule \"%1$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:981
+#: include/classes/api/services/CDiscoveryRule.php:982
 #, c-format
 msgid "Incorrect filter condition macro for discovery rule \"%1$s\"."
 msgstr "Incorrect filter condition macro for discovery rule \"%1$s\"."
@@ -7291,7 +7290,7 @@ msgstr "Incorrect filter condition macro for discovery rule \"%1$s\"."
 msgid "Incorrect filter condition operator for action \"%1$s\"."
 msgstr "Incorrect filter condition operator for action \"%1$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:993
+#: include/classes/api/services/CDiscoveryRule.php:994
 #, c-format
 msgid "Incorrect filter condition operator for discovery rule \"%1$s\"."
 msgstr "Incorrect filter condition operator for discovery rule \"%1$s\"."
@@ -7711,7 +7710,7 @@ msgstr "Incorrect trigger prototype expression. Trigger prototype expression ele
 msgid "Incorrect type of calculation for action \"%1$s\"."
 msgstr "Incorrect type of calculation for action \"%1$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:947
+#: include/classes/api/services/CDiscoveryRule.php:948
 #, c-format
 msgid "Incorrect type of calculation for discovery rule \"%1$s\"."
 msgstr "Incorrect type of calculation for discovery rule \"%1$s\"."
@@ -8316,7 +8315,7 @@ msgstr "Item \"%1$s\" already exists on \"%2$s\", inherited from another templat
 msgid "Item \"%1$s\" already exists on \"%2$s\"."
 msgstr "Item \"%1$s\" already exists on \"%2$s\"."
 
-#: include/classes/api/services/CItem.php:852
+#: include/classes/api/services/CItem.php:853
 #, c-format
 msgid "Item \"%1$s\" cannot populate a missing host inventory field number \"%2$d\". Choices are: from 0 (do not populate) to %3$d."
 msgstr "Item \"%1$s\" cannot populate a missing host inventory field number \"%2$d\". Choices are: from 0 (do not populate) to %3$d."
@@ -9073,7 +9072,7 @@ msgstr "Macros"
 msgid "Macros updated"
 msgstr "Macros updated"
 
-#: include/audit.inc.php:47 include/maps.inc.php:646 include/maps.inc.php:734
+#: include/audit.inc.php:47 include/maps.inc.php:646 include/maps.inc.php:723
 #: include/menu.inc.php:225
 #: include/views/configuration.maintenance.edit.php:205
 #: include/views/js/monitoring.sysmaps.js.php:138
@@ -9844,7 +9843,7 @@ msgstr "No \"%1$s\" given for web scenario."
 msgid "No \"%2$s\" given for a filter condition of action \"%1$s\"."
 msgstr "No \"%2$s\" given for a filter condition of action \"%1$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:997
+#: include/classes/api/services/CDiscoveryRule.php:998
 #, c-format
 msgid "No \"%2$s\" given for a filter condition of discovery rule \"%1$s\"."
 msgstr "No \"%2$s\" given for a filter condition of discovery rule \"%1$s\"."
@@ -9859,7 +9858,7 @@ msgstr "No \"%2$s\" given for host prototype \"%1$s\"."
 msgid "No \"%2$s\" given for the filter of action \"%1$s\"."
 msgstr "No \"%2$s\" given for the filter of action \"%1$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:965
+#: include/classes/api/services/CDiscoveryRule.php:966
 #, c-format
 msgid "No \"%2$s\" given for the filter of discovery rule \"%1$s\"."
 msgstr "No \"%2$s\" given for the filter of discovery rule \"%1$s\"."
@@ -10170,8 +10169,8 @@ msgstr "No permissions for system access."
 #: include/classes/api/services/CImage.php:511
 #: include/classes/api/services/CItemGeneral.php:181
 #: include/classes/api/services/CItemGeneral.php:247
-#: include/classes/api/services/CItem.php:568
-#: include/classes/api/services/CItemPrototype.php:720
+#: include/classes/api/services/CItem.php:569
+#: include/classes/api/services/CItemPrototype.php:721
 #: include/classes/api/services/CMaintenance.php:263
 #: include/classes/api/services/CMaintenance.php:288
 #: include/classes/api/services/CMaintenance.php:301
@@ -10193,7 +10192,7 @@ msgstr "No permissions for system access."
 #: include/classes/api/services/CScreenItem.php:396
 #: include/classes/api/services/CScreenItem.php:494
 #: include/classes/api/services/CScreen.php:771
-#: include/classes/api/services/CScreen.php:1238
+#: include/classes/api/services/CScreen.php:1239
 #: include/classes/api/services/CScript.php:287
 #: include/classes/api/services/CScript.php:297
 #: include/classes/api/services/CService.php:1049
@@ -10547,7 +10546,7 @@ msgstr "OEM"
 #: include/classes/screens/CScreenHttpTestDetails.php:187
 #: include/classes/screens/CScreenHttpTest.php:156
 #: include/classes/tree/CServiceTree.php:47 include/maps.inc.php:499
-#: include/maps.inc.php:579 include/maps.inc.php:667 include/maps.inc.php:755
+#: include/maps.inc.php:579 include/maps.inc.php:656 include/maps.inc.php:733
 #: include/triggers.inc.php:170
 #: include/views/monitoring.overview.triggers.php:31
 msgid "OK"
@@ -11457,7 +11456,7 @@ msgstr "Private key file"
 msgid "Privilege level"
 msgstr "Privilege level"
 
-#: include/maps.inc.php:535 include/maps.inc.php:616 include/maps.inc.php:705
+#: include/maps.inc.php:535 include/maps.inc.php:616 include/maps.inc.php:694
 #: include/views/common.filter.trigger.php:38
 #: include/views/js/monitoring.sysmaps.js.php:133
 msgid "Problem"
@@ -11487,7 +11486,7 @@ msgstr "Problem, if at least one child has a problem"
 #: app/views/report.services.php:60 app/views/report.services.php:61
 #: app/views/report.services.php:62 app/views/report.services.php:63
 #: chart4.php:165 include/maps.inc.php:529 include/maps.inc.php:610
-#: include/maps.inc.php:699 report2.php:393
+#: include/maps.inc.php:688 report2.php:393
 msgid "Problems"
 msgstr "Problems"
 
@@ -14179,7 +14178,7 @@ msgstr "Turkish (tr_TR)"
 msgid "Two elements should be selected"
 msgstr "Two elements should be selected"
 
-#: include/classes/api/services/CItem.php:913
+#: include/classes/api/services/CItem.php:914
 #, c-format
 msgid "Two items (\"%1$s\" and \"%2$s\") cannot populate one host inventory field \"%3$s\", this would lead to a conflict."
 msgstr "Two items (\"%1$s\" and \"%2$s\") cannot populate one host inventory field \"%3$s\", this would lead to a conflict."
@@ -14349,7 +14348,7 @@ msgstr "Unable to select configuration."
 msgid "Unable to upload file because \"file_uploads\" is disabled."
 msgstr "Unable to upload file because \"file_uploads\" is disabled."
 
-#: include/maps.inc.php:546 include/maps.inc.php:627 include/maps.inc.php:716
+#: include/maps.inc.php:546 include/maps.inc.php:627 include/maps.inc.php:705
 msgid "Unacknowledged"
 msgstr "Unacknowledged"
 
@@ -14536,7 +14535,7 @@ msgstr "Unsupported parameter \"%1$s\" for group prototype."
 msgid "Unsupported parameter \"%2$s\" for a filter condition of action \"%1$s\"."
 msgstr "Unsupported parameter \"%2$s\" for a filter condition of action \"%1$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:998
+#: include/classes/api/services/CDiscoveryRule.php:999
 #, c-format
 msgid "Unsupported parameter \"%2$s\" for a filter condition of discovery rule \"%1$s\"."
 msgstr "Unsupported parameter \"%2$s\" for a filter condition of discovery rule \"%1$s\"."
@@ -14556,7 +14555,7 @@ msgstr "Unsupported parameter \"%2$s\" for host prototype %1$s host inventory."
 msgid "Unsupported parameter \"%2$s\" for the filter of action \"%1$s\"."
 msgstr "Unsupported parameter \"%2$s\" for the filter of action \"%1$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:966
+#: include/classes/api/services/CDiscoveryRule.php:967
 #, c-format
 msgid "Unsupported parameter \"%2$s\" for the filter of discovery rule \"%1$s\"."
 msgstr "Unsupported parameter \"%2$s\" for the filter of discovery rule \"%1$s\"."
@@ -14677,7 +14676,7 @@ msgstr "Updated: %s"
 msgid "Updated: Application \"%1$s\" on \"%2$s\"."
 msgstr "Updated: Application \"%1$s\" on \"%2$s\"."
 
-#: include/classes/api/services/CDiscoveryRule.php:864
+#: include/classes/api/services/CDiscoveryRule.php:865
 #, c-format
 msgid "Updated: Discovery rule \"%1$s\" on \"%2$s\"."
 msgstr "Updated: Discovery rule \"%1$s\" on \"%2$s\"."
@@ -14687,12 +14686,12 @@ msgstr "Updated: Discovery rule \"%1$s\" on \"%2$s\"."
 msgid "Updated: Host prototype \"%1$s\" on \"%2$s\"."
 msgstr "Updated: Host prototype \"%1$s\" on \"%2$s\"."
 
-#: include/classes/api/services/CItem.php:506
+#: include/classes/api/services/CItem.php:507
 #, c-format
 msgid "Updated: Item \"%1$s\" on \"%2$s\"."
 msgstr "Updated: Item \"%1$s\" on \"%2$s\"."
 
-#: include/classes/api/services/CItemPrototype.php:672
+#: include/classes/api/services/CItemPrototype.php:673
 #, c-format
 msgid "Updated: Item prototype \"%1$s\" on \"%2$s\"."
 msgstr "Updated: Item prototype \"%1$s\" on \"%2$s\"."
