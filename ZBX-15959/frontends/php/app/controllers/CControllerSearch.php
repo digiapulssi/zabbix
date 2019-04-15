@@ -50,6 +50,10 @@ class CControllerSearch extends CController {
 			USER_TYPE_SUPER_ADMIN
 		]);
 
+		if (CWebUser::$data['type'] < USER_TYPE_ZABBIX_USER) {
+			access_deny(ACCESS_DENY_PAGE);
+		}
+
 		$this->limit = CWebUser::$data['rows_per_page'];
 	}
 
