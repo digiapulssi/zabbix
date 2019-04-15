@@ -4115,9 +4115,9 @@ static int	DBpatch_3000312(void)
 
 	result = DBselect(
 			"select i.itemid,i.key_"
-			" from items i".
+			" from items i"
 			" left join hosts_groups hg on hg.hostid=i.hostid"
-			" where i.key_ like '%s%%'".
+			" where i.key_ like '%s%%'"
 				" and hg.groupid=140", key_prefix);
 
 	while (NULL != (row = DBfetch(result)))
