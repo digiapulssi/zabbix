@@ -835,6 +835,7 @@ class DB {
 			case self::FIELD_TYPE_ID:
 			case self::FIELD_TYPE_INT:
 			case self::FIELD_TYPE_UINT:
+			case self::FIELD_TYPE_DOUBLE:
 				return true;
 		}
 
