@@ -3334,7 +3334,7 @@ static int	create_dns_downtime_trigger(const char *hostid)
 	if (ZBX_DB_OK > DBexecute(
 			"insert into triggers (triggerid,expression,description,"
 				"url,status,priority,comments,templateid,type,flags)"
-			"values (" ZBX_FS_UI64 ", '{" ZBX_FS_UI64 "}>{$RSM.SLV.DNS.DOWNTIME}', 'DNS service was unavailable for at least {ITEM.VALUE1}m',"
+			"values (" ZBX_FS_UI64 ",'{" ZBX_FS_UI64 "}>{$RSM.SLV.DNS.DOWNTIME}','DNS service was unavailable for at least {ITEM.VALUE1}m',"
 				"'', '0', '5', '', NULL, '0', '0')",
 			triggerid, functionid))
 	{
@@ -3398,7 +3398,7 @@ static int	create_rdds_downtime_trigger(const char *hostid, const char *percent,
 			"insert into triggers (triggerid,expression,description,"
 				"url,status,priority,comments,templateid,type,flags)"
 			"values (" ZBX_FS_UI64 ", '{" ZBX_FS_UI64 "}>={$RSM.SLV.RDDS.DOWNTIME}%s',"
-				"'RDDS service was unavailable for %s of allowed $1',"
+				"'RDDS service was unavailable for %s of allowed $1 minutes',"
 				"'', '0', '%s', '', NULL, '0', '0')",
 			*triggerid, functionid, coefficient, percent, priority))
 	{
@@ -4053,7 +4053,7 @@ static int	create_dns_ns_downtime_trigger(const char *itemid, const char *nsip,
 			"insert into triggers (triggerid,expression,description,"
 				"url,status,priority,comments,templateid,type,flags)"
 			"values (" ZBX_FS_UI64 ", '{" ZBX_FS_UI64 "}>={$RSM.SLV.NS.DOWNTIME}%s',"
-				"'DNS %s downtime exceeded %s of allowed $1',"
+				"'DNS NS %s was unavailable for %s of allowed $1 minutes',"
 				"'', '0', '%s', '', NULL, '0', '0')",
 			*triggerid, functionid, coefficient, nsip, percent, priority))
 	{
@@ -4113,9 +4113,12 @@ static int	DBpatch_3000312(void)
 
 	prefixlen = strlen(key_prefix);
 
-	result = DBselect("select i.itemid,i.key_"
-			" from items i left join hosts_groups hg on hg.hostid=i.hostid"
-			" where i.key_ like '%s%%' and hg.groupid=140", key_prefix);
+	result = DBselect(
+			"select i.itemid,i.key_"
+			" from items i".
+			" left join hosts_groups hg on hg.hostid=i.hostid"
+			" where i.key_ like '%s%%'".
+				" and hg.groupid=140", key_prefix);
 
 	while (NULL != (row = DBfetch(result)))
 	{
