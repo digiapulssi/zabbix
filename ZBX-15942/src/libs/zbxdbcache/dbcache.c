@@ -2165,7 +2165,6 @@ static void	dc_add_proxy_history(ZBX_DC_HISTORY *history, int history_num)
 	char		buffer[64], *pvalue;
 	zbx_db_insert_t	db_insert;
 
-
 	zbx_db_insert_prepare(&db_insert, "proxy_history", "itemid", "clock", "ns", "value", "flags", NULL);
 
 	for (i = 0; i < history_num; i++)
