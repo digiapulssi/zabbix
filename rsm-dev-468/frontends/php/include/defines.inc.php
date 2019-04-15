@@ -1279,6 +1279,7 @@ define('RSM_EPP',			3);
 
 // SLA monitoring macros
 define('RSM_RDDS_RTT_LOW',			'{$RSM.RDDS.RTT.LOW}');
+define('RSM_SLV_MACRO_RDDS_DOWNTIME',	'{$RSM.SLV.RDDS.DOWNTIME}');
 define('RSM_SLV_MACRO_RDDS_RTT',	'{$RSM.SLV.RDDS.RTT}');
 define('RSM_SLV_MACRO_RDDS_AVAIL',	'{$RSM.SLV.RDDS.AVAIL}');
 define('RSM_SLV_MACRO_EPP_AVAIL',	'{$RSM.SLV.EPP.AVAIL}');
@@ -1295,7 +1296,8 @@ define('RSM_TLD_RDDS43_ENABLED',	'{$RSM.TLD.RDDS43.ENABLED}');
 define('RSM_TLD_RDDS80_ENABLED',	'{$RSM.TLD.RDDS80.ENABLED}');
 define('RSM_RDAP_TLD_ENABLED',		'{$RDAP.TLD.ENABLED}');
 define('RSM_TLD_RDAP_ENABLED',		'{$RSM.TLD.RDAP.ENABLED}');
-define('RSM_SLV_NS_DOWNTIME',			'{$RSM.SLV.NS.DOWNTIME}');
+define('RSM_SLV_NS_DOWNTIME',		'{$RSM.SLV.NS.DOWNTIME}');
+define('RSM_SLV_DNS_DOWNTIME',		'{$RSM.SLV.DNS.DOWNTIME}');
 define('RSM_SLV_DNS_TCP_RTT',		'{$RSM.SLV.DNS.TCP.RTT}');
 define('RSM_DNS_TCP_RTT_LOW',		'{$RSM.DNS.TCP.RTT.LOW}');
 define('RSM_SLV_DNS_UDP_RTT',		'{$RSM.SLV.DNS.UDP.RTT}');
@@ -1322,7 +1324,6 @@ define('RSM_SLV_EPP_ROLLWEEK',		'rsm.slv.epp.rollweek');
 
 // SLA monitoring availability items keys
 define('RSM_SLV_DNS_AVAIL',					'rsm.slv.dns.avail');
-define('RSM_SLV_DNS_DOWNTIME',				'rsm.slv.dns.downtime');
 define('RSM_SLV_DNS_NS_DOWNTIME',			'rsm.slv.dns.ns.downtime');
 define('RSM_SLV_DNS_TCP_RTT_PFAILED',		'rsm.slv.dns.tcp.rtt.pfailed');
 define('RSM_SLV_DNS_TCP_RTT_FAILED',		'rsm.slv.dns.tcp.rtt.failed');

@@ -23,64 +23,38 @@ require_once dirname(__FILE__).'/include/config.inc.php';
 
 $page['title'] = _('SLA report');
 $page['file'] = 'rsm.slareports.php';
-$page['hist_arg'] = array('groupid', 'hostid');
-$page['type'] = detect_page_type(PAGE_TYPE_HTML);
+$page['type'] = detect_page_type(hasRequest('export') ? PAGE_TYPE_XML : PAGE_TYPE_HTML);
 
 require_once dirname(__FILE__).'/include/page_header.php';
 
 //		VAR			TYPE	OPTIONAL FLAGS	VALIDATION	EXCEPTION
-$fields = array(
-	'export' =>			array(T_ZBX_INT, O_OPT,	P_ACT,	null,		null),
-	// filter
-	'filter_set' =>		array(T_ZBX_STR, O_OPT,  null,	null,		null),
-	'filter_search' =>	array(T_ZBX_STR, O_OPT,  null,	null,		null),
-	'filter_year' =>	array(T_ZBX_INT, O_OPT,  null,	null,		null),
-	'filter_month' =>	array(T_ZBX_INT, O_OPT,  null,	null,		null),
-	// ajax
-	'favobj' =>			array(T_ZBX_STR, O_OPT, P_ACT,	null,		null),
-	'favref' =>			array(T_ZBX_STR, O_OPT, P_ACT,  NOT_EMPTY,	'isset({favobj})'),
-	'favstate' =>		array(T_ZBX_INT, O_OPT, P_ACT,  NOT_EMPTY,	'isset({favobj})&&("filter"=={favobj})')
-);
+$fields = [
+	'export' =>			[T_ZBX_STR, O_OPT,  null,	null,		null],
+	'filter_set' =>		[T_ZBX_STR, O_OPT,  null,	null,		null],
+	'filter_search' =>	[T_ZBX_STR, O_OPT,  null,	null,		null],
+	'filter_year' =>	[T_ZBX_INT, O_OPT,  null,	null,		null],
+	'filter_month' =>	[T_ZBX_INT, O_OPT,  null,	null,		null]
+];
 
 check_fields($fields);
 
-if (isset($_REQUEST['favobj'])) {
-	if('filter' == $_REQUEST['favobj']){
-		CProfile::update('web.rsm.slareports.filter.state', getRequest('favstate'), PROFILE_TYPE_INT);
-	}
-}
-
-if ((PAGE_TYPE_JS == $page['type']) || (PAGE_TYPE_HTML_BLOCK == $page['type'])) {
-	require_once dirname(__FILE__).'/include/page_footer.php';
-	exit();
-}
-
-$error = '';
 $data = [
 	'tld' => [],
 	'url' => '',
 	'sid' => CWebUser::getSessionCookie(),
 	'filter_search' => getRequest('filter_search'),
-	'filter_year' => getRequest('filter_year', date('Y')),
-	'filter_month' => getRequest('filter_month', date('n'))
+	'filter_year' => (int) getRequest('filter_year', date('Y')),
+	'filter_month' => (int) getRequest('filter_month', date('n'))
 ];
-
-// Time limits.
-$now = (new DateTime(null, new DateTimeZone('UTC')));
-$end_time = clone $now;
-$start_time = clone $now;
-$start_time = $start_time->setDate($data['filter_year'], $data['filter_month'], 1)->modify('00:00:00')->getTimestamp();
-$end_time = $end_time->modify('last day of this month 23:59:59')->getTimestamp();
-$data['start_time'] = $start_time;
-$data['end_time'] = $end_time;
 
 /*
  * Filter
  */
-if (hasRequest('filter_set') && $start_time > $now->getTimestamp()) {
+if ($data['filter_year'] == date('Y') && $data['filter_month'] > date('n')) {
 	show_error_message(_('Incorrect report period.'));
 }
 elseif ($data['filter_search']) {
+	$error = '';
 	$master = $DB;
 
 	foreach ($DB['SERVERS'] as $server_nr => $server) {
@@ -112,49 +86,11 @@ elseif ($data['filter_search']) {
 }
 
 if ($data['tld']) {
-	// Get TLD template.
-	$template = API::Template()->get([
-		'output' => ['templateid'],
-		'filter' => ['host' => 'Template '.$data['tld']['host']]
-	])[0];
-
-	$template_macros = API::UserMacro()->get([
-		'output' => ['macro', 'value'],
-		'hostids' => $template['templateid'],
-		'filter' => [
-			'macro' => [RSM_TLD_RDDS43_ENABLED, RSM_TLD_RDDS80_ENABLED, RSM_TLD_RDAP_ENABLED]
-		]
-	]);
-
-	$item_keys = [RSM_SLV_DNS_DOWNTIME, RSM_SLV_DNS_TCP_RTT_PFAILED, RSM_SLV_DNS_UDP_RTT_PFAILED];
-	$macro_keys = [RSM_SLV_NS_DOWNTIME, RSM_SLV_DNS_TCP_RTT, RSM_DNS_TCP_RTT_LOW, RSM_SLV_DNS_UDP_RTT, RSM_DNS_UDP_RTT_LOW];
-
-	foreach ($template_macros as $tmpl_macro) {
-		if ($tmpl_macro['value'] != 1) {
-			continue;
-		}
-
-		// Add RDDS item keys and macro if RDDS is enabled.
-		$item_keys = array_merge($item_keys, [RSM_SLV_RDDS_DOWNTIME, RSM_SLV_RDDS_RTT_PFAILED]);
-		$macro_keys = array_merge($macro_keys, [RSM_SLV_MACRO_RDDS_AVAIL, RSM_SLV_RDDS_UPD, RSM_RDDS_UPDATE_TIME,
-			RSM_RDDS_RTT_LOW, RSM_SLV_MACRO_RDDS_RTT
-		]);
-		break;
-	}
-
-	// Get TLD items.
-	$items = zbx_toHash($data['tld']['items'], 'key_');
-	unset($data['tld']['items']);
-	$slv_keys = array_intersect($item_keys, array_keys($items));
-
-	if (count($slv_keys) != count($item_keys)) {
-		show_error_message(_s('Configuration error, cannot find items: "%1$s".', implode(', ',
-			array_diff($item_keys, $slv_keys)))
-		);
-
-		require_once dirname(__FILE__).'/include/page_footer.php';
-		exit;
-	}
+	$macro_keys = [
+		RSM_SLV_DNS_DOWNTIME, RSM_SLV_DNS_TCP_RTT, RSM_DNS_TCP_RTT_LOW, RSM_SLV_DNS_UDP_RTT, RSM_SLV_NS_DOWNTIME,
+		RSM_DNS_UDP_RTT_LOW, RSM_SLV_MACRO_RDDS_AVAIL, RSM_SLV_RDDS_UPD, RSM_RDDS_UPDATE_TIME, RSM_RDDS_RTT_LOW,
+		RSM_SLV_MACRO_RDDS_RTT, RSM_SLV_MACRO_RDDS_DOWNTIME
+	];
 
 	$macros = API::UserMacro()->get([
 		'globalmacro' => true,
@@ -164,95 +100,86 @@ if ($data['tld']) {
 	$macros = zbx_toHash($macros, 'macro');
 	$macros = array_merge($macros, zbx_toHash($data['tld']['macros'], 'macro'));
 	unset($data['tld']['macros']);
-	$slv_keys = array_intersect($macro_keys, array_keys($macros));
-	$undefined_macro = array_diff($macro_keys, $slv_keys);
-
-	if ($undefined_macro) {
-		show_error_message(_s('Configuration error, cannot find macros: "%1$s".', implode(', ', $undefined_macro)));
-
-		require_once dirname(__FILE__).'/include/page_footer.php';
-		exit;
-	}
 
 	$data['macro'] = [];
 	foreach ($macro_keys as $macro_key) {
 		$data['macro'][$macro_key] = $macros[$macro_key]['value'];
 	}
 
-	$db_items = [];
-	foreach ($item_keys as $key_) {
-		$db_items[$key_] = $items[$key_]['itemid'];
-	}
+	// Searching for pregenerated SLA report in database.
+	$report_row = DB::find('sla_reports', [
+		'hostid'	=> $data['tld']['hostid'],
+		'month'		=> $data['filter_month'],
+		'year'		=> $data['filter_year']
+	]);
+	$report_row = reset($report_row);
 
-	foreach ($items as $key => $item) {
-		if (strpos($key, RSM_SLV_DNS_NS_DOWNTIME) === 0) {
-			$db_items[$key] = $item['itemid'];
+	if (!$report_row) {
+		// Include file by build in autoloader.
+		new CSlaReport();
+
+		if (!class_exists('CSlaReport')) {
+			show_error_message(_('SLA Report generation file is missing.'));
+		}
+		else {
+			$report_row = CSlaReport::generate($data['server_nr'], [$data['tld']['host']], $data['filter_year'],
+				$data['filter_month']
+			);
+
+			if ($report_row === null) {
+				show_error_message(_s('Unable to generate XML report: "%1$s".', CSlaReport::$error));
+				if ($data['filter_year'] == date('Y') && $data['filter_month'] == date('n')) {
+					show_error_message(_('Please try again after 5 minutes.'));
+				}
+			}
 		}
 	}
 
-	$values = [];
-	$item_key_parser = new CItemKey();
-	foreach ($db_items as $key_ => $itemid) {
-		/**
-		 * CHistory request with 'output' set to ['clock', 'value'] will return only 'itemid'
-		 * therefore API_OUTPUT_EXTEND is used instead.
-		 */
-		$history_from = API::History()->get([
-			'output' => API_OUTPUT_EXTEND,
-			'itemids' => $itemid,
-			'history' => ITEM_VALUE_TYPE_UINT64,
-			'time_from' => $start_time,
-			'time_till' => $end_time,
-			'sortfield' => 'clock',
-			'limit' => 1
-		]);
+	// SLA Report download as XML file.
+	if ($report_row && hasRequest('export')) {
+		header('Content-Type: text/xml');
+		header(sprintf('Content-disposition: attachment; filename="%s-%d-%s.xml"',
+			$data['tld']['host'], $report_row['year'], getMonthCaption($report_row['month']))
+		);
+		echo $report_row['report'];
 
-		$history_to = API::History()->get([
-			'output' => API_OUTPUT_EXTEND,
-			'itemids' => $itemid,
-			'history' => ITEM_VALUE_TYPE_UINT64,
-			'time_from' => $start_time,
-			'time_till' => $end_time,
-			'sortfield' => 'clock',
-			'sortorder' => 'DESC',
-			'limit' => 1
-		]);
+		exit;
+	}
 
-		if ($history_from && $history_to) {
-			$from = $history_from[0];
-			$to = $history_to[0];
-		} else {
-			$from = [
-				'clock' => $start_time,
-				'value' => 0
-			];
-			$to = [
-				'clock' => $end_time,
-				'value' => 0
+	if ($report_row && array_key_exists('report', $report_row)) {
+		$xml = new SimpleXMLElement($report_row['report']);
+		$details = $xml->attributes();
+
+		$ns_items = [];
+		foreach ($xml->DNS->nsAvailability as $ns_item) {
+			$attrs = $ns_item->attributes();
+			$ns_items[] = [
+				'from'	=> (int) $attrs->from,
+				'to'	=> (int) $attrs->to,
+				'host'	=> (string) $attrs->hostname,
+				'ip'	=> (string) $attrs->ipAddress,
+				'slv'	=> (string) $ns_item[0]
 			];
 		}
 
-		$values[$key_] = [
-			'from' => $from['clock'],
-			'to' => $to['clock'],
-			'slv' => $to['value']
+		$data += [
+			'ns_items'	=> $ns_items,
+			'details'	=> [
+				'from'		=> (int) $details->reportPeriodFrom,
+				'to'		=> (int) $details->reportPeriodTo,
+				'generated'	=> (int) $details->generationDateTime
+			],
+			'slv_dns_downtime'		=> (string) $xml->DNS->serviceAvailability,
+			'slv_dns_tcp_pfailed'	=> (string) $xml->DNS->rttTCP,
+			'slv_dns_udp_pfailed'	=> (string) $xml->DNS->rttUDP,
+			'slv_rdds_downtime'		=> (string) $xml->RDDS->serviceAvailability,
+			'slv_rdds_rtt_downtime'	=> (string) $xml->RDDS->rtt
 		];
 
-		if (strpos($key_, RSM_SLV_DNS_NS_DOWNTIME) === 0) {
-			$item_key_parser->parse($key_);
-			$values[$key_]['host'] = $item_key_parser->getParam(0);
-			$values[$key_]['ip'] = $item_key_parser->getParam(1);
-			$values[$key_]['nsitem'] = true;
+		if ($data['tld']['host'] !== $details->id) {
+			show_error_message(_('Incorrect report tld value.'));
 		}
 	}
-
-	$data['values'] = $values;
-	$data['source_url'] = base64_encode('rsm.slareports.php?' . http_build_query([
-		'filter_search' => $data['filter_search'],
-		'filter_year' => $data['filter_year'],
-		'filter_month' => $data['filter_month'],
-		'filter_set' => 1
-	]));
 
 	if ($DB === $master) {
 		$data['rolling_week_url'] = (new CUrl('rsm.rollingweekstatus.php'))->getUrl();
