@@ -1463,21 +1463,6 @@ define('PROBE_UP',		1);
 define('NAMESERVER_DOWN',	0);
 define('NAMESERVER_UP',		1);
 
-// SLA monitoring monthly reports item
-define('MONTHLY_REPORTS_APPLICATION',	'SLV monthly');
-
-// SLA monitoring monthly reports item keys
-define('MONTHLY_REPORTS_DNS_NS_RTT_UDP',	'rsm.slv.dns.ns.rtt.udp.month');
-define('MONTHLY_REPORTS_DNS_NS_RTT_TCP',	'rsm.slv.dns.ns.rtt.tcp.month');
-define('MONTHLY_REPORTS_DNS_NS_UPD',		'rsm.slv.dns.ns.upd.month');
-define('MONTHLY_REPORTS_DNS_NS',			'rsm.slv.dns.ns.month');
-define('MONTHLY_REPORTS_RDDS43_RTT',		'rsm.slv.rdds.43.rtt.month');
-define('MONTHLY_REPORTS_RDDS80_RTT',		'rsm.slv.rdds.80.rtt.month');
-define('MONTHLY_REPORTS_RDDS_UPD',			'rsm.slv.rdds.upd.month');
-define('MONTHLY_REPORTS_EPP_INFO',			'rsm.slv.epp.rtt.info.month');
-define('MONTHLY_REPORTS_EPP_LOGIN',			'rsm.slv.epp.rtt.login.month');
-define('MONTHLY_REPORTS_EPP_UPDATE',		'rsm.slv.epp.rtt.update.month');
-
 // SLA monitoring "rsm" host name
 define('RSM_HOST',	'Global macro history');
 
