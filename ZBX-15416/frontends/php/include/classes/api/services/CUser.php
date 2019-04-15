@@ -271,8 +271,9 @@ class CUser extends CApiService {
 			}
 
 			// Check if passed language is supported.
-			$supported_locales = getLocales();
-			if (array_key_exists('lang', $user) && !array_key_exists($user['lang'], $supported_locales)) {
+			if (array_key_exists('lang', $user) && $user['lang'] !== 'en_GB'
+					&& (!array_key_exists($user['lang'], getLocales())
+						|| !setlocale(LC_MONETARY , zbx_locale_variants($user['lang'])))) {
 				self::exception(ZBX_API_ERROR_PARAMETERS, _s('Language "%1$s" is not supported.', $user['lang']));
 			}
 
