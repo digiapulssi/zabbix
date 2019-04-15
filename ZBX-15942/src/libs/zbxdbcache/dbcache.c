@@ -3375,7 +3375,7 @@ static void	dc_local_add_history_lld(zbx_uint64_t itemid, const zbx_timespec_t *
 }
 
 static void	dc_local_add_history_empty(zbx_uint64_t itemid, unsigned char item_value_type, const zbx_timespec_t *ts,
-		zbx_uint64_t lastlogsize, int mtime, unsigned char flags)
+		unsigned char flags)
 {
 	dc_item_value_t	*item_value;
 
@@ -3387,12 +3387,6 @@ static void	dc_local_add_history_empty(zbx_uint64_t itemid, unsigned char item_v
 	item_value->value_type = ITEM_VALUE_TYPE_NONE;
 	item_value->state = ITEM_STATE_NORMAL;
 	item_value->flags = flags;
-
-	if (0 != (item_value->flags & ZBX_DC_FLAG_META))
-	{
-		item_value->lastlogsize = lastlogsize;
-		item_value->mtime = mtime;
-	}
 }
 
 /******************************************************************************
@@ -3506,10 +3500,7 @@ void	dc_add_history(zbx_uint64_t itemid, unsigned char item_value_type, unsigned
 					value_flags);
 		}
 		else
-		{
-			dc_local_add_history_empty(itemid, item_value_type, ts, result->lastlogsize, result->mtime,
-					value_flags);
-		}
+			dc_local_add_history_empty(itemid, item_value_type, ts, value_flags);
 	}
 }
 
