@@ -152,7 +152,10 @@ sub calculate_downtime_values
 	if (SUCCESS != get_lastvalue($downtime_itemid, ITEM_VALUE_TYPE_UINT64, \$downtime_value, \$downtime_clock))
 	{
 		$downtime_value = 0;
-		$downtime_clock = current_month_first_cycle() - 60;
+
+		$downtime_clock = db_select_value("select min(clock)-60 from history_uint where itemid=?", [$avail_itemid]);
+
+		fail("no name server availability data yet") unless (defined($downtime_clock));
 	}
 
 	if ($downtime_clock >= $avail_clock)
