@@ -924,15 +924,21 @@ static int	process_value(const char *server, unsigned short port, const char *ho
 	ZBX_ACTIVE_BUFFER_ELEMENT	*el = NULL;
 	int				i, ret = FAIL;
 	size_t				sz;
-	char				log_llsz[MAX_STRING_LEN];
 
-	if (NULL != lastlogsize)
-		zbx_snprintf(log_llsz, sizeof(log_llsz), " lastlogsize:'%lu'", *lastlogsize);
-	else
-		*log_llsz = '\0';
-
-	zabbix_log(LOG_LEVEL_DEBUG, "In %s() key:'%s:%s'%s value:'%s'", __function_name, host, key, log_llsz,
-			ZBX_NULL2STR(value));
+	if (SUCCEED == zabbix_check_log_level(LOG_LEVEL_DEBUG))
+	{
+		if (NULL != lastlogsize)
+		{
+			zabbix_log(LOG_LEVEL_DEBUG, "In %s() key:'%s:%s' lastlogsize:" ZBX_FS_UI64 " value:'%s'",
+					__function_name, host, key, *lastlogsize, ZBX_NULL2STR(value));
+		}
+		else
+		{
+			/* log a dummy lastlogsize to keep the same record format for simpler parsing */
+			zabbix_log(LOG_LEVEL_DEBUG, "In %s() key:'%s:%s' lastlogsize:null value:'%s'",
+					__function_name, host, key, ZBX_NULL2STR(value));
+		}
+	}
 
 	send_buffer(server, port);
 
