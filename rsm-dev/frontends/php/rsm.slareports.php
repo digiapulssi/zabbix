@@ -132,6 +132,10 @@ if ($data['tld']) {
 					show_error_message(_('Please try again after 5 minutes.'));
 				}
 			}
+			else {
+				$report_row = reset($report_row);
+				$report_row += ['year' => $data['filter_year'], 'month' => $data['filter_month']];
+			}
 		}
 	}
 
@@ -176,7 +180,7 @@ if ($data['tld']) {
 			'slv_rdds_rtt_downtime'	=> (string) $xml->RDDS->rtt
 		];
 
-		if ($data['tld']['host'] !== $details->id) {
+		if ($data['tld']['host'] !== strval($details->id)) {
 			show_error_message(_('Incorrect report tld value.'));
 		}
 	}
