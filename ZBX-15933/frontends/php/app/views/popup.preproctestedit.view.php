@@ -94,6 +94,13 @@ $form_list = (new CFormList())
 				->setEnabled($data['show_prev'])
 				->setWidth(ZBX_TEXTAREA_SMALL_WIDTH)
 		]))->addClass('preproc-test-popup-value-row')
+	)
+	->addRow(
+		new CLabel(_('End of line sequence'), 'end_line_type'),
+		(new CRadioButtonList('end_line_type', ZBX_LINE_FEED))
+			->addValue(_('LF'), ZBX_LINE_FEED)
+			->addValue(_('CRLF'), ZBX_LINE_FEED_CARRIAGE_RETURN)
+			->setModern(true)
 	);
 
 if ($macros_table) {
