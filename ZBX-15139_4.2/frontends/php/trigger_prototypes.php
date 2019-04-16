@@ -138,7 +138,7 @@ if ($triggerPrototypeIds) {
 		'editable' => true
 	]);
 
-	if (count($triggerPrototypeId) != count($triggerPrototypes)) {
+	if (count($triggerPrototypeIds) != count($triggerPrototypes)) {
 		uncheckTableRows(getRequest('parent_discoveryid'), zbx_objectValues($triggerPrototypes, 'triggerid'));
 	}
 }
