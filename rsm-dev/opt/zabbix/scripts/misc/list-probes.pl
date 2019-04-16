@@ -28,24 +28,24 @@ foreach my $server_key (@server_keys)
 
 	my $result = $zabbix->get('proxy',{'output' => ['proxyid', 'host'], 'selectInterface' => ['ip', 'port'], 'preservekeys' => 1 });
 
-	my $total = 0;
-	my $rdds_num = 0;
-	my $epp_num = 0;
+	my $probes = {'total' => 0, 'disabled' => 0, 'features' => {}};
 
 	foreach my $proxyid (keys(%{$result}))
 	{
 		my $proxy = $result->{$proxyid};
 
-		$total++;
-
 		my $ph = $proxy->{'host'};
 		my ($ip, $port);
+
+		$probes->{'total'}++;
 
 		if (ref($proxy->{'interface'}) eq 'ARRAY')
 		{
 			# disabled probe
 			$ip = "DISABLED";
 			$port = "PASSIVE";
+
+			$probes->{'disabled'}++;
 		}
 		else
 		{
@@ -55,45 +55,45 @@ foreach my $server_key (@server_keys)
 
 		my ($tname, $result2, $hostid, $macro);
 
-		my $rdds = "no";
-		my $epp = "no";
-
 		$tname = 'Template '.$ph;
 		$result2 = $zabbix->get('template', {'output' => ['templateid'], 'filter' => {'host' => $tname}});
-
 		$hostid = $result2->{'templateid'};
 
-		$macro = '{$RSM.RDDS.ENABLED}';
-		$result2 = $zabbix->get('usermacro', {'output' => 'extend', 'hostids' => $hostid, 'filter' => {'macro' => $macro}});
-		if (defined($result2->{'value'}) and $result2->{'value'} != 0)
+		my %features;
+
+		foreach my $feature ('RDDS', 'EPP', 'IP4', 'IP6')
 		{
-			$rdds_num++;
-			$rdds = "yes";
+			$macro = "{\$RSM.$feature.ENABLED}";
+
+			$probes->{'features'}->{$feature} //= 0;
+
+			my $result = $zabbix->get('usermacro', {'output' => 'extend', 'hostids' => $hostid, 'filter' => {'macro' => $macro}});
+
+			fail("macro \"$macro\" not defined on \"$tname\"") unless (defined($result->{'value'}));
+
+			if ($result->{'value'} == 0)
+			{
+				$features{$feature} = "off";
+			}
+			else
+			{
+				$features{$feature} = "on";
+				$probes->{'features'}->{$feature}++;
+			}
 		}
 
-		$macro = '{$RSM.EPP.ENABLED}';
-		$result2 = $zabbix->get('usermacro', {'output' => 'extend', 'hostids' => $hostid, 'filter' => {'macro' => $macro}});
-		if (defined($result2->{'value'}) and $result2->{'value'} != 0)
-		{
-			$epp_num++;
-			$epp = "yes";
-		}
+		print("  $ph ($ip:$port)\t");
 
-		print("  $ph ($ip:$port): RDDS:$rdds EPP:$epp\n");
+		map {print("$_:$features{$_}\t")} (sort(keys(%features)));
+
+		print("\n");
 	}
 
-	if ($total == $rdds_num and $total == $epp_num)
-	{
-		print("Total $total probes, all with RDDS and EPP enabled\n");
-	}
-	elsif ($rdds_num == 0 and $epp_num == 0)
-	{
-		print("Total $total probes, all with RDDS and EPP disabled\n");
-	}
-	else
-	{
-		print("Total $total probes, $rdds_num with RDDS enabled, $epp_num with EPP enabled\n");
-	}
+	print("Total $probes->{'total'} probes, disabled:$probes->{'disabled'}\t");
+
+	map {print("$_:$probes->{'features'}->{$_}\t")} (sort(keys(%{$probes->{'features'}})));
+
+	print("\n");
 
 	print("\n") unless ($server_key eq $server_keys[-1]);
 }
