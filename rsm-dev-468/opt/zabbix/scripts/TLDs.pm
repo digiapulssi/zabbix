@@ -861,7 +861,7 @@ sub create_cron_jobs($)
 		if ($slv_file =~ /\.slv\..*\.rtt\.pl$/)
 		{
 			# monthly RTT data
-			pfail($err) if (SUCCESS != write_file(CRON_D_PATH . "/$cron_file", "* * * * * root sleep $rtt_cur; $slv_path/$slv_file >> $errlog 2>&1", \$err));
+			pfail($err) if (SUCCESS != write_file(CRON_D_PATH . "/$cron_file", "* * * * * root sleep $rtt_cur; $slv_path/$slv_file >> $errlog 2>&1\n", \$err));
 
 			$rtt_cur += $rtt_step;
 			$rtt_cur = $rtt_shift if ($rtt_cur >= $rtt_limit);
@@ -869,7 +869,7 @@ sub create_cron_jobs($)
 		elsif ($slv_file =~ /\.slv\..*\.downtime\.pl$/)
 		{
 			# downtime
-			pfail($err) if (SUCCESS != write_file(CRON_D_PATH . "/$cron_file", "* * * * * root sleep $downtime_cur; $slv_path/$slv_file >> $errlog 2>&1", \$err));
+			pfail($err) if (SUCCESS != write_file(CRON_D_PATH . "/$cron_file", "* * * * * root sleep $downtime_cur; $slv_path/$slv_file >> $errlog 2>&1\n", \$err));
 
 			$downtime_cur += $downtime_step;
 			$downtime_cur = $downtime_shift if ($downtime_cur >= $downtime_limit);
@@ -877,7 +877,7 @@ sub create_cron_jobs($)
 		elsif ($slv_file =~ /\.slv\..*\.avail\.pl$/)
 		{
 			# service availability
-			pfail($err) if (SUCCESS != write_file(CRON_D_PATH . "/$cron_file", "* * * * * root sleep $avail_cur; $slv_path/$slv_file >> $errlog 2>&1", \$err));
+			pfail($err) if (SUCCESS != write_file(CRON_D_PATH . "/$cron_file", "* * * * * root sleep $avail_cur; $slv_path/$slv_file >> $errlog 2>&1\n", \$err));
 
 			$avail_cur += $avail_step;
 			$avail_cur = $avail_shift if ($avail_cur >= $avail_limit);
@@ -885,7 +885,7 @@ sub create_cron_jobs($)
 		elsif ($slv_file =~ /\.slv\..*\.rollweek\.pl$/)
 		{
 			# rolling week
-			pfail($err) if (SUCCESS != write_file(CRON_D_PATH . "/$cron_file", "* * * * * root sleep $rollweek_cur; $slv_path/$slv_file >> $errlog 2>&1", \$err));
+			pfail($err) if (SUCCESS != write_file(CRON_D_PATH . "/$cron_file", "* * * * * root sleep $rollweek_cur; $slv_path/$slv_file >> $errlog 2>&1\n", \$err));
 
 			$rollweek_cur += $rollweek_step;
 			$rollweek_cur = $rollweek_shift if ($rollweek_cur >= $rollweek_limit);
@@ -893,7 +893,7 @@ sub create_cron_jobs($)
 		else
 		{
 			# everything else
-			pfail($err) if (SUCCESS != write_file(CRON_D_PATH . "/$cron_file", "* * * * * root $slv_path/$slv_file >> $errlog 2>&1", \$err));
+			pfail($err) if (SUCCESS != write_file(CRON_D_PATH . "/$cron_file", "* * * * * root $slv_path/$slv_file >> $errlog 2>&1\n", \$err));
 		}
 	}
 }
