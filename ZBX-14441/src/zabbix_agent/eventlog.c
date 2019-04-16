@@ -1275,8 +1275,8 @@ int	process_eventslog(const char *server, unsigned short port, const char *fl_so
 		goto out;
 	}
 
-	zabbix_log(LOG_LEVEL_TRACE, "%s(): state before EventLog reading: dwRead=%d dwErr=%s FirstID="ZBX_FS_UI64
-			" LastID = "ZBX_FS_UI64" lastlogsize="ZBX_FS_UI64, __function_name, dwRead,
+	zabbix_log(LOG_LEVEL_TRACE, "%s(): state before EventLog reading: dwRead=%d dwErr=%s FirstID=" ZBX_FS_UI64
+			" LastID=" ZBX_FS_UI64 " lastlogsize=" ZBX_FS_UI64, __function_name, dwRead,
 			strerror_from_system(dwErr), FirstID, LastID, lastlogsize);
 
 	if (ERROR_HANDLE_EOF == dwErr)
