@@ -50,17 +50,24 @@ $table = (new CTableInfo())->setHeader([
 	_('Monthly SLR')
 ]);
 
-if (!$data['tld']) {
-	return $widget->addItem($table);
+if (!array_key_exists('details', $data)) {
+	return $widget->addItem([
+		$table,
+		(new CDiv())
+			->addItem((new CButton('export', 'Download XML'))->setEnabled(false))
+			->addClass('action-buttons')
+	]);
 }
+
+$macro = $data['macro'];
 
 // TLD details.
 $widget->additem((new CDiv())
 	->addClass(ZBX_STYLE_TABLE_FORMS_CONTAINER)
 	->addItem([
-		bold(_s('Period: %1$s - %2$s', gmdate('Y/m/d H:i:s', $data['start_time']),
-			gmdate('Y/m/d H:i:s', $data['end_time']))), BR(),
-		bold(_s('Generation time: %1$s', gmdate('dS F Y, H:i:s e', time()))), BR(),
+		bold(_s('Period: %1$s - %2$s', gmdate('Y/m/d H:i:s', $data['details']['from']),
+			gmdate('Y/m/d H:i:s', $data['details']['to']))), BR(),
+		bold(_s('Generation time: %1$s', gmdate('dS F Y, H:i:s e', $data['details']['generated']))), BR(),
 		bold(_s('TLD: %1$s', $data['tld']['name'])), BR(),
 		bold(_('Server: ')), new CLink($data['server'], $data['rolling_week_url'])
 	])
@@ -68,31 +75,27 @@ $widget->additem((new CDiv())
 
 // DNS Server Availability.
 $table->addRow([
-		bold(_('DNS Server Availability')),
+		bold(_('DNS Service Availability')),
 		'-',
 		'-',
 		'-',
-		_s('%d (minutes of downtime)', $data['values'][RSM_SLV_DNS_DOWNTIME]['slv']),
-		_s('%d (minutes of downtime)', $data['macro'][RSM_SLV_NS_DOWNTIME])
+		_s('%d (minutes of downtime)', $data['slv_dns_downtime']),
+		_s('%d (minutes of downtime)', $macro[RSM_SLV_DNS_DOWNTIME])
 	],
-	($data['values'][RSM_SLV_DNS_DOWNTIME]['slv'] > $data['macro'][RSM_SLV_NS_DOWNTIME]) ? 'red-bg' : null
+	($data['slv_dns_downtime'] > $macro[RSM_SLV_DNS_DOWNTIME]) ? 'red-bg' : null
 );
 
 // DNS Name Server availability.
-foreach ($data['values'] as $item) {
-	if (!array_key_exists('nsitem', $item)) {
-		continue;
-	}
-
+foreach ($data['ns_items'] as $item) {
 	$table->addRow([
-			_('DNS Name Server availability'),
+			_('DNS Name Service availability'),
 			implode(', ', array_filter([$item['host'], $item['ip']], 'strlen')),
 			gmdate('Y-m-d H:i:s e', $item['from']),
 			gmdate('Y-m-d H:i:s e', $item['to']),
 			_s('%1$s (minutes of downtime)', $item['slv']),
-			_s('%1$s (minutes of downtime)', $data['macro'][RSM_SLV_NS_DOWNTIME])
+			_s('%1$s (minutes of downtime)', $macro[RSM_SLV_NS_DOWNTIME])
 		],
-		($item['slv'] > $data['macro'][RSM_SLV_NS_DOWNTIME]) ? 'red-bg' : null
+		($item['slv'] > $macro[RSM_SLV_NS_DOWNTIME]) ? 'red-bg' : null
 	);
 }
 
@@ -103,78 +106,61 @@ $table
 			'-',
 			'-',
 			'-',
-			_s('%1$s %% (queries <= %2$s ms)', $data['values'][RSM_SLV_DNS_TCP_RTT_PFAILED]['slv'],
-				$data['macro'][RSM_DNS_TCP_RTT_LOW]
+			_s('%1$s %% (queries <= %2$s ms)', $data['slv_dns_tcp_pfailed'],
+				$macro[RSM_DNS_TCP_RTT_LOW]
 			),
-			_s('<= %1$s ms, for at least %2$s %% of queries', $data['macro'][RSM_DNS_TCP_RTT_LOW],
-				$data['macro'][RSM_SLV_DNS_TCP_RTT]
+			_s('<= %1$s ms, for at least %2$s %% of queries', $macro[RSM_DNS_TCP_RTT_LOW],
+				$macro[RSM_SLV_DNS_TCP_RTT]
 			)
 		],
-		($data['values'][RSM_SLV_DNS_TCP_RTT_PFAILED]['slv'] > $data['macro'][RSM_SLV_DNS_TCP_RTT])
-			? 'red-bg' : null
+		($data['slv_dns_tcp_pfailed'] > $macro[RSM_SLV_DNS_TCP_RTT]) ? 'red-bg' : null
 	)->addRow([
 			_('DNS UDP Resolutioin RTT'),
 			'-',
 			'-',
 			'-',
-			_s('%1$s %% (queries <= %2$s ms)', $data['values'][RSM_SLV_DNS_UDP_RTT_PFAILED]['slv'],
-				$data['macro'][RSM_DNS_TCP_RTT_LOW]
+			_s('%1$s %% (queries <= %2$s ms)', $data['slv_dns_udp_pfailed'],
+				$macro[RSM_DNS_UDP_RTT_LOW]
 			),
-			_s('<= %1$s ms, for at least %2$s %% of queries', $data['macro'][RSM_DNS_TCP_RTT_LOW],
-				$data['macro'][RSM_SLV_DNS_TCP_RTT]
+			_s('<= %1$s ms, for at least %2$s %% of queries', $macro[RSM_DNS_UDP_RTT_LOW],
+				$macro[RSM_SLV_DNS_UDP_RTT]
 			)
 		],
-		($data['values'][RSM_SLV_DNS_UDP_RTT_PFAILED]['slv'] > $data['macro'][RSM_SLV_DNS_TCP_RTT])
-			? 'red-bg' : null
+		($data['slv_dns_udp_pfailed'] > $macro[RSM_DNS_UDP_RTT_LOW]) ? 'red-bg' : null
 );
 
 // RDDS Availability.
-if (array_key_exists(RSM_SLV_RDDS_DOWNTIME, $data['values'])) {
+if (array_key_exists('slv_rdds_downtime', $data) && $data['slv_rdds_downtime'] !== 'disabled'
+		&& $data['slv_rdds_rtt_downtime'] !== 'disabled') {
 	$table->addRow([
 			bold(_('RDDS Availability')),
 			'-',
 			'-',
 			'-',
-			_s('%1$s (minutes of downtime)', $data['values'][RSM_SLV_RDDS_DOWNTIME]['slv']),
-			_s('<= %1$s min of downtime', $data['macro'][RSM_DNS_UDP_RTT_LOW])
+			_s('%1$s (minutes of downtime)', $data['slv_rdds_downtime']),
+			_s('<= %1$s min of downtime', $macro[RSM_SLV_MACRO_RDDS_DOWNTIME])
 		],
-		($data['values'][RSM_SLV_RDDS_DOWNTIME]['slv'] > $data['macro'][RSM_DNS_UDP_RTT_LOW])
-			? 'red-bg' : null
+		($data['slv_rdds_downtime'] > $macro[RSM_SLV_MACRO_RDDS_DOWNTIME]) ? 'red-bg' : null
 	)->addRow([
 			_('RDDS Query RTT'),
 			'-',
 			'-',
 			'-',
-			_s('%1$s %% (queries <= %2$s ms)', $data['values'][RSM_SLV_RDDS_RTT_PFAILED]['slv'],
-				$data['macro'][RSM_RDDS_RTT_LOW]
-			),
-			_s('<= %1$s ms, for at least %2$s %% of the queries', $data['macro'][RSM_RDDS_RTT_LOW],
-				$data['macro'][RSM_SLV_MACRO_RDDS_RTT]
-			)
+			_s('%1$s %% (queries <= %2$s ms)', $data['slv_rdds_rtt_downtime'], $macro[RSM_RDDS_RTT_LOW]),
+			_s('<= %1$s ms, for at least %2$s %% of the queries', $macro[RSM_RDDS_RTT_LOW], $macro[RSM_SLV_MACRO_RDDS_RTT])
 		],
-		($data['values'][RSM_SLV_RDDS_RTT_PFAILED]['slv'] > $data['macro'][RSM_SLV_MACRO_RDDS_RTT])
-			? 'red-bg' : null
+		($data['slv_rdds_rtt_downtime'] > $macro[RSM_SLV_MACRO_RDDS_RTT]) ? 'red-bg' : null
 	);
 }
-
-// Append download button.
-$download_button = $data['tld']
-	? (new CButton('download-report', 'Download XML'))->onClick(sprintf(
-		'javascript: document.location = "rsm.slareports-download.php?%s"',
-		http_build_query([
-			'action' => 'download-xml',
-			'server' => $data['server_nr'],
-			'tld' => $data['tld']['host'],
-			'year' => $data['filter_year'],
-			'month' => $data['filter_month'],
-			'source_url' => $data['source_url']
-		])
-	))
-	: (new CButton('download-report', 'Download XML'))->setEnabled(false);
 
 return $widget->addItem([
 	$table,
 	(new CDiv())
-		->addItem($download_button)
+		->addItem((new CForm())
+			->addVar('filter_search', $data['filter_search'])
+			->addVar('filter_year', $data['filter_year'])
+			->addVar('filter_month', $data['filter_month'])
+			->additem(new CSubmitButton(_('Download XML'), 'export', 1))
+		)
 		->addClass('action-buttons')
 ]);

@@ -151,13 +151,6 @@ function zbx_construct_menu(&$main_menu, &$sub_menus, &$page, $action = null) {
 					)
 				),
 				array(
-					'url' => 'rsm.monthlyreports.php',
-					'label' => _('Monthly reports'),
-					'user_type'	=> [USER_TYPE_ZABBIX_USER, USER_TYPE_TEHNICAL_SERVICE, USER_TYPE_COMPLIANCE,
-						USER_TYPE_ZABBIX_ADMIN, USER_TYPE_SUPER_ADMIN
-					],
-				),
-				array(
 					'url' => 'rsm.slareports.php',
 					'label' => _('SLA reports'),
 					'sub_pages' => array('rsm.screens.php'),

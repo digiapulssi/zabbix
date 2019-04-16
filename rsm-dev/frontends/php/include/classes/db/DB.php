@@ -38,6 +38,8 @@ class DB {
 	const FIELD_TYPE_UINT = 'uint';
 	const FIELD_TYPE_BLOB = 'blob';
 	const FIELD_TYPE_TEXT = 'text';
+	// ICANN specific field for 'lastvalue' table.
+	const FIELD_TYPE_DOUBLE = 'double';
 
 	private static $schema = null;
 
@@ -833,6 +835,7 @@ class DB {
 			case self::FIELD_TYPE_ID:
 			case self::FIELD_TYPE_INT:
 			case self::FIELD_TYPE_UINT:
+			case self::FIELD_TYPE_DOUBLE:
 				return true;
 		}
 

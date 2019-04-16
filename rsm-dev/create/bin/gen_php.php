@@ -50,6 +50,11 @@ function parse_schema($path) {
 						$type = 'DB::FIELD_TYPE_FLOAT';
 						$length = 16;
 						break;
+					// ICANN specific field for 'lastvalue' table.
+					case 't_bigdouble':
+						$type = 'DB::FIELD_TYPE_DOUBLE';
+						$length = false;
+						break;
 					case 't_varchar':
 					case 't_char':
 						$type = 'DB::FIELD_TYPE_CHAR';
