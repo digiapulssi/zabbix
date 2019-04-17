@@ -40,7 +40,8 @@ window.ZABBIX = Object.create({
 		}, this);
 	},
 	logout: function() {
-		this.namespace('instances.localStorage').destruct();
+		var ls = this.namespace('instances.localStorage');
+		ls && ls.destruct();
 		redirect('index.php?reconnect=1', 'post', 'sid', true);
 	}
 });
