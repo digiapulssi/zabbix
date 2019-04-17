@@ -871,8 +871,12 @@ sub fill_test_data($$$$)
 			# different value types. This means they can appear in history tables at different times.
 			# In this case we must skip that test with partial metrics, it will be added on the next run
 			# when we have all the needed data.
+			#
+			# Exception! In case of negative RTT the IP is sometimes undefined. We assume that this is the
+			# case and allow empty IPs.
+			#
 
-			next if (!defined($src_metric_ref->{'rtt'}) || !defined($src_metric_ref->{'ip'}));
+			next if (!defined($src_metric_ref->{'rtt'}) || ($src_metric_ref->{'rtt'} >= 0 && !defined($src_metric_ref->{'ip'})));
 
 			my $metric = {
 				'testDateTime'	=> int($src_metric_ref->{'clock'}),
