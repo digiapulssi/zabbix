@@ -127,7 +127,7 @@ if ($data['tld']) {
 			);
 
 			if ($report_row === null) {
-				show_error_message(_s('Unable to generate XML report: "%1$s".', CSlaReport::$error));
+				show_error_message(_s('Unable to generate XML report: %1$s', CSlaReport::$error));
 				if ($data['filter_year'] == date('Y') && $data['filter_month'] == date('n')) {
 					show_error_message(_('Please try again after 5 minutes.'));
 				}
