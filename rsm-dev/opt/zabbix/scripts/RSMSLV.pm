@@ -2376,13 +2376,13 @@ sub process_slv_downtime_cycles($$$$)
 
 	init_values();
 
-	foreach my $value_ts (sort(keys(%{$cycles_ref})))
+	foreach my $clock (sort(keys(%{$cycles_ref})))
 	{
-		my ($from, $till, undef) = get_downtime_bounds($delay, $value_ts);
+		my ($from, $till, $value_ts) = get_downtime_bounds($delay, $clock);
 
-		dbg("selecting period ", selected_period($from, $till), " (value_ts:", ts_str($value_ts), ")");
+		dbg("selecting period ", selected_period($from, $till), " (value_ts:", ts_str($clock), ")");
 
-		foreach (@{$cycles_ref->{$value_ts}})
+		foreach (@{$cycles_ref->{$clock}})
 		{
 			# NB! This is needed in order to set the value globally.
 			$tld = $_;
@@ -2910,37 +2910,27 @@ sub get_downtime_execute
 			$sql_count++;
 		}
 
-		my $is_down = 0;	# 1 if service is "Down"
-					# 0 if it is "Up", "Up-inconclusive-no-data" or "Up-inconclusive-no-probes"
 		my $prevclock = 0;
 
-		while ($sth->fetch)
+		while ($sth->fetch())
 		{
 			$fetches++;
 
-			if ($value == DOWN && $prevclock == 0)
+			if ($prevclock != 0 && $clock - $prevclock != $delay)
 			{
-				# first run
-				$downtime += 60;
-			}
-			elsif ($is_down != 0)
-			{
-				$downtime += $clock - $prevclock;
+				fail("dimir was wrong, one cycle can have missing or more than one availability value");
 			}
 
-			$is_down = ($value == DOWN ? 1 : 0);
+			if ($value == DOWN)
+			{
+				$downtime += $delay;
+			}
+
 			$prevclock = $clock;
 		}
 
-		# leftover of downtime
-		$downtime += $period_till - $prevclock if ($is_down != 0);
-
-		$sth->finish();
 		$sql_count++;
 	}
-
-	# complete minute
-	$downtime += 60 - ($downtime % 60 ? $downtime % 60 : 60);
 
 	# return minutes
 	return int($downtime / 60);
