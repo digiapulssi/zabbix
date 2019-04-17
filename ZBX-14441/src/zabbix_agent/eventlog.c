@@ -985,6 +985,8 @@ static int	seek_eventlog(HANDLE *eventlog_handle, zbx_uint64_t FirstID, DWORD dw
 
 		if (ERROR_INVALID_PARAMETER == (*dwErr = GetLastError()))
 		{
+			/* see Microsoft Knowledge Base article, 177199 "BUG: ReadEventLog Fails with Error 87" */
+			/* how ReadEventLog() can fail with all valid parameters */
 			break;
 		}
 		else if (ERROR_HANDLE_EOF == *dwErr)
