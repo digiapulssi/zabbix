@@ -931,8 +931,10 @@ int	finalize_eventlog6(EVT_HANDLE *render_context, EVT_HANDLE *query)
  *                                                                            *
  * Parameters: eventlog_handle - [IN] the handle to the event log to be read  *
  *             FirstID         - [IN] the first Event log record to be parse  *
- *             dwReadDirection - [IN] FirstID position - the first or second  *
- *                                    half of the Event Log file              *
+ *             dwReadDirection - [IN] direction of reading:                   *
+ *                                    EVENTLOG_FORWARDS_READ,                 *
+ *                                    EVENTLOG_BACKWARDS_READ or 0 (no seek,  *
+ *                                    the current position will be used)      *
  *             LastID          - [IN] position of last record in EventLog     *
  *             fl_source       - [IN] the name of the Event Log file          *
  *             pELRs           - [IN/OUT] buffer for read of data of EventLog *
