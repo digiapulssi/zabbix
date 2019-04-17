@@ -73,7 +73,7 @@ $widget->additem((new CDiv())
 	])
 );
 
-// DNS Server Availability.
+// DNS Service Availability.
 $table->addRow([
 		bold(_('DNS Service Availability')),
 		'-',
@@ -85,10 +85,10 @@ $table->addRow([
 	($data['slv_dns_downtime'] > $macro[RSM_SLV_DNS_DOWNTIME]) ? 'red-bg' : null
 );
 
-// DNS Name Server availability.
+// DNS Name Server Availability.
 foreach ($data['ns_items'] as $item) {
 	$table->addRow([
-			_('DNS Name Service availability'),
+			_('DNS Name Server Availability'),
 			implode(', ', array_filter([$item['host'], $item['ip']], 'strlen')),
 			gmdate('Y-m-d H:i:s e', $item['from']),
 			gmdate('Y-m-d H:i:s e', $item['to']),
