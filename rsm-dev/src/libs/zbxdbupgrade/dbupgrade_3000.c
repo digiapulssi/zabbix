@@ -4194,6 +4194,26 @@ static int	DBpatch_3000315(void)
 	return SUCCEED;
 }
 
+static int	DBpatch_3000316(void)
+{
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	/* update global macro */
+	if (ZBX_DB_OK > DBexecute("update globalmacro set value = 3600 where macro = '{$RSM.DNS.TCP.DELAY}'"))
+	{
+		return FAIL;
+	}
+
+	/* update item update intervals */
+	if (ZBX_DB_OK > DBexecute("update items set delay = 3600 where key_ like 'rsm.dns.tcp[%%]'"))
+	{
+		return FAIL;
+	}
+
+	return SUCCEED;
+}
+
 #endif
 
 DBPATCH_START(3000)
@@ -4295,5 +4315,6 @@ DBPATCH_ADD(3000312, 0, 0)	/* add nameserver downtime triggers to tld hosts */
 DBPATCH_ADD(3000313, 0, 0)	/* add nameserver availability items to tld hosts */
 DBPATCH_ADD(3000314, 0, 0)	/* fill auditlog.resourceid for "Marked/Unmarked as false positive" logs */
 DBPATCH_ADD(3000315, 0, 0)	/* fix item value_type for rsm.slv.dns.ns.* to uint */
+DBPATCH_ADD(3000316, 0, 0)	/* set RSM.DNS.TCP.DELAY macro to 1h, set update interval of rsm.dns.tcp[%] items to 1h */
 
 DBPATCH_END()

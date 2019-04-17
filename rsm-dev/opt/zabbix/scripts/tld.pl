@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 #
 # - DNS availability test		(data collection)	rsm.dns.udp			(simple, every minute)
-#								rsm.dns.tcp			(simple, every 50 minutes)
+#								rsm.dns.tcp			(simple, every 60 minutes)
 #								rsm.dns.udp.rtt			(trapper, Proxy)
 #								rsm.dns.tcp.rtt			-|-
 #								rsm.dns.udp.upd			-|-
