@@ -964,7 +964,7 @@ static int	seek_eventlog(HANDLE *eventlog_handle, zbx_uint64_t FirstID, DWORD dw
 		return SUCCEED;
 	}
 
-	if (LastID < FirstID)		/* no one new records */
+	if (LastID < FirstID)		/* no new records */
 	{
 		*dwErr = ERROR_HANDLE_EOF;
 		return SUCCEED;
