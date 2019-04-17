@@ -99,9 +99,22 @@ foreach ($data['ns_items'] as $item) {
 	);
 }
 
-// TCP/UDP DNS Resolution.
+// DNS UDP/TCP Resolution RTT.
 $table
 	->addRow([
+			_('DNS UDP Resolution RTT'),
+			'-',
+			'-',
+			'-',
+			_s('%1$s %% (queries <= %2$s ms)', $data['slv_dns_udp_pfailed'],
+				$macro[RSM_DNS_UDP_RTT_LOW]
+			),
+			_s('<= %1$s ms, for at least %2$s %% of queries', $macro[RSM_DNS_UDP_RTT_LOW],
+				$macro[RSM_SLV_DNS_UDP_RTT]
+			)
+		],
+		($data['slv_dns_udp_pfailed'] > $macro[RSM_DNS_UDP_RTT_LOW]) ? 'red-bg' : null
+	)->addRow([
 			_('DNS TCP Resolution RTT'),
 			'-',
 			'-',
@@ -114,26 +127,13 @@ $table
 			)
 		],
 		($data['slv_dns_tcp_pfailed'] > $macro[RSM_SLV_DNS_TCP_RTT]) ? 'red-bg' : null
-	)->addRow([
-			_('DNS UDP Resolutioin RTT'),
-			'-',
-			'-',
-			'-',
-			_s('%1$s %% (queries <= %2$s ms)', $data['slv_dns_udp_pfailed'],
-				$macro[RSM_DNS_UDP_RTT_LOW]
-			),
-			_s('<= %1$s ms, for at least %2$s %% of queries', $macro[RSM_DNS_UDP_RTT_LOW],
-				$macro[RSM_SLV_DNS_UDP_RTT]
-			)
-		],
-		($data['slv_dns_udp_pfailed'] > $macro[RSM_DNS_UDP_RTT_LOW]) ? 'red-bg' : null
 );
 
-// RDDS Availability.
+// RDDS Service Availability and Query RTT.
 if (array_key_exists('slv_rdds_downtime', $data) && $data['slv_rdds_downtime'] !== 'disabled'
 		&& $data['slv_rdds_rtt_downtime'] !== 'disabled') {
 	$table->addRow([
-			bold(_('RDDS Availability')),
+			bold(_('RDDS Service Availability')),
 			'-',
 			'-',
 			'-',
