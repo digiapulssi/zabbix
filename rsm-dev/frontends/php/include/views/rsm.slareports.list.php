@@ -113,7 +113,7 @@ $table
 				$macro[RSM_SLV_DNS_UDP_RTT]
 			)
 		],
-		($data['slv_dns_udp_pfailed'] > $macro[RSM_DNS_UDP_RTT_LOW]) ? 'red-bg' : null
+		($data['slv_dns_udp_pfailed'] < (100 - $macro[RSM_DNS_UDP_RTT_LOW])) ? 'red-bg' : null
 	)->addRow([
 			_('DNS TCP Resolution RTT'),
 			'-',
@@ -126,7 +126,7 @@ $table
 				$macro[RSM_SLV_DNS_TCP_RTT]
 			)
 		],
-		($data['slv_dns_tcp_pfailed'] > $macro[RSM_SLV_DNS_TCP_RTT]) ? 'red-bg' : null
+		($data['slv_dns_tcp_pfailed'] < (100 - $macro[RSM_SLV_DNS_TCP_RTT])) ? 'red-bg' : null
 );
 
 // RDDS Service Availability and Query RTT.
