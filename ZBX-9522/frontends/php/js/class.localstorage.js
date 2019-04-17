@@ -84,7 +84,9 @@ function ZBX_LocalStorage(version, prefix) {
 	// This subset of keys will be written also into session storage.
 	// This way we surrvive data across page reloads in case of single tab.
 	this.keysToBackup = {
-		'notifications.alarm.end': true
+		'notifications.alarm.end': true,
+		'notifications.alarm.snoozed': true,
+		'notifications.snoozedids': true
 	}
 
 	if (this.readKey('version') != this.keys.version) {
@@ -209,11 +211,12 @@ ZBX_LocalStorage.prototype.writeKey = function(key, value) {
 
 	this.ensureKey(key);
 
+	var absKey = this.toAbsKey(key);
 	value = this.wrap(value);
 	if (this.keysToBackup[key]) {
-		sessionStorage.setItem(this.toAbsKey(key), value);
+		sessionStorage.setItem(absKey, value);
 	}
-	localStorage.setItem(this.toAbsKey(key), value);
+	localStorage.setItem(absKey, value);
 }
 
 /**
@@ -240,8 +243,8 @@ ZBX_LocalStorage.prototype.readKey = function(key) {
 		var absKey = this.toAbsKey(key);
 
 		// A copy of default value is retured if key has no data.
-		var item = localStorage.getItem(absKey)
-			|| this.keysToBackup[key] && sessionStorage.getItem(absKey)
+		var item = this.primaryFetch(absKey)
+			|| this.keysToBackup[key] && this.backupFetch(absKey)
 			|| this.wrap(this.keys[key]);
 
 		return this.unwrap(item).payload;
@@ -251,6 +254,24 @@ ZBX_LocalStorage.prototype.readKey = function(key) {
 		this.truncateBackup();
 		return null;
 	}
+}
+
+/**
+ * @param {string} absKey
+ *
+ * @return {mixed|null}  A null is retured when there is no such key.
+ */
+ZBX_LocalStorage.prototype.backupFetch = function(absKey) {
+	return sessionStorage.getItem(absKey);
+}
+
+/**
+ * @param {string} absKey
+ *
+ * @return {mixed|null}  A null is retured when there is no such key.
+ */
+ZBX_LocalStorage.prototype.primaryFetch = function(absKey) {
+	return localStorage.getItem(absKey);
 }
 
 /**

@@ -224,7 +224,8 @@ ZBX_Notifications.prototype.onSnoozeChange = function(bool) {
 	}
 
 	var listObj = this.store.readKey('notifications.list');
-	var snoozedids = {};
+	var snoozedids = this.store.readKey('notifications.snoozedids');
+
 	for (var id  in listObj) {
 		snoozedids[id] = bool;
 		listObj[id].snoozed = bool;
