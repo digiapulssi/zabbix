@@ -24,6 +24,13 @@
 ZBX_Notification.ease = 500;
 
 /**
+ * Since setTimeout would execute closure immediately if too large timeout is scheduled.
+ * It is possible to notifications are hidden immediately if user has chosen to work with very high message timeout.
+ * We limit the upper bound.
+ */
+ZBX_Notification.max_timeout = Math.pow(2, 30);
+
+/**
  * Detached DOM node is created.
  * Closing time is scheduled.
  *
@@ -49,13 +56,19 @@ function ZBX_Notification(options) {
  * @return integer  Timeout ID.
  */
 ZBX_Notification.prototype.setTimeout = function(seconds) {
+	var ms = seconds * 1000;
+
+	if (ms > ZBX_Notification.max_timeout) {
+		ms = ZBX_Notification.max_timeout;
+	}
+
 	if (this.timeoutid) {
 		clearTimeout(this.timeout);
 	}
 
 	return setTimeout(function() {
 		this.onTimeout(this);
-	}.bind(this), seconds * 1000);
+	}.bind(this), ms);
 }
 
 /**
