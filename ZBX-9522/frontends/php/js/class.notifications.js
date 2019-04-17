@@ -298,7 +298,7 @@ ZBX_Notifications.prototype.writeAlarm = function(notif, opts) {
 		this.store.writeKey('notifications.alarm.timeout', -1);
 	}
 	else { // Play in loop till end of arbitrary timeout.
-		this.store.writeKey('notifications.alarm.timeout', opts.timeout);
+		this.store.writeKey('notifications.alarm.timeout', opts.alarm_timeout);
 	}
 
 	this.store.writeKey('notifications.alarm.wave', opts.files[notif.file]);
