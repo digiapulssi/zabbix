@@ -1,6 +1,7 @@
 Changes for 3.0.27rc1
 
 Bug fixes:
+........S. [ZBX-16019] fixed HOST.CONN, HOST.IP, IPADDRESS and HOST.DNS macros expansion in global scripts (akozlovs)
 ..F....... [ZBX-15674] fixed map status to be displayed OK if there are no problem in submaps (talbergs)
 A.F....... [ZBX-2494] fixed sorting of items, item prototypes, lld rules and screens to avoid deadlocks in database between server and frontend (ashubin)
 ..F....... [ZBX-10404] fixed password being passed in plain text in media type edit form (gcalenko)
