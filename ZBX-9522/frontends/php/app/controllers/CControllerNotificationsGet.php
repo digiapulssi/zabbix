@@ -39,7 +39,7 @@ class CControllerNotificationsGet extends CController {
 			'listid' => '',
 			'settings' => [
 				'timeout' => intval($msgsettings['sounds.repeat']),
-				'muted' => boolval($msgsettings['sounds.mute']),
+				'muted' => (bool) $msgsettings['sounds.mute'],
 				'files' => [
 					'-1' => $msgsettings['sounds.recovery'],
 					'0' => $msgsettings['sounds.0'],
