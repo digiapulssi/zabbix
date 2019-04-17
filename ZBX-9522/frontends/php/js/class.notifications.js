@@ -311,10 +311,10 @@ ZBX_Notifications.prototype.writeAlarm = function(notif, opts) {
 		this.store.resetKey('notifications.alarm.seek');
 	}
 
-	if (opts.timeout == -1) { // Play in loop till end of notification timeout.
+	if (opts.alarm_timeout == -1) { // Play in loop till end of notification timeout.
 		this.store.writeKey('notifications.alarm.timeout', notif.ttl);
 	}
-	else if (opts.timeout == 1) { // Play once till end of audio file.
+	else if (opts.alarm_timeout == 1) { // Play once till end of audio file.
 		this.store.writeKey('notifications.alarm.timeout', -1);
 	}
 	else { // Play in loop till end of arbitrary timeout.
