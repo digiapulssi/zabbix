@@ -18,7 +18,10 @@
 **/
 
 
-ZBX_Notifications.POLL_INTERVAL = 30000;
+/**
+ * Default value in seconds, for poller interval.
+ */
+ZBX_Notifications.POLL_INTERVAL = 30;
 
 /**
  * @param {ZBX_LocalStorage} store
@@ -62,9 +65,11 @@ function ZBX_Notifications(store, tab) {
 
 	this.player.seek(this.store.readKey('notifications.alarm.seek'));
 	this.player.file(this.store.readKey('notifications.alarm.wave'));
+
 	this.player.onTimeout = this.onPlayerTimeout.bind(this);
 
-	this.mainLoopId = setInterval(this.mainLoop.bind(this), ZBX_Notifications.POLL_INTERVAL);
+	this.pollInterval = ZBX_Notifications.POLL_INTERVAL;
+	this.restartMainLoop();
 
 	// Upon object creation we invoke tab.onFocus hook if tab was not opened in background.
 	// Re-stack exists because of IE11.
@@ -73,6 +78,17 @@ function ZBX_Notifications(store, tab) {
 		this.mainLoop();
 	}.bind(this), 0);
 }
+
+/**
+ * Sets interval for mainLoop.
+ */
+ZBX_Notifications.prototype.restartMainLoop = function() {
+	if (this.mainLoopId) {
+		clearInterval(this.mainLoopId);
+	}
+
+	this.mainLoopId = setInterval(this.mainLoop.bind(this), this.pollInterval * 1000);
+};
 
 /**
  * Proxies an store update event to various handlers.
@@ -106,6 +122,10 @@ ZBX_Notifications.prototype.onStoreUpdate = function(key, value) {
 			break;
 		case 'tabs.lastfocused':
 			this.onTabFocusChanged(value);
+			break;
+		case 'notifications.poll_interval':
+			this.pollInterval = value;
+			this.restartMainLoop();
 			break;
 	}
 }
@@ -314,6 +334,22 @@ ZBX_Notifications.prototype.writeAlarm = function(notif, opts) {
  */
 ZBX_Notifications.prototype.writeSettings = function(settings) {
 	this.store.writeKey('notifications.alarm.muted', settings.muted);
+
+	var min_timeout = Math.floor(settings.msg_timeout / 2);
+
+	if (min_timeout < 1) {
+		min_timeout = 1;
+	}
+	else if (min_timeout > ZBX_Notifications.POLL_INTERVAL) {
+		min_timeout = ZBX_Notifications.POLL_INTERVAL;
+	}
+
+	if (this.pollInterval != min_timeout) {
+		this.pollInterval = min_timeout;
+		this.store.writeKey('notifications.poll_interval', this.pollInterval);
+		this.restartMainLoop(this.pollInterval);
+	}
+
 	this.onMuteChange(settings.muted);
 }
 

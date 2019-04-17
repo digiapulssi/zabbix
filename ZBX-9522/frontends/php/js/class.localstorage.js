@@ -77,7 +77,8 @@ function ZBX_LocalStorage(version, prefix) {
 		'notifications.alarm.start': '',
 		// Notification end id is written when notification has completed it's alert.
 		// It is then checked if these keys are equal to know that we do not play notification again.
-		'notifications.alarm.end': ''
+		'notifications.alarm.end': '',
+		'notifications.poll_interval': 0
 	}
 
 	// This subset of keys will be written also into session storage.
