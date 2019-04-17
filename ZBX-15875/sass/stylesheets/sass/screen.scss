@@ -1607,6 +1607,13 @@ output {
 				}
 			}
 		}
+
+		&.disabled {
+
+			li.disabled {
+				opacity: 1;
+			}
+		}
 	}
 
 	div[aria-live] {

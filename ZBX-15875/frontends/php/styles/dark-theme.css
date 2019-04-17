@@ -1092,6 +1092,8 @@ output {
           background-color: dimgray;
           opacity: 1;
           filter: alpha(opacity=100); }
+    .multiselect .multiselect-list.disabled li.disabled {
+      opacity: 1; }
   .multiselect div[aria-live] {
     overflow: hidden;
     position: absolute;
@@ -4597,6 +4599,11 @@ svg {
 .list-table.compact-view td.na-bg, .list-table.compact-view td.normal-bg, .list-table.compact-view td.info-bg, .list-table.compact-view td.average-bg, .list-table.compact-view td.warning-bg, .list-table.compact-view td.high-bg, .list-table.compact-view td.disaster-bg, .list-table.compact-view td.info-bg, .list-table.compact-view td.warning-bg, .list-table.compact-view td.average-bg, .list-table.compact-view td.high-bg, .list-table.compact-view td.disaster-bg {
   color: black;
   box-shadow: inset 0 -1px 0 0 rgba(0, 0, 0, 0.1); }
+
+.multiselect-list.disabled .subfilter-enabled {
+  color: #a8a8a8; }
+.multiselect-list.disabled .subfilter-disable-btn {
+  color: #a8a8a8; }
 
 .btn-back-map-container .btn-back-map .btn-back-map-icon {
   background-position: -85px -725px; }

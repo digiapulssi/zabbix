@@ -188,6 +188,18 @@ $ok-ack-fg-color: #00ff00;
 	}
 }
 
+// MULTISELECT
+.multiselect-list.disabled {
+
+	.subfilter-enabled {
+		color: lighten($ui-bg-selected-color, 35%);
+	}
+
+	.subfilter-disable-btn {
+		color: lighten($ui-bg-selected-color, 35%);
+	}
+}
+
 // GRAPH AND MAP
 .btn-back-map-container {
 	.btn-back-map {

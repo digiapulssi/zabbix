@@ -1055,6 +1055,8 @@ output {
           background-color: #f7f7f7;
           opacity: 1;
           filter: alpha(opacity=100); }
+    .multiselect .multiselect-list.disabled li.disabled {
+      opacity: 1; }
   .multiselect div[aria-live] {
     overflow: hidden;
     position: absolute;
