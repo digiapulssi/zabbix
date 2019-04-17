@@ -4214,6 +4214,87 @@ static int	DBpatch_3000316(void)
 	return SUCCEED;
 }
 
+static int	DBpatch_3000317(void)
+{
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	if (ZBX_DB_OK > DBexecute("update items set delay = 60 where hostid = 100000"))
+	{
+		return FAIL;
+	}
+
+	return SUCCEED;
+}
+
+static int	add_global_macro_history_item(zbx_uint64_t itemid, zbx_uint64_t itemappid, const char *macro)
+{
+	/* constant IDs are from data.tmpl */
+
+	if (ZBX_DB_OK > DBexecute(
+			"insert into items (itemid,type,snmp_community,snmp_oid,hostid,name,key_,delay,history,trends,"
+				"status,value_type,trapper_hosts,units,multiplier,delta,"
+				"snmpv3_securityname,snmpv3_securitylevel,snmpv3_authpassphrase,snmpv3_privpassphrase,"
+				"formula,logtimefmt,templateid,valuemapid,delay_flex,params,ipmi_sensor,data_type,"
+				"authtype,username,password,publickey,privatekey,flags,interfaceid,port,description,"
+				"inventory_link,lifetime,snmpv3_authprotocol,snmpv3_privprotocol,snmpv3_contextname,evaltype)"
+			" values (" ZBX_FS_UI64 ",15,'','',100000,'$1 value','rsm.configvalue[%s]',60,7,365,"
+				"0,3,'','',0,0,"
+				"'',0,'','',"
+				"1,'',NULL,NULL,'','{$%s}','',0,"
+				"0,'','','','',0,NULL,'','',"
+				"0,0,0,0,'',0)",
+			itemid, macro, macro))
+	{
+		return FAIL;
+	}
+
+	if (ZBX_DB_OK > DBexecute(
+			"insert into items_applications (itemappid,applicationid,itemid)"
+			" values (" ZBX_FS_UI64 ",1000," ZBX_FS_UI64 ")",
+			itemappid, itemid))
+	{
+		return FAIL;
+	}
+
+	return SUCCEED;
+}
+
+static int	DBpatch_3000318(void)
+{
+	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY))
+		return SUCCEED;
+
+	/* constant IDs are from data.tmpl */
+
+	if (FAIL == add_global_macro_history_item(100026, 100026, "RSM.SLV.DNS.DOWNTIME"))
+	{
+		return FAIL;
+	}
+	if (FAIL == add_global_macro_history_item(100027, 100027, "RSM.DNS.TCP.RTT.LOW"))
+	{
+		return FAIL;
+	}
+	if (FAIL == add_global_macro_history_item(100028, 100028, "RSM.DNS.UDP.RTT.LOW"))
+	{
+		return FAIL;
+	}
+	if (FAIL == add_global_macro_history_item(100029, 100029, "RSM.SLV.RDDS.DOWNTIME"))
+	{
+		return FAIL;
+	}
+	if (FAIL == add_global_macro_history_item(100030, 100030, "RSM.SLV.RDDS.RTT"))
+	{
+		return FAIL;
+	}
+	if (FAIL == add_global_macro_history_item(100031, 100031, "RSM.RDDS.RTT.LOW"))
+	{
+		return FAIL;
+	}
+
+	return SUCCEED;
+}
+
 #endif
 
 DBPATCH_START(3000)
@@ -4316,5 +4397,7 @@ DBPATCH_ADD(3000313, 0, 0)	/* add nameserver availability items to tld hosts */
 DBPATCH_ADD(3000314, 0, 0)	/* fill auditlog.resourceid for "Marked/Unmarked as false positive" logs */
 DBPATCH_ADD(3000315, 0, 0)	/* fix item value_type for rsm.slv.dns.ns.* to uint */
 DBPATCH_ADD(3000316, 0, 0)	/* set RSM.DNS.TCP.DELAY macro to 1h, set update interval of rsm.dns.tcp[%] items to 1h */
+DBPATCH_ADD(3000317, 0, 0)	/* set update interval of items in "Global macro history" host to 60 seconds */
+DBPATCH_ADD(3000318, 0, 0)	/* add new items to "Global macro history" host */
 
 DBPATCH_END()
