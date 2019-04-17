@@ -1115,8 +1115,8 @@ define('NAME_DELIMITER', ': ');
 define('UNKNOWN_VALUE', '');
 
 // End of line sequence
-define('ZBX_LINE_FEED',					0);
-define('ZBX_LINE_FEED_CARRIAGE_RETURN', 1);
+define('ZBX_EOL_LF',	0);
+define('ZBX_EOL_CRLF',	1);
 
 // suffixes
 define('ZBX_BYTE_SUFFIXES', 'KMGT');

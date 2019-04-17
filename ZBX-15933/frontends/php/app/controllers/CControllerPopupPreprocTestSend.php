@@ -41,7 +41,7 @@ class CControllerPopupPreprocTestSend extends CControllerPopupPreprocTest {
 			'hostid' => 'db hosts.hostid',
 			'value_type' => 'in '.implode(',', [ITEM_VALUE_TYPE_UINT64, ITEM_VALUE_TYPE_FLOAT, ITEM_VALUE_TYPE_STR, ITEM_VALUE_TYPE_LOG, ITEM_VALUE_TYPE_TEXT]),
 			'test_type' => 'in '.implode(',', [self::ZBX_TEST_TYPE_ITEM, self::ZBX_TEST_TYPE_ITEM_PROTOTYPE, self::ZBX_TEST_TYPE_LLD]),
-			'end_line_type' => 'in '.implode(',', [ZBX_LINE_FEED, ZBX_LINE_FEED_CARRIAGE_RETURN]),
+			'eol' => 'in '.implode(',', [ZBX_EOL_LF, ZBX_EOL_CRLF]),
 			'steps' => 'required|array',
 			'macros' => 'array',
 			'value' => 'string',
@@ -218,7 +218,7 @@ class CControllerPopupPreprocTestSend extends CControllerPopupPreprocTest {
 		if (in_array($var, ['value', 'prev_value'])) {
 			$value = str_replace("\r\n", "\n", str_replace("\n\r", "\n", $value));
 
-			if (parent::getInput('end_line_type', 0) == ZBX_LINE_FEED_CARRIAGE_RETURN) {
+			if (parent::getInput('eol', 0) == ZBX_EOL_CRLF) {
 				$value = str_replace("\n", "\r\n", $value);
 			}
 		}

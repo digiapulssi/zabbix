@@ -96,10 +96,10 @@ $form_list = (new CFormList())
 		]))->addClass('preproc-test-popup-value-row')
 	)
 	->addRow(
-		new CLabel(_('End of line sequence'), 'end_line_type'),
-		(new CRadioButtonList('end_line_type', ZBX_LINE_FEED))
-			->addValue(_('LF'), ZBX_LINE_FEED)
-			->addValue(_('CRLF'), ZBX_LINE_FEED_CARRIAGE_RETURN)
+		new CLabel(_('End of line sequence'), 'eol'),
+		(new CRadioButtonList('eol', ZBX_EOL_LF))
+			->addValue(_('LF'), ZBX_EOL_LF)
+			->addValue(_('CRLF'), ZBX_EOL_CRLF)
 			->setModern(true)
 	);
 
