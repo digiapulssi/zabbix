@@ -268,12 +268,21 @@ function addElementNames(array &$selements) {
 /**
  * Returns selement icon rendering parameters.
  *
- * @param array $i
- * @param int   $show_unack  Map "Problem display" option.
+ * @param array    $i
+ * @param int      $i['elementtype']    Possible values:
+ *                                      SYSMAP_ELEMENT_TYPE_HOST, SYSMAP_ELEMENT_TYPE_MAP, SYSMAP_ELEMENT_TYPE_TRIGGER,
+ *                                      SYSMAP_ELEMENT_TYPE_HOST_GROUP, SYSMAP_ELEMENT_TYPE_IMAGE.
+ * @param int      $i['expandproblem']  Map "Display problems" option. Possible values:
+ *                                      SYSMAP_SINGLE_PROBLEM, SYSMAP_PROBLEMS_NUMBER, SYSMAP_PROBLEMS_NUMBER_CRITICAL.
+ * @param int      $i['problem']        The number of problems.
+ * @param string   $i['problem_title']  The name of the most critical problem.
+ * @param int      $i['problem_unack']  The number of unacknowledged problems.
+ * @param int|null $show_unack          (optional) Map "Problem display" option. Possible values:
+ *                                      EXTACK_OPTION_ALL, EXTACK_OPTION_UNACK, EXTACK_OPTION_BOTH.
  *
  * @return array
  */
-function getSelementInfo(array $i, $show_unack) {
+function getSelementInfo(array $i, $show_unack = null) {
 	if ($i['elementtype'] == SYSMAP_ELEMENT_TYPE_IMAGE) {
 		return [
 			'iconid' => $i['iconid_off'],
@@ -290,6 +299,18 @@ function getSelementInfo(array $i, $show_unack) {
 		'info' => [],
 		'iconid' => $i['iconid_off']
 	];
+
+	if ($i['elementtype'] == SYSMAP_ELEMENT_TYPE_HOST && $i['disabled']) {
+		$info['iconid'] = $i['iconid_disabled'];
+		$info['icon_type'] = SYSMAP_ELEMENT_ICON_DISABLED;
+		$info['info']['status'] = [
+			'msg' => _('Disabled'),
+			'color' => '960000'
+		];
+
+		return $info;
+	}
+
 	$has_problem = false;
 
 	if ($i['problem']) {
@@ -368,15 +389,8 @@ function getSelementInfo(array $i, $show_unack) {
 			'color' => 'EE9600'
 		];
 	}
-	elseif ($i['elementtype'] == SYSMAP_ELEMENT_TYPE_HOST && $i['disabled']) {
-		$info['iconid'] = $i['iconid_disabled'];
-		$info['icon_type'] = SYSMAP_ELEMENT_ICON_DISABLED;
-		$info['info']['status'] = [
-			'msg' => _('Disabled'),
-			'color' => '960000'
-		];
-	}
-	elseif (!$has_problem) {
+
+	if (!$has_problem) {
 		$info['iconid'] = $i['iconid_off'];
 		$info['icon_type'] = SYSMAP_ELEMENT_ICON_OFF;
 		$info['info']['ok'] = [
@@ -675,6 +689,7 @@ function getSelementsInfo(array $sysmap, array $options = []) {
 		'output' => ['eventid', 'objectid', 'name', 'acknowledged', 'clock', 'r_clock', 'severity'],
 		'objectids' => array_keys($triggerids),
 		'recent' => true,
+		'acknowledged' => ($sysmap['show_unack'] == EXTACK_OPTION_UNACK) ? false : null,
 		'suppressed' => ($sysmap['show_suppressed'] == ZBX_PROBLEM_SUPPRESSED_FALSE) ? false : null
 	]);
 
@@ -707,7 +722,7 @@ function getSelementsInfo(array $sysmap, array $options = []) {
 		 * icons.
 		 */
 		if (PERM_READ > $selement['permission']) {
-			$info[$selementId] = getSelementInfo($i + ['iconid_off' => $selement['iconid_off']], null);
+			$info[$selementId] = getSelementInfo($i + ['iconid_off' => $selement['iconid_off']]);
 
 			continue;
 		}
