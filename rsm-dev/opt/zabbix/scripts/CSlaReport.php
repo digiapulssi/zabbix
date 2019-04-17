@@ -358,76 +358,124 @@ class CSlaReport
 		{
 			if (is_null($tld["host"]))
 			{
-				throw new Exception("\$data[{$hostid}]['host'] is null");
+				if (defined("DEBUG") && DEBUG === true)
+					printf("(DEBUG) %s() \$data[{$hostid}]['host'] is null\n", __method__);
+
+				throw new Exception("partial or missing TLD data in the database");
 			}
 			if (is_null($tld["dns"]["availability"]))
 			{
-				throw new Exception("\$data[{$hostid}]['dns']['availability'] is null (TLD: '{$tld["host"]}')");
+				if (defined("DEBUG") && DEBUG === true)
+					printf("(DEBUG) %s() \$data[{$hostid}]['dns']['availability'] is null (TLD: '{$tld["host"]}')\n", __method__);
+
+				throw new Exception("partial or missing DNS Service Availability data in the database");
 			}
 			if (!is_array($tld["dns"]["ns"]))
 			{
-				throw new Exception("\$data[{$hostid}]['dns']['ns'] is not an array (TLD: '{$tld["host"]}')");
+				if (defined("DEBUG") && DEBUG === true)
+					printf("(DEBUG) %s() \$data[{$hostid}]['dns']['ns'] is not an array (TLD: '{$tld["host"]}')\n", __method__);
+
+				throw new Exception("unexpected XML data structure");
 			}
 			if (count($tld["dns"]["ns"]) === 0)
 			{
-				throw new Exception("\$data[{$hostid}]['dns']['ns'] is empty array (TLD: '{$tld["host"]}')");
+				if (defined("DEBUG") && DEBUG === true)
+					printf("(DEBUG) %s() \$data[{$hostid}]['dns']['ns'] is empty array (TLD: '{$tld["host"]}')\n", __method__);
+
+				throw new Exception("no Name Server availability data in the database");
 			}
 			foreach ($tld["dns"]["ns"] as $i => $ns)
 			{
 				if (is_null($ns["hostname"]))
 				{
-					throw new Exception("\$data[{$hostid}]['dns']['ns'][{$i}]['hostname'] is null (TLD: '{$tld["host"]}')");
+					if (defined("DEBUG") && DEBUG === true)
+						printf("(DEBUG) %s() \$data[{$hostid}]['dns']['ns'][{$i}]['hostname'] is null (TLD: '{$tld["host"]}')\n", __method__);
+
+					throw new Exception("unexpected XML data structure");
 				}
 				if (is_null($ns["ipAddress"]))
 				{
-					throw new Exception("\$data[{$hostid}]['dns']['ns'][{$i}]['ipAddress'] is null (TLD: '{$tld["host"]}')");
+					if (defined("DEBUG") && DEBUG === true)
+						printf("(DEBUG) %s() \$data[{$hostid}]['dns']['ns'][{$i}]['ipAddress'] is null (TLD: '{$tld["host"]}')\n", __method__);
+
+					throw new Exception("unexpected XML data structure");
 				}
 				// TODO: "availability", "from", "till" - what if NS was disabled for whole month?
 				if (is_null($ns["availability"]))
 				{
-					throw new Exception("\$data[{$hostid}]['dns']['ns'][{$i}]['availability'] is null (TLD: '{$tld["host"]}')");
+					if (defined("DEBUG") && DEBUG === true)
+						printf("(DEBUG) %s() \$data[{$hostid}]['dns']['ns'][{$i}]['availability'] is null (TLD: '{$tld["host"]}')\n", __method__);
+
+					throw new Exception("no availability data of Name Server ".$ns["hostname"].":".$ns["ipAddress"]." in the database");
 				}
 				if (is_null($ns["from"]))
 				{
-					throw new Exception("\$data[{$hostid}]['dns']['ns'][{$i}]['from'] is null (TLD: '{$tld["host"]}')");
+					if (defined("DEBUG") && DEBUG === true)
+						printf("(DEBUG) %s() \$data[{$hostid}]['dns']['ns'][{$i}]['from'] is null (TLD: '{$tld["host"]}')\n", __method__);
+
+					throw new Exception("unexpected XML data structure");
 				}
 				if (is_null($ns["to"]))
 				{
-					throw new Exception("\$data[{$hostid}]['dns']['ns'][{$i}]['to'] is null (TLD: '{$tld["host"]}')");
+					if (defined("DEBUG") && DEBUG === true)
+						printf("(DEBUG) %s() \$data[{$hostid}]['dns']['ns'][{$i}]['to'] is null (TLD: '{$tld["host"]}')\n", __method__);
+
+					throw new Exception("unexpected XML data structure");
 				}
 			}
 			if (!is_float($tld["dns"]["rttUDP"]))
 			{
-				throw new Exception("\$data[{$hostid}]['dns']['rttUDP'] is not float (TLD: '{$tld["host"]}')");
+				if (defined("DEBUG") && DEBUG === true)
+					printf("(DEBUG) %s() \$data[{$hostid}]['dns']['rttUDP'] is not float (TLD: '{$tld["host"]}')\n", __method__);
+
+				throw new Exception("invalid DNS UDP Resolution RTT value type in the database");
 			}
 			if (!is_float($tld["dns"]["rttTCP"]))
 			{
-				throw new Exception("\$data[{$hostid}]['dns']['rttTCP'] is not float (TLD: '{$tld["host"]}')");
+				if (defined("DEBUG") && DEBUG === true)
+					printf("(DEBUG) %s() \$data[{$hostid}]['dns']['rttTCP'] is not float (TLD: '{$tld["host"]}')\n", __method__);
+
+				throw new Exception("invalid DNS TCP Resolution RTT value type in the database");
 			}
 			if (!is_bool($tld["rdds"]["enabled"]))
 			{
-				throw new Exception("\$data[{$hostid}]['rdds']['enabled'] is not bool (TLD: '{$tld["host"]}')");
+				if (defined("DEBUG") && DEBUG === true)
+					printf("(DEBUG) %s() \$data[{$hostid}]['rdds']['enabled'] is not bool (TLD: '{$tld["host"]}')\n", __method__);
+
+				throw new Exception("invalid RDDS state value type in the database");
 			}
 			if ($tld["rdds"]["enabled"])
 			{
 				if (is_null($tld["rdds"]["availability"]))
 				{
-					throw new Exception("\$data[{$hostid}]['rdds']['availability'] is null (TLD: '{$tld["host"]}')");
+					if (defined("DEBUG") && DEBUG === true)
+						printf("(DEBUG) %s() \$data[{$hostid}]['rdds']['availability'] is null (TLD: '{$tld["host"]}')\n", __method__);
+
+					throw new Exception("partial or missing RDDS Service Availability data in the database");
 				}
 				if (!is_float($tld["rdds"]["rtt"]))
 				{
-					throw new Exception("\$data[{$hostid}]['rdds']['rtt'] is not float (TLD: '{$tld["host"]}')");
+					if (defined("DEBUG") && DEBUG === true)
+						printf("(DEBUG) %s() \$data[{$hostid}]['rdds']['rtt'] is not float (TLD: '{$tld["host"]}')\n", __method__);
+
+					throw new Exception("partial or missing RDDS Query RTT data in the database");
 				}
 			}
 			else
 			{
 				if (!is_null($tld["rdds"]["availability"]))
 				{
-					throw new Exception("\$data[{$hostid}]['rdds']['availability'] is not null (TLD: '{$tld["host"]}')");
+					if (defined("DEBUG") && DEBUG === true)
+						printf("(DEBUG) %s() \$data[{$hostid}]['rdds']['availability'] is not null (TLD: '{$tld["host"]}')\n", __method__);
+
+					throw new Exception("RDDS Service Availability data found in the database while it shouldn't have been");
 				}
 				if (!is_null($tld["rdds"]["rtt"]))
 				{
-					throw new Exception("\$data[{$hostid}]['rdds']['rtt'] is not null (TLD: '{$tld["host"]}')");
+					if (defined("DEBUG") && DEBUG === true)
+						printf("(DEBUG) %s() \$data[{$hostid}]['rdds']['rtt'] is not null (TLD: '{$tld["host"]}')\n", __method__);
+
+					throw new Exception("RDDS Query RTT data found in the database while it shouldn't have been");
 				}
 			}
 		}
