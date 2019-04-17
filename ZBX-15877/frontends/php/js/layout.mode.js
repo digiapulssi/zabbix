@@ -44,4 +44,23 @@ jQuery(function($) {
 			}).trigger('mousemove');
 		}
 	}
+
+	if (ED) {
+		// Edge browser captures focus in some elements in layout.
+		$(".search").keydown(function(e){
+			if (e.which == 9) {
+				if (e.shiftKey) {
+					$(".top-nav").focus();
+				}
+				else {
+					$(".top-nav-support").focus();
+				}
+			}
+		});
+		$(".top-nav-zbbshare").keydown(function(e){
+			if (e.which == 9 && e.shiftKey) {
+				$(".top-nav-support").focus();
+			}
+		});
+	}
 });
