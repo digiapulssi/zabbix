@@ -556,8 +556,7 @@ out:
  *             error          - [OUT] the error message in the case of        *
  *                                    failure                                 *
  *                                                                            *
- * Return value: SUCCEED - the operation has completed successfully           *
- *               FAIL    - the operation has failed                           *
+ * Return value: SUCCEED or FAIL                                              *
  *                                                                            *
  ******************************************************************************/
 static int	zbx_parse_eventlog_message6(const wchar_t *wsource, EVT_HANDLE *render_context,
@@ -713,8 +712,7 @@ out:
  *             error            - [OUT] the error message in the case of      *
  *                                      failure                               *
  *                                                                            *
- * Return value: SUCCEED - the operation has completed successfully           *
- *               FAIL    - the operation has failed                           *
+ * Return value: SUCCEED or FAIL                                              *
  *                                                                            *
  ******************************************************************************/
 int	process_eventslog6(const char *server, unsigned short port, const char *fl_source, EVT_HANDLE *render_context,
@@ -945,8 +943,7 @@ int	finalize_eventlog6(EVT_HANDLE *render_context, EVT_HANDLE *query)
  *             error           - [OUT] the error message in the case of       *
  *                                     failure                                *
  *                                                                            *
- * Return value: SUCCEED - the operation has completed successfully           *
- *               FAIL    - the operation has failed                           *
+ * Return value: SUCCEED or FAIL                                              *
  *                                                                            *
  ******************************************************************************/
 static int	seek_eventlog(HANDLE *eventlog_handle, zbx_uint64_t FirstID, DWORD ReadDirection,
@@ -1196,8 +1193,7 @@ static void	zbx_parse_eventlog_message(const wchar_t *wsource, const EVENTLOGREC
  *             error            - [OUT] the error message in the case of      *
  *                                     failure                                *
  *                                                                            *
- * Return value: SUCCEED - the operation has completed successfully           *
- *               FAIL    - the operation has failed                           *
+ * Return value: SUCCEED or FAIL                                              *
  *                                                                            *
  ******************************************************************************/
 int	process_eventslog(const char *server, unsigned short port, const char *eventlog_name, zbx_vector_ptr_t *regexps,
