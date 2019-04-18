@@ -936,7 +936,7 @@ int	finalize_eventlog6(EVT_HANDLE *render_context, EVT_HANDLE *query)
  *                                    EVENTLOG_BACKWARDS_READ or 0 (no seek,  *
  *                                    the current position will be used)      *
  *             LastID          - [IN] position of last record in EventLog     *
- *             fl_source       - [IN] the name of the Event Log file          *
+ *             eventlog_name   - [IN] the name of the event log               *
  *             pELRs           - [IN/OUT] buffer for read of data of EventLog *
  *             buffer_size     - [IN/OUT] size of the pELRs                   *
  *             dwRead          - [OUT] the number of bytes read from EventLog *
@@ -950,8 +950,8 @@ int	finalize_eventlog6(EVT_HANDLE *render_context, EVT_HANDLE *query)
  *                                                                            *
  ******************************************************************************/
 static int	seek_eventlog(HANDLE *eventlog_handle, zbx_uint64_t FirstID, DWORD dwReadDirection,
-		zbx_uint64_t LastID, const char *fl_source, BYTE **pELRs, int *buffer_size, DWORD *dwRead, DWORD *dwErr,
-		char **error)
+		zbx_uint64_t LastID, const char *eventlog_name, BYTE **pELRs, int *buffer_size, DWORD *dwRead,
+		DWORD *dwErr, char **error)
 {
 	const char	*__function_name="seek_eventlog";
 	BYTE		*pEndOfRecords, *pELR;
@@ -1001,7 +1001,7 @@ static int	seek_eventlog(HANDLE *eventlog_handle, zbx_uint64_t FirstID, DWORD dw
 		}
 		else
 		{
-			*error = zbx_dsprintf(*error, "Cannot read eventlog '%s': %s.", fl_source,
+			*error = zbx_dsprintf(*error, "Cannot read eventlog '%s': %s.", eventlog_name,
 					strerror_from_system(*dwErr));
 			return FAIL;
 		}
@@ -1036,7 +1036,7 @@ static int	seek_eventlog(HANDLE *eventlog_handle, zbx_uint64_t FirstID, DWORD dw
 			else if (ERROR_HANDLE_EOF != *dwErr)
 				break;
 
-			*error = zbx_dsprintf(*error, "Cannot read eventlog '%s': %s.", fl_source,
+			*error = zbx_dsprintf(*error, "Cannot read eventlog '%s': %s.", eventlog_name,
 					strerror_from_system(*dwErr));
 			return FAIL;
 		}
@@ -1180,7 +1180,7 @@ static void	zbx_parse_eventlog_message(const wchar_t *wsource, const EVENTLOGREC
  *                                                                            *
  * Parameters: server           - [IN] IP or Hostname of Zabbix server        *
  *             port             - [IN] port of Zabbix server                  *
- *             fl_source        - [IN] the name of the Event Log file         *
+ *             eventlog_name    - [IN] the name of the event log              *
  *             regexps          - [IN] set of regexp rules for Event Log test *
  *             pattern          - [IN] buffer for read of data of EventLog    *
  *             key_severity     - [IN] severity of logged data sources        *
@@ -1200,7 +1200,7 @@ static void	zbx_parse_eventlog_message(const wchar_t *wsource, const EVENTLOGREC
  *               FAIL    - the operation has failed                           *
  *                                                                            *
  ******************************************************************************/
-int	process_eventslog(const char *server, unsigned short port, const char *fl_source, zbx_vector_ptr_t *regexps,
+int	process_eventslog(const char *server, unsigned short port, const char *eventlog_name, zbx_vector_ptr_t *regexps,
 		const char *pattern, const char *key_severity, const char *key_source, const char *key_logeventid,
 		int rate, zbx_process_value_t process_value_cb, ZBX_ACTIVE_METRIC *metric,
 		zbx_uint64_t *lastlogsize_sent, char **error)
@@ -1219,7 +1219,7 @@ int	process_eventslog(const char *server, unsigned short port, const char *fl_so
 	char		*source, *value, str_logeventid[8];
 
 	lastlogsize = metric->lastlogsize;
-	zabbix_log(LOG_LEVEL_DEBUG, "In %s() source:'%s' lastlogsize:" ZBX_FS_UI64, __function_name, fl_source,
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s() source:'%s' lastlogsize:" ZBX_FS_UI64, __function_name, eventlog_name,
 			lastlogsize);
 
 	/* From MSDN documentation:                                                                         */
@@ -1231,17 +1231,18 @@ int	process_eventslog(const char *server, unsigned short port, const char *fl_so
 	/* This RecordNumber wraparound is handled simply by using 64bit integer to calculate record        */
 	/* numbers and then converting to DWORD values.                                                     */
 
-	if (NULL == fl_source || '\0' == *fl_source)
+	if (NULL == eventlog_name || '\0' == *eventlog_name)
 	{
 		*error = zbx_strdup(*error, "Cannot open eventlog with empty name.");
 		return ret;
 	}
 
-	wsource = zbx_utf8_to_unicode(fl_source);
+	wsource = zbx_utf8_to_unicode(eventlog_name);
 
 	if (SUCCEED != zbx_open_eventlog(wsource, &eventlog_handle, &FirstID, &LastID, &dwErr))
 	{
-		*error = zbx_dsprintf(*error, "Cannot open eventlog '%s': %s.", fl_source, strerror_from_system(dwErr));
+		*error = zbx_dsprintf(*error, "Cannot open eventlog '%s': %s.", eventlog_name,
+				strerror_from_system(dwErr));
 		goto out;
 	}
 
@@ -1273,7 +1274,7 @@ int	process_eventslog(const char *server, unsigned short port, const char *fl_so
 
 	pELRs = (BYTE*)zbx_malloc((void *)pELRs, buffer_size);
 
-	if (SUCCEED != seek_eventlog(eventlog_handle, FirstID, dwReadDirection, LastID, fl_source, &pELRs,
+	if (SUCCEED != seek_eventlog(eventlog_handle, FirstID, dwReadDirection, LastID, eventlog_name, &pELRs,
 			&buffer_size, &dwRead, &dwErr, error))
 	{
 		goto out;
@@ -1307,8 +1308,8 @@ int	process_eventslog(const char *server, unsigned short port, const char *fl_so
 			else if (ERROR_HANDLE_EOF == dwErr)
 				break;
 
-			*error = zbx_dsprintf(*error, "Cannot read eventlog '%s': %s.", fl_source,
-							strerror_from_system(dwErr));
+			*error = zbx_dsprintf(*error, "Cannot read eventlog '%s': %s.", eventlog_name,
+					strerror_from_system(dwErr));
 			goto out;
 		}
 
