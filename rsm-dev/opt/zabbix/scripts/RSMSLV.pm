@@ -2376,7 +2376,7 @@ sub process_slv_downtime_cycles($$$$)
 
 	init_values();
 
-	foreach my $clock (sort(keys(%{$cycles_ref})))
+	foreach my $clock (sort {$a <=> $b} keys(%{$cycles_ref}))
 	{
 		my ($from, $till, $value_ts) = get_downtime_bounds($delay, $clock);
 
