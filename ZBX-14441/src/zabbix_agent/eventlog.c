@@ -961,8 +961,8 @@ static int	seek_eventlog(HANDLE *eventlog_handle, zbx_uint64_t FirstID, DWORD Re
 
 	while (ERROR_SUCCESS == *dwErr)
 	{
-		if (ReadEventLog(eventlog_handle, EVENTLOG_SEEK_READ | EVENTLOG_FORWARDS_READ, dwRecordNumber, *pELRs,
-				*buffer_size, dwRead, &dwNeeded))
+		if (0 != ReadEventLog(eventlog_handle, EVENTLOG_SEEK_READ | EVENTLOG_FORWARDS_READ, dwRecordNumber,
+				*pELRs, *buffer_size, dwRead, &dwNeeded))
 		{
 			return SUCCEED;
 		}
@@ -973,22 +973,21 @@ static int	seek_eventlog(HANDLE *eventlog_handle, zbx_uint64_t FirstID, DWORD Re
 			/* how ReadEventLog() can fail with all valid parameters */
 			break;
 		}
-		else if (ERROR_HANDLE_EOF == *dwErr)
-		{
+
+		if (ERROR_HANDLE_EOF == *dwErr)
 			return SUCCEED;
-		}
-		else if (ERROR_INSUFFICIENT_BUFFER == *dwErr)
+
+		if (ERROR_INSUFFICIENT_BUFFER == *dwErr)
 		{
 			*buffer_size = dwNeeded;
 			*pELRs = (BYTE *)zbx_realloc((void *)*pELRs, *buffer_size);
 			*dwErr = ERROR_SUCCESS;
+			continue;
 		}
-		else
-		{
-			*error = zbx_dsprintf(*error, "Cannot read eventlog '%s': %s.", eventlog_name,
-					strerror_from_system(*dwErr));
-			return FAIL;
-		}
+
+		*error = zbx_dsprintf(*error, "Cannot read eventlog '%s': %s.", eventlog_name,
+				strerror_from_system(*dwErr));
+		return FAIL;
 	}
 
 	/* Fallback implementation of the first seek for read pointer of EventLog. */
