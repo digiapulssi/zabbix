@@ -1208,7 +1208,7 @@ int	process_eventslog(const char *server, unsigned short port, const char *event
 	const char	*str_severity, *__function_name = "process_eventslog";
 	int		ret = FAIL;
 	HANDLE		eventlog_handle = NULL;
-	wchar_t 	*wsource;
+	wchar_t 	*eventlog_name_w;
 	zbx_uint64_t	FirstID, LastID, lastlogsize;
 	int		buffer_size = 64 * ZBX_KIBIBYTE;
 	DWORD		dwRead = 0, dwNeeded, dwReadDirection, dwErr;
@@ -1237,9 +1237,9 @@ int	process_eventslog(const char *server, unsigned short port, const char *event
 		return ret;
 	}
 
-	wsource = zbx_utf8_to_unicode(eventlog_name);
+	eventlog_name_w = zbx_utf8_to_unicode(eventlog_name);
 
-	if (SUCCEED != zbx_open_eventlog(wsource, &eventlog_handle, &FirstID, &LastID, &dwErr))
+	if (SUCCEED != zbx_open_eventlog(eventlog_name_w, &eventlog_handle, &FirstID, &LastID, &dwErr))
 	{
 		*error = zbx_dsprintf(*error, "Cannot open eventlog '%s': %s.", eventlog_name,
 				strerror_from_system(dwErr));
@@ -1334,8 +1334,8 @@ int	process_eventslog(const char *server, unsigned short port, const char *event
 				else
 					lastlogsize += 1;
 
-				zbx_parse_eventlog_message(wsource, (EVENTLOGRECORD *)pELR, &source, &value, &severity,
-						&timestamp, &logeventid);
+				zbx_parse_eventlog_message(eventlog_name_w, (EVENTLOGRECORD *)pELR, &source, &value,
+						&severity, &timestamp, &logeventid);
 
 				switch (severity)
 				{
@@ -1419,10 +1419,9 @@ finish:
 	ret = SUCCEED;
 out:
 	zbx_close_eventlog(eventlog_handle);
-	zbx_free(wsource);
+	zbx_free(eventlog_name_w);
 	zbx_free(pELRs);
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, zbx_result_string(ret));
 
 	return ret;
 }
-
