@@ -4290,7 +4290,7 @@ sub recalculate_downtime($$$$$$)
 				{
 					if ($is_incident && $avail{$clock} == DOWN)
 					{
-						$downtime_value++;
+						$downtime_value += $delay / 60;
 					}
 
 					push(@downtime_values, [$clock, $downtime_value]);
