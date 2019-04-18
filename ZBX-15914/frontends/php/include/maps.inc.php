@@ -391,8 +391,11 @@ function getSelementInfo(array $i, $show_unack = null) {
 	}
 
 	if (!$has_problem) {
-		$info['iconid'] = $i['iconid_off'];
-		$info['icon_type'] = SYSMAP_ELEMENT_ICON_OFF;
+		if (!$i['maintenance']) {
+			$info['iconid'] = $i['iconid_off'];
+			$info['icon_type'] = SYSMAP_ELEMENT_ICON_OFF;
+		}
+
 		$info['info']['ok'] = [
 			'msg' => _('OK'),
 			'color' => getSelementLabelColor(false, $i['ack'])
