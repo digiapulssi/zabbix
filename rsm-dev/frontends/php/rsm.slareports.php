@@ -139,7 +139,7 @@ if ($data['tld']) {
 		}
 	}
 
-	// SLA Report download as XML file.
+	// SLA Report download as XML file
 	if ($report_row && hasRequest('export')) {
 		header('Content-Type: text/xml');
 		header(sprintf('Content-disposition: attachment; filename="%s-%d-%s.xml"',
