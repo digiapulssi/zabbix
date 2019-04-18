@@ -218,7 +218,7 @@ class CControllerPopupPreprocTestSend extends CControllerPopupPreprocTest {
 		if ($var == 'value' || $var == 'prev_value') {
 			$value = str_replace("\r\n", "\n", str_replace("\n\r", "\n", $value));
 
-			if (parent::getInput('eol', 0) == ZBX_EOL_CRLF) {
+			if (parent::getInput('eol', ZBX_EOL_LF) == ZBX_EOL_CRLF) {
 				$value = str_replace("\n", "\r\n", $value);
 			}
 		}
