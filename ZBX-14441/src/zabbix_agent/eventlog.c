@@ -931,7 +931,7 @@ int	finalize_eventlog6(EVT_HANDLE *render_context, EVT_HANDLE *query)
  *                                                                            *
  * Parameters: eventlog_handle - [IN] the handle to the event log to be read  *
  *             FirstID         - [IN] the first Event log record to be parse  *
- *             dwReadDirection - [IN] direction of reading:                   *
+ *             ReadDirection   - [IN] direction of reading:                   *
  *                                    EVENTLOG_FORWARDS_READ,                 *
  *                                    EVENTLOG_BACKWARDS_READ or 0 (no seek,  *
  *                                    the current position will be used)      *
@@ -949,7 +949,7 @@ int	finalize_eventlog6(EVT_HANDLE *render_context, EVT_HANDLE *query)
  *               FAIL    - the operation has failed                           *
  *                                                                            *
  ******************************************************************************/
-static int	seek_eventlog(HANDLE *eventlog_handle, zbx_uint64_t FirstID, DWORD dwReadDirection,
+static int	seek_eventlog(HANDLE *eventlog_handle, zbx_uint64_t FirstID, DWORD ReadDirection,
 		zbx_uint64_t LastID, const char *eventlog_name, BYTE **pELRs, int *buffer_size, DWORD *dwRead,
 		DWORD *dwErr, char **error)
 {
@@ -958,7 +958,7 @@ static int	seek_eventlog(HANDLE *eventlog_handle, zbx_uint64_t FirstID, DWORD dw
 	DWORD		dwRecordNumber, dwNeeded;
 	zbx_uint64_t	skip_count = 0;
 
-	if (0 == dwReadDirection)	/* we will read EvenLog from the first record */
+	if (0 == ReadDirection)	/* we will read EvenLog from the first record */
 	{
 		*dwErr = ERROR_SUCCESS;
 		return SUCCEED;
@@ -1008,7 +1008,7 @@ static int	seek_eventlog(HANDLE *eventlog_handle, zbx_uint64_t FirstID, DWORD dw
 	}
 
 	/* Fallback implementation of the first seek for read pointer of EventLog. */
-	if (ERROR_INVALID_PARAMETER == *dwErr && EVENTLOG_BACKWARDS_READ == dwReadDirection)
+	if (ERROR_INVALID_PARAMETER == *dwErr && EVENTLOG_BACKWARDS_READ == ReadDirection)
 	{
 		if (LastID == FirstID)
 			skip_count = 1;
@@ -1021,9 +1021,9 @@ static int	seek_eventlog(HANDLE *eventlog_handle, zbx_uint64_t FirstID, DWORD dw
 
 	*dwErr = ERROR_SUCCESS;
 
-	while (0 < skip_count && ERROR_SUCCESS == *dwErr && EVENTLOG_BACKWARDS_READ == dwReadDirection)
+	while (0 < skip_count && ERROR_SUCCESS == *dwErr && EVENTLOG_BACKWARDS_READ == ReadDirection)
 	{
-		if (!ReadEventLog(eventlog_handle, EVENTLOG_SEQUENTIAL_READ | dwReadDirection, 0, *pELRs, *buffer_size,
+		if (!ReadEventLog(eventlog_handle, EVENTLOG_SEQUENTIAL_READ | ReadDirection, 0, *pELRs, *buffer_size,
 				dwRead, &dwNeeded))
 		{
 			if (ERROR_INSUFFICIENT_BUFFER == (*dwErr = GetLastError()))
@@ -1054,7 +1054,7 @@ static int	seek_eventlog(HANDLE *eventlog_handle, zbx_uint64_t FirstID, DWORD dw
 		}
 	}
 
-	if (EVENTLOG_BACKWARDS_READ == dwReadDirection && ERROR_HANDLE_EOF == *dwErr)
+	if (EVENTLOG_BACKWARDS_READ == ReadDirection && ERROR_HANDLE_EOF == *dwErr)
 		*dwErr = ERROR_SUCCESS;
 
 	return SUCCEED;
@@ -1211,7 +1211,7 @@ int	process_eventslog(const char *server, unsigned short port, const char *event
 	wchar_t 	*eventlog_name_w;
 	zbx_uint64_t	FirstID, LastID, lastlogsize;
 	int		buffer_size = 64 * ZBX_KIBIBYTE;
-	DWORD		dwRead = 0, dwNeeded, dwReadDirection, dwErr;
+	DWORD		dwRead = 0, dwNeeded, ReadDirection, dwErr;
 	BYTE		*pELR, *pEndOfRecords, *pELRs = NULL;
 	int		s_count, p_count, send_err = SUCCEED;
 	unsigned long	logeventid, timestamp = 0;
@@ -1259,7 +1259,7 @@ int	process_eventslog(const char *server, unsigned short port, const char *event
 	if (lastlogsize > LastID)
 		lastlogsize = (DWORD)lastlogsize;
 
-	dwReadDirection = ((LastID - FirstID) / 2) > lastlogsize ? EVENTLOG_FORWARDS_READ : EVENTLOG_BACKWARDS_READ;
+	ReadDirection = ((LastID - FirstID) / 2) > lastlogsize ? EVENTLOG_FORWARDS_READ : EVENTLOG_BACKWARDS_READ;
 
 	/* if the lastlogsize is still outside log record interval reset it to the oldest record number, */
 	/* otherwise set FirstID to the next record after lastlogsize, which is the first event record   */
@@ -1267,14 +1267,14 @@ int	process_eventslog(const char *server, unsigned short port, const char *event
 	if (lastlogsize > LastID || lastlogsize < FirstID)
 	{
 		lastlogsize = FirstID;
-		dwReadDirection = 0;
+		ReadDirection = 0;
 	}
 	else
 		FirstID = lastlogsize + 1;
 
 	pELRs = (BYTE*)zbx_malloc((void *)pELRs, buffer_size);
 
-	if (SUCCEED != seek_eventlog(eventlog_handle, FirstID, dwReadDirection, LastID, eventlog_name, &pELRs,
+	if (SUCCEED != seek_eventlog(eventlog_handle, FirstID, ReadDirection, LastID, eventlog_name, &pELRs,
 			&buffer_size, &dwRead, &dwErr, error))
 	{
 		goto out;
