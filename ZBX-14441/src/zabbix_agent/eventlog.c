@@ -937,8 +937,7 @@ int	finalize_eventlog6(EVT_HANDLE *render_context, EVT_HANDLE *query)
  *             pELRs           - [IN/OUT] buffer for read of data of EventLog *
  *             buffer_size     - [IN/OUT] size of the pELRs                   *
  *             dwRead          - [OUT] the number of bytes read from EventLog *
- *             dwErr           - [OUT] result of the pointer shift attempt    *
- *                                     state                                  *
+ *             error_code      - [OUT] error code (e.g. from ReadEventLog())  *
  *             error           - [OUT] the error message in the case of       *
  *                                     failure                                *
  *                                                                            *
@@ -947,7 +946,7 @@ int	finalize_eventlog6(EVT_HANDLE *render_context, EVT_HANDLE *query)
  ******************************************************************************/
 static int	seek_eventlog(HANDLE *eventlog_handle, zbx_uint64_t FirstID, DWORD ReadDirection,
 		zbx_uint64_t LastID, const char *eventlog_name, BYTE **pELRs, int *buffer_size, DWORD *dwRead,
-		DWORD *dwErr, char **error)
+		DWORD *error_code, char **error)
 {
 	const char	*__function_name="seek_eventlog";
 	BYTE		*pEndOfRecords, *pELR;
@@ -957,9 +956,9 @@ static int	seek_eventlog(HANDLE *eventlog_handle, zbx_uint64_t FirstID, DWORD Re
 	/* convert to DWORD to handle possible event record number wraparound */
 	dwRecordNumber = (DWORD)FirstID;
 
-	*dwErr = ERROR_SUCCESS;
+	*error_code = ERROR_SUCCESS;
 
-	while (ERROR_SUCCESS == *dwErr)
+	while (ERROR_SUCCESS == *error_code)
 	{
 		if (0 != ReadEventLog(eventlog_handle, EVENTLOG_SEEK_READ | EVENTLOG_FORWARDS_READ, dwRecordNumber,
 				*pELRs, *buffer_size, dwRead, &dwNeeded))
@@ -967,60 +966,60 @@ static int	seek_eventlog(HANDLE *eventlog_handle, zbx_uint64_t FirstID, DWORD Re
 			return SUCCEED;
 		}
 
-		if (ERROR_INVALID_PARAMETER == (*dwErr = GetLastError()))
+		if (ERROR_INVALID_PARAMETER == (*error_code = GetLastError()))
 		{
 			/* see Microsoft Knowledge Base article, 177199 "BUG: ReadEventLog Fails with Error 87" */
 			/* how ReadEventLog() can fail with all valid parameters */
 			break;
 		}
 
-		if (ERROR_HANDLE_EOF == *dwErr)
+		if (ERROR_HANDLE_EOF == *error_code)
 			return SUCCEED;
 
-		if (ERROR_INSUFFICIENT_BUFFER == *dwErr)
+		if (ERROR_INSUFFICIENT_BUFFER == *error_code)
 		{
 			*buffer_size = dwNeeded;
 			*pELRs = (BYTE *)zbx_realloc((void *)*pELRs, *buffer_size);
-			*dwErr = ERROR_SUCCESS;
+			*error_code = ERROR_SUCCESS;
 			continue;
 		}
 
 		*error = zbx_dsprintf(*error, "Cannot read eventlog '%s': %s.", eventlog_name,
-				strerror_from_system(*dwErr));
+				strerror_from_system(*error_code));
 		return FAIL;
 	}
 
 	/* Fallback implementation of the first seek for read pointer of EventLog. */
-	if (ERROR_INVALID_PARAMETER == *dwErr && EVENTLOG_BACKWARDS_READ == ReadDirection)
+	if (ERROR_INVALID_PARAMETER == *error_code && EVENTLOG_BACKWARDS_READ == ReadDirection)
 	{
 		if (LastID == FirstID)
 			skip_count = 1;
 		else
 			skip_count = LastID - FirstID;
 
-		zabbix_log(LOG_LEVEL_DEBUG, "In %s(): fallback dwErr=%d skip_count="ZBX_FS_UI64, __function_name,
-				*dwErr, skip_count);
+		zabbix_log(LOG_LEVEL_DEBUG, "In %s(): fallback error_code=%d skip_count="ZBX_FS_UI64, __function_name,
+				*error_code, skip_count);
 	}
 
-	*dwErr = ERROR_SUCCESS;
+	*error_code = ERROR_SUCCESS;
 
-	while (0 < skip_count && ERROR_SUCCESS == *dwErr && EVENTLOG_BACKWARDS_READ == ReadDirection)
+	while (0 < skip_count && ERROR_SUCCESS == *error_code && EVENTLOG_BACKWARDS_READ == ReadDirection)
 	{
 		if (!ReadEventLog(eventlog_handle, EVENTLOG_SEQUENTIAL_READ | ReadDirection, 0, *pELRs, *buffer_size,
 				dwRead, &dwNeeded))
 		{
-			if (ERROR_INSUFFICIENT_BUFFER == (*dwErr = GetLastError()))
+			if (ERROR_INSUFFICIENT_BUFFER == (*error_code = GetLastError()))
 			{
-				*dwErr = ERROR_SUCCESS;
+				*error_code = ERROR_SUCCESS;
 				*buffer_size = dwNeeded;
 				*pELRs = (BYTE *)zbx_realloc((void *)*pELRs, *buffer_size);
 				continue;
 			}
-			else if (ERROR_HANDLE_EOF != *dwErr)
+			else if (ERROR_HANDLE_EOF != *error_code)
 				break;
 
 			*error = zbx_dsprintf(*error, "Cannot read eventlog '%s': %s.", eventlog_name,
-					strerror_from_system(*dwErr));
+					strerror_from_system(*error_code));
 			return FAIL;
 		}
 
@@ -1037,8 +1036,8 @@ static int	seek_eventlog(HANDLE *eventlog_handle, zbx_uint64_t FirstID, DWORD Re
 		}
 	}
 
-	if (EVENTLOG_BACKWARDS_READ == ReadDirection && ERROR_HANDLE_EOF == *dwErr)
-		*dwErr = ERROR_SUCCESS;
+	if (EVENTLOG_BACKWARDS_READ == ReadDirection && ERROR_HANDLE_EOF == *error_code)
+		*error_code = ERROR_SUCCESS;
 
 	return SUCCEED;
 }
@@ -1193,7 +1192,7 @@ int	process_eventslog(const char *server, unsigned short port, const char *event
 	wchar_t 	*eventlog_name_w;
 	zbx_uint64_t	FirstID, LastID, lastlogsize;
 	int		buffer_size = 64 * ZBX_KIBIBYTE;
-	DWORD		dwRead = 0, dwNeeded, ReadDirection, dwErr;
+	DWORD		dwRead = 0, dwNeeded, ReadDirection, error_code;
 	BYTE		*pELR, *pEndOfRecords, *pELRs = NULL;
 	int		s_count, p_count, send_err = SUCCEED;
 	unsigned long	logeventid, timestamp = 0;
@@ -1221,10 +1220,10 @@ int	process_eventslog(const char *server, unsigned short port, const char *event
 
 	eventlog_name_w = zbx_utf8_to_unicode(eventlog_name);
 
-	if (SUCCEED != zbx_open_eventlog(eventlog_name_w, &eventlog_handle, &FirstID, &LastID, &dwErr))
+	if (SUCCEED != zbx_open_eventlog(eventlog_name_w, &eventlog_handle, &FirstID, &LastID, &error_code))
 	{
 		*error = zbx_dsprintf(*error, "Cannot open eventlog '%s': %s.", eventlog_name,
-				strerror_from_system(dwErr));
+				strerror_from_system(error_code));
 		goto out;
 	}
 
@@ -1258,23 +1257,23 @@ int	process_eventslog(const char *server, unsigned short port, const char *event
 
 	if (0 == ReadDirection)		/* read eventlog from the first record */
 	{
-		dwErr = ERROR_SUCCESS;
+		error_code = ERROR_SUCCESS;
 	}
 	else if (LastID < FirstID)	/* no new records */
 	{
-		dwErr = ERROR_HANDLE_EOF;
+		error_code = ERROR_HANDLE_EOF;
 	}
 	else if (SUCCEED != seek_eventlog(eventlog_handle, FirstID, ReadDirection, LastID, eventlog_name, &pELRs,
-			&buffer_size, &dwRead, &dwErr, error))
+			&buffer_size, &dwRead, &error_code, error))
 	{
 		goto out;
 	}
 
-	zabbix_log(LOG_LEVEL_TRACE, "%s(): state before EventLog reading: dwRead=%d dwErr=%s FirstID=" ZBX_FS_UI64
+	zabbix_log(LOG_LEVEL_TRACE, "%s(): state before EventLog reading: dwRead=%d error=%s FirstID=" ZBX_FS_UI64
 			" LastID=" ZBX_FS_UI64 " lastlogsize=" ZBX_FS_UI64, __function_name, dwRead,
-			strerror_from_system(dwErr), FirstID, LastID, lastlogsize);
+			strerror_from_system(error_code), FirstID, LastID, lastlogsize);
 
-	if (ERROR_HANDLE_EOF == dwErr)
+	if (ERROR_HANDLE_EOF == error_code)
 		goto finish;
 
 	s_count = 0;
@@ -1283,23 +1282,23 @@ int	process_eventslog(const char *server, unsigned short port, const char *event
 	/* Read blocks of records until you reach the end of the log or an           */
 	/* error occurs. The records are read from oldest to newest. If the buffer   */
 	/* is not big enough to hold a complete event record, reallocate the buffer. */
-	while (ERROR_SUCCESS == dwErr)
+	while (ERROR_SUCCESS == error_code)
 	{
 		if (0 == dwRead && !ReadEventLog(eventlog_handle, EVENTLOG_SEQUENTIAL_READ | EVENTLOG_FORWARDS_READ, 0,
 				pELRs, buffer_size, &dwRead, &dwNeeded))
 		{
-			if (ERROR_INSUFFICIENT_BUFFER == (dwErr = GetLastError()))
+			if (ERROR_INSUFFICIENT_BUFFER == (error_code = GetLastError()))
 			{
-				dwErr = ERROR_SUCCESS;
+				error_code = ERROR_SUCCESS;
 				buffer_size = dwNeeded;
 				pELRs = (BYTE *)zbx_realloc((void *)pELRs, buffer_size);
 				continue;
 			}
-			else if (ERROR_HANDLE_EOF == dwErr)
+			else if (ERROR_HANDLE_EOF == error_code)
 				break;
 
 			*error = zbx_dsprintf(*error, "Cannot read eventlog '%s': %s.", eventlog_name,
-					strerror_from_system(dwErr));
+					strerror_from_system(error_code));
 			goto out;
 		}
 
@@ -1402,7 +1401,7 @@ int	process_eventslog(const char *server, unsigned short port, const char *event
 		}
 
 		if (pELR < pEndOfRecords)
-			dwErr = ERROR_NO_MORE_ITEMS;
+			error_code = ERROR_NO_MORE_ITEMS;
 	}
 
 finish:
