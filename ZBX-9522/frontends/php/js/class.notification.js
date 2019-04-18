@@ -19,37 +19,32 @@
 
 
 /**
- * In milliseconds, slide animation duration upon remove.
+ * In milliseconds, slide animation duration upon notification element remove.
  */
 ZBX_Notification.ease = 500;
 
 /**
- * Since setTimeout would execute closure immediately if too large timeout is scheduled.
- * It is possible to notifications are hidden immediately if user has chosen to work with very high message timeout.
- * We limit the upper bound.
+ * In case if user has set incredibly long notification timeout - he would end up never seeing them, because JS would
+ * execute scheduled timeout immediately. So we limit the upper bound.
  */
 ZBX_Notification.max_timeout = Math.pow(2, 30);
 
 /**
- * Detached DOM node is created.
- * Closing time is scheduled.
+ * Upon instance creation an detached DOM node is created and closing time has been scheduled.
  *
  * @param {object} options
- *        {number} options.ttl  The timeout for this message is determined server side.
- *        {string} options.html
  */
 function ZBX_Notification(options) {
-	this.uid = options.uid;
-	this.node = this.makeNode(options);
-	this.ttl = options.ttl;
+	this.uid       = options.uid;
+	this.node      = this.makeNode(options);
+	this.ttl       = options.ttl;
 	this.timeoutid = this.setTimeout(options.ttl);
 	this.onTimeout = function() {};
-	this.snoozed = options.snoozed;
+	this.snoozed   = options.snoozed;
 }
 
 /**
- * Removes previous timeout if it is scheduled, then
- * schedule timeout to close this message.
+ * Removes previous timeout if it is scheduled, then schedules an timeout to close this message.
  *
  * @param {integer} seconds  Timeout in seconds for 'close' to be called.
  *
@@ -69,7 +64,7 @@ ZBX_Notification.prototype.setTimeout = function(seconds) {
 	return setTimeout(function() {
 		this.onTimeout(this);
 	}.bind(this), ms);
-}
+};
 
 /**
  * Renders this message object.
@@ -79,15 +74,15 @@ ZBX_Notification.prototype.setTimeout = function(seconds) {
  * @return {HTMLElement}  Detached DOM node.
  */
 ZBX_Notification.prototype.makeNode = function(obj) {
-	var node = document.createElement('li');
+	var node = document.createElement('li'),
+		indicator = document.createElement('div'),
+		title_node = document.createElement('h4');
 
-	var indicator = document.createElement('div');
 	indicator.className = 'notif-indic ' + obj.severity_style;
 	node.appendChild(indicator);
 
-	var titleNode = document.createElement('h4');
-	titleNode.innerHTML = BBCode.Parse(obj.title);
-	node.appendChild(titleNode);
+	title_node.innerHTML = BBCode.Parse(obj.title);
+	node.appendChild(title_node);
 
 	obj.body.forEach(function(line) {
 		var p = document.createElement('p');
@@ -102,17 +97,21 @@ ZBX_Notification.prototype.makeNode = function(obj) {
 	node.querySelector('.notif-indic').appendChild(node.snooze_icon)
 
 	return node;
-}
+};
 
+/**
+ * @param {bool} bool  If true, mark this notification as snoozed.
+ */
 ZBX_Notification.prototype.renderSnoozed = function(bool) {
 	this.snoozed = bool;
+
 	if (bool) {
 		this.node.snooze_icon.style.opacity = 0.5;
 	}
 	else {
 		this.node.snooze_icon.style.opacity = 0;
 	}
-}
+};
 
 /**
  * Remove this notification from DOM.
@@ -125,27 +124,28 @@ ZBX_Notification.prototype.remove = function(ease, cb) {
 	ease *= rate;
 	if (ease > 0) {
 		this.node.style.overflow = 'hidden';
-		var t = ease / rate;
-		var step = this.node.offsetHeight / t;
-		var id = setInterval(function() {
-			if (t < rate) {
-				// Since there is loaded prototype.js and it extends DOM's native 'remove' method,
-				// we have to check explicitly if node is connected.
-				// In case of IE11 there is no 'isConnected' method.
-				if (this.node.isConnected || this.node.parentNode) {
-					this.node.remove();
-					cb && cb()
+		var t = ease / rate,
+			step = this.node.offsetHeight / t,
+			id = setInterval(function() {
+				if (t < rate) {
+					/**
+					 * Since there is loaded prototype.js and it extends DOM's native 'remove' method, we have to
+					 * explicitly check if node is connected. Also, case of IE11 there is no 'isConnected' method.
+					 */
+					if (this.node.isConnected || this.node.parentNode) {
+						this.node.remove();
+						cb && cb()
+					}
+					clearInterval(id);
 				}
-				clearInterval(id);
-			}
-			else {
-				t -= rate;
-				this.node.style.height = (step * t).toFixed() +'px';
-			}
-		}.bind(this), rate);
+				else {
+					t -= rate;
+					this.node.style.height = (step * t).toFixed() + 'px';
+				}
+			}.bind(this), rate);
 	}
 	else {
 		this.node.remove();
 		cb && cb()
 	}
-}
+};

@@ -17,11 +17,12 @@
  ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  **/
 
+
 /**
- * An object that is used to namespace objects,
- * allows to retrieve and write objects via arbitrary path.
+ * An object that is used to namespace objects, allows to retrieve and write objects via arbitrary path.
  */
 window.ZABBIX = Object.create({
+
 	/**
 	 * @param {string} path  Dot separated path. Each segment is used as object key.
 	 * @param {mixed} value  Optional value to be written into path only if path held undefined before.
@@ -39,9 +40,14 @@ window.ZABBIX = Object.create({
 			return obj[pt];
 		}, this);
 	},
+
+	/**
+	 * Logs user out, also, handles side effects before that.
+	 */
 	logout: function() {
 		var ls = this.namespace('instances.localStorage');
 		ls && ls.destruct();
+
 		redirect('index.php?reconnect=1', 'post', 'sid', true);
 	}
 });

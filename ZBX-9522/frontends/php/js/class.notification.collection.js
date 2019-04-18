@@ -19,8 +19,7 @@
 
 
 /**
- * Stores the list of notification objects.
- * Creates and maintains DOM node for notification list.
+ * Represents DOM node for notification list. Stores the list of notification objects.
  */
 function ZBX_NotificationCollection() {
 	this.list = {};
@@ -35,56 +34,61 @@ function ZBX_NotificationCollection() {
  * Creates DOM nodes.
  */
 ZBX_NotificationCollection.prototype.makeNodes = function() {
+	var header = document.createElement('div'),
+		controls = document.createElement('ul');
+
 	this.node = document.createElement('div');
 	this.node.hidden = true;
 	this.node.className = 'overlay-dialogue notif';
 
-	this.btnClose = document.createElement('button');
-	this.btnClose.setAttribute('title', locale['S_CLEAR']);
-	this.btnClose.setAttribute('type', 'button');
-	this.btnClose.className = 'overlay-close-btn';
-	this.node.appendChild(this.btnClose);
+	this.btn_close = document.createElement('button');
+	this.btn_close.setAttribute('title', locale['S_CLEAR']);
+	this.btn_close.setAttribute('type', 'button');
+	this.btn_close.className = 'overlay-close-btn';
 
-	var header = document.createElement('div');
+	this.node.appendChild(this.btn_close);
+
 	header.className = 'dashbrd-widget-head cursor-move';
 	this.node.appendChild(header);
 
-	var controls = document.createElement('ul');
 	header.appendChild(controls);
 
-	this.btnMute = this.makeToggleBtn(
+	this.btn_mute = this.makeToggleBtn(
 		{class: 'btn-sound-on', title: locale['S_MUTE']},
 		{class: 'btn-sound-off', title: locale['S_UNMUTE']}
 	);
 
-	this.btnSnooze = this.makeToggleBtn({class: 'btn-alarm-on'}, {class: 'btn-alarm-off'});
-	this.btnSnooze.setAttribute('title', locale['S_SNOOZE']);
+	this.btn_snooze = this.makeToggleBtn({class: 'btn-alarm-on'}, {class: 'btn-alarm-off'});
+	this.btn_snooze.setAttribute('title', locale['S_SNOOZE']);
 
-	controls.appendChild(document.createElement('li').appendChild(this.btnSnooze));
-	controls.appendChild(document.createElement('li').appendChild(this.btnMute));
+	controls.appendChild(document.createElement('li').appendChild(this.btn_snooze));
+	controls.appendChild(document.createElement('li').appendChild(this.btn_mute));
 
-	this.listNode = document.createElement('ul');
-	this.listNode.className = 'notif-body';
+	this.list_node = document.createElement('ul');
+	this.list_node.className = 'notif-body';
 
-	this.node.appendChild(this.listNode);
-}
+	this.node.appendChild(this.list_node);
+};
 
 /**
- * Creates <button> node with method 'renderState(bool)'.
+ * Creates a button node with a method 'renderState(bool)'.
  *
- * @param {object} attrsInactive
- * @param {object} attrsActive
+ * @param {object} attrs_inactive  Attribute key-value object to be mapped on renderState(true).
+ * @param {object} attrs_active    Attribute key-value object to be mapped on renderState(false).
  */
-ZBX_NotificationCollection.prototype.makeToggleBtn = function(attrsInactive, attrsActive) {
+ZBX_NotificationCollection.prototype.makeToggleBtn = function(attrs_inactive, attrs_active) {
 	var button = document.createElement('button');
 	button.renderState = function(isActive) {
-		var attrs = isActive ? attrsActive : attrsInactive;
-		for (var attrName in attrs) {
-			this.setAttribute(attrName, attrs[attrName]);
+		var attrs = isActive ? attrs_active : attrs_inactive,
+			attr_name;
+
+		for (attr_name in attrs) {
+			this.setAttribute(attr_name, attrs[attr_name]);
 		}
 	}
+
 	return button;
-}
+};
 
 /**
  * Shows list of notifications.
@@ -101,7 +105,7 @@ ZBX_NotificationCollection.prototype.show = function() {
 		}
 		this.style.opacity = op;
 	}.bind(this.node), 50);
-}
+};
 
 /**
  * Hides list of notifications.
@@ -118,29 +122,29 @@ ZBX_NotificationCollection.prototype.hide = function() {
 		}
 		this.style.opacity = op;
 	}.bind(this.node), 50);
-}
+};
 
 /**
- * Replaces current list node contents with new one.
+ * Creates list node contents and replaces current list node children.
  *
- * @param {object} listObj  Notifications list object in format it is stored in local storage.
+ * @param {object} list_obj  Notifications list object in format it is stored in local storage.
  */
-ZBX_NotificationCollection.prototype.renderFromStorable = function(listObj) {
+ZBX_NotificationCollection.prototype.renderFromStorable = function(list_obj) {
 	var frag = document.createDocumentFragment();
 
 	this.list = {};
 
-	Object.keys(listObj).reverse().forEach(function(id) {
-		this.list[id] = new ZBX_Notification(listObj[id]);
-		this.list[id].renderSnoozed(listObj[id].snoozed);
+	Object.keys(list_obj).reverse().forEach(function(id) {
+		this.list[id] = new ZBX_Notification(list_obj[id]);
+		this.list[id].renderSnoozed(list_obj[id].snoozed);
 		this.list[id].onTimeout = this.onTimeout;
 		frag.appendChild(this.list[id].node);
 	}.bind(this));
-	this.listNode.innerHTML = '';
+	this.list_node.innerHTML = '';
 
 	if (frag.childNodes.length) {
-		this.listNode.appendChild(frag);
+		this.list_node.appendChild(frag);
 	}
 
-	return this.listNode.children.length;
-}
+	return this.list_node.children.length;
+};

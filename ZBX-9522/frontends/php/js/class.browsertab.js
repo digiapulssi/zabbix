@@ -21,12 +21,11 @@
 /**
  * Amount of seconds for keep-alive interval.
  */
-ZBX_BrowserTab.keepAliveInterval = 30;
+ZBX_BrowserTab.keep_alive_interval = 30;
 
 /**
- * This object is representing a browser tab. Implements singleton pattern.
- * It ensures there are only non-crashed tabs in store.
- * It maintains currently focused tab and last focused tab in store.
+ * This object is representing a browser tab. Implements singleton pattern. It ensures there are only
+ * non-crashed tabs in store. It maintains currently focused tab and last focused tab in store.
  *
  * @param {ZBX_LocalStorage} store  A localStorage wrapper.
  */
@@ -44,9 +43,9 @@ function ZBX_BrowserTab(store) {
 	this.focused = false;
 	this.store = store;
 
-	this.onFocusCbs = [];
-	this.onBlurCbs = [];
-	this.onUnloadCbs = [];
+	this.on_focus_cbs = [];
+	this.on_blur_cbs = [];
+	this.on_unload_cbs = [];
 
 	this.register();
 }
@@ -58,97 +57,100 @@ function ZBX_BrowserTab(store) {
  */
 ZBX_BrowserTab.prototype.getAllTabIds = function() {
 	return Object.keys(this.store.readKey('tabs.lastseen'));
-}
+};
 
 /**
  * Looks for crashed tabs.
  */
 ZBX_BrowserTab.prototype.checkAlive = function() {
-	var since = Math.floor(+new Date / 1000) - (ZBX_BrowserTab.keepAliveInterval - 1) * 2;
+	var since = Math.floor(+new Date / 1000) - (ZBX_BrowserTab.keep_alive_interval - 1) * 2;
 	var tabs = this.store.readKey('tabs.lastseen');
 
-	for (var tabId in tabs) {
-		if (tabs[tabId] < since) {
-			this.handleCrashed(tabId);
+	for (var tabid in tabs) {
+		if (tabs[tabid] < since) {
+			this.handleCrashed(tabid);
 		}
 	}
-}
+};
 
 /**
- * A focus event on current tab is spoofed, if this tab recovered a crashed tab,
- * that previously was the last focused one.
+ * A focus event on current tab will be spoofed, if it tab just removed a crashed tab reference, that previously was the
+ * focused one.
  *
- * @param {string} tabId  The crashed tab id.
+ * @param {string} tabid  The crashed tab ID.
  */
-ZBX_BrowserTab.prototype.handleCrashed = function(tabId) {
+ZBX_BrowserTab.prototype.handleCrashed = function(tabid) {
 	this.store.mutateObject('tabs.lastseen', function(tabs) {
-		delete tabs[tabId];
+		delete tabs[tabid];
 	}.bind(this));
 
-	if (this.store.readKey('tabs.lastfocused') == tabId) {
-		console.info('Recovered a crashed tab '+tabId+'. Now tab ' + this.uid + ' is polling for notifications.');
+	if (this.store.readKey('tabs.lastfocused') == tabid) {
+		console.info('Recovered a crashed tab ' + tabid + '. Now tab ' + this.uid + ' is polling for notifications.');
 		this.handleFocus();
 	}
-}
+};
 
 /**
  * @param {callable} callback
  */
 ZBX_BrowserTab.prototype.onBlur = function(callback) {
-	this.onBlurCbs.push(callback);
-}
+	this.on_blur_cbs.push(callback);
+};
 
 /**
  * @param {callable} callback
  */
 ZBX_BrowserTab.prototype.onFocus = function(callback) {
-	this.onFocusCbs.push(callback);
-}
+	this.on_focus_cbs.push(callback);
+};
 
 /**
  * @param {callable} callback
  */
 ZBX_BrowserTab.prototype.onUnload = function(callback) {
-	this.onUnloadCbs.push(callback);
-}
+	this.on_unload_cbs.push(callback);
+};
 
 /**
- * Rewrite focused tab id.
+ * Rewrite focused tab ID.
  */
 ZBX_BrowserTab.prototype.handleBlur = function() {
-	this.onBlurCbs.forEach(function(c) {c(this)}.bind(this));
+	this.on_blur_cbs.forEach(function(c) {c(this);}.bind(this));
 	// This object might already be collected at beforeunload handler.
 	if (this.store) {
 		this.store.writeKey('tabs.lastblured', this.uid);
 	}
-}
+};
 
 /**
- * Rewrite focused tab id.
+ * Rewrite focused tab ID.
  */
 ZBX_BrowserTab.prototype.handleFocus = function() {
-	this.onFocusCbs.forEach(function(c) {c(this)}.bind(this));
+	this.on_focus_cbs.forEach(function(c) {c(this);}.bind(this));
 	this.store.writeKey('tabs.lastfocused', this.uid);
-}
+};
 
 /**
- * Delegate active tab to any alive tab and clean up localStorage.
+ * Delegates active tab to any other alive tab and cleans up localStorage.
  */
 ZBX_BrowserTab.prototype.handleBeforeUnload = function() {
-	var uid = this.uid;
+	var uid = this.uid,
+		all_tab_ids;
+
 	this.checkAlive();
 	this.store.mutateObject('tabs.lastseen', function(tabs) {
 		delete tabs[uid];
 	});
-	var allTabIds = this.getAllTabIds();
-	this.store.writeKey('tabs.lastfocused', allTabIds.length ? allTabIds[0] : '');
 
-	this.onUnloadCbs.forEach(function(c) {c(this)}.bind(this));
+	all_tab_ids = this.getAllTabIds();
+	this.store.writeKey('tabs.lastfocused', all_tab_ids.length ? all_tab_ids[0] : '');
+
+	this.on_unload_cbs.forEach(function(c) {c(this)}.bind(this));
 
 	window.removeEventListener('beforeunload', this.handleBeforeUnload.bind(this));
 	window.removeEventListener('focus', this.handleFocus.bind(this));
 	window.removeEventListener('blur', this.handleBlur.bind(this));
-}
+};
 
 /**
  * Compares instance with active ref from localStorage.
@@ -157,30 +159,27 @@ ZBX_BrowserTab.prototype.handleBeforeUnload = function() {
  */
 ZBX_BrowserTab.prototype.isFocused = function() {
 	return this.store.readKey('tabs.lastfocused') === this.uid;
-}
+};
 
 /**
- * Determines if there are more sibling tabs.
- *
  * @return {bool}
  */
 ZBX_BrowserTab.prototype.isSingleSession = function() {
 	return this.getAllTabIds().length == 1;
-}
+};
 
 /**
- * Updates timestamp for own ID in `store.tabs` object.
+ * Updates timestamp for own ID.
  */
 ZBX_BrowserTab.prototype.keepAlive = function() {
 	var uid = this.uid;
 	this.store.mutateObject('tabs.lastseen', function(tabs) {
 		tabs[uid] = Math.floor(+new Date / 1000);
 	});
-}
+};
 
 /**
- * Writes own ID in `store.tabs` object.
- * Registers beforeunload event to remove own ID from `store.tabs`.
+ * Writes own ID in `store.tabs` object.  Registers beforeunload event to remove own ID from `store.tabs`.
  * Registers focus and blur events to maintain `store.tabs.lastfocused`.
  * Begins a loop to see if any tab of tabs has crashed.
  */
@@ -191,15 +190,16 @@ ZBX_BrowserTab.prototype.register = function() {
 	setInterval(function() {
 		this.keepAlive();
 		this.checkAlive();
-	}.bind(this), ZBX_BrowserTab.keepAliveInterval * 1000);
+	}.bind(this), ZBX_BrowserTab.keep_alive_interval * 1000);
 
 	window.addEventListener('beforeunload', this.handleBeforeUnload.bind(this));
 	window.addEventListener('focus', this.handleFocus.bind(this));
 	window.addEventListener('blur', this.handleBlur.bind(this));
+
 	if (document.hasFocus()) {
 		this.handleFocus();
 	}
-}
+};
 
 ZABBIX.namespace('instances.browserTab', new ZBX_BrowserTab(
 	ZABBIX.namespace('instances.localStorage')

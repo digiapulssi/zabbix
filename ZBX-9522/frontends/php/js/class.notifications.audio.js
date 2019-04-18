@@ -17,18 +17,14 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
+
 /**
  * Timeout controlled player.
  *
- * It plays, meanwhile decrementing timeout.
- * Pausing and playing is done by 'volume', 'muted' media properties adjust only.
- * It hold infinite loop so it allows us easily adjust timeout while player is running.
+ * It plays, meanwhile decrementing timeout. Pausing and playing is done by control of 'volume' and 'muted' properties.
+ * It holds infinite loop, so it allows us easily adjust timeout during playback.
  *
- * Fluent setters may be used in any order,
- * still it is suggested to use 'timeout' as last one.
- *
- * Since it is very specific player which has to share timeout and audio across tabs,
- * it is not global, but notifications specific.
+ * Fluent setters may be used in any order, still it is suggested to use 'timeout' as last one.
  */
 function ZBX_NotificationsAudio() {
 	this.audio = new Audio();
@@ -38,48 +34,48 @@ function ZBX_NotificationsAudio() {
 	this.audio.autoplay = true;
 	this.audio.loop = true;
 
-	this.audio.onloadeddata = this.handleOnloadeddata.bind(this)
+	this.audio.onloadeddata = this.handleOnloadeddata.bind(this);
 	this.onTimeout = function() {};
 
 	this.audio.load();
 
 	this.wave = '';
-	this.msTimeout = 0;
+	this.ms_timeout = 0;
 	this.listen();
 }
 
 /**
  * Starts main loop.
  *
- * @return int  Interval id.
+ * @return int  Interval ID.
  */
 ZBX_NotificationsAudio.prototype.listen = function() {
-	var msStep = 10;
+	var ms_step = 10;
 
 	return setInterval(function(){
-		if (this.playOnceOnReady) {
+		if (this.play_once_on_ready) {
 			return this.once();
 		}
 
-		this.msTimeout -= msStep;
+		this.ms_timeout -= ms_step;
 
-		if (this.msTimeout < 1) {
+		if (this.ms_timeout < 1) {
 			!this.audio.muted && this.onTimeout();
 			this.audio.muted = true;
 			this.audio.volume = 0;
-			this.msTimeout = 0;
+			this.ms_timeout = 0;
 			return;
 		}
 
 		this.audio.muted = false;
 		this.audio.volume = 1;
 
-	}.bind(this), msStep);
-}
+	}.bind(this), ms_step);
+};
 
 /**
- * File is applied only if it is different than on instate, so this method
- * may be called repeatedly, and will not interrupt playback.
+ * File is applied only if it is different than on instate, so this method may be called repeatedly,
+ * and will not interrupt playback.
  *
  * @param {string} file  Audio file path relative to DOCUMENT_ROOT/audio/ directory.
  *
@@ -100,12 +96,10 @@ ZBX_NotificationsAudio.prototype.file = function(file) {
 	}
 
 	return this;
-}
+};
 
 /**
- * Set player seek position.
- *
- * There are no safety checks, if one decides to seek out of bounds - no audio.
+ * Sets player seek position. There are no safety checks, if one decides to seek out of audio file bounds - no audio.
  *
  * @param {float} seconds
  *
@@ -115,38 +109,39 @@ ZBX_NotificationsAudio.prototype.seek = function(seconds) {
 	if (this.audio.readyState > 0) {
 		this.audio.currentTime = seconds;
 	}
+
 	return this;
-}
+};
 
 /**
- * Once file duration is known, this method seeks player to beginning
- * and sets timeout equal to file duration.
+ * Once file duration is known, this method seeks player to the beginning and sets timeout equal to file duration.
  *
  * @return {ZBX_NotificationsAudio}
  */
 ZBX_NotificationsAudio.prototype.once = function() {
-	if (this.playOnceOnReady && this.audio.readyState >= 3) {
-		this.playOnceOnReady = false;
+	if (this.play_once_on_ready && this.audio.readyState >= 3) {
+		this.play_once_on_ready = false;
+
 		return this.seek(0).timeout(this.audio.duration);
 	}
 
-	this.playOnceOnReady = true;
+	this.play_once_on_ready = true;
 
 	return this;
-}
+};
 
 /**
- * An alias method. Player is stopped by truncating timeout.
+ * An alias method. Player is stopped by exhausting timeout.
  *
  * @return {ZBX_NotificationsAudio}
  */
 ZBX_NotificationsAudio.prototype.stop = function() {
 	return this.timeout(0);
-}
+};
 
 /**
- * Will play for seconds given, since this call.
- * If "0" given - will just not play.
+ * Will play in loop for seconds given, since this call. If "0" given - will just not play. If "-1" is given - file will
+ * be played once.
  *
  * @return {ZBX_NotificationsAudio}
  */
@@ -155,10 +150,10 @@ ZBX_NotificationsAudio.prototype.timeout = function(seconds) {
 		return this.once();
 	}
 
-	this.msTimeout = seconds * 1000;
+	this.ms_timeout = seconds * 1000;
 
 	return this;
-}
+};
 
 /**
  * Get current player seek position.
@@ -167,7 +162,7 @@ ZBX_NotificationsAudio.prototype.timeout = function(seconds) {
  */
 ZBX_NotificationsAudio.prototype.getSeek = function() {
 	return this.audio.currentTime;
-}
+};
 
 /**
  * Get the time player will play for.
@@ -175,18 +170,19 @@ ZBX_NotificationsAudio.prototype.getSeek = function() {
  * @return {float}  Amount of seconds.
  */
 ZBX_NotificationsAudio.prototype.getTimeout = function() {
-	return this.msTimeout / 1000;
-}
+	return this.ms_timeout / 1000;
+};
 
 /**
- * This handler will be invoked once audio file has successfully pre-loaded.
- * We attempt to auto play and see if we have policy error.
+ * This handler will be invoked once audio file has successfully pre-loaded. We attempt to auto play and see,
+ * if we have auto play policy error.
  */
 ZBX_NotificationsAudio.prototype.handleOnloadeddata = function() {
 	var promise = this.audio.play();
 
+	// Internet explorer does not return promise.
 	if (typeof promise === 'undefined') {
-		return; // Internet explorer does not return promise.
+		return;
 	}
 
 	promise.catch(function (error) {
@@ -195,4 +191,4 @@ ZBX_NotificationsAudio.prototype.handleOnloadeddata = function() {
 			console.warn('Zabbix was not able to play audio due to "Autoplay policy". Please see manual for more information.');
 		}
 	}.bind(this));
-}
+};

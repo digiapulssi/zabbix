@@ -39,7 +39,6 @@ require_once dirname(__FILE__).'/include/page_header.php';
 
 if (!is_array($data) || !isset($data['method'])
 		|| ($requestType == PAGE_TYPE_JSON && (!isset($data['params']) || !is_array($data['params'])))) {
-		// TODO this fatal_error method could also set response status code ... I did run into issue when jsRPC acted as successful in case of invalid request.
 	fatal_error('Wrong RPC call to JS RPC!');
 }
 
