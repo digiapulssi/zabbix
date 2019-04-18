@@ -1269,9 +1269,9 @@ int	process_eventslog(const char *server, unsigned short port, const char *event
 		goto out;
 	}
 
-	zabbix_log(LOG_LEVEL_TRACE, "%s(): state before EventLog reading: num_bytes_read=%d error=%s FirstID="
-			ZBX_FS_UI64 " LastID=" ZBX_FS_UI64 " lastlogsize=" ZBX_FS_UI64, __function_name, num_bytes_read,
-			strerror_from_system(error_code), FirstID, LastID, lastlogsize);
+	zabbix_log(LOG_LEVEL_TRACE, "%s(): state before EventLog reading: num_bytes_read=%u error=%s FirstID="
+			ZBX_FS_UI64 " LastID=" ZBX_FS_UI64 " lastlogsize=" ZBX_FS_UI64, __function_name,
+			(unsigned int)num_bytes_read, strerror_from_system(error_code), FirstID, LastID, lastlogsize);
 
 	if (ERROR_HANDLE_EOF == error_code)
 		goto finish;
@@ -1305,10 +1305,11 @@ int	process_eventslog(const char *server, unsigned short port, const char *event
 
 		pELR = pELRs;
 		pEndOfRecords = pELR + num_bytes_read;
-		zabbix_log(LOG_LEVEL_TRACE, "%s(): state before buffer parsing: num_bytes_read = %d RecordNumber = %d"
+
+		zabbix_log(LOG_LEVEL_TRACE, "%s(): state before buffer parsing: num_bytes_read = %u RecordNumber = %d"
 				"FirstID = "ZBX_FS_UI64" LastID = "ZBX_FS_UI64" lastlogsize="ZBX_FS_UI64,
-				__function_name, num_bytes_read, ((PEVENTLOGRECORD)pELR)->RecordNumber, FirstID, LastID,
-				lastlogsize);
+				__function_name, (unsigned int)num_bytes_read, ((PEVENTLOGRECORD)pELR)->RecordNumber,
+				FirstID, LastID, lastlogsize);
 		num_bytes_read = 0;
 
 		while (pELR < pEndOfRecords)
