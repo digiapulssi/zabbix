@@ -950,7 +950,7 @@ static int	seek_eventlog(HANDLE *eventlog_handle, zbx_uint64_t FirstID, DWORD Re
 {
 	const char	*__function_name="seek_eventlog";
 	BYTE		*pEndOfRecords, *pELR;
-	DWORD		dwRecordNumber, dwNeeded;
+	DWORD		dwRecordNumber, required_buf_size;
 	zbx_uint64_t	skip_count = 0;
 
 	/* convert to DWORD to handle possible event record number wraparound */
@@ -961,7 +961,7 @@ static int	seek_eventlog(HANDLE *eventlog_handle, zbx_uint64_t FirstID, DWORD Re
 	while (ERROR_SUCCESS == *error_code)
 	{
 		if (0 != ReadEventLog(eventlog_handle, EVENTLOG_SEEK_READ | EVENTLOG_FORWARDS_READ, dwRecordNumber,
-				*pELRs, *buffer_size, num_bytes_read, &dwNeeded))
+				*pELRs, *buffer_size, num_bytes_read, &required_buf_size))
 		{
 			return SUCCEED;
 		}
@@ -978,7 +978,7 @@ static int	seek_eventlog(HANDLE *eventlog_handle, zbx_uint64_t FirstID, DWORD Re
 
 		if (ERROR_INSUFFICIENT_BUFFER == *error_code)
 		{
-			*buffer_size = dwNeeded;
+			*buffer_size = required_buf_size;
 			*pELRs = (BYTE *)zbx_realloc((void *)*pELRs, *buffer_size);
 			*error_code = ERROR_SUCCESS;
 			continue;
@@ -1006,12 +1006,12 @@ static int	seek_eventlog(HANDLE *eventlog_handle, zbx_uint64_t FirstID, DWORD Re
 	while (0 < skip_count && ERROR_SUCCESS == *error_code && EVENTLOG_BACKWARDS_READ == ReadDirection)
 	{
 		if (!ReadEventLog(eventlog_handle, EVENTLOG_SEQUENTIAL_READ | ReadDirection, 0, *pELRs, *buffer_size,
-				num_bytes_read, &dwNeeded))
+				num_bytes_read, &required_buf_size))
 		{
 			if (ERROR_INSUFFICIENT_BUFFER == (*error_code = GetLastError()))
 			{
 				*error_code = ERROR_SUCCESS;
-				*buffer_size = dwNeeded;
+				*buffer_size = required_buf_size;
 				*pELRs = (BYTE *)zbx_realloc((void *)*pELRs, *buffer_size);
 				continue;
 			}
@@ -1192,7 +1192,7 @@ int	process_eventslog(const char *server, unsigned short port, const char *event
 	wchar_t 	*eventlog_name_w;
 	zbx_uint64_t	FirstID, LastID, lastlogsize;
 	int		buffer_size = 64 * ZBX_KIBIBYTE;
-	DWORD		num_bytes_read = 0, dwNeeded, ReadDirection, error_code;
+	DWORD		num_bytes_read = 0, required_buf_size, ReadDirection, error_code;
 	BYTE		*pELR, *pEndOfRecords, *pELRs = NULL;
 	int		s_count, p_count, send_err = SUCCEED;
 	unsigned long	logeventid, timestamp = 0;
@@ -1286,12 +1286,12 @@ int	process_eventslog(const char *server, unsigned short port, const char *event
 	{
 		if (0 == num_bytes_read && 0 == ReadEventLog(eventlog_handle,
 				EVENTLOG_SEQUENTIAL_READ | EVENTLOG_FORWARDS_READ, 0,
-				pELRs, buffer_size, &num_bytes_read, &dwNeeded))
+				pELRs, buffer_size, &num_bytes_read, &required_buf_size))
 		{
 			if (ERROR_INSUFFICIENT_BUFFER == (error_code = GetLastError()))
 			{
 				error_code = ERROR_SUCCESS;
-				buffer_size = dwNeeded;
+				buffer_size = required_buf_size;
 				pELRs = (BYTE *)zbx_realloc((void *)pELRs, buffer_size);
 				continue;
 			}
