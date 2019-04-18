@@ -97,7 +97,7 @@ $form_list = (new CFormList())
 	)
 	->addRow(
 		new CLabel(_('End of line sequence'), 'eol'),
-		(new CRadioButtonList('eol', ZBX_EOL_LF))
+		(new CRadioButtonList('eol', $data['eol']))
 			->addValue(_('LF'), ZBX_EOL_LF)
 			->addValue(_('CRLF'), ZBX_EOL_CRLF)
 			->setModern(true)
