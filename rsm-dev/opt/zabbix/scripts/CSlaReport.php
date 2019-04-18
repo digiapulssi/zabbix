@@ -203,7 +203,7 @@ class CSlaReport
 		foreach ($rows as $row)
 		{
 			list($tld, $status) = $row;
-			$rddsStatus[$tld] = $status === "1";
+			$rddsStatus[$tld] = (bool)$status;
 		}
 
 		foreach ($data as $hostid => $tld)
@@ -254,11 +254,11 @@ class CSlaReport
 
 				array_push($itemids_ns_avail, $itemid);
 			}
-			elseif ((int)$type === 0)
+			elseif ($type === 0)
 			{
 				array_push($itemids_float, $itemid);
 			}
-			elseif ((int)$type === 3)
+			elseif ($type === 3)
 			{
 				array_push($itemids_uint, $itemid);
 			}
@@ -339,7 +339,7 @@ class CSlaReport
 			$hostname   = $itemids_meta_ns_avail[$itemid_avail]["hostname"];
 			$ip_address = $itemids_meta_ns_avail[$itemid_avail]["ipAddress"];
 
-			# if $itemids_meta_ns_downtime doesn't contain info about $hostid, then NS was probably disabled
+			// if $itemids_meta_ns_downtime doesn't contain info about $hostid, then NS was probably disabled
 			if (array_key_exists($hostid, $itemids_meta_ns_downtime))
 			{
 				$itemid_downtime = $itemids_meta_ns_downtime[$hostid][$hostname][$ip_address];
