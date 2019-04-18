@@ -930,9 +930,8 @@ int	finalize_eventlog6(EVT_HANDLE *render_context, EVT_HANDLE *query)
  * Parameters: eventlog_handle - [IN] the handle to the event log to be read  *
  *             FirstID         - [IN] the first Event log record to be parse  *
  *             ReadDirection   - [IN] direction of reading:                   *
- *                                    EVENTLOG_FORWARDS_READ,                 *
- *                                    EVENTLOG_BACKWARDS_READ or 0 (no seek,  *
- *                                    the current position will be used)      *
+ *                                    EVENTLOG_FORWARDS_READ or               *
+ *                                    EVENTLOG_BACKWARDS_READ                 *
  *             LastID          - [IN] position of last record in EventLog     *
  *             eventlog_name   - [IN] the name of the event log               *
  *             pELRs           - [IN/OUT] buffer for read of data of EventLog *
@@ -954,18 +953,6 @@ static int	seek_eventlog(HANDLE *eventlog_handle, zbx_uint64_t FirstID, DWORD Re
 	BYTE		*pEndOfRecords, *pELR;
 	DWORD		dwRecordNumber, dwNeeded;
 	zbx_uint64_t	skip_count = 0;
-
-	if (0 == ReadDirection)	/* we will read EvenLog from the first record */
-	{
-		*dwErr = ERROR_SUCCESS;
-		return SUCCEED;
-	}
-
-	if (LastID < FirstID)		/* no new records */
-	{
-		*dwErr = ERROR_HANDLE_EOF;
-		return SUCCEED;
-	}
 
 	/* convert to DWORD to handle possible event record number wraparound */
 	dwRecordNumber = (DWORD)FirstID;
@@ -1270,7 +1257,15 @@ int	process_eventslog(const char *server, unsigned short port, const char *event
 
 	pELRs = (BYTE*)zbx_malloc((void *)pELRs, buffer_size);
 
-	if (SUCCEED != seek_eventlog(eventlog_handle, FirstID, ReadDirection, LastID, eventlog_name, &pELRs,
+	if (0 == ReadDirection)		/* read eventlog from the first record */
+	{
+		dwErr = ERROR_SUCCESS;
+	}
+	else if (LastID < FirstID)	/* no new records */
+	{
+		dwErr = ERROR_HANDLE_EOF;
+	}
+	else if (SUCCEED != seek_eventlog(eventlog_handle, FirstID, ReadDirection, LastID, eventlog_name, &pELRs,
 			&buffer_size, &dwRead, &dwErr, error))
 	{
 		goto out;
