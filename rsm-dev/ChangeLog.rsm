@@ -4,6 +4,17 @@ New features:
 ..F.I..... [170] added support for Compliance SLA monitoring (dimir, yurii, asitals, miks, gcalenko)
 
 --------------------------------------------------------------------------------
+Changes for rsm1.2.0
+
+rsm1.2.0rc15 was released as rsm1.2.0 without any changes
+
+--------------------------------------------------------------------------------
+Changes for rsm1.2.0rc15
+
+Bug fixes:
+....I..... [493] fix handling of negative RTT without IP in recent measurements (dimir)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.2.0rc14
 
 Bug fixes:
