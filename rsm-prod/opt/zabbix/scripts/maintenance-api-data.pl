@@ -13,11 +13,11 @@ use Path::Tiny qw(path);
 use ApiHelper;
 use RSM;
 
-my $error = rsm_targets_prepare(AH_TMP_DIR, AH_BASE_DIR);
+my $error = rsm_targets_prepare(AH_SLA_API_TMP_DIR, AH_SLA_API_DIR);
 
 die($error) if ($error);
 
-foreach my $tld_dir (path(AH_BASE_DIR)->children)
+foreach my $tld_dir (path(AH_SLA_API_DIR)->children)
 {
 	next unless ($tld_dir->is_dir());
 

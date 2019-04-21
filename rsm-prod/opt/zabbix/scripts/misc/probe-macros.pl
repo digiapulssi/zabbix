@@ -10,6 +10,7 @@ use lib $MYDIR2;
 
 use strict;
 use warnings;
+use TLD_constants qw(:api);
 use RSM;
 use RSMSLV;
 
@@ -36,10 +37,6 @@ foreach my $probe (keys(%{$result}))
 	}
 }
 
-# todo phase 1: taken from TLD_constants.pm of phase 2
-use constant HOST_STATUS_PROXY_PASSIVE => 6;
-
-# todo phase 1: taken from RSMSLV.pm of phase 2
 sub __get_probe_macros
 {
 	my $rows_ref = db_select(

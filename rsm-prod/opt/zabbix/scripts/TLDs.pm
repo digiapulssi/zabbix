@@ -878,7 +878,6 @@ sub create_cron_jobs($) {
     }
 }
 
-# todo phase 1: moved here from tld.pl to be used by both tld.pl and probes.pl
 sub create_probe_health_tmpl()
 {
 	my $host_name = 'Template Proxy Health';
@@ -915,7 +914,6 @@ sub create_probe_health_tmpl()
 		$host_name
 	);
 
-	# todo phase 1: make sure this is in phase 2
 	create_item({
 		'name'		=> 'Probe main status',
 		'key_'		=> PROBE_KEY_ONLINE,

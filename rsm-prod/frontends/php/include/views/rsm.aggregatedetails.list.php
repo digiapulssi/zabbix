@@ -73,6 +73,7 @@ $table = (new CTableInfo())
 $down = (new CSpan(_('Down')))->addClass(ZBX_STYLE_RED);
 $offline = (new CSpan(_('Offline')))->addClass(ZBX_STYLE_GREY);
 $no_result = (new CSpan(_('No result')))->addClass(ZBX_STYLE_GREY);
+$disabled = (new CSpan(_('Disabled')))->addClass(ZBX_STYLE_GREY);
 $up = (new CSpan(_('Up')))->addClass(ZBX_STYLE_GREEN);
 
 // Results summary.
@@ -82,7 +83,14 @@ $down_probes = 0;
 
 // Add results for each probe.
 foreach ($data['probes'] as $probe) {
-	if (array_key_exists('status_udp', $probe)) {
+	$probe_disabled = (array_key_exists($probe['host'], $data['probes_status']) && $data['probes_status'][$probe['host']] == 1);
+
+	if ($probe_disabled) {
+		$udp_status = $disabled;
+		$probe_status_color = ZBX_STYLE_GREY;
+		$no_result_probes++;
+	}
+	elseif (array_key_exists('status_udp', $probe)) {
 		if ($probe['status_udp'] == PROBE_OFFLINE) {
 			$probe_status_color = ZBX_STYLE_GREY;
 			$udp_status = $offline;
@@ -107,8 +115,8 @@ foreach ($data['probes'] as $probe) {
 	$row = [
 		(new CSpan($probe['name']))->addClass($probe_status_color),
 		$udp_status,
-		$probe['udp_ns_up'],
-		$probe['udp_ns_down']
+		$probe_disabled ? '-' : $probe['udp_ns_up'],
+		$probe_disabled ? '-' : $probe['udp_ns_down']
 	];
 
 	if (array_key_exists('dns_udp_nameservers', $data)) {

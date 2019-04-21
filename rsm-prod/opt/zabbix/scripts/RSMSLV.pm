@@ -20,7 +20,7 @@ use RSM;
 use Pusher qw(push_to_trapper);
 
 use constant SUCCESS => 0;
-use constant E_FAIL => -1;
+use constant E_FAIL => -1;	# be careful when changing this, some functions depend on current value
 use constant E_ID_NONEXIST => -2;
 use constant E_ID_MULTIPLE => -3;
 
@@ -33,8 +33,8 @@ use constant UP				=> 1;	# Up
 use constant UP_INCONCLUSIVE_NO_DATA	=> 2;	# Up-inconclusive-no-data
 use constant UP_INCONCLUSIVE_NO_PROBES	=> 3;	# Up-inconclusive-no-probes
 
-use constant ONLINE => 1;	# todo phase 1: check where these are used
-use constant OFFLINE => 0;	# todo phase 1: check where these are used
+use constant ONLINE => 1;	# todo: check where these are used
+use constant OFFLINE => 0;	# todo: check where these are used
 use constant SLV_UNAVAILABILITY_LIMIT => 49; # NB! must be in sync with frontend
 
 use constant MIN_LOGIN_ERROR => -205;
@@ -60,14 +60,13 @@ use constant RSM_CONFIG_EPP_DELAY_ITEMID => 100010;	# rsm.configvalue[RSM.EPP.DE
 # are available on the server (from proxies). We shift back 2 minutes
 # in case of "availability" and 3 minutes in case of "rolling week"
 # calculations.
+
 # NB! These numbers must be in sync with Frontend (details page)!
 use constant PROBE_ONLINE_SHIFT		=> 120;	# seconds (must be divisible by 60) to go back for Probe online status calculation
 use constant AVAIL_SHIFT_BACK		=> 120;	# seconds (must be divisible by 60) to go back for Service Availability calculation
-use constant ROLLWEEK_SHIFT_BACK	=> 180;	# seconds (must be divisible by 60) to go back to make sure Service Availability is calculated
+use constant ROLLWEEK_SHIFT_BACK	=> 180;	# seconds (must be divisible by 60) back when Service Availability is definitely calculated
 
 use constant PROBE_ONLINE_STR => 'Online';
-use constant PROBE_OFFLINE_STR => 'Offline';
-use constant PROBE_NORESULT_STR => 'No result';
 
 use constant DETAILED_RESULT_DELIM => ', ';
 
@@ -79,24 +78,29 @@ our ($result, $dbh, $tld, $server_key);
 our %OPTS; # specified command-line options
 
 our @EXPORT = qw($result $dbh $tld $server_key
-		SUCCESS E_FAIL E_ID_NONEXIST E_ID_MULTIPLE UP DOWN RDDS_UP SLV_UNAVAILABILITY_LIMIT MIN_LOGIN_ERROR
+		SUCCESS E_FAIL E_ID_NONEXIST E_ID_MULTIPLE UP DOWN SLV_UNAVAILABILITY_LIMIT MIN_LOGIN_ERROR
+		UP_INCONCLUSIVE_NO_PROBES
 		UP_INCONCLUSIVE_NO_DATA PROTO_UDP PROTO_TCP
-		MAX_LOGIN_ERROR MIN_INFO_ERROR MAX_INFO_ERROR PROBE_ONLINE_STR PROBE_OFFLINE_STR
-		PROBE_NORESULT_STR AVAIL_SHIFT_BACK ROLLWEEK_SHIFT_BACK PROBE_ONLINE_SHIFT
+		MAX_LOGIN_ERROR MIN_INFO_ERROR MAX_INFO_ERROR PROBE_ONLINE_STR
+		AVAIL_SHIFT_BACK ROLLWEEK_SHIFT_BACK PROBE_ONLINE_SHIFT
+		PROBE_KEY_MANUAL
 		ONLINE OFFLINE
 		get_macro_minns get_macro_dns_probe_online get_macro_rdds_probe_online get_macro_dns_rollweek_sla
 		get_macro_rdds_rollweek_sla get_macro_dns_udp_rtt_high get_macro_dns_udp_rtt_low
 		get_macro_dns_tcp_rtt_low get_macro_rdds_rtt_low get_dns_udp_delay get_dns_tcp_delay
 		get_rdds_delay get_epp_delay get_macro_epp_probe_online get_macro_epp_rollweek_sla
 		get_macro_dns_update_time get_macro_rdds_update_time get_tld_items get_hostid
+		get_rtt_low
 		get_macro_epp_rtt_low get_macro_probe_avail_limit get_itemid_by_key get_itemid_by_host
 		get_itemid_by_hostid get_itemid_like_by_hostid get_itemids_by_host_and_keypart get_lastclock get_tlds
+		get_oldest_clock
 		get_probes get_nsips get_nsip_items tld_exists tld_service_enabled db_connect db_disconnect
+		validate_tld validate_service
 		get_templated_nsips db_exec tld_interface_enabled
 		tld_interface_enabled_create_cache tld_interface_enabled_delete_cache
 		db_select db_select_binds set_slv_config get_cycle_bounds get_rollweek_bounds get_downtime_bounds
+		get_probe_times probe_offline_at probes2tldhostids
 		slv_max_cycles
-		max_avail_time get_probe_times probe_offline_at probes2tldhostids
 		get_probe_online_key_itemid
 		init_values push_value send_values get_nsip_from_key is_service_error get_templated_items_like
 		is_service_error_desc
@@ -110,13 +114,20 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		uint_value_exists
 		float_value_exists
 		sql_time_condition get_incidents get_downtime get_downtime_prepare get_downtime_execute
-		get_current_value get_itemids_by_hostids get_nsip_values get_valuemaps get_statusmaps get_detailed_result
-		get_avail_valuemaps slv_stats_reset
+		history_table
+		get_lastvalue get_itemids_by_hostids get_nsip_values get_valuemaps get_statusmaps get_detailed_result
+		get_avail_valuemaps
 		get_result_string get_tld_by_trigger truncate_from truncate_till alerts_enabled
 		get_real_services_period dbg info wrn fail set_on_fail
-		format_stats_time slv_finalize slv_exit exit_if_running trim parse_opts
-		parse_avail_opts parse_rollweek_opts opt getopt setopt unsetopt optkeys ts_str ts_full selected_period
-		write_file
+		format_stats_time
+		init_process finalize_process
+		slv_exit
+		fail_if_running
+		exit_if_running
+		trim
+		parse_opts parse_slv_opts
+		opt getopt setopt unsetopt optkeys ts_str ts_full selected_period
+		write_file read_file
 		cycle_start
 		cycle_end
 		usage);
@@ -124,7 +135,7 @@ our @EXPORT = qw($result $dbh $tld $server_key
 # configuration, set in set_slv_config()
 my $config = undef;
 
-# this will be used for making sure only one copy of script runs (see function exit_if_running())
+# this will be used for making sure only one copy of script runs (see function __is_already_running())
 my $pidfile;
 use constant PID_DIR => '/tmp';
 
@@ -141,6 +152,8 @@ my $sql_end;
 my $sql_send;
 my $sql_time = 0.0;
 my $sql_count = 0;
+
+my $log_open = 0;
 
 sub get_macro_minns
 {
@@ -202,8 +215,8 @@ sub get_dns_tcp_delay
 {
 	my $value_time = (shift or time() - AVAIL_SHIFT_BACK);
 
-	# todo phase 1: Export DNS-TCP tests
-	# todo phase 1: if we really need DNS-TCP history the item must be added (to db schema and upgrade patch)
+	# todo: Export DNS-TCP tests
+	# todo: if we really need DNS-TCP history the item must be added (to db schema and upgrade patch)
 #	my $value = __get_configvalue(RSM_CONFIG_DNS_TCP_DELAY_ITEMID, $value_time);
 #
 #	return $value if (defined($value));
@@ -251,6 +264,46 @@ sub get_macro_epp_probe_online
 sub get_macro_epp_rollweek_sla
 {
 	return __get_macro('{$RSM.EPP.ROLLWEEK.SLA}');
+}
+
+sub get_rtt_low
+{
+	my $service = shift;
+	my $proto = shift;	# for DNS
+	my $command = shift;	# for EPP: 'login', 'info' or 'update'
+
+	if ($service eq 'dns' || $service eq 'dnssec')
+	{
+		fail("internal error: get_rtt_low() called for $service without specifying protocol")
+			unless (defined($proto));
+
+		if ($proto == PROTO_UDP)
+		{
+			return get_macro_dns_udp_rtt_low();	# can be per TLD
+		}
+		elsif ($proto == PROTO_TCP)
+		{
+			return get_macro_dns_tcp_rtt_low();	# can be per TLD
+		}
+		else
+		{
+			fail("dimir was wrong, besides protocols ", PROTO_UDP, " and ", PROTO_TCP,
+				" there is also ", $proto);
+		}
+	}
+
+	if ($service eq 'rdds')
+	{
+		return get_macro_rdds_rtt_low();
+	}
+
+	if ($service eq 'epp')
+	{
+		return get_macro_epp_rtt_low($command);	# can be per TLD
+	}
+
+	fail("dimir was wrong, thinking the only known services are \"dns\", \"dnssec\", \"rdds\" and \"epp\",",
+		" there is also \"$service\"");
 }
 
 sub get_macro_epp_rtt_low
@@ -356,7 +409,7 @@ sub get_itemids_by_host_and_keypart
 # E_FAIL - if item was not found
 #      0 - if lastclock is NULL
 #      * - lastclock
-sub get_lastclock
+sub get_lastclock($$$)
 {
 	my $host = shift;
 	my $key = shift;
@@ -393,7 +446,7 @@ sub get_lastclock
 	my $itemid = $rows_ref->[0]->[0];
 	my $lastclock;
 
-	if (get_current_value($itemid, undef, \$lastclock) != SUCCESS)
+	if (get_lastvalue($itemid, $value_type, undef, \$lastclock) != SUCCESS)
 	{
 		$lastclock = 0;
 	}
@@ -401,10 +454,42 @@ sub get_lastclock
 	return $lastclock;
 }
 
+# returns:
+# E_FAIL - if item was not found
+# undef  - if history table is empty
+# *      - lastclock
+sub get_oldest_clock($$$)
+{
+	my $host = shift;
+	my $key = shift;
+	my $value_type = shift;
+
+	my $rows_ref = db_select(
+		"select i.itemid".
+		" from items i,hosts h".
+		" where i.hostid=h.hostid".
+			" and i.status=0".
+			" and h.host='$host'".
+			" and i.key_='$key'"
+	);
+
+	return E_FAIL if (scalar(@$rows_ref) == 0);
+
+	my $itemid = $rows_ref->[0]->[0];
+
+	$rows_ref = db_select(
+		"select min(clock)".
+		" from " . history_table($value_type).
+		" where itemid=$itemid"
+	);
+
+	return $rows_ref->[0]->[0];
+}
+
 sub get_tlds
 {
-	my $service = shift;
-	my $till = shift;
+	my $service = shift;	# optionally specify service which must be enabled
+	my $till = shift;	# used only if $service is defined
 
 	my $rows_ref = db_select(
 		"select distinct h.host".
@@ -431,7 +516,6 @@ sub get_tlds
 }
 
 # Returns a reference to hash of all probes (host => hostid).
-# todo phase 1: this function changed in phase 2, please check callers
 sub get_probes
 {
 	my $service = shift;
@@ -444,10 +528,9 @@ sub get_probes
 	$name_cond = " and h.host='$name'" if ($name);
 
 	my $rows_ref = db_select(
-		"select h.host,h.hostid".
+		"select h.host,h.hostid,h.status".
 		" from hosts h, hosts_groups hg".
 		" where h.hostid=hg.hostid".
-			" and h.status=0".
 			$name_cond.
 			" and hg.groupid=".PROBES_GROUPID);
 
@@ -457,6 +540,7 @@ sub get_probes
 	{
 		my $host = $row_ref->[0];
 		my $hostid = $row_ref->[1];
+		my $status = $row_ref->[2];
 
 		if ($service ne 'DNS')
 		{
@@ -470,7 +554,7 @@ sub get_probes
 			next if (scalar(@$rows_ref) != 0 and $rows_ref->[0]->[0] == 0);
 		}
 
-		$result->{$host} = $hostid;
+		$result->{$host} = {'hostid' => $hostid, 'status' => $status};
 	}
 
 	return $result;
@@ -616,7 +700,7 @@ sub get_hostid
 	return $rows_ref->[0]->[0];
 }
 
-sub tld_exists
+sub tld_exists_locally($)
 {
 	my $tld = shift;
 
@@ -627,18 +711,55 @@ sub tld_exists
 			" and hg.groupid=g.groupid".
 			" and g.name='TLDs'".
 			" and h.status=0".
-			" and h.host='$tld'");
+			" and h.host='$tld'"
+	);
 
 	return 0 if (scalar(@$rows_ref) == 0);
 
 	return 1;
 }
 
+sub tld_exists($)
+{
+	return tld_exists_locally(shift);
+}
+
+sub validate_tld($$)
+{
+	my $tld = shift;
+	my $server_keys = shift;
+
+	foreach my $server_key (@{$server_keys})
+	{
+		db_connect($server_key);
+
+		my $rv = tld_exists_locally($tld);
+
+		db_disconnect();
+
+		if ($rv)
+		{
+			dbg("tld $tld found on $server_key");
+
+			return;
+		}
+	}
+
+	fail("tld \"$tld\" does not exist");
+}
+
+sub validate_service($)
+{
+	my $service = shift;
+
+	fail("service \"$service\" is unknown") if (!grep {/$service/} ('dns', 'dnssec', 'rdds', 'epp'));
+}
+
 sub tld_service_enabled
 {
 	my $tld = shift;
 	my $service = shift;
-	my $till = shift;
+	my $now = shift;
 
 	$service = lc($service);
 
@@ -646,12 +767,12 @@ sub tld_service_enabled
 
 	if ($service eq 'rdds')
 	{
-		return 1 if tld_interface_enabled($tld, 'rdds43', $till);
+		return 1 if tld_interface_enabled($tld, 'rdds43', $now);
 
-		return tld_interface_enabled($tld, 'rdap', $till);
+		return tld_interface_enabled($tld, 'rdap', $now);
 	}
 
-	return tld_interface_enabled($tld, $service, $till);
+	return tld_interface_enabled($tld, $service, $now);
 }
 
 sub enabled_item_key_from_interface
@@ -712,7 +833,6 @@ sub uniq
 
 sub tld_interface_enabled_create_cache
 {
-	my $till = shift;
 	my @interfaces = @_;
 
 	dbg(join(',', @interfaces));
@@ -775,11 +895,11 @@ sub tld_interface_enabled_delete_cache()
 	@tlds_cache = ();
 }
 
-sub tld_interface_enabled
+sub tld_interface_enabled($$$)
 {
 	my $tld = shift;
 	my $interface = shift;
-	my $till = shift;
+	my $now = shift;
 
 	$interface = lc($interface);
 
@@ -789,35 +909,38 @@ sub tld_interface_enabled
 
 	if (!defined($enabled_items_cache{$item_key}))
 	{
-		tld_interface_enabled_create_cache($till, $interface);
+		tld_interface_enabled_create_cache($interface);
 	}
 
-	if (scalar(@{$enabled_items_cache{$item_key}{$tld}}) != 0)
+	if (defined($enabled_items_cache{$item_key}{$tld}))
 	{
-		# find the latest value but make sure to specify time bounds, relatively to $till
+		# find the latest value but make sure to specify time bounds, relatively to $now
 
-		$till = cycle_end(time() - 120, 60);	# go back 2 minutes if time unspecified
+		$now = time() - 120 unless ($now);	# go back 2 minutes if time unspecified
+
+		my $till = cycle_end($now, 60);
 
 		my @conditions = (
-			[sql_time_condition($till - 0 * 3600 -  1 * 60 + 1, $till), "desc"],	# go back 1 minute
-			[sql_time_condition($till - 0 * 3600 - 30 * 60 + 1, $till), "desc"],	# go back 30 minutes
-			[sql_time_condition($till - 6 * 3600 -  0 * 60 + 1, $till), "desc"],	# go back 6 hours
-			[sql_time_condition($till + 1, $till + 24 * 3600), "asc"]		# go forward 1 day
+			[$till - 0 * 3600 -  1 * 60 + 1, $till            , "clock desc"],	# go back 1 minute
+			[$till - 0 * 3600 - 30 * 60 + 1, $till            , "clock desc"],	# go back 30 minutes
+			[$till - 6 * 3600 -  0 * 60 + 1, $till            , "clock desc"],	# go back 6 hours
+			[$till + 1                     , $till + 24 * 3600, "clock asc"]	# go forward 1 day
 		);
 
 		my $condition_index = 0;
 
 		while ($condition_index < scalar(@conditions))
 		{
-			my $condition = $conditions[$condition_index]->[0];
-			my $order = $conditions[$condition_index]->[1];
+			my $from = $conditions[$condition_index]->[0];
+			my $till = $conditions[$condition_index]->[1];
+			my $order = $conditions[$condition_index]->[2];
 
 			my $rows_ref = db_select_binds(
 				"select value".
 				" from history_uint".
 				" where itemid=?".
-					" and $condition".
-				" order by clock $order".
+					" and " . sql_time_condition($from, $till).
+				" order by $order".
 				" limit 1",
 				$enabled_items_cache{$item_key}{$tld});
 
@@ -1010,7 +1133,6 @@ sub db_select
 	return $rows_ref;
 }
 
-# todo phase 1: taken from RSMSLV.pm phase 2
 sub db_select_binds
 {
 	$_global_sql = shift;
@@ -1073,7 +1195,6 @@ sub db_select_binds
 	return \@rows;
 }
 
-# todo phase 1: taken from RSMSLV.pm phase 2 for DaWa.pm::dw_get_id()
 sub db_exec
 {
 	$_global_sql = shift;
@@ -1138,7 +1259,6 @@ sub get_rollweek_bounds
 	return ($from, $till, cycle_start($till, $delay));
 }
 
-# todo phase 1: old name of this function was 'get_curmon_bounds'
 # Get bounds for monthly downtime calculation. $till is the last second of latest calculated test cycle.
 # $from is the first second of the month.
 sub get_downtime_bounds
@@ -1180,13 +1300,6 @@ sub slv_max_cycles($)
 	return (defined($config) && defined($config->{'slv'}->{$var}) ? $config->{'slv'}->{$var} : DEFAULT_SLV_MAX_CYCLES);
 }
 
-# guaranteed time when Service availabilities are calculated
-sub max_avail_time
-{
-	return truncate_till(time() - ROLLWEEK_SHIFT_BACK);
-}
-
-# todo phase 1: taken from RSMSLV.pm of phase 2
 sub __print_probe_times
 {
 	my $probe_times_ref = shift;
@@ -1225,18 +1338,26 @@ sub __print_probe_times
 #   ...
 # }
 #
-# NB! If a probe was down for the whole specified period it won't be in a hash.
+# NB! If a probe was down for the whole specified period or is currently disabled it won't be in a hash.
 sub get_probe_times($$$)
 {
 	my $from = shift;
 	my $till = shift;
-	my $probes_ref = shift; # { host => hostid, ... }
+	my $probes_ref = shift;	# {host => {'hostid' => hostid, 'status' => status}, ...}
 
 	my $result = {};
 
 	return $result if (scalar(keys(%{$probes_ref})) == 0);
 
-	my @probes = map {"'$_ - mon'"} (keys(%{$probes_ref}));
+	my @probes;
+	foreach my $probe (keys(%{$probes_ref}))
+	{
+		next unless ($probes_ref->{$probe}->{'status'} == HOST_STATUS_MONITORED);
+
+		push(@probes, "'$probe - mon'");
+	}
+
+	return $result if (scalar(@probes) == 0);
 
 	my $items_ref = db_select(
 		"select i.itemid,h.host".
@@ -1651,11 +1772,12 @@ sub get_templated_items_like
 # }
 #
 # where value_ts is value timestamp of the cycle
-sub collect_slv_cycles($$$$$)
+sub collect_slv_cycles($$$$$$)
 {
 	my $tlds_ref = shift;
 	my $delay = shift;
 	my $cfg_key_out = shift;
+	my $value_type = shift;	# value type of $cfg_key_out
 	my $max_clock = shift;	# latest cycle to process
 	my $max_cycles = shift;
 
@@ -1670,7 +1792,7 @@ sub collect_slv_cycles($$$$$)
 
 		my $itemid = get_itemid_by_host($tld, $cfg_key_out);
 
-		if (get_current_value($itemid, \$lastvalue, \$lastclock) != SUCCESS)
+		if (get_lastvalue($itemid, $value_type, \$lastvalue, \$lastclock) != SUCCESS)
 		{
 			# new item
 			push(@{$cycles{$max_clock}}, $tld);
@@ -1678,15 +1800,17 @@ sub collect_slv_cycles($$$$$)
 			next;
 		}
 
-		next if (!opt('dry-run') && uint_value_exists($max_clock, $itemid));
+		next if (!opt('dry-run') && history_value_exists($value_type, $max_clock, $itemid));
 
 		my $cycles_added = 0;
 
-		while ($lastclock < $max_clock && $cycles_added++ < $max_cycles)
+		while ($lastclock < $max_clock && (!$max_cycles || $cycles_added < $max_cycles))
 		{
 			$lastclock += $delay;
 
 			push(@{$cycles{$lastclock}}, $tld);
+
+			$cycles_added++;
 		}
 
 		# unset TLD (for the logs)
@@ -1965,7 +2089,7 @@ sub __get_item_values($$$$)
 
 	my $rows_ref = db_select(
 		"select itemid,value".
-		" from " . __get_history_table_by_value_type($value_type).
+		" from " . history_table($value_type).
 		" where itemid in (" . join(',', @itemids) . ")".
 			" and clock between $from and $till".
 		" order by clock");
@@ -1988,7 +2112,7 @@ sub __get_item_values($$$$)
 	return [values(%result)];
 }
 
-sub uint_value_exists
+sub uint_value_exists($$)
 {
         my $clock = shift;
         my $itemid = shift;
@@ -2000,7 +2124,7 @@ sub uint_value_exists
         return 0;
 }
 
-sub float_value_exists
+sub float_value_exists($$)
 {
         my $clock = shift;
         my $itemid = shift;
@@ -2010,6 +2134,20 @@ sub float_value_exists
         return 1 if (defined($rows_ref->[0]->[0]));
 
         return 0;
+}
+
+sub history_value_exists($$$)
+{
+	my $value_type = shift;
+        my $clock = shift;
+        my $itemid = shift;
+
+	my $rows_ref;
+
+	return uint_value_exists($clock, $itemid) if ($value_type == ITEM_VALUE_TYPE_UINT64);
+	return float_value_exists($clock, $itemid) if ($value_type == ITEM_VALUE_TYPE_FLOAT);
+
+	fail("internal error: value type $value_type is not supported by function history_value_exists()");
 }
 
 sub __make_incident
@@ -2031,7 +2169,7 @@ sub sql_time_condition
 	my $till = shift;
 	my $clock_field = shift;
 
-	$clock_field = "clock" unless(defined($clock_field));
+	$clock_field = "clock" unless (defined($clock_field));
 
 	if (defined($from) and not defined($till))
 	{
@@ -2301,7 +2439,7 @@ sub get_downtime
 			my $value = $row_ref->[0];
 			my $clock = $row_ref->[1];
 
-			# todo phase 1: do not ignore the first downtime minute
+			# NB! Do not ignore the first downtime minute
 			if ($value == DOWN && $prevclock == 0)
 			{
 				# first run
@@ -2456,7 +2594,7 @@ sub get_downtime_execute
 	return int($downtime / 60);
 }
 
-sub __get_history_table_by_value_type
+sub history_table($)
 {
 	my $value_type = shift;
 
@@ -2470,16 +2608,25 @@ sub __get_history_table_by_value_type
 # returns:
 # SUCCESS - last clock and value found
 # E_FAIL  - nothing found
-# todo phase 1: rename to get_lastvalue
-sub get_current_value($$$)
+sub get_lastvalue($$$$)
 {
 	my $itemid = shift;
+	my $value_type = shift;
 	my $value_ref = shift;
 	my $clock_ref = shift;
 
 	fail("THIS_SHOULD_NEVER_HAPPEN") unless ($clock_ref || $value_ref);
 
-	my $rows_ref = db_select("select value,clock from lastvalue where itemid=$itemid");
+	my $rows_ref;
+
+	if ($value_type == ITEM_VALUE_TYPE_FLOAT || $value_type == ITEM_VALUE_TYPE_UINT64)
+	{
+		$rows_ref = db_select("select value,clock from lastvalue where itemid=$itemid");
+	}
+	else
+	{
+		$rows_ref = db_select("select value,clock from lastvalue_str where itemid=$itemid");
+	}
 
 	if (@{$rows_ref})
 	{
@@ -2607,8 +2754,8 @@ sub __get_valuemappings
 	return $result;
 }
 
-# todo phase 1: the $vmname's must be fixed accordingly in phase 2
-# todo phase 1: also, consider renaming to something like get_rtt_valuemaps()
+# todo: the $vmname's must be fixed accordingly
+# todo: also, consider renaming to something like get_rtt_valuemaps()
 sub get_valuemaps
 {
 	my $service = shift;
@@ -2638,8 +2785,8 @@ sub get_valuemaps
 	return __get_valuemappings($vmname);
 }
 
-# todo phase 1: the $vmname's must be fixed accordingly in phase 2
-# todo phase 1: also, consider renaming to something like get_result_valuemaps()
+# todo: the $vmname's must be fixed accordingly
+# todo: also, consider renaming to something like get_result_valuemaps()
 sub get_statusmaps
 {
 	my $service = shift;
@@ -2647,7 +2794,7 @@ sub get_statusmaps
 	my $vmname;
 	if ($service eq 'dns' or $service eq 'dnssec')
 	{
-		# todo phase 1: this will be used in phase 2 (many statuses)
+		# todo: this will be used later (many statuses)
 		#$vmname = 'RSM DNS result';
 		return undef;
 	}
@@ -2667,7 +2814,6 @@ sub get_statusmaps
 	return __get_valuemappings($vmname);
 }
 
-# todo phase 1: add to phase 2
 sub get_avail_valuemaps
 {
 	return __get_valuemappings('RSM Service Availability');
@@ -2850,7 +2996,14 @@ sub format_stats_time
 	return sprintf("%.3lfs", $s);
 }
 
-sub slv_finalize
+# Call this function from child, to open separate log file handler and reset stats.
+sub init_process
+{
+	$log_open = 0;
+	__reset_stats();
+}
+
+sub finalize_process
 {
 	my $rv = shift // SUCCESS;
 
@@ -2864,10 +3017,9 @@ sub slv_finalize
 
 		$sql_str .= " ($sql_count queries)";
 
-		my $total_str = format_stats_time(time() - $start_time);
+		my $total_str = format_stats_time(Time::HiRes::time() - $start_time);
 
-		print($prefix, "total     : $total_str\n");
-		print($prefix, "sql       : $sql_str\n");
+		info($prefix, "PID ($$), total: $total_str, sql: $sql_str");
 	}
 
 	closelog();
@@ -2877,37 +3029,63 @@ sub slv_exit
 {
 	my $rv = shift;
 
-	slv_finalize($rv);
+	finalize_process($rv);
 
 	exit($rv);
 }
 
-sub slv_stats_reset
+sub __is_already_running()
 {
-	$start_time = time();
-	$sql_time = 0.0;
-	$sql_count = 0;
-}
-
-sub exit_if_running
-{
-	return if (opt('dry-run'));
-
 	my $filename = __get_pidfile();
 
 	$pidfile = File::Pid->new({ file => $filename });
+
 	fail("cannot lock script") unless (defined($pidfile));
 
 	$pidfile->write() or fail("cannot write to a pid file ", $pidfile->file);
 
+	# the only instance running is us
 	return if ($pidfile->pid == $$);
 
-	# pid file exists and has valid pid
+	# pid file exists, see if the pid in it is valid
 	my $pid = $pidfile->running();
-	fail(__script() . " is already running (pid:$pid)") if ($pid);
 
+	if ($pid)
+	{
+		# yes, we have another instance running
+		return $pid;
+	}
+
+	# invalid pid in the pid file, update it
 	$pidfile->pid($$);
 	$pidfile->write() or fail("cannot write to a pid file ", $pidfile->file);
+
+	return;
+}
+
+sub fail_if_running()
+{
+	return if (opt('dry-run'));
+
+	my $pid = __is_already_running();
+
+	if ($pid)
+	{
+		fail(__script() . " is already running (pid:$pid)");
+	}
+}
+
+sub exit_if_running()
+{
+	return if (opt('dry-run'));
+
+	my $pid = __is_already_running();
+
+	if ($pid)
+	{
+		wrn(__script() . " is already running (pid:$pid)");
+		exit 0;
+	}
 }
 
 sub dbg
@@ -2940,9 +3118,9 @@ sub fail
 
 	if ($on_fail_cb)
 	{
-		__log('debug', "script failed, calling \"on fail\" callback...");
+		dbg("script failed, calling \"on fail\" callback...");
 		$on_fail_cb->();
-		__log('debug', "\"on fail\" callback finished");
+		dbg("\"on fail\" callback finished");
 	}
 
 	slv_exit(E_FAIL);
@@ -2968,23 +3146,22 @@ sub parse_opts
 
 	setopt('nolog') if (opt('dry-run') || opt('debug'));
 
-	$start_time = time() if (opt('stats'));
+	$start_time = Time::HiRes::time() if (opt('stats'));
 
 	$get_stats = 1 if (opt('stats') || opt('warnslow'));
+
+	if (opt('debug'))
+	{
+		dbg("command-line parameters:");
+		dbg("$_ => ", getopt($_)) foreach (optkeys());
+	}
 }
 
-sub parse_avail_opts
+sub parse_slv_opts
 {
-	$POD2USAGE_FILE = '/opt/zabbix/scripts/slv/rsm.slv.avail.usage';
+	$POD2USAGE_FILE = '/opt/zabbix/scripts/slv/rsm.slv.usage';
 
-	parse_opts('tld=s', 'now=n');
-}
-
-sub parse_rollweek_opts
-{
-	$POD2USAGE_FILE = '/opt/zabbix/scripts/slv/rsm.slv.rollweek.usage';
-
-	parse_opts('tld=s', 'now=n');
+	parse_opts('tld=s', 'now=n', 'cycles=n');
 }
 
 sub opt
@@ -3054,18 +3231,42 @@ sub selected_period
 
 sub write_file
 {
-	my $full_path = shift;
+	my $file = shift;
 	my $text = shift;
 
 	my $OUTFILE;
 
-	return E_FAIL unless (open($OUTFILE, '>', $full_path));
+	return E_FAIL unless (open($OUTFILE, '>', $file));
 
 	my $rv = print { $OUTFILE } $text;
 
 	close($OUTFILE);
 
 	return E_FAIL unless ($rv);
+
+	return SUCCESS;
+}
+
+sub read_file($$$)
+{
+	my $file = shift;
+	my $buf = shift;
+	my $error = shift;
+
+	my $contents = do
+	{
+		local $/ = undef;
+
+		if (!open my $fh, "<", $file)
+		{
+			$$error = "$!";
+			return E_FAIL;
+		}
+
+		<$fh>;
+	};
+
+	$$buf = $contents;
 
 	return SUCCESS;
 }
@@ -3099,7 +3300,6 @@ my $program = $0; $program =~ s,.*/,,g;
 my $logopt = 'pid';
 my $facility = 'user';
 my $prev_tld = "";
-my $log_open = 0;
 
 sub __func
 {
@@ -3128,12 +3328,12 @@ sub __log
 	}
 	elsif ($syslog_priority eq 'err')
 	{
-		$stdout = 0 unless (opt('debug') || opt('dry-run'));	# todo phase 1: add this line to RSMSLV.pm of phase 2!
+		$stdout = 0 unless (opt('debug') || opt('dry-run'));
 		$priority = 'ERR';
 	}
 	elsif ($syslog_priority eq 'warning')
 	{
-		$stdout = 0 unless (opt('debug') || opt('dry-run'));	# todo phase 1: add this line to RSMSLV.pm of phase 2!
+		$stdout = 0 unless (opt('debug') || opt('dry-run'));
 		$priority = 'WRN';
 	}
 	elsif ($syslog_priority eq 'debug')
@@ -3218,6 +3418,13 @@ sub __script
 sub __get_pidfile
 {
 	return PID_DIR . '/' . __script() . '.pid';
+}
+
+sub __reset_stats
+{
+	$start_time = Time::HiRes::time();
+	$sql_time = 0.0;
+	$sql_count = 0;
 }
 
 # Times when probe "lastaccess" within $probe_avail_limit.
@@ -3374,23 +3581,30 @@ sub __get_configvalue
 	my $month = $day * 30;
 
 	my $diff = $hour;
-	my $value;
 
-	while (!defined($value) && $diff < $month)
+	while (1)
 	{
-		my $rows_ref = db_select("select value from history_uint where itemid=$itemid and clock between " . ($value_time - $diff) . " and $value_time order by clock desc limit 1");
+		my $rows_ref = db_select(
+			"select value".
+			" from history_uint".
+			" where itemid=$itemid".
+				" and " . sql_time_condition($value_time - $diff, $value_time).
+			" order by clock desc".
+			" limit 1"
+		);
 
 		foreach my $row_ref (@$rows_ref)
 		{
-			$value = $row_ref->[0];
-			last;
+			return $row_ref->[0];
 		}
 
-		$diff = $day if ($diff == $hour);
-		$diff = $month if ($diff == $day);
-	}
+		# no more attempts
+		return if ($diff == $month);
 
-	return $value;
+		# try bigger period
+		$diff = $month if ($diff == $day);
+		$diff = $day if ($diff == $hour);
+	}
 }
 
 1;

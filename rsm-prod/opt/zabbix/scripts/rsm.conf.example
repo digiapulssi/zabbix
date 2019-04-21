@@ -35,6 +35,9 @@ zport = 10051
 max_cycles_dns = 20
 max_cycles_rdds = 10
 
+[sla_api]
+incident_measurements_limit = 3600
+
 [salesforce]
 username = someone@example.com
 password = password

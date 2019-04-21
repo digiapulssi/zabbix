@@ -1,3 +1,129 @@
+Changes for rsm1.2.0
+
+rsm1.2.0rc15 was released as rsm1.2.0 without any changes
+
+--------------------------------------------------------------------------------
+Changes for rsm1.2.0rc15
+
+Bug fixes:
+....I..... [493] fix handling of negative RTT without IP in recent measurements (dimir)
+
+--------------------------------------------------------------------------------
+Changes for rsm1.2.0rc14
+
+Bug fixes:
+....I..... [sub-486] added listing probes with disabled service as "Offline" to recent measurement files (dimir)
+
+--------------------------------------------------------------------------------
+Changes for rsm1.2.0rc13
+
+Bug fixes:
+....I..... [sub-488] fixed incorrect period selection for incident measurements limit (dimir)
+
+--------------------------------------------------------------------------------
+Changes for rsm1.2.0rc12
+
+Bug fixes:
+....I..... [488] added configurable limit of time to look back for incident measurement files, 1 hour by default (dimir)
+....I..... [489] fixed online nodes calculation script to mind probe status (dimir)
+
+--------------------------------------------------------------------------------
+Changes for rsm1.2.0rc11
+
+Bug fixes:
+....I..... [486] added listing disabled probes as "Offline" in recent measurement files (dimir)
+..F....... [486] fixed inconsistent probe status displaying in DNS and RDDS details page (miks)
+
+--------------------------------------------------------------------------------
+Changes for rsm1.2.0rc10
+
+New features:
+....I..PS. [476] removed obsoleted DNS errors -252, -652 (dimir)
+
+Bug fixes:
+....I..... [478] increased "value" field of "lastvalue" table by double(24,4) to accept bigint values (dimir)
+
+--------------------------------------------------------------------------------
+Changes for rsm1.2.0rc9
+
+Bug fixes:
+....I..... [sub-464] fixed issues of updating the cache file in recent measurements script (dimir)
+
+--------------------------------------------------------------------------------
+Changes for rsm1.2.0rc8
+
+Bug fixes:
+....I..... [sub-464] fixed warning about use of uninitialized value (dimir)
+
+--------------------------------------------------------------------------------
+Changes for rsm1.2.0rc7
+
+Bug fixes:
+....I..... [sub-464] improved recent measurements generation by handling db servers in parallel (yurii)
+
+--------------------------------------------------------------------------------
+Changes for rsm1.2.0rc6
+
+Bug fixes:
+....I..... [sub-464] improved SQL query and parallelization, fixed cache growing issue (yurii, dimir)
+
+--------------------------------------------------------------------------------
+Changes for rsm1.2.0rc5
+
+Bug fixes:
+....I..... [464] implemented parallel processing of TLDs (yurii)
+....I..... [sub-460] removed metrics from measurement files if probe is Offline (dimir)
+....I..... [sub-466] joined rtt and ip values in single RDDS metric (dimir)
+
+--------------------------------------------------------------------------------
+Changes for rsm1.2.0rc4
+
+Bug fixes:
+....I..... [466] fixed missing RDDS values in recent measurement metrics (dimir)
+
+--------------------------------------------------------------------------------
+Changes for rsm1.2.0rc3
+
+Bug fixes:
+....I..... [sub-457] fixed missing IPs in recent measurement metrics (dimir)
+....I..... [463] removed double quotes from some timestamp values in sla json files (yurii)
+....I..... [458] fixed sla-api-recent.pl to exit with non-zero exit status if invalid tld/service specified (yurii, dimir)
+
+--------------------------------------------------------------------------------
+Changes for rsm1.2.0rc2
+
+Bug fixes:
+....I..... [460] fixed setting Up-inconclusive-no-probes status (dimir)
+....I..... [459] fixed sla-api-recent.pl script to re-generate recent measurement files when new data received (dimir)
+....I..... [461] fixed sla-api-recent.pl script to generate recent measurement files even when no data from Probes (dimir)
+....I..... [462] fixed update-api-data.pl not setting endTime on incident/state file (yurii)
+....I..... [457] fixed missing recent measurements (dimir)
+
+--------------------------------------------------------------------------------
+Changes for rsm1.2.0rc1
+
+Bug fixes:
+....I..... [sub-438] changed exit code to 0 if already running, removed unused data from cache, increased respect for --now option, save recent measurement files under SLA API base directory (dimir)
+
+--------------------------------------------------------------------------------
+Changes for rsm1.2.0alpha3
+
+Bug fixes:
+....I..... [sub-438] fixed unknown symbol error, added test script to test recent measurements (dimir)
+
+--------------------------------------------------------------------------------
+Changes for rsm1.2.0alpha2
+
+Bug fixes:
+....I..... [sub-438] fixed empty directories creation, getting RTT limits for recent measurements and syntax errors in SLV scripts (dimir)
+
+--------------------------------------------------------------------------------
+Changes for rsm1.2.0alpha1
+
+New features:
+....I..... [438] implemented Recent Measurements for Registries (dimir)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.1.1
 
 New features:

@@ -18,7 +18,7 @@ use Data::Dumper;
 use Time::Local;
 use POSIX qw(floor);
 use Time::HiRes qw(time);
-use TLD_constants qw(:ec :api);
+use TLD_constants qw(:ec :api :general);
 use Parallel::ForkManager;
 
 use constant RDDS_SUBSERVICE => 'sub';
@@ -28,33 +28,34 @@ use constant PROBE_STATUS_UP => 'Up';
 use constant PROBE_STATUS_DOWN => 'Down';
 use constant PROBE_STATUS_UNKNOWN => 'Unknown';
 
-use constant JSON_INTERFACE_DNS		=> 'DNS';	# todo phase 1: taken from phase 2
-use constant JSON_INTERFACE_DNSSEC	=> 'DNSSEC';	# todo phase 1: taken from phase 2
-use constant TRIGGER_SEVERITY_NOT_CLASSIFIED	=> 0;	# todo phase 1: taken from phase 2
-use constant TRIGGER_VALUE_FALSE	=> 0;		# todo phase 1: taken from phase 2
-use constant SEC_PER_WEEK	=> 604800;		# todo phase 1: taken from phase 2
-use constant EVENT_OBJECT_TRIGGER	=> 0;		# todo phase 1: taken from phase 2
-use constant EVENT_SOURCE_TRIGGERS	=> 0;		# todo phase 1: taken from phase 2
-use constant TRIGGER_VALUE_TRUE		=> 1;		# todo phase 1: taken from phase 2
-use constant JSON_TAG_RTT		=> 'rtt';	# todo phase 1: taken from phase 2
-use constant JSON_TAG_TARGET_IP		=> 'targetIP';	# todo phase 1: taken from phase 2
-use constant JSON_TAG_CLOCK		=> 'clock';	# todo phase 1: taken from phase 2
-use constant JSON_TAG_DESCRIPTION	=> 'description';# todo phase 1: taken from phase 2
-use constant JSON_TAG_UPD		=> 'upd';	# todo phase 1: taken from phase 2
-use constant JSON_INTERFACE_RDDS43	=> 'RDDS43';	# todo phase 1: taken from phase 2
-use constant JSON_INTERFACE_RDDS80	=> 'RDDS80';	# todo phase 1: taken from phase 2
+use constant JSON_INTERFACE_DNS		=> 'DNS';
+use constant JSON_INTERFACE_DNSSEC	=> 'DNSSEC';
+use constant TRIGGER_SEVERITY_NOT_CLASSIFIED	=> 0;
+use constant TRIGGER_VALUE_FALSE	=> 0;
+use constant SEC_PER_WEEK	=> 604800;
+use constant EVENT_OBJECT_TRIGGER	=> 0;
+use constant EVENT_SOURCE_TRIGGERS	=> 0;
+use constant TRIGGER_VALUE_TRUE		=> 1;
+use constant JSON_TAG_RTT		=> 'rtt';
+use constant JSON_TAG_TARGET_IP		=> 'targetIP';
+use constant JSON_TAG_CLOCK		=> 'clock';
+use constant JSON_TAG_DESCRIPTION	=> 'description';
+use constant JSON_TAG_UPD		=> 'upd';
+use constant JSON_INTERFACE_RDDS43	=> 'RDDS43';
+use constant JSON_INTERFACE_RDDS80	=> 'RDDS80';
 use constant JSON_INTERFACE_RDAP	=> 'RDAP';
-use constant ROOT_ZONE_READABLE		=> 'zz--root';	# todo phase 1: taken from phase 2
+use constant ROOT_ZONE_READABLE		=> 'zz--root';
 
-use constant SERVICE_DNS_TCP	=> 'dns-tcp';	# todo phase 1: Export DNS-TCP tests, not a real service
+use constant PROBE_OFFLINE_STR	=> 'Offline';
+use constant PROBE_ONLINE_STR	=> 'Online';
 
-use constant AH_STATUS_UP	=> 'Up';	# todo phase 1: taken from ApiHelper.pm phase 2
-use constant AH_STATUS_DOWN	=> 'Down';	# todo phase 1: taken from ApiHelper.pm phase 2
+use constant SERVICE_DNS_TCP	=> 'dns-tcp';
 
-use constant true => 1;	# todo phase 1: taken from TLD_constants.pm phase 2
-			# todo phase 1: taken from TLD_constants.pm phase 2
+use constant AH_STATUS_UP	=> 'Up';
+use constant AH_STATUS_DOWN	=> 'Down';
 
-# todo phase 1: this must be available in phase 2
+use constant true => 1;
+
 use constant TARGETS_TMP_DIR => '/opt/zabbix/export-tmp';
 use constant TARGETS_TARGET_DIR => '/opt/zabbix/export';
 
@@ -67,6 +68,11 @@ setopt('nolog');
 
 my $config = get_rsm_config();
 set_slv_config($config);
+
+my @server_keys = get_rsm_server_keys($config);
+
+validate_tld(getopt('tld'), \@server_keys) if (opt('tld'));
+validate_service(getopt('service')) if (opt('service'));
 
 db_connect();
 
@@ -90,7 +96,7 @@ if (opt('service'))
 }
 else
 {
-	foreach my $service ('dns', 'dnssec', SERVICE_DNS_TCP, 'rdds', 'epp')	# todo phase 1: Export DNS-TCP tests
+	foreach my $service ('dns', 'dnssec', SERVICE_DNS_TCP, 'rdds', 'epp')	# Export DNS-TCP tests
 	{
 		$services->{$service} = undef;
 	}
@@ -109,10 +115,9 @@ foreach my $service (keys(%{$services}))
 	}
 }
 
-# todo phase 1: changed from get_statusmaps('dns')
 my $cfg_avail_valuemaps = get_avail_valuemaps();
 
-# todo phase 1: changed from get_result_string($cfg_dns_statusmaps, UP/Down)
+# changed from get_result_string($cfg_dns_statusmaps, UP/Down)
 my $general_status_up = 'Up';
 my $general_status_down = 'Down';
 
@@ -136,7 +141,6 @@ if (opt('debug'))
 	dbg("till: ", ts_full($till));
 }
 
-# todo phase 1: make sure this check exists in phase 2
 my $max = cycle_end(time() - 240, 60);
 fail("cannot export data: selected time period is in the future") if (!opt('force') && $till > $max);
 
@@ -184,12 +188,12 @@ my $probes_data;
 
 my ($time_start, $time_get_test_data, $time_load_ids, $time_process_records, $time_write_csv);
 
-my $child_failed = 0;
-my $signal_sent = 0;
-
 my $fm = new Parallel::ForkManager(opt('max-children') ? getopt('max-children') : EXPORT_MAX_CHILDREN_DEFAULT);
 
 set_on_fail(\&__wait_all_children_cb);
+
+my $child_failed = 0;
+my $signal_sent = 0;
 
 my %tldmap;	# <PID> => <TLD> hashmap
 
@@ -232,7 +236,7 @@ $fm->run_on_finish(
 );
 
 # go through all the databases
-my @server_keys = get_rsm_server_keys($config);
+
 foreach (@server_keys)
 {
 $server_key = $_;
@@ -265,6 +269,7 @@ if (opt('tld'))
 		{
 			if ($server_keys[-1] eq $server_key)
 			{
+				# last server in list
 				info("TLD $t does not exist.");
 				goto WAIT_CHILDREN;
 			}
@@ -284,7 +289,7 @@ else
 
 # Prepare the cache for function tld_service_enabled(). Make sure this is called before creating child processes!
 tld_interface_enabled_delete_cache();	# delete cache of previous server
-tld_interface_enabled_create_cache($till, @interfaces);
+tld_interface_enabled_create_cache(@interfaces);
 
 db_disconnect();
 
@@ -306,9 +311,9 @@ foreach my $tld_for_a_child_to_process (@{$tlds_ref})
 			next;
 		}
 
-		$tld = $tld_for_a_child_to_process;
+		init_process();
 
-		slv_stats_reset();	# todo phase 1: this is part of phase 2
+		$tld = $tld_for_a_child_to_process;
 
 		db_connect($server_key);
 
@@ -330,7 +335,7 @@ foreach my $tld_for_a_child_to_process (@{$tlds_ref})
 				format_stats_time($time_process_records - $time_load_ids),
 				format_stats_time($time_write_csv - $time_process_records))) if (opt('stats'));
 
-		slv_finalize();
+		finalize_process();
 
 		# When we fork for real it makes no difference for Parallel::ForkManager whether child calls exit() or
 		# calls $fm->finish(), therefore we do not need to introduce $fm->finish() in all our low-level error
@@ -484,7 +489,7 @@ sub __get_delays
 
 			$services->{$service}->{'delay'} = $cfg_dns_delay;
 		}
-		elsif ($service eq SERVICE_DNS_TCP)	# todo phase 1: Export DNS-TCP tests
+		elsif ($service eq SERVICE_DNS_TCP)	# Export DNS-TCP tests
 		{
 			$services->{$service}->{'delay'} = get_dns_tcp_delay();
 		}
@@ -512,7 +517,7 @@ sub __get_keys
 			$services->{$service}->{'key_status'} = 'rsm.dns.udp[{$RSM.TLD}]';	# 0 - down, 1 - up
 			$services->{$service}->{'key_rtt'} = 'rsm.dns.udp.rtt[{$RSM.TLD},';
 		}
-		elsif ($service eq SERVICE_DNS_TCP)	# todo phase 1: Export DNS-TCP tests
+		elsif ($service eq SERVICE_DNS_TCP)	# Export DNS-TCP tests
 		{
 			$services->{$service}->{'key_rtt'} = 'rsm.dns.tcp.rtt[{$RSM.TLD},';
 		}
@@ -535,7 +540,7 @@ sub __get_keys
 			$services->{$service}->{'key_rtt'} = 'rsm.epp.rtt[{$RSM.TLD},';
 		}
 
-		if ($service ne SERVICE_DNS_TCP)	# todo phase 1: Export DNS-TCP tests, they do not refer to service availability
+		if ($service ne SERVICE_DNS_TCP)	# Export DNS-TCP tests, they do not refer to Service Availability
 		{
 			$services->{$service}->{'key_avail'} = "rsm.slv.$service.avail";
 			$services->{$service}->{'key_rollweek'} = "rsm.slv.$service.rollweek";
@@ -551,7 +556,7 @@ sub __get_valuemaps
 
 	foreach my $service (sort(keys(%{$services})))
 	{
-		if ($service eq 'dns' || $service eq SERVICE_DNS_TCP || $service eq 'dnssec')	# todo phase 1: Export DNS-TCP tests
+		if ($service eq 'dns' || $service eq SERVICE_DNS_TCP || $service eq 'dnssec')	# Export DNS-TCP tests
 		{
 			$cfg_dns_valuemaps = get_valuemaps('dns') unless ($cfg_dns_valuemaps);
 
@@ -594,7 +599,7 @@ sub __get_test_data
 
 	foreach my $service (sort(keys(%{$services})))
 	{
-		if ($service ne SERVICE_DNS_TCP)	# todo phase 1: Export DNS-TCP tests
+		if ($service ne SERVICE_DNS_TCP)	# Export DNS-TCP tests
 		{
 			next if (!tld_service_enabled($tld, $service, $till));
 		}
@@ -643,7 +648,7 @@ sub __get_test_data
 				$dns_items_ref = __get_dns_itemids($nsips_ref, $services->{$service}->{'key_rtt'}, $tld, getopt('probe'));
 			}
 		}
-		elsif ($service eq SERVICE_DNS_TCP)	# todo phase 1: Export DNS-TCP tests
+		elsif ($service eq SERVICE_DNS_TCP)	# Export DNS-TCP tests
 		{
 			if (!$nsips_ref)
 			{
@@ -703,10 +708,6 @@ sub __get_test_data
 
 			#dbg("$service availability at ", ts_full($clock), ": $value");
 
-			# todo phase 1: remove the cycle here that counts failed_incidents, it's already calculated in __get_incidents()
-			# NB! REMOVED CODE HERE
-			# todo phase 1: calculating number of failed incidents can be added as an option to get_incidents() of phase 2
-
 			unless (exists($cfg_avail_valuemaps->{int($value)}))
 			{
 				my $expected_list;
@@ -740,7 +741,6 @@ sub __get_test_data
 
 			my $cycleclock = cycle_start($clock, $delay);
 
-			# todo phase 1: make sure this uses avail valuemaps in phase1
 			# todo: later rewrite to use valuemap ID from item
 			$cycles->{$cycleclock}->{'status'} = get_result_string($cfg_avail_valuemaps, $value);
 		}
@@ -774,7 +774,7 @@ sub __get_test_data
 
 		my $cycles_count = scalar(keys(%{$cycles}));
 
-		if ($service ne SERVICE_DNS_TCP && $cycles_count == 0)	# todo phase 1: Export DNS-TCP tests, they do not refer to service availability
+		if ($service ne SERVICE_DNS_TCP && $cycles_count == 0)	# Export DNS-TCP tests, they do not refer to Service Availability
 		{
 			wrn("$service: no results");
 			last;
@@ -787,7 +787,7 @@ sub __get_test_data
 			$tests_ref = __get_dns_test_values($dns_items_ref, $service_from, $service_till,
 				$services->{$service}->{'valuemaps'}, $delay, $service);
 		}
-		elsif ($service eq SERVICE_DNS_TCP)	# todo phase 1: Export DNS-TCP tests
+		elsif ($service eq SERVICE_DNS_TCP)	# Export DNS-TCP tests
 		{
 			$tests_ref = __get_dns_test_values($dns_tcp_items_ref, $service_from, $service_till,
 				$services->{$service}->{'valuemaps'}, $delay, $service);
@@ -886,7 +886,7 @@ sub __save_csv_data
 			$protocol_id = $udp_protocol_id;
 			$proto = PROTO_UDP;
 		}
-		elsif ($service eq SERVICE_DNS_TCP)	# todo phase 1: Export DNS-TCP tests
+		elsif ($service eq SERVICE_DNS_TCP)	# Export DNS-TCP tests
 		{
 			$service_category_id = $dns_service_category_id;
 			$protocol_id = $tcp_protocol_id;
@@ -924,7 +924,7 @@ sub __save_csv_data
 		{
 			my $cycle_ref = $result->{$tld}->{'services'}->{$service}->{'cycles'}->{$cycleclock};
 
-			if ($service ne SERVICE_DNS_TCP)	# todo phase 1: Export DNS-TCP tests, they do not refer to service availability
+			if ($service ne SERVICE_DNS_TCP)	# Export DNS-TCP tests, they do not refer to Service Availability
 			{
 				if (!defined($cycle_ref->{'status'}))
 				{
@@ -964,7 +964,7 @@ sub __save_csv_data
 					      '',
 					      $tld_type_id,
 					      $protocol_id
-				]) if ($service ne SERVICE_DNS_TCP);	# todo phase 1: Export DNS-TCP tests, they do not refer to service availability
+				]) if ($service ne SERVICE_DNS_TCP);	# Export DNS-TCP tests, currently they do not refer to Service Availability
 
 			foreach my $interface (keys(%{$cycle_ref->{'interfaces'}}))
 			{
@@ -997,9 +997,9 @@ sub __save_csv_data
 							if (!defined($rtt_low) || !defined($rtt_low->{$tld}) || !defined($rtt_low->{$tld}->{$service})
 								|| !defined($rtt_low->{$tld}->{$service}->{$proto}))
 							{
-								my $_service = ($service eq SERVICE_DNS_TCP ? 'dns' : $service);	# todo phase 1: Export DNS-TCP tests, __get_rtt_low() expects real service
+								my $_service = ($service eq SERVICE_DNS_TCP ? 'dns' : $service);	# Export DNS-TCP tests, get_rtt_low() expects real service
 
-								$rtt_low->{$tld}->{$service}->{$proto} = __get_rtt_low($_service, $proto);	# TODO: add third parameter (command) for EPP!
+								$rtt_low->{$tld}->{$service}->{$proto} = get_rtt_low($_service, $proto);	# TODO: add third parameter (command) for EPP!
 							}
 
 							if (__check_test($interface, $metric_ref->{JSON_TAG_RTT()}, $metric_ref->{JSON_TAG_DESCRIPTION()},
@@ -1108,7 +1108,7 @@ sub __save_csv_data
 				}
 
 
-				if ($interface eq 'DNS' && $service ne SERVICE_DNS_TCP)	# todo phase 1: Export DNS-TCP tests
+				if ($interface eq 'DNS' && $service ne SERVICE_DNS_TCP)	# Export DNS-TCP tests
 				{
 					foreach my $ns (keys(%nscycle))
 					{
@@ -1143,7 +1143,7 @@ sub __save_csv_data
 							dw_append_csv(DATA_CYCLE, [
 									      dw_get_cycle_id($cycleclock, $ns_service_category_id, $tld_id, $ns_id, $ip_id),
 									      $cycleclock,
-									      '',	# TODO: emergency threshold not yet supported for NS Availability (todo phase 1: make sure this fix (0 -> '') exists in phase 2)
+									      '',	# TODO: emergency threshold not yet supported for NS Availability (make sure this fix (0 -> '') exists)
 									      dw_get_id(ID_STATUS_MAP, $nscyclestatus),
 									      '',	# TODO: incident ID not yet supported for NS Availability
 									      $tld_id,
@@ -1472,7 +1472,7 @@ sub __check_test
 	return (is_service_error($interface, $value, $max_value) ? E_FAIL : SUCCESS);
 }
 
-# todo phase 1: taken from RSMSLV.pm phase 2
+# taken from RSMSLV.pm
 sub __get_dns_itemids
 {
 	my $nsips_ref = shift; # array reference of NS,IP pairs
@@ -1524,7 +1524,6 @@ sub __print_undef
 	return (defined($string) ? $string : "UNDEF");
 }
 
-# todo phase 1: taken from RSMSLV.pm phase 2
 # NB! THIS IS FIXED VERSION WHICH MUST REPLACE EXISTING ONE
 # (supports identifying service error)
 sub __best_dns_rtt
@@ -1562,7 +1561,6 @@ sub __best_dns_rtt
 	return ($cur_rtt, $cur_description);
 }
 
-# todo phase 1: taken from RSMSLV.pm phase 2
 # NB! THIS IS FIXED VERSION WHICH MUST REPLACE EXISTING ONE
 # 1. Fixes incorrect handling of set_idx: $set_idx = 0.
 # 2. Improves speed by using itemid -> probe, target, ip hash.
@@ -1577,7 +1575,7 @@ sub __get_dns_test_values
 
 	my $interface;
 
-	if ($service eq 'dns' || $service eq SERVICE_DNS_TCP)	# todo phase 1: Export DNS-TCP tests
+	if ($service eq 'dns' || $service eq SERVICE_DNS_TCP)	# Export DNS-TCP tests
 	{
 		$interface = JSON_INTERFACE_DNS;
 	}
@@ -1686,7 +1684,7 @@ sub __get_dns_test_values
 	return $result;
 }
 
-# todo phase 1: taken from RSMSLV.pm phase 2
+# todo: taken from RSMSLV.pm
 sub __make_incident
 {
 	my %h;
@@ -1699,8 +1697,8 @@ sub __make_incident
 	return \%h;
 }
 
-# todo phase 1: taken from RSMSLV.pm phase 2
-# todo phase 1: NB! Contains the fix to recalculate number of failed tests, see below label "FIX-PH1"
+# todo: taken from RSMSLV.pm
+# todo: NB! Contains the fix to recalculate number of failed tests, see below label "FIX-PH1"
 sub __get_incidents2
 {
 	my $itemid = shift;
@@ -1896,7 +1894,7 @@ sub __get_incidents2
 	return \@incidents;
 }
 
-# todo phase 1: taken from RSMSLV.pm phase 2
+# todo: taken from RSMSLV.pm
 sub __get_service_status_itemids
 {
 	my $tld = shift;
@@ -1936,7 +1934,7 @@ sub __get_service_status_itemids
 	return \%result;
 }
 
-# todo phase 1: taken from RSMSLV.pm phase 2
+# todo: taken from RSMSLV.pm
 # NB! THIS IS FIXED VERSION WHICH MUST REPLACE EXISTING ONE
 # 1. Improves speed by using itemid -> probe hash.
 sub __get_probe_results
@@ -1980,7 +1978,7 @@ sub __get_probe_results
 	return \%result;
 }
 
-# todo phase 1: taken from RSMSLV.pm phase 2
+# todo: taken from RSMSLV.pm
 sub __get_rdds_dbl_itemids
 {
 	my $tld = shift;
@@ -1993,7 +1991,7 @@ sub __get_rdds_dbl_itemids
 	return __get_itemids_by_complete_key($tld, $probe, $key_43_rtt, $key_80_rtt, $key_43_upd, $key_rdap_rtt);
 }
 
-# todo phase 1: taken from RSMSLV.pm phase 2
+# todo: taken from RSMSLV.pm
 sub __get_rdds_str_itemids
 {
 	my $tld = shift;
@@ -2005,7 +2003,7 @@ sub __get_rdds_str_itemids
 	return __get_itemids_by_complete_key($tld, $probe, $key_43_ip, $key_80_ip, $key_rdap_ip);
 }
 
-# todo phase 1: taken from RSMSLV.pm phase 2
+# todo: taken from RSMSLV.pm
 sub __get_rdds_test_values
 {
 	my $rdds_dbl_items_ref = shift;
@@ -2072,7 +2070,7 @@ sub __get_rdds_test_values
 
 		my $cycleclock = cycle_start($clock, $delay);
 
-		# todo phase 1: NB! Do not use references, that won't add data!
+		# NB! Do not use references, that won't add data!
 		$result->{$cycleclock}->{$interface}->{$probe}->{$target}->[0]->{$type} = $value;
 		$result->{$cycleclock}->{$interface}->{$probe}->{$target}->[0]->{JSON_TAG_CLOCK()} = $clock;
 		$result->{$cycleclock}->{$interface}->{$probe}->{$target}->[0]->{JSON_TAG_DESCRIPTION()} = $description;
@@ -2102,14 +2100,14 @@ sub __get_rdds_test_values
 
 		my $cycleclock = cycle_start($clock, $delay);
 
-		# todo phase 1: NB! Do not use references, that won't add data!
+		# NB! Do not use references, that won't add data!
 		$result->{$cycleclock}->{$interface}->{$probe}->{$target}->[0]->{$type} = $value;
 	}
 
 	return $result;
 }
 
-# todo phase 1: taken from RSMSLV.pm phase 2
+# todo: taken from RSMSLV.pm
 sub __get_epp_test_values
 {
 	my $epp_dbl_items_ref = shift;
@@ -2168,7 +2166,7 @@ sub __get_epp_test_values
 		# __add_csv_test() 3 times, for each RTT.
 		# NB! Sync with export.pl part that calls this function!
 
-		# todo phase 1: NB! Do not use references, that won't add data!
+		# NB! Do not use references, that won't add data!
 		$result->{$cycleclock}->{JSON_INTERFACE_EPP}->{$probe}->{$target}->[0]->{$command} = $value;
 		$result->{$cycleclock}->{JSON_INTERFACE_EPP}->{$probe}->{$target}->[0]->{JSON_TAG_CLOCK()} = $clock;
 		$result->{$cycleclock}->{JSON_INTERFACE_EPP}->{$probe}->{$target}->[0]->{JSON_TAG_DESCRIPTION()} = get_detailed_result($valuemaps, $value);
@@ -2195,14 +2193,14 @@ sub __get_epp_test_values
 
 		my $cycleclock = cycle_start($clock, $delay);
 
-		# todo phase 1: NB! Do not use references, that won't add data!
+		# NB! Do not use references, that won't add data!
 		$result->{$cycleclock}->{JSON_INTERFACE_EPP}->{$probe}->{$target}->[0]->{JSON_TAG_TARGET_IP()} = $ip;
 	}
 
 	return $result;
 }
 
-# todo phase 1: taken from RSMSLV.pm phase 2
+# todo: taken from RSMSLV.pm
 sub __find_probe_key_by_itemid
 {
 	my $itemid = shift;
@@ -2217,7 +2215,7 @@ sub __find_probe_key_by_itemid
 	return (undef, undef);
 }
 
-# todo phase 1: taken from RSMSLV.pm phase 2
+# todo: taken from RSMSLV.pm
 sub __get_rdds_item_details
 {
 	my $interface;
@@ -2273,7 +2271,7 @@ sub pick_rdds_item_type
 	return undef;
 }
 
-# todo phase 1: taken from RSMSLV.pm phase 2
+# todo: taken from RSMSLV.pm
 sub __get_epp_dbl_type
 {
 	my $key = shift;
@@ -2284,50 +2282,14 @@ sub __get_epp_dbl_type
         return substr($key, 23);
 }
 
-# todo phase 1: taken from RSMSLV.pm phase 2
+# todo: taken from RSMSLV.pm
 sub __get_epp_str_type
 {
 	# NB! This is done for consistency, perhaps in the future there will be more string items, not just "ip".
 	return 'ip';
 }
 
-# todo phase 1: taken from RSMSLV.pm phase 2
-sub __get_rtt_low
-{
-	my $service = shift;
-	my $proto = shift;	# for DNS
-	my $command = shift;	# for EPP: 'login', 'info' or 'update'
-
-	if ($service eq 'dns' || $service eq 'dnssec')
-	{
-		if ($proto == PROTO_UDP)
-		{
-			return get_macro_dns_udp_rtt_low();	# can be per TLD
-		}
-		elsif ($proto == PROTO_TCP)
-		{
-			return get_macro_dns_tcp_rtt_low();	# can be per TLD
-		}
-		else
-		{
-			fail("THIS SHOULD NEVER HAPPEN");
-		}
-	}
-
-	if ($service eq 'rdds')
-	{
-		return get_macro_rdds_rtt_low();
-	}
-
-	if ($service eq 'epp')
-	{
-		return get_macro_epp_rtt_low($command);	# can be per TLD
-	}
-
-	fail("THIS SHOULD NEVER HAPPEN");
-}
-
-# todo phase 1: taken from RSMSLV.pm phase 2
+# todo: taken from RSMSLV.pm
 sub get_readable_tld
 {
 	my $tld = shift;
@@ -2337,7 +2299,7 @@ sub get_readable_tld
 	return $tld;
 }
 
-# todo phase 1: taken from RSMSLV.pm phase 2
+# todo: taken from RSMSLV.pm
 # NB! THIS IS FIXED VERSION WHICH MUST REPLACE EXISTING ONE
 # (improved log message)
 sub __no_cycle_result

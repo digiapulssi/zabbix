@@ -53,10 +53,12 @@ my $online = 0;
 
 foreach my $probe (keys(%{$probes_ref}))
 {
+	next unless ($probes_ref->{$probe}->{'status'} == HOST_STATUS_MONITORED);
+
 	my $itemid = get_itemid_by_host("$probe - mon", PROBE_KEY_ONLINE);
 	my $value;
 
-	next if (get_current_value($itemid, \$value, undef) != SUCCESS);
+	next if (get_lastvalue($itemid, ITEM_VALUE_TYPE_UINT64, \$value, undef) != SUCCESS);
 
 	$online++ if $value == ONLINE;
 	$total++;

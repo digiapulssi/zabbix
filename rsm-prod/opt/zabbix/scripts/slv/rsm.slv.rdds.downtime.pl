@@ -12,12 +12,13 @@ use strict;
 use warnings;
 use RSM;
 use RSMSLV;
+use TLD_constants qw(:api);
 
 my $cfg_key_in = 'rsm.slv.rdds.avail';
 my $cfg_key_out = 'rsm.slv.rdds.downtime';
 
-parse_opts('tld=s', 'now=n');
-exit_if_running();
+parse_slv_opts();
+fail_if_running();
 
 set_slv_config(get_rsm_config());
 
@@ -42,7 +43,14 @@ else
 
 slv_exit(SUCCESS) if (scalar(@{$tlds_ref}) == 0);
 
-my $cycles_ref = collect_slv_cycles($tlds_ref, $delay, $cfg_key_out, $max_clock, slv_max_cycles('rdds'));
+my $cycles_ref = collect_slv_cycles(
+	$tlds_ref,
+	$delay,
+	$cfg_key_out,
+	ITEM_VALUE_TYPE_UINT64,
+	$max_clock,
+	(opt('cycles') ? getopt('cycles') : slv_max_cycles('rdds'))
+);
 
 slv_exit(SUCCESS) if (scalar(keys(%{$cycles_ref})) == 0);
 

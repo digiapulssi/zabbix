@@ -3047,7 +3047,7 @@ static int	DBpatch_3000234(void)
 		return FAIL;
 	}
 
-	/* delete obsoleted records */
+	/* add constraint */
 	if (ZBX_DB_OK > DBexecute(
 			"alter table `lastvalue`"
 			" add constraint `c_lastvalue_1`"
@@ -3199,6 +3199,51 @@ static int	DBpatch_3000238(void)
 
 	return SUCCEED;
 }
+
+static int	DBpatch_3000300(void)
+{
+	return SUCCEED;
+}
+
+static int	DBpatch_3000301(void)
+{
+	const ZBX_TABLE table =
+			{"lastvalue_str", "itemid", 0,
+				{
+					{"itemid", NULL, NULL, NULL, 0, ZBX_TYPE_ID, ZBX_NOTNULL, 0},
+					{"clock", "0", NULL, NULL, 0, ZBX_TYPE_INT, ZBX_NOTNULL, 0},
+					{"value", "", NULL, NULL, 255, ZBX_TYPE_CHAR, ZBX_NOTNULL, 0},
+					{0}
+				},
+				NULL
+			};
+
+	if (SUCCEED != DBcreate_table(&table))
+		return FAIL;
+
+	/* add constraint */
+	if (ZBX_DB_OK > DBexecute(
+			"alter table `lastvalue_str`"
+			" add constraint `c_lastvalue_str_1`"
+				" foreign key (`itemid`) references `items` (`itemid`)"
+			" on delete cascade"))
+	{
+		return FAIL;
+	}
+
+	return SUCCEED;
+}
+
+static int	DBpatch_3000302(void)
+{
+	return DBpatch_3000237();
+}
+
+static int	DBpatch_3000303(void)
+{
+	return DBpatch_3000238();
+}
+
 #endif
 
 DBPATCH_START(3000)
@@ -3284,5 +3329,9 @@ DBPATCH_ADD(3000235, 0, 0)	/* add trigger for item rsm.probe.status[manual] to a
 DBPATCH_ADD(3000236, 0, 0)	/* disable "RDAP availability" items on hosts where RDAP is disabled (again) */
 DBPATCH_ADD(3000237, 0, 0)	/* mark DNS errors -252, -652 in mappings as obsoleted */
 DBPATCH_ADD(3000238, 0, 0)	/* increase "value" field of "lastvalue" table by double(24,4) to accept bigint values */
+DBPATCH_ADD(3000300, 0, 0)	/* Phase 3 */
+DBPATCH_ADD(3000301, 0, 0)	/* add lastvalue_str table */
+DBPATCH_ADD(3000302, 0, 0)	/* mark DNS errors -252, -652 in mappings as obsoleted (again, for those started from Phase 3) */
+DBPATCH_ADD(3000303, 0, 0)	/* increase "value" field of "lastvalue" table by double(24,4) to accept bigint values (again, for those started from Phase 3) */
 
 DBPATCH_END()

@@ -39,8 +39,19 @@ foreach my $server_key (@server_keys)
 		$total++;
 
 		my $ph = $proxy->{'host'};
-		my $ip = $proxy->{'interface'}->{'ip'};
-		my $port = $proxy->{'interface'}->{'port'};
+		my ($ip, $port);
+
+		if (ref($proxy->{'interface'}) eq 'ARRAY')
+		{
+			# disabled probe
+			$ip = "DISABLED";
+			$port = "PASSIVE";
+		}
+		else
+		{
+			$ip = $proxy->{'interface'}->{'ip'};
+			$port = $proxy->{'interface'}->{'port'};
+		}
 
 		my ($tname, $result2, $hostid, $macro);
 

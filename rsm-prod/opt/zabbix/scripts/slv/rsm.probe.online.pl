@@ -12,17 +12,13 @@ use strict;
 use warnings;
 use RSM;
 use RSMSLV;
-use TLD_constants qw(:items);
+use TLD_constants qw(:items :api);
 
 use constant PROBE_LASTACCESS_ITEM	=> 'zabbix[proxy,{$RSM.PROXY_NAME},lastaccess]';
-use constant PROBE_KEY_MANUAL		=> 'rsm.probe.status[manual]';
 use constant PROBE_KEY_AUTOMATIC	=> 'rsm.probe.status[automatic,%]';	# match all in SQL
 
-use constant ONLINE	=> 1;
-use constant OFFLINE	=> 0;
-
 parse_opts('now=i');
-exit_if_running();
+fail_if_running();
 
 set_slv_config(get_rsm_config());
 
@@ -38,7 +34,6 @@ my $value_ts = $from;
 
 dbg("selected period: ", selected_period($from, $till), ", with value timestamp: ", ts_full($value_ts));
 
-# todo phase 1: add parameter: ENABLED_DNS
 my $probes_ref = get_probes();
 
 my $probe_times_ref = __get_main_probe_status_times($from, $till, $probes_ref);
@@ -70,17 +65,19 @@ sub __get_main_probe_status_times
 {
 	my $from = shift;
 	my $till = shift;
-	my $probes_ref = shift; # { host => hostid, ... }
+	my $probes_ref = shift; # { host => {'hostid' => hostid, 'status' => status}, ... }
 
 	my $probe_avail_limit = get_macro_probe_avail_limit();
 
 	dbg("from:$from till:$till probe_avail_limit:$probe_avail_limit");
 
-	my $result;
+	my $result = {};
 
 	# check probe lastaccess time
 	foreach my $probe (keys(%$probes_ref))
 	{
+		next unless ($probes_ref->{$probe}->{'status'} == HOST_STATUS_MONITORED);
+
 		my $host = "$probe - mon";
 
 		my $itemid = get_itemid_by_host($host, PROBE_LASTACCESS_ITEM);
@@ -92,7 +89,7 @@ sub __get_main_probe_status_times
 
 		my $times_ref = __get_lastaccess_times($itemid, $probe_avail_limit, $from, $till);
 
-		my $hostid = $probes_ref->{$probe};
+		my $hostid = $probes_ref->{$probe}->{'hostid'};
 
 		if (scalar(@$times_ref) != 0)
 		{

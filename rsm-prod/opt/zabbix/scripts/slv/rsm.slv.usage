@@ -1,10 +1,10 @@
 =head1 NAME
 
-rsm.slv.*.avail.pl - scripts to calculate different service status results and save to the database
+rsm.slv.*.pl - scripts to calculate different service status results and save to the database
 
 =head1 SYNOPSIS
 
-rsm.slv.*.avail.pl [--now <timestamp>] [--dry-run] [--warnslow <seconds>] [--debug] [--help]
+rsm.slv.*.pl [--now <timestamp>] [--cycles <cycles>] [--dry-run] [--warnslow <seconds>] [--debug] [--help]
 
 =head1 OPTIONS
 
@@ -13,6 +13,10 @@ rsm.slv.*.avail.pl [--now <timestamp>] [--dry-run] [--warnslow <seconds>] [--deb
 =item B<--now> timestamp
 
 Specify Unix timestamp within cycle that needs to be calculated.
+
+=item B<--cycles> cycles
+
+Specify number of cycles to try to process starting from the oldest unprocessed or specified with --now.
 
 =item B<--dry-run>
 
