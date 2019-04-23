@@ -149,7 +149,7 @@ if (array_key_exists('slv_rdds_downtime', $data) && $data['slv_rdds_downtime'] !
 			_s('%1$s %% (queries <= %2$s ms)', $data['slv_rdds_rtt_downtime'], $macro[RSM_RDDS_RTT_LOW]),
 			_s('<= %1$s ms, for at least %2$s %% of the queries', $macro[RSM_RDDS_RTT_LOW], $macro[RSM_SLV_MACRO_RDDS_RTT])
 		],
-		($data['slv_rdds_rtt_downtime'] > $macro[RSM_SLV_MACRO_RDDS_RTT]) ? 'red-bg' : null
+		($data['slv_rdds_rtt_downtime'] < (100 - $macro[RSM_SLV_MACRO_RDDS_RTT])) ? 'red-bg' : null
 	);
 }
 
