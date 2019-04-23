@@ -1,3 +1,9 @@
+Changes for rsm1.2.1
+
+New features:
+.......PS. [496] added instructions to cURL to set User-Agent in HTTP checks (dimir)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.2.0
 
 rsm1.2.0rc15 was released as rsm1.2.0 without any changes
