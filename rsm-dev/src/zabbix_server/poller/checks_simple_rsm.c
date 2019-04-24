@@ -3267,13 +3267,15 @@ typedef struct
 }
 zbx_http_error_t;
 
+#define ZBX_FLAG_CURL_VERBOSE	0x1
+
 /* Helper function for Web-based RDDS80 and RDAP checks. Adds host to header, connects to URL obeying timeout and */
 /* max redirect settings, stores web page contents using provided callback, checks for OK response and calculates */
 /* round-trip time. When function succeeds it returns RTT in milliseconds. When function fails it returns source  */
 /* of error in provided RTT parameter. Does not verify certificates.                                              */
 static int	zbx_http_test(const char *host, const char *url, long timeout, long maxredirs, zbx_http_error_t *ec_http,
 		int *rtt, void *writedata, size_t (*writefunction)(char *, size_t, size_t, void *),
-		char *err, size_t err_size)
+		int curl_flags, char *err, size_t err_size)
 {
 #ifdef HAVE_LIBCURL
 	CURL			*easyhandle;
@@ -3281,7 +3283,7 @@ static int	zbx_http_test(const char *host, const char *url, long timeout, long m
 	CURLoption		opt;
 	char			host_buf[ZBX_HOST_BUF_SIZE];
 	double			total_time;
-	long			response_code;
+	long			response_code, curlopt_verbose;
 	struct curl_slist	*slist = NULL;
 #endif
 	int			ret = FAIL;
@@ -3306,8 +3308,11 @@ static int	zbx_http_test(const char *host, const char *url, long timeout, long m
 		goto out;
 	}
 
+	curlopt_verbose = (0 != (curl_flags & ZBX_FLAG_CURL_VERBOSE) ? 1L : 0L);
+
 	if (CURLE_OK != (curl_err = curl_easy_setopt(easyhandle, opt = CURLOPT_FOLLOWLOCATION, 1L)) ||
 			CURLE_OK != (curl_err = curl_easy_setopt(easyhandle, opt = CURLOPT_USERAGENT, "Zabbix " ZABBIX_VERSION)) ||
+			CURLE_OK != (curl_err = curl_easy_setopt(easyhandle, opt = CURLOPT_VERBOSE, curlopt_verbose)) ||
 			CURLE_OK != (curl_err = curl_easy_setopt(easyhandle, opt = CURLOPT_MAXREDIRS, maxredirs)) ||
 			CURLE_OK != (curl_err = curl_easy_setopt(easyhandle, opt = CURLOPT_URL, url)) ||
 			CURLE_OK != (curl_err = curl_easy_setopt(easyhandle, opt = CURLOPT_TIMEOUT, timeout)) ||
@@ -3559,7 +3564,7 @@ int	check_rsm_rdds(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 	zbx_http_error_t	ec_http;
 	int			rtt43 = ZBX_NO_VALUE, upd43 = ZBX_NO_VALUE, rtt80 = ZBX_NO_VALUE, rtt_limit,
 				ipv4_enabled, ipv6_enabled, ipv_flags = 0, rdds_enabled, epp_enabled, maxredirs,
-				ret = SYSINFO_RET_FAIL;
+				curl_flags = 0, ret = SYSINFO_RET_FAIL;
 
 	if (3 != request->nparam)
 	{
@@ -3879,10 +3884,10 @@ int	check_rsm_rdds(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 		zbx_snprintf(testname, sizeof(testname), "http://[%s]", ip80);
 
 	if (SUCCEED != zbx_http_test(random_host, testname, RSM_TCP_TIMEOUT, maxredirs, &ec_http, &rtt80, NULL,
-			curl_devnull, err, sizeof(err)))
+			curl_devnull, curl_flags, err, sizeof(err)))
 	{
 		rtt80 = zbx_http_error_to_RDDS80(ec_http);
-		rsm_errf(log_fd, "RDDS80 of \"%s\" (%s) failed: %s (%d)", random_host, ip80, err, rtt80);
+		rsm_errf(log_fd, "RDDS80 of \"%s\" (%s) failed: %s (%d)", random_host, testname, err, rtt80);
 	}
 
 	rsm_infof(log_fd, "end RDDS80 test (rtt:%d)", rtt80);
@@ -4016,7 +4021,7 @@ int	check_rsm_rdap(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 	unsigned int		extras;
 	zbx_http_error_t	ec_http;
 	int			maxredirs, rtt_limit, tld_enabled, probe_enabled, ipv4_enabled, ipv6_enabled,
-				ipv_flags = 0, port, rtt = ZBX_NO_VALUE, ret = SYSINFO_RET_FAIL;
+				ipv_flags = 0, curl_flags = 0, port, rtt = ZBX_NO_VALUE, ret = SYSINFO_RET_FAIL;
 
 	if (10 != request->nparam)
 	{
@@ -4213,10 +4218,10 @@ int	check_rsm_rdap(DC_ITEM *item, const AGENT_REQUEST *request, AGENT_RESULT *re
 			base_url, ip, full_url);
 
 	if (SUCCEED != zbx_http_test(domain_part, full_url, RSM_TCP_TIMEOUT, maxredirs, &ec_http, &rtt, &data,
-			curl_memory, err, sizeof(err)))
+			curl_memory, curl_flags, err, sizeof(err)))
 	{
 		rtt = zbx_http_error_to_RDAP(ec_http);
-		rsm_errf(log_fd, "test of \"%s\" (%s) failed: %s (%d)", base_url, ip, err, rtt);
+		rsm_errf(log_fd, "test of \"%s\" (%s) failed: %s (%d)", base_url, full_url, err, rtt);
 		goto out;
 	}
 

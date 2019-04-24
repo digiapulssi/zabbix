@@ -9,10 +9,12 @@
 
 void	exit_usage(const char *progname)
 {
-	fprintf(stderr, "usage: %s -t <tld> -n <ns> -i <ip> [-r <res_ip>] [-p <testprefix>] [-d] [-g] [-f] [-h]\n", progname);
+	fprintf(stderr, "usage: %s -t <tld> -n <ns> -i <ip> <[-4] [-6]> [-r <res_ip>] [-p <testprefix>] [-d] [-g] [-f] [-h]\n", progname);
 	fprintf(stderr, "       -t <tld>          TLD to test\n");
 	fprintf(stderr, "       -n <ns>           Name Server to test\n");
 	fprintf(stderr, "       -i <ip>           IP address of the Name Server to test\n");
+	fprintf(stderr, "       -4                enable IPv4\n");
+	fprintf(stderr, "       -6                enable IPv6\n");
 	fprintf(stderr, "       -r <res_ip>       IP address of resolver to use (default: %s)\n", DEFAULT_RES_IP);
 	fprintf(stderr, "       -p <testprefix>   domain testprefix to use (default: %s)\n", DEFAULT_TESTPREFIX);
 	fprintf(stderr, "       -d                enable DNSSEC\n");
@@ -25,17 +27,18 @@ void	exit_usage(const char *progname)
 
 int	main(int argc, char *argv[])
 {
-	char		err[256], *res_ip = DEFAULT_RES_IP, *tld = NULL, *ns = NULL, *ns_ip = NULL, proto = ZBX_RSM_UDP,
-			ipv4_enabled = 1, ipv6_enabled = 1, *testprefix = DEFAULT_TESTPREFIX, dnssec_enabled = 0,
+	char		err[256], *res_ip = DEFAULT_RES_IP, *tld = NULL, *ns = NULL, *ns_ip = NULL, proto = RSM_UDP,
+			ipv4_enabled = 0, ipv6_enabled = 0, *testprefix = DEFAULT_TESTPREFIX, dnssec_enabled = 0,
 			ignore_err = 0, log_to_file = 0;
 	int		c, index, rtt;
 	ldns_resolver	*res = NULL;
 	ldns_rr_list	*keys = NULL;
 	FILE		*log_fd = stdout;
+	unsigned int	extras;
 
 	opterr = 0;
 
-	while ((c = getopt (argc, argv, "t:n:i:r:p:dcgfh")) != -1)
+	while ((c = getopt (argc, argv, "t:n:i:46r:p:dcgfh")) != -1)
 	{
 		switch (c)
 		{
@@ -48,6 +51,12 @@ int	main(int argc, char *argv[])
 			case 'i':
 				ns_ip = optarg;
 				break;
+			case '4':
+				ipv4_enabled = 1;
+				break;
+			case '6':
+				ipv6_enabled = 1;
+				break;
 			case 'r':
 				res_ip = optarg;
 				break;
@@ -58,7 +67,7 @@ int	main(int argc, char *argv[])
 				dnssec_enabled = 1;
 				break;
 			case 'c':
-				proto = ZBX_RSM_TCP;
+				proto = RSM_TCP;
 				break;
 			case 'g':
 				ignore_err = 1;
@@ -84,16 +93,41 @@ int	main(int argc, char *argv[])
 	for (index = optind; index < argc; index++)
 		printf("Non-option argument %s\n", argv[index]);
 
-	if (NULL == tld || NULL == ns || NULL == ns_ip)
+	if (NULL == tld)
+	{
+		fprintf(stderr, "tld [-t] must be specified\n");
 		exit_usage(argv[0]);
+	}
 
-	zbx_rsm_infof(log_fd, "tld:%s, ns:%s, ip:%s, res:%s, testprefix:%s", tld, ns, ns_ip, res_ip, testprefix);
+	if (NULL == ns)
+	{
+		fprintf(stderr, "Name Server [-n] must be specified\n");
+		exit_usage(argv[0]);
+	}
+
+	if (NULL == ns_ip)
+	{
+		fprintf(stderr, "Name Server IP [-i] must be specified\n");
+		exit_usage(argv[0]);
+	}
+
+	if (0 == ipv4_enabled && 0 == ipv6_enabled)
+	{
+		fprintf(stderr, "at least one IP version [-4, -6] must be specified\n");
+		exit_usage(argv[0]);
+	}
+
+	rsm_infof(log_fd, "tld:%s, ns:%s, ip:%s, res:%s, testprefix:%s", tld, ns, ns_ip, res_ip, testprefix);
+
+	extras = (dnssec_enabled ? RESOLVER_EXTRAS_DNSSEC : RESOLVER_EXTRAS_NONE);
 
 	/* create resolver */
-	if (SUCCEED != zbx_create_resolver(&res, "resolver", res_ip, proto, ipv4_enabled, ipv6_enabled, dnssec_enabled,
+	if (SUCCEED != zbx_create_resolver(&res, "resolver", res_ip, proto, ipv4_enabled, ipv6_enabled, extras,
+			(RSM_UDP == proto ? RSM_UDP_TIMEOUT : RSM_TCP_TIMEOUT),
+			(RSM_UDP == proto ? RSM_UDP_RETRY : RSM_TCP_RETRY),
 			log_fd, err, sizeof(err)))
 	{
-		zbx_rsm_errf(stderr, "cannot create resolver: %s", err);
+		rsm_errf(stderr, "cannot create resolver: %s", err);
 		goto out;
 	}
 
@@ -105,14 +139,14 @@ int	main(int argc, char *argv[])
 		{
 			if (NULL == (log_fd = fopen(LOG_FILE1, "w")))
 			{
-				zbx_rsm_errf(stderr, "cannot open file \"%s\" for writing: %s", LOG_FILE1, strerror(errno));
+				rsm_errf(stderr, "cannot open file \"%s\" for writing: %s", LOG_FILE1, strerror(errno));
 				exit(EXIT_FAILURE);
 			}
 		}
 
 		if (SUCCEED != zbx_get_dnskeys(res, tld, res_ip, &keys, log_fd, &dnskeys_ec, err, sizeof(err)))
 		{
-			zbx_rsm_errf(stderr, "%s (error=%d)", err, DNS[DNS_PROTO(res)].dnskeys_error(dnskeys_ec));
+			rsm_errf(stderr, "%s (error=%d)", err, DNS[DNS_PROTO(res)].dnskeys_error(dnskeys_ec));
 			if (0 == ignore_err)
 				goto out;
 		}
@@ -122,13 +156,13 @@ int	main(int argc, char *argv[])
 	{
 		if (0 != fclose(log_fd))
 		{
-			zbx_rsm_errf(stderr, "cannot close file %s: %s", LOG_FILE1, strerror(errno));
+			rsm_errf(stderr, "cannot close file %s: %s", LOG_FILE1, strerror(errno));
 			goto out;
 		}
 
 		if (NULL == (log_fd = fopen(LOG_FILE2, "w")))
 		{
-			zbx_rsm_errf(stderr, "cannot open file \"%s\" for writing: %s", LOG_FILE2, strerror(errno));
+			rsm_errf(stderr, "cannot open file \"%s\" for writing: %s", LOG_FILE2, strerror(errno));
 			goto out;
 		}
 	}
@@ -136,7 +170,7 @@ int	main(int argc, char *argv[])
 	if (SUCCEED != zbx_get_ns_ip_values(res, ns, ns_ip, keys, testprefix, tld, log_fd, &rtt, NULL, ipv4_enabled,
 					ipv6_enabled, 0, err, sizeof(err)))
 	{
-		zbx_rsm_err(stderr, err);
+		rsm_err(stderr, err);
 		if (0 == ignore_err)
 			goto out;
 	}
@@ -146,7 +180,7 @@ out:
 	if (log_to_file != 0)
 	{
 		if (0 != fclose(log_fd))
-			zbx_rsm_errf(stderr, "cannot close log file: %s", strerror(errno));
+			rsm_errf(stderr, "cannot close log file: %s", strerror(errno));
 	}
 
 	if (NULL != keys)
