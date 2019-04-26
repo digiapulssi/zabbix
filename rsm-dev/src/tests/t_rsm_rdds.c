@@ -158,7 +158,7 @@ int	main(int argc, char *argv[])
 			goto out;
 	}
 
-	zbx_delete_unsupported_ips(&ips43, 1, 1);
+	zbx_delete_unsupported_ips(&ips43, ipv4_enabled, ipv6_enabled);
 
 	if (0 == ips43.values_num)
 	{
