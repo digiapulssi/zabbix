@@ -1,3 +1,10 @@
+Changes for rsm1.2.2
+
+Bug fixes:
+.F........ [490] fixed undefined index "ipv6" and broken html table in details of particular test page (miks)
+....I..... [497] added configurable ("allow_missing_measurements") period to allow for missing measurement files in SLA API script (dimir)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.2.1
 
 New features:

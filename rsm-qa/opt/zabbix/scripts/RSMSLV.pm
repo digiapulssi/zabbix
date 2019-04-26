@@ -149,7 +149,8 @@ my $get_stats = 0;
 my $start_time;
 my $sql_start;
 my $sql_end;
-my $sql_send;
+my $sql_warnslow_start;
+my $sql_warnslow_end;
 my $sql_time = 0.0;
 my $sql_count = 0;
 
@@ -1090,6 +1091,11 @@ sub db_select
 		$sql_start = Time::HiRes::time();
 	}
 
+	if (opt('warnslow'))
+	{
+		$sql_warnslow_start = Time::HiRes::time();
+	}
+
 	my $sth = $dbh->prepare($_global_sql)
 		or fail("cannot prepare [$_global_sql]: ", $dbh->errstr);
 
@@ -1097,11 +1103,6 @@ sub db_select
 
 	$sth->execute()
 		or fail("cannot execute [$_global_sql]: ", $sth->errstr);
-
-	if (opt('warnslow'))
-	{
-		$sql_send = Time::HiRes::time();
-	}
 
 	my $rows_ref = $sth->fetchall_arrayref();
 
@@ -1112,10 +1113,14 @@ sub db_select
 		$sql_count++;
 	}
 
-	if (opt('warnslow') && (($sql_end - $sql_start) > getopt('warnslow')))
+	if (opt('warnslow'))
 	{
-		wrn("slow query: [$_global_sql] took ", sprintf("%.3f seconds (execute:%.3f fetch:%.3f)",
-			($sql_end - $sql_start), ($sql_send - $sql_start), ($sql_end - $sql_send)));
+		$sql_warnslow_end = Time::HiRes::time();
+
+		if  ($sql_warnslow_end - $sql_warnslow_start > getopt('warnslow'))
+		{
+			wrn("slow query: [$_global_sql] took ", sprintf("%.3f seconds", $sql_warnslow_end - $sql_warnslow_start));
+		}
 	}
 
 	if (opt('debug'))
@@ -1153,13 +1158,13 @@ sub db_select_binds
 			$sql_start = Time::HiRes::time();
 		}
 
-		$sth->execute($bind_value)
-			or fail("cannot execute [$_global_sql] bind_value:$bind_value: ", $sth->errstr);
-
 		if (opt('warnslow'))
 		{
-			$sql_send = Time::HiRes::time();
+			$sql_warnslow_start = Time::HiRes::time();
 		}
+
+		$sth->execute($bind_value)
+			or fail("cannot execute [$_global_sql] bind_value:$bind_value: ", $sth->errstr);
 
 		while (my @row = $sth->fetchrow_array())
 		{
@@ -1173,10 +1178,14 @@ sub db_select_binds
 			$sql_count++;
 		}
 
-		if (opt('warnslow') && (($sql_end - $sql_start) > getopt('warnslow')))
+		if (opt('warnslow'))
 		{
-			wrn("slow query: [$_global_sql] took ", sprintf("%.3f seconds (execute:%.3f fetch:%.3f)",
-				($sql_end - $sql_start), ($sql_send - $sql_start), ($sql_end - $sql_send)));
+			$sql_warnslow_end = Time::HiRes::time();
+
+			if ($sql_warnslow_end - $sql_warnslow_start > getopt('warnslow'))
+			{
+				wrn("slow query: [$_global_sql] ($bind_value) took ", sprintf("%.3f seconds", $sql_warnslow_end - $sql_warnslow_start));
+			}
 		}
 	}
 
@@ -1204,6 +1213,11 @@ sub db_exec
 		$sql_start = Time::HiRes::time();
 	}
 
+	if (opt('warnslow'))
+	{
+		$sql_warnslow_start = Time::HiRes::time();
+	}
+
 	my $sth = $dbh->prepare($_global_sql)
 		or fail("cannot prepare [$_global_sql]: ", $dbh->errstr);
 
@@ -1221,10 +1235,14 @@ sub db_exec
 		$sql_count++;
 	}
 
-	if (opt('warnslow') && (($sql_end - $sql_start) > getopt('warnslow')))
+	if (opt('warnslow'))
 	{
-		wrn("slow query: [$_global_sql] took ", sprintf("%.3f seconds (execute:%.3f)",
-			($sql_end - $sql_start), ($sql_send - $sql_start)));
+		$sql_warnslow_end = Time::HiRes::time();
+
+		if ($sql_warnslow_end - $sql_warnslow_start > getopt('warnslow'))
+		{
+			wrn("slow query: [$_global_sql] took ", sprintf("%.3f seconds", $sql_warnslow_end - $sql_warnslow_start));
+		}
 	}
 
 	return $sth->{mysql_insertid};

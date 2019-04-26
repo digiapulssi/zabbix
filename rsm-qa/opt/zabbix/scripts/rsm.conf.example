@@ -36,7 +36,10 @@ max_cycles_dns = 20
 max_cycles_rdds = 10
 
 [sla_api]
+# seconds, maximum period back from current time to look back for recent measurement files for an incident
 incident_measurements_limit = 3600
+# seconds, maximum period back from current time to allow for missing measurement files before exiting with non-zero
+allow_missing_measurements = 60
 
 [salesforce]
 username = someone@example.com
