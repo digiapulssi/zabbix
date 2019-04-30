@@ -1,0 +1,1 @@
+0 0 1 * * root /opt/zabbix/scripts/slv/sla-monthly-status.pl >> /var/log/zabbix/sla-monthly-status.err 2>&1
