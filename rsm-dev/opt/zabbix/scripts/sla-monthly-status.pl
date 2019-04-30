@@ -51,40 +51,47 @@ sub main()
 
 		foreach my $row (@data)
 		{
-			my ($itemid, $value) = @{$row};
+			my ($itemid, $value, $clock) = @{$row};
 			my ($tld, $itemkey) = @{$items->{$itemid}};
 
 
 			if ($itemkey eq SLV_ITEM_KEY_DNS_DOWNTIME)
 			{
-				push(@{$tlds{$tld}}, ["DNS Service Availability", $value]);
+				push(@{$tlds{$tld}}, ["DNS Service Availability", $value, $clock]);
 			}
 			elsif ($itemkey eq SLV_ITEM_KEY_RDDS_DOWNTIME)
 			{
-				push(@{$tlds{$tld}}, ["RDDS availability", $value]);
+				push(@{$tlds{$tld}}, ["RDDS availability", $value, $clock]);
 			}
 			elsif ($itemkey eq SLV_ITEM_KEY_DNS_UDP_PFAILED)
 			{
-				push(@{$tlds{$tld}}, ["UDP DNS Resolution RTT", 100 - $value]);
+				push(@{$tlds{$tld}}, ["UDP DNS Resolution RTT", 100 - $value, $clock]);
 			}
 			elsif ($itemkey eq SLV_ITEM_KEY_DNS_TCP_PFAILED)
 			{
-				push(@{$tlds{$tld}}, ["TCP DNS Resolution RTT", 100 - $value]);
+				push(@{$tlds{$tld}}, ["TCP DNS Resolution RTT", 100 - $value, $clock]);
 			}
 			elsif ($itemkey eq SLV_ITEM_KEY_RDDS_PFAILED)
 			{
-				push(@{$tlds{$tld}}, ["RDDS query RTT", 100 - $value]);
+				push(@{$tlds{$tld}}, ["RDDS query RTT", 100 - $value, $clock]);
 			}
 			else # if ($itemkey eq SLV_ITEM_KEY_DNS_NS_DOWNTIME
 			{
-				push(@{$tlds{$tld}}, ["DNS name server availability ($itemkey)", $value]);
+				push(@{$tlds{$tld}}, ["DNS name server availability ($itemkey)", $value, $clock]);
 			}
 		}
 
 		db_disconnect();
 	}
 
-	print Dumper \%tlds;
+	foreach my $tld (keys(%tlds))
+	{
+		foreach my $data (@{$tlds{$tld}})
+		{
+			my ($item, $value, $clock) = @{$data};
+			alert($tld, $item, $value, $clock);
+		}
+	}
 
 	slv_exit(SUCCESS);
 }
@@ -253,7 +260,7 @@ sub get_data($$$$)
 	}
 
 	my $itemids_placeholder = join(",", ("?") x scalar(@itemids_params));
-	my $sql = "select $history_table.itemid, $history_table.value" .
+	my $sql = "select $history_table.itemid, $history_table.value, $history_table.clock" .
 		" from $history_table," .
 			" (" .
 				"select itemid, max(clock) as max_clock" .
@@ -271,6 +278,48 @@ sub get_data($$$$)
 	return db_select($sql, \@params);
 }
 
+sub alert($$$$)
+{
+	my $tld   = shift;
+	my $item  = shift;
+	my $value = shift;
+	my $clock = shift;
+
+	my $cmd = "python";
+	my @args = ();
+
+	push(@args, "/opt/slam/library/alertcom/script.py");
+	push(@args, "zabbix alert");
+	push(@args, "tld#PROBLEM#$tld#Monthly SLV: $item#$value");
+	push(@args, DateTime->from_epoch('epoch' => $clock)->strftime('%Y.%m.%d %H:%M:%S %Z'));
+
+	my $args = join(' ', map('"' . $_ . '"', @args));
+
+	if (opt("dry-run"))
+	{
+		print "$cmd $args\n";
+	}
+	else
+	{
+		dbg("executing $cmd $args");
+		my $out = qx($cmd @args 2>&1);
+
+		if ($out)
+		{
+			dbg("output of $cmd:\n" . $out);
+		}
+
+		if ($? == -1)
+		{
+			fail("failed to execute '$cmd $args[0]': $!");
+		}
+		if ($? != 0)
+		{
+			fail("command '$cmd $args[0]' exited with value " . ($? >> 8));
+		}
+	}
+}
+
 main();
 
 __END__
@@ -281,7 +330,7 @@ sla-monthly-status.pl - get SLV entries that violate SLA.
 
 =head1 SYNOPSIS
 
-sla-monthly-status.pl [--year <year>] [--month <month>] [--debug] [--help]
+sla-monthly-status.pl [--year <year>] [--month <month>] [--dry-run] [--debug] [--help]
 
 =head1 OPTIONS
 
@@ -294,6 +343,10 @@ Specify year. If year is specified, month also has to be specified.
 =item B<--month> int
 
 Specify month. If month is specified, year also has to be specified.
+
+=item B<--dry-run>
+
+Print data to the screen, do not change anything in the system.
 
 =item B<--debug>
 
