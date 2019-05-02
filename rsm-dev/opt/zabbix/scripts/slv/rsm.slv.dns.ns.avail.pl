@@ -159,27 +159,6 @@ sub process_cycles # for a particular slv item
 	}
 }
 
-sub get_dns_udp_rtt_itemids
-{
-	my $nsip = shift;
-
-	my $rows = db_select(
-		"select itemid,key_".
-		" from items".
-		" where key_ like '$rtt_item_key_pattern\[\%$nsip]'".
-			" and templateid is not null"
-	);
-
-	my $itemids = [];
-
-	foreach my $row (@{$rows})
-	{
-		push(@{$itemids}, $row->[0]);
-	}
-
-	return $itemids;
-}
-
 sub get_all_dns_udp_rtt_itemids
 {
 	my $rows = db_select(
