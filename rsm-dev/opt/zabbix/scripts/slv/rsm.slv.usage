@@ -22,6 +22,10 @@ Specify number of cycles to try to process starting from the oldest unprocessed 
 
 Print data to the screen, do not write anything to the filesystem.
 
+=item B<--output-file> filename
+
+Write data to a file instead of sending it to trapper.
+
 =item B<--warnslow> seconds
 
 Issue a warning in case an SQL query takes more than specified number of seconds. A floating-point number

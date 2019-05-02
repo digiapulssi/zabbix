@@ -1979,8 +1979,17 @@ sub send_values
 		push(@{$data}, $sender_value->{'data'});
 	}
 
-	dbg("sending $total_values values");	# send everything in one batch since server should be local
-	push_to_trapper($config->{'slv'}->{'zserver'}, $config->{'slv'}->{'zport'}, 10, 5, $data);
+	if (opt('output-file'))
+	{
+		my $output_file = getopt('output-file');
+		dbg("writing $total_values values to $output_file");
+		write_file($output_file, Dumper($data));
+	}
+	else
+	{
+		dbg("sending $total_values values");	# send everything in one batch since server should be local
+		push_to_trapper($config->{'slv'}->{'zserver'}, $config->{'slv'}->{'zport'}, 10, 5, $data);
+	}
 
 	# $tld is a global variable which is used in info()
 	my $saved_tld = $tld;
@@ -3545,7 +3554,7 @@ sub parse_slv_opts
 {
 	$POD2USAGE_FILE = '/opt/zabbix/scripts/slv/rsm.slv.usage';
 
-	parse_opts('tld=s', 'now=n', 'cycles=n');
+	parse_opts('tld=s', 'now=n', 'cycles=n', 'output-file=s');
 }
 
 sub opt
