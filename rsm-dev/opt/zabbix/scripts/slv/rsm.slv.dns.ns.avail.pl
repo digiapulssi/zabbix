@@ -35,6 +35,7 @@ my $current_month_latest_cycle = current_month_latest_cycle();
 my $cfg_minonline = get_macro_dns_probe_online();
 my $max_cycles_to_process = (opt('cycles') ? getopt('cycles') : 5);
 my $dns_rtt_low = get_rtt_low('dns', PROTO_UDP);
+my $rtt_itemids = get_all_dns_udp_rtt_itemids();
 
 init_values();
 process_values();
@@ -91,8 +92,6 @@ sub process_cycles # for a particular slv item
 	my $slv_itemkey = shift;
 	my $nsip = shift;
 
-	my $rtt_itemids = get_dns_udp_rtt_itemids($nsip); # one item per probe
-
 	my $slv_clock;
 
 	get_lastvalue($slv_itemid, ITEM_VALUE_TYPE_UINT64, undef, \$slv_clock);
@@ -131,7 +130,7 @@ sub process_cycles # for a particular slv item
 		}
 		else
 		{
-			my $rtt_values = get_rtt_values($from, $till, $rtt_itemids);
+			my $rtt_values = get_rtt_values($from, $till, $rtt_itemids->{$nsip});
 			my $probes_with_results = scalar(@{$rtt_values});
 
 			if ($probes_with_results < $cfg_minonline)
@@ -151,7 +150,7 @@ sub process_cycles # for a particular slv item
 					}
 				}
 
-				my $probe_count = scalar(@{$rtt_itemids});
+				my $probe_count = scalar(@{$rtt_itemids->{$nsip}});
 				my $limit = (SLV_UNAVAILABILITY_LIMIT * 0.01) * $probe_count;
 
 				push_value($tld, $slv_itemkey, $from, ($down_rtt_count > $limit) ? DOWN : UP);
@@ -176,6 +175,33 @@ sub get_dns_udp_rtt_itemids
 	foreach my $row (@{$rows})
 	{
 		push(@{$itemids}, $row->[0]);
+	}
+
+	return $itemids;
+}
+
+sub get_all_dns_udp_rtt_itemids
+{
+	my $rows = db_select(
+		"select itemid,key_".
+		" from items".
+		" where key_ like '$rtt_item_key_pattern\%'".
+		" and templateid is not null"
+	);
+
+	my $itemids = {};
+
+	foreach my $row (@{$rows})
+	{
+		if ($row->[1] =~ /\[\{\$RSM\.TLD\},(.+,.+)\]$/)
+		{
+			if (!defined($itemids->{$1}))
+			{
+				$itemids->{$1} = [];
+			}
+
+			push(@{$itemids->{$1}}, $row->[0]);
+		}
 	}
 
 	return $itemids;
