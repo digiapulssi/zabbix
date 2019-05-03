@@ -887,13 +887,29 @@ sub validate_service($)
 	fail("service \"$service\" is unknown") if (!grep {/$service/} ('dns', 'dnssec', 'rdds', 'epp'));
 }
 
-sub tld_service_enabled
+my %tld_service_enabled_cache = ();
+
+sub tld_service_enabled($$$)
 {
-	my $tld = shift;
+	my $tld     = shift;
 	my $service = shift;
-	my $now = shift;
+	my $now     = shift;
 
 	$service = lc($service);
+
+	if (!defined($tld_service_enabled_cache{$server_key}{$tld}{$service}{$now}))
+	{
+		$tld_service_enabled_cache{$server_key}{$tld}{$service}{$now} = __tld_service_enabled($tld, $service, $now);
+	}
+
+	return $tld_service_enabled_cache{$server_key}{$tld}{$service}{$now};
+}
+
+sub __tld_service_enabled($$$)
+{
+	my $tld     = shift;
+	my $service = shift;
+	my $now     = shift;
 
 	return 1 if ($service eq 'dns');
 
@@ -1053,10 +1069,10 @@ sub tld_interface_enabled($$$)
 		my $till = cycle_end($now, 60);
 
 		my @conditions = (
-			[$till - 0 * 3600 -  1 * 60 + 1, $till            , "clock desc"],	# go back 1 minute
-			[$till - 0 * 3600 - 30 * 60 + 1, $till            , "clock desc"],	# go back 30 minutes
-			[$till - 6 * 3600 -  0 * 60 + 1, $till            , "clock desc"],	# go back 6 hours
-			[$till + 1                     , $till + 24 * 3600, "clock asc"]	# go forward 1 day
+			[$till - 0 * 3600 -  1 * 60 + 1, $till            , "max(clock)"],	# go back 1 minute
+			[$till - 0 * 3600 - 30 * 60 + 1, $till            , "max(clock)"],	# go back 30 minutes
+			[$till - 6 * 3600 -  0 * 60 + 1, $till            , "max(clock)"],	# go back 6 hours
+			[$till + 1                     , $till + 24 * 3600, "min(clock)"]	# go forward 1 day
 		);
 
 		my $condition_index = 0;
@@ -1065,16 +1081,23 @@ sub tld_interface_enabled($$$)
 		{
 			my $from = $conditions[$condition_index]->[0];
 			my $till = $conditions[$condition_index]->[1];
-			my $order = $conditions[$condition_index]->[2];
+			my $clock = $conditions[$condition_index]->[2];
 
-			my $rows_ref = db_select_binds(
-				"select value".
-				" from history_uint".
-				" where itemid=?".
-					" and " . sql_time_condition($from, $till).
-				" order by $order".
-				" limit 1",
-				$enabled_items_cache{$item_key}{$tld});
+			my $itemids_placeholder = join(",", ("?") x scalar(@{$enabled_items_cache{$item_key}{$tld}}));
+
+			my $rows_ref = db_select(
+				"select value" .
+				" from" .
+					" history_uint" .
+					" inner join (" .
+						" select itemid,$clock as clock" .
+						" from history_uint" .
+						" where" .
+							" clock between ? and ? and" .
+							" itemid in ($itemids_placeholder)" .
+						" group by itemid" .
+					" ) as history_clock on history_clock.itemid=history_uint.itemid and history_clock.clock=history_uint.clock",
+					[$from, $till, @{$enabled_items_cache{$item_key}{$tld}}]);
 
 			my $found = 0;
 
