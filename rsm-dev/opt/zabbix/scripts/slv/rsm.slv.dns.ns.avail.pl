@@ -31,9 +31,10 @@ else
 }
 
 
+my $max_cycles = (opt('cycles') ? getopt('cycles') : slv_max_cycles('dns'));
+my $cycle_delay = get_dns_udp_delay();
 my $current_month_latest_cycle = current_month_latest_cycle();
 my $cfg_minonline = get_macro_dns_probe_online();
-my $max_cycles_to_process = (opt('cycles') ? getopt('cycles') : 5);
 my $dns_rtt_low = get_rtt_low('dns', PROTO_UDP);
 my $rtt_itemids = get_all_dns_udp_rtt_itemids();
 
@@ -100,12 +101,12 @@ sub process_cycles # for a particular slv item
 
 	for (;;)
 	{
-		last if ($n >= $max_cycles_to_process);
+		last if ($n >= $max_cycles);
 		$n++;
 
 		if (defined($slv_clock))
 		{
-			$slv_clock += 60;
+			$slv_clock += $cycle_delay;
 		}
 		else
 		{
@@ -119,7 +120,7 @@ sub process_cycles # for a particular slv item
 		}
 
 		my $from = $slv_clock;
-		my $till = $slv_clock + 59;
+		my $till = $slv_clock + $cycle_delay - 1;
 
 		my $online_probe_count = get_online_probe_count($from, $till);
 
@@ -228,5 +229,5 @@ sub get_rtt_values
 sub current_month_latest_cycle
 {
 	# we don't know the rollweek bounds yet so we assume it ends at least few minutes back
-	return cycle_start($now, 60) - AVAIL_SHIFT_BACK;
+	return cycle_start($now, $cycle_delay) - AVAIL_SHIFT_BACK;
 }

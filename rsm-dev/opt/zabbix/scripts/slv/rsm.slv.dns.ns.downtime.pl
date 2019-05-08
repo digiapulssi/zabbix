@@ -21,6 +21,7 @@ use constant AVAIL_KEY_PATTERN => 'rsm.slv.dns.ns.avail';
 use constant DOWNTIME_KEY_PATTERN => 'rsm.slv.dns.ns.downtime';
 
 my $max_cycles = (opt('cycles') ? getopt('cycles') : slv_max_cycles('dns'));
+my $cycle_delay = get_dns_udp_delay();
 
 init_values();
 process_values();
@@ -153,7 +154,7 @@ sub calculate_downtime_values
 	{
 		$downtime_value = 0;
 
-		$downtime_clock = db_select_value("select min(clock)-60 from history_uint where itemid=?", [$avail_itemid]);
+		$downtime_clock = db_select_value("select min(clock)-$cycle_delay from history_uint where itemid=?", [$avail_itemid]);
 
 		fail("no name server availability data yet") unless (defined($downtime_clock));
 	}
@@ -164,8 +165,8 @@ sub calculate_downtime_values
 		return;
 	}
 
-	my $clock_first = $downtime_clock + 60;
-	my $clock_last = $downtime_clock + (60 * $max_cycles);
+	my $clock_first = $downtime_clock + $cycle_delay;
+	my $clock_last = $downtime_clock + ($cycle_delay * $max_cycles);
 
 	if ($clock_last > $avail_clock)
 	{
@@ -188,7 +189,7 @@ sub calculate_downtime_values
 
 	undef($rows);
 
-	for (my $clock = $clock_first; $clock <= $clock_last; $clock+=60)
+	for (my $clock = $clock_first; $clock <= $clock_last; $clock += $cycle_delay)
 	{
 		my $avail_value = $avail_values_by_clock{$clock};
 
@@ -198,7 +199,7 @@ sub calculate_downtime_values
 			$avail_value = UP;
 		}
 
-		my $prev_clock = $clock - 60;
+		my $prev_clock = $clock - $cycle_delay;
 		my $month_changed = (month_start($prev_clock) != month_start($clock) ? 1 : 0);
 
 		my $new_downtime_value = ($month_changed ? 0 : $downtime_value) + ($avail_value == DOWN ? 1 : 0);
