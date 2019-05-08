@@ -134,43 +134,42 @@ sub process_ns_items
 sub calculate_downtime_values
 {
 	my $tld = shift;
-	my $nsip = shift;
+	my $nsip = shift;	# only for logging
 	my $avail_itemid = shift;
 	my $downtime_itemid = shift;
 	my $downtime_key = shift;
 
-	my $avail_clock;
-	my $avail_value;
+	my $avail_lastclock;
 
-	if (SUCCESS != get_lastvalue($avail_itemid, ITEM_VALUE_TYPE_UINT64, \$avail_value, \$avail_clock))
+	if (SUCCESS != get_lastvalue($avail_itemid, ITEM_VALUE_TYPE_UINT64, undef, \$avail_lastclock))
 	{
 		fail("cannot get lastvalue for avail item $avail_itemid");
 	}
 
 	my $downtime_value;
-	my $downtime_clock;
+	my $downtime_lastclock;
 
-	if (SUCCESS != get_lastvalue($downtime_itemid, ITEM_VALUE_TYPE_UINT64, \$downtime_value, \$downtime_clock))
+	if (SUCCESS != get_lastvalue($downtime_itemid, ITEM_VALUE_TYPE_UINT64, \$downtime_value, \$downtime_lastclock))
 	{
 		$downtime_value = 0;
 
-		$downtime_clock = db_select_value("select min(clock)-$cycle_delay from history_uint where itemid=?", [$avail_itemid]);
+		$downtime_lastclock = db_select_value("select min(clock)-$cycle_delay from history_uint where itemid=?", [$avail_itemid]);
 
-		fail("no name server availability data yet") unless (defined($downtime_clock));
+		fail("no name server availability data yet") unless (defined($downtime_lastclock));
 	}
 
-	if ($downtime_clock >= $avail_clock)
+	if ($downtime_lastclock >= $avail_lastclock)
 	{
 		dbg("no new data for nsip '$nsip'");
 		return;
 	}
 
-	my $clock_first = $downtime_clock + $cycle_delay;
-	my $clock_last = $downtime_clock + ($cycle_delay * $max_cycles);
+	my $clock_first = $downtime_lastclock + $cycle_delay;
+	my $clock_last = $downtime_lastclock + ($cycle_delay * $max_cycles);
 
-	if ($clock_last > $avail_clock)
+	if ($clock_last > $avail_lastclock)
 	{
-		$clock_last = $avail_clock;
+		$clock_last = $avail_lastclock;
 	}
 
 	my $rows = db_select(
@@ -187,15 +186,13 @@ sub calculate_downtime_values
 		$avail_values_by_clock{$row->[0]} = $row->[1];
 	}
 
-	undef($rows);
-
 	for (my $clock = $clock_first; $clock <= $clock_last; $clock += $cycle_delay)
 	{
 		my $avail_value = $avail_values_by_clock{$clock};
 
 		if (!defined($avail_value))
 		{
-			dbg("no history value for avail item $avail_itemid at cycle $clock");
+			dbg("no history value for avail item $avail_itemid at ", ts_full($clock), ", the data was probably removed");
 			$avail_value = UP;
 		}
 
