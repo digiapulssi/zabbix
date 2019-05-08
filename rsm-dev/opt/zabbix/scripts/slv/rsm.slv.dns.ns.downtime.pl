@@ -179,12 +179,24 @@ sub calculate_downtime_values
 			" and " . sql_time_condition($clock_first, $clock_last)
 	);
 
-	fail("cannot obtain values for ns '$nsip' avail item") unless (scalar(@{$rows}));
+	my %avail_values_by_clock;
 
 	foreach my $row (@{$rows})
 	{
-		my $clock = $row->[0];
-		my $avail_value = $row->[1];
+		$avail_values_by_clock{$row->[0]} = $row->[1];
+	}
+
+	undef($rows);
+
+	for (my $clock = $clock_first; $clock <= $clock_last; $clock+=60)
+	{
+		my $avail_value = $avail_values_by_clock{$clock};
+
+		if (!defined($avail_value))
+		{
+			dbg("no history value for avail item $avail_itemid at cycle $clock");
+			$avail_value = UP;
+		}
 
 		my $prev_clock = $clock - 60;
 		my $month_changed = (month_start($prev_clock) != month_start($clock) ? 1 : 0);
@@ -194,6 +206,5 @@ sub calculate_downtime_values
 		push_value($tld, $downtime_key, $clock, $new_downtime_value);
 
 		$downtime_value = $new_downtime_value;
-		$clock += 60;
 	}
 }
