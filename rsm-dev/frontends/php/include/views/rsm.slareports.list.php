@@ -77,8 +77,8 @@ $widget->additem((new CDiv())
 $table->addRow([
 		bold(_('DNS Service Availability')),
 		'-',
-		'-',
-		'-',
+		gmdate('Y-m-d H:i:s e', $data['details']['from']),
+		gmdate('Y-m-d H:i:s e', $data['details']['to']),
 		_s('%d (minutes of downtime)', $data['slv_dns_downtime']),
 		_s('%d (minutes of downtime)', $macro[RSM_SLV_DNS_DOWNTIME])
 	],
@@ -104,8 +104,8 @@ $table
 	->addRow([
 			_('DNS UDP Resolution RTT'),
 			'-',
-			'-',
-			'-',
+			gmdate('Y-m-d H:i:s e', $data['details']['from']),
+			gmdate('Y-m-d H:i:s e', $data['details']['to']),
 			_s('%1$s %% (queries <= %2$s ms)', $data['slv_dns_udp_pfailed'],
 				$macro[RSM_DNS_UDP_RTT_LOW]
 			),
@@ -117,8 +117,8 @@ $table
 	)->addRow([
 			_('DNS TCP Resolution RTT'),
 			'-',
-			'-',
-			'-',
+			gmdate('Y-m-d H:i:s e', $data['details']['from']),
+			gmdate('Y-m-d H:i:s e', $data['details']['to']),
 			_s('%1$s %% (queries <= %2$s ms)', $data['slv_dns_tcp_pfailed'],
 				$macro[RSM_DNS_TCP_RTT_LOW]
 			),
@@ -135,8 +135,8 @@ if (array_key_exists('slv_rdds_downtime', $data) && $data['slv_rdds_downtime'] !
 	$table->addRow([
 			bold(_('RDDS Service Availability')),
 			'-',
-			'-',
-			'-',
+			gmdate('Y-m-d H:i:s e', $data['details']['from']),
+			gmdate('Y-m-d H:i:s e', $data['details']['to']),
 			_s('%1$s (minutes of downtime)', $data['slv_rdds_downtime']),
 			_s('<= %1$s min of downtime', $macro[RSM_SLV_MACRO_RDDS_DOWNTIME])
 		],
@@ -144,8 +144,8 @@ if (array_key_exists('slv_rdds_downtime', $data) && $data['slv_rdds_downtime'] !
 	)->addRow([
 			_('RDDS Query RTT'),
 			'-',
-			'-',
-			'-',
+			gmdate('Y-m-d H:i:s e', $data['details']['from']),
+			gmdate('Y-m-d H:i:s e', $data['details']['to']),
 			_s('%1$s %% (queries <= %2$s ms)', $data['slv_rdds_rtt_downtime'], $macro[RSM_RDDS_RTT_LOW]),
 			_s('<= %1$s ms, for at least %2$s %% of the queries', $macro[RSM_RDDS_RTT_LOW], $macro[RSM_SLV_MACRO_RDDS_RTT])
 		],
