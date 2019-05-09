@@ -16,6 +16,7 @@ use POSIX qw(floor);
 use Sys::Syslog;
 use Data::Dumper;
 use Time::HiRes;
+use Fcntl qw(:flock);	# for the LOCK_* constants, logging to stdout by multiple processes
 use RSM;
 use Pusher qw(push_to_trapper);
 
@@ -134,10 +135,6 @@ our @EXPORT = qw($result $dbh $tld $server_key
 
 # configuration, set in set_slv_config()
 my $config = undef;
-
-# this will be used for making sure only one copy of script runs (see function __is_already_running())
-my $pidfile;
-use constant PID_DIR => '/tmp';
 
 my $_sender_values;	# used to send values to Zabbix server
 
@@ -3021,9 +3018,18 @@ sub init_process
 	__reset_stats();
 }
 
+# this will be used for making sure only one copy of script runs (see function __is_already_running())
+my $pidfile;
+use constant PID_DIR => '/tmp';
+
 sub finalize_process
 {
 	my $rv = shift // SUCCESS;
+
+	if (defined($pidfile) && $pidfile->pid == $$)
+	{
+		$pidfile->remove() or wrn("cannot unlink pid file");
+	}
 
 	db_disconnect();
 
@@ -3265,11 +3271,11 @@ sub write_file
 	return SUCCESS;
 }
 
-sub read_file($$$)
+sub read_file($$;$)
 {
 	my $file = shift;
 	my $buf = shift;
-	my $error = shift;
+	my $error_buf = shift;
 
 	my $contents = do
 	{
@@ -3277,7 +3283,7 @@ sub read_file($$$)
 
 		if (!open my $fh, "<", $file)
 		{
-			$$error = "$!";
+			$$error_buf = "$!" if ($error_buf);
 			return E_FAIL;
 		}
 
@@ -3332,6 +3338,27 @@ sub __func
 	return "";
 }
 
+sub __script
+{
+	my $script = $0;
+
+	$script =~ s,.*/([^/]*)$,$1,;
+
+	return $script;
+}
+
+# for clear output from child processes
+use constant STDOUT_LOCK_FILE	=> PID_DIR . '/' . __script() . '.stdout.lock';
+my $stdout_lock_handle;
+
+sub __init_stdout_lock
+{
+	if (!defined($stdout_lock_handle))
+	{
+		open($stdout_lock_handle, ">", STDOUT_LOCK_FILE) or die("cannot open \"" . STDOUT_LOCK_FILE . "\": $!");
+	}
+}
+
 sub __log
 {
 	my $syslog_priority = shift;
@@ -3368,7 +3395,14 @@ sub __log
 
 	if (opt('dry-run') or opt('nolog'))
 	{
+		__init_stdout_lock();
+
+		flock($stdout_lock_handle, LOCK_EX) or die("cannot lock \"" . STDOUT_LOCK_FILE . "\": $!");
+
 		print {$stdout ? *STDOUT : *STDERR} (sprintf("%6d:", $$), ts_str(), " [$priority] ", $server_str, ($cur_tld eq "" ? "" : "$cur_tld: "), __func(), "$msg\n");
+
+		flock($stdout_lock_handle, LOCK_UN) or die("cannot unlock \"" . STDOUT_LOCK_FILE . "\": $!");
+
 		return;
 	}
 
@@ -3422,15 +3456,6 @@ sub __get_dbl_values
 	}
 
 	return $result;
-}
-
-sub __script
-{
-	my $script = $0;
-
-	$script =~ s,.*/([^/]*)$,$1,;
-
-	return $script;
 }
 
 sub __get_pidfile

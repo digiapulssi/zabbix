@@ -27,6 +27,7 @@ use constant MAX_PERIOD => 30 * 60;	# 30 minutes
 use constant SUBSTR_KEY_LEN => 20;	# for logging
 
 use constant DEFAULT_MAX_CHILDREN => 64;
+use constant DEFAULT_MAX_WAIT => 600;	# maximum seconds to wait befor terminating child process
 
 sub process_server($);
 sub process_tld_batch($$$$$$);
@@ -41,13 +42,15 @@ sub child_error($$$$$$);
 sub save_child_lastvalues_cache($);
 sub set_on_finish($);
 
-parse_opts('tld=s', 'service=s', 'server-id=i', 'now=i', 'period=i', 'print-period!', 'max-children=i');
+parse_opts('tld=s', 'service=s', 'server-id=i', 'now=i', 'period=i', 'print-period!', 'max-children=i', 'max-wait=i', 'debug2!');
 
 setopt('nolog');
 
 usage() if (opt('help'));
 
 exit_if_running();	# exit with 0 exit code
+
+my $max_wait = getopt('max-wait') // DEFAULT_MAX_WAIT;
 
 if (opt('debug'))
 {
@@ -145,8 +148,17 @@ my $signal_sent = 0;
 my $lastvalues_cache = {};
 
 my $fm = new Parallel::ForkManager($server_count);
+set_on_finish($fm);
 
-foreach (@server_keys)
+# {
+#     PID => {'desc' => 'server_#_parent', 'from' => 1234324235},
+#     ...
+#     PID => {'desc' => 'server_#_child', 'from' => 1234324235},
+#     ...
+# }
+my %child_desc;
+
+foreach my $server_key (@server_keys)
 {
 	my $pid = $fm->start();
 
@@ -154,12 +166,18 @@ foreach (@server_keys)
 	{
 		init_process();
 
-		process_server($_);
+		process_server($server_key);
 
 		finalize_process();
 
 		$fm->finish(SUCCESS);
 		last;
+	}
+	else
+	{
+		$child_desc{$pid}->{'desc'} = "${server_key}__parent";
+		$child_desc{$pid}->{'from'} = time();
+		dbg("$child_desc{$pid}->{'desc'} (PID:$pid) STARTED");
 	}
 }
 
@@ -219,9 +237,11 @@ sub process_server($)
 	my $tldi_begin = 0;
 	my $tldi_end;
 
+	%child_desc = ();
+
 	while ($children_count)
 	{
-		child_failed() if ($child_failed);
+		terminate_children() if ($child_failed);
 
 		$tldi_end = $tldi_begin + $tlds_per_child;
 
@@ -243,17 +263,45 @@ sub process_server($)
 			$fm->finish(SUCCESS, \%child_data);
 			last;
 		}
+		else
+		{
+			$child_desc{$pid}->{'desc'} = "${server_key}_child";
+			$child_desc{$pid}->{'from'} = time();
+			dbg("$child_desc{$pid}->{'desc'} (PID:$pid) STARTED");
+		}
 
 		$tldi_begin = $tldi_end;
 
 		$children_count--;
 	}
 
-	$fm->run_on_wait(undef);
+	$fm->run_on_wait(
+		sub()
+		{
+			dbg("waiting for children, one of:");
+			foreach my $pid (keys(%child_desc))
+			{
+				my $run_time = time() - $child_desc{$pid}->{'from'};
+				if ($run_time > $max_wait)
+				{
+					wrn("$child_desc{$pid}->{'desc'} (PID:$pid) is running for $run_time seconds, terminating");
+
+					kill('TERM', $pid);
+
+					last;
+				}
+
+				dbg("    $child_desc{$pid}->{'desc'} (PID:$pid), run time $run_time seconds");
+
+			}
+		},
+		5	# every 5 seconds
+	);
+
 	$fm->wait_all_children();
 
 	# Do not update cache if something happened.
-	child_failed() if ($child_failed);
+	terminate_children() if ($child_failed);
 
 	if (!opt('dry-run') && !opt('now'))
 	{
@@ -321,6 +369,8 @@ sub process_tld_batch($$$$$$)
 	}
 
 	db_disconnect();
+
+	sleep(2);
 }
 
 sub process_tld($$$$$)
@@ -433,20 +483,19 @@ sub get_global_lastclock($$$)
 
 	my $continue_file = ah_get_continue_file();
 
-	if (-e $continue_file)
+	my $error;
+
+	if (read_file($continue_file, \$lastclock, \$error) == SUCCESS)
 	{
-		my $error;
-
-		if (read_file($continue_file, \$lastclock, \$error) != SUCCESS)
-		{
-			fail("cannot read file \"$continue_file\": $error");
-		}
-
 		while (chomp($lastclock)) {}
 
 		dbg("using last clock from SLA API directory, file $continue_file: ", ts_str($lastclock));
 
 		return cycle_start($lastclock, $delay);
+	}
+	else
+	{
+		wrn("cannot read \"$continue_file\": $error");
 	}
 
 	# if not, get the oldest from the database
@@ -1474,16 +1523,12 @@ sub calculate_cycle($$$$$$$$$)
 
 	dbg("cycle: $json->{'status'} ($detailed_info)");
 
-	if (opt('dry-run'))
+	if (opt('debug2'))
 	{
 		print(Dumper($json));
-		return;
 	}
 
-	if (opt('debug'))
-	{
-		print(Dumper($json));
-	}
+	return if (opt('dry-run'));
 
 	if (ah_save_recent_measurement(ah_get_api_tld($tld), $service, $json, $from) != AH_SUCCESS)
 	{
@@ -1517,7 +1562,7 @@ sub get_interfaces($$$)
 	return \@result;
 }
 
-sub child_failed
+sub terminate_children
 {
 	$fm->run_on_wait(
 		sub ()
@@ -1541,7 +1586,7 @@ sub child_failed
 
 	$fm->wait_all_children();
 
-	slv_exit(E_FAIL) if ($child_failed);
+	slv_exit(E_FAIL);
 }
 
 sub child_error($$$$$$)
@@ -1555,14 +1600,19 @@ sub child_error($$$$$$)
 
 	if ($core_dump == 1)
 	{
-		info("child (PID:$pid) core dumped");
+		info("$child_desc{$pid}->{'desc'} (PID:$pid) core dumped");
 		return 1;
 	}
 	elsif ($exit_code != SUCCESS)
 	{
-		info("child (PID:$pid)",
+		info("$child_desc{$pid}->{'desc'} (PID:$pid)",
 			($exit_signal == 0 ? "" : " got signal " . sig_name($exit_signal) . " and"),
 			" exited with code $exit_code");
+		return 1;
+	}
+	elsif ($exit_signal != 0)
+	{
+		wrn("$child_desc{$pid}->{'desc'} (PID:$pid) got signal " . sig_name($exit_signal));
 		return 1;
 	}
 
@@ -1595,12 +1645,18 @@ sub set_on_finish($)
 
 			if (child_error($pid, $exit_code, $id, $exit_signal, $core_dump, $child_data))
 			{
+				wrn("$child_desc{$pid}->{'desc'} (PID:$pid) failed,",
+					" run time: ", time() - $child_desc{$pid}->{'from'}, " seconds");
 				$child_failed = 1;
+
+				slv_exit(E_FAIL);
 			}
 			else
 			{
-				dbg("child (PID:$pid) exited successfully");
-				save_child_lastvalues_cache($child_data);
+				dbg("$child_desc{$pid}->{'desc'} (PID:$pid) exited successfully,",
+					" run time: ", time() - $child_desc{$pid}->{'from'}, " seconds");
+
+				save_child_lastvalues_cache($child_data) if (defined($child_data));
 			}
 		}
 	);
@@ -1614,7 +1670,7 @@ sla-api-current.pl - generate recent SLA API measurement files for newly collect
 
 =head1 SYNOPSIS
 
-sla-api-current.pl [--tld <tld>] [--service <name>] [--server-id <id>] [--now unixtimestamp] [--period minutes] [--print-period] [--max-children n] [--debug] [--dry-run] [--help]
+sla-api-current.pl [--tld <tld>] [--service <name>] [--server-id <id>] [--now unixtimestamp] [--period minutes] [--print-period] [--max-children n] [--max-wait seconds] [--debug] [--dry-run] [--help]
 
 =head1 OPTIONS
 
@@ -1647,6 +1703,11 @@ Print selected period on the screen.
 =item B<--max-children> n
 
 Specify maximum number of child processes to run in parallel (default: 64).
+
+=item B<--max-wait> seconds
+
+Specify maximum number of seconds to wait for single child process to finish (default: 600). If still running
+the process will be sent TERM signal causing the script to exit with non-zero exit code.
 
 =item B<--debug>
 
