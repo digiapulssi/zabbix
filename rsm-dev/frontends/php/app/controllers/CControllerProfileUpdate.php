@@ -35,7 +35,6 @@ class CControllerProfileUpdate extends CController {
 				case 'web.auditacts.filter.state':
 				case 'web.rsm.slareports.filter.state':
 				case 'web.rsm.monthlyreports.filter.state':
-				case 'web.rsm.screens.filter.state':
 				case 'web.rsm.rollingweekstatus.filter.state':
 				case 'web.auditlogs.filter.state':
 				case 'web.avail_report.filter.state':
