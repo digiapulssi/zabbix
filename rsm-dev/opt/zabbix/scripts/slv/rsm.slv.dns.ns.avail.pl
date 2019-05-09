@@ -97,13 +97,8 @@ sub process_cycles # for a particular slv item
 
 	get_lastvalue($slv_itemid, ITEM_VALUE_TYPE_UINT64, undef, \$slv_clock);
 
-	my $n = 0;
-
-	for (;;)
+	for (my $n = 0; $n < $max_cycles; $n++)
 	{
-		last if ($n >= $max_cycles);
-		$n++;
-
 		if (defined($slv_clock))
 		{
 			$slv_clock += $cycle_delay;
@@ -131,7 +126,7 @@ sub process_cycles # for a particular slv item
 		}
 		else
 		{
-			my $rtt_values = get_rtt_values($from, $till, $rtt_itemids->{$nsip});
+			my $rtt_values = get_rtt_values($from, $till, $rtt_itemids->{$tld}{$nsip});
 			my $probes_with_results = scalar(@{$rtt_values});
 
 			if ($probes_with_results < $cfg_minonline)
@@ -151,7 +146,7 @@ sub process_cycles # for a particular slv item
 					}
 				}
 
-				my $probe_count = scalar(@{$rtt_itemids->{$nsip}});
+				my $probe_count = scalar(@{$rtt_itemids->{$tld}{$nsip}});
 				my $limit = (SLV_UNAVAILABILITY_LIMIT * 0.01) * $probe_count;
 
 				push_value($tld, $slv_itemkey, $from, ($down_rtt_count > $limit) ? DOWN : UP);
@@ -163,25 +158,25 @@ sub process_cycles # for a particular slv item
 sub get_all_dns_udp_rtt_itemids
 {
 	my $rows = db_select(
-		"select itemid,key_".
-		" from items".
-		" where key_ like '$rtt_item_key_pattern\%'".
-		" and templateid is not null"
+		"select substring_index(hosts.host,' ',1),items.itemid,items.key_" .
+		" from" .
+			" items" .
+			" left join hosts on hosts.hostid = items.hostid" .
+		" where" .
+			" items.key_ like '$rtt_item_key_pattern\[%,%,%\]' and" .
+			" items.templateid is not null and" .
+			" hosts.host like '% %'"
 	);
 
 	my $itemids = {};
 
 	foreach my $row (@{$rows})
 	{
-		if ($row->[1] =~ /\[\{\$RSM\.TLD\},(.+,.+)\]$/)
-		{
-			if (!defined($itemids->{$1}))
-			{
-				$itemids->{$1} = [];
-			}
-
-			push(@{$itemids->{$1}}, $row->[0]);
-		}
+		my $tld    = $row->[0];
+		my $itemid = $row->[1];
+		my $key    = $row->[2];
+		my $nsip   = $key =~ s/^.+\[.+,(.+,.+)\]$/$1/r;
+		push(@{$itemids->{$tld}{$nsip}}, $itemid);
 	}
 
 	return $itemids;
@@ -209,21 +204,14 @@ sub get_rtt_values
 	my $till = shift;
 	my $rtt_itemids = shift;
 
-	my $rows = db_select(
-		"select value".
-		" from history".
-		" where itemid in (".join(',', @{$rtt_itemids}).")".
-			" and clock between $from and $till"
+	my $itemids_placeholder = join(",", ("?") x scalar(@{$rtt_itemids}));
+
+	return db_select_col(
+		"select value" .
+		" from history" .
+		" where itemid in ($itemids_placeholder) and clock between $from and $till",
+		$rtt_itemids
 	);
-
-	my $values = [];
-
-	foreach my $row (@{$rows})
-	{
-		push(@{$values}, $row->[0]);
-	}
-
-	return $values;
 }
 
 sub current_month_latest_cycle
