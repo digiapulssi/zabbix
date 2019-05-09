@@ -57,13 +57,13 @@ sub process_tld
 	my $tld = shift;
 	my $hostid = shift;
 
-	foreach (@{get_slv_dns_ns_downtime_items($hostid)})
+	foreach (@{get_slv_dns_ns_avail_items($hostid)})
 	{
 		process_slv_item($tld, @$_);
 	}
 }
 
-sub get_slv_dns_ns_downtime_items
+sub get_slv_dns_ns_avail_items
 {
 	my $hostid = shift;
 
