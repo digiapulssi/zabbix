@@ -123,35 +123,35 @@ sub process_cycles # for a particular slv item
 		{
 			push_value($tld, $slv_itemkey, $from, UP_INCONCLUSIVE_NO_PROBES,
 				"Up (not enough probes online, $online_probe_count while $cfg_minonline required)");
+
+			next;
 		}
-		else
+
+		my $rtt_values = get_rtt_values($from, $till, $rtt_itemids->{$tld}{$nsip});
+		my $probes_with_results = scalar(@{$rtt_values});
+
+		if ($probes_with_results < $cfg_minonline)
 		{
-			my $rtt_values = get_rtt_values($from, $till, $rtt_itemids->{$tld}{$nsip});
-			my $probes_with_results = scalar(@{$rtt_values});
+			push_value($tld, $slv_itemkey, $from, UP_INCONCLUSIVE_NO_DATA,
+				"Up (not enough probes with results, $probes_with_results while $cfg_minonline required)");
 
-			if ($probes_with_results < $cfg_minonline)
+			next;
+		}
+
+		my $down_rtt_count = 0;
+
+		foreach my $rtt_value (@{$rtt_values})
+		{
+			if (is_service_error('dns', $rtt_value, $dns_rtt_low))
 			{
-				push_value($tld, $slv_itemkey, $from, UP_INCONCLUSIVE_NO_DATA,
-					"Up (not enough probes with results, $probes_with_results while $cfg_minonline required)");
-			}
-			else
-			{
-				my $down_rtt_count = 0;
-
-				foreach my $rtt_value (@{$rtt_values})
-				{
-					if (is_service_error('dns', $rtt_value, $dns_rtt_low))
-					{
-						$down_rtt_count++;
-					}
-				}
-
-				my $probe_count = scalar(@{$rtt_itemids->{$tld}{$nsip}});
-				my $limit = (SLV_UNAVAILABILITY_LIMIT * 0.01) * $probe_count;
-
-				push_value($tld, $slv_itemkey, $from, ($down_rtt_count > $limit) ? DOWN : UP);
+				$down_rtt_count++;
 			}
 		}
+
+		my $probe_count = scalar(@{$rtt_itemids->{$tld}{$nsip}});
+		my $limit = (SLV_UNAVAILABILITY_LIMIT * 0.01) * $probe_count;
+
+		push_value($tld, $slv_itemkey, $from, ($down_rtt_count > $limit) ? DOWN : UP);
 	}
 }
 
