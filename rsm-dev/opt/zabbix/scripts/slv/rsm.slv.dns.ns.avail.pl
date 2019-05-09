@@ -209,8 +209,8 @@ sub get_rtt_values
 	return db_select_col(
 		"select value" .
 		" from history" .
-		" where itemid in ($itemids_placeholder) and clock between $from and $till",
-		$rtt_itemids
+		" where itemid in ($itemids_placeholder) and clock between ? and ?",
+		[@{$rtt_itemids}, $from, $till]
 	);
 }
 
