@@ -121,7 +121,9 @@ class CSlaReport
 
 			self::validateData($data);
 
-			$reports = self::generateXml($tlds, $data, $time, $from, $till);
+			$slrs = self::getSlrValues($from);
+
+			$reports = self::generateXml($tlds, $data, $slrs, $time, $from, $till);
 		}
 		catch (Exception $e)
 		{
@@ -481,7 +483,7 @@ class CSlaReport
 		}
 	}
 
-	private static function generateXml(&$tlds, &$data, $generationDateTime, $reportPeriodFrom, $reportPeriodTo)
+	private static function generateXml(&$tlds, &$data, &$slrs, $generationDateTime, $reportPeriodFrom, $reportPeriodTo)
 	{
 		$reports = array_fill_keys($tlds, null); // for sorting, based on $tlds
 
@@ -494,7 +496,8 @@ class CSlaReport
 			$xml->addAttribute("reportPeriodTo", $reportPeriodTo);
 
 			$xml_dns = $xml->addChild("DNS");
-			$xml_dns->addChild("serviceAvailability", $tld["dns"]["availability"]);
+			$xml_dns_avail = $xml_dns->addChild("serviceAvailability", $tld["dns"]["availability"]);
+			$xml_dns_avail->addAttribute("downtimeSLR", $slrs["dns-avail"]);
 			foreach ($tld["dns"]["ns"] as $ns)
 			{
 				$xml_ns = $xml_dns->addChild("nsAvailability", $ns["availability"]);
@@ -502,22 +505,33 @@ class CSlaReport
 				$xml_ns->addAttribute("ipAddress", $ns["ipAddress"]);
 				$xml_ns->addAttribute("from", $ns["from"]);
 				$xml_ns->addAttribute("to", $ns["to"]);
+				$xml_ns->addAttribute("downtimeSLR", $slrs["ns-avail"]);
 			}
-			$xml_dns->addChild("rttUDP", $tld["dns"]["rttUDP"]);
-			$xml_dns->addChild("rttTCP", $tld["dns"]["rttTCP"]);
+			$xml_dns_udp_rtt = $xml_dns->addChild("rttUDP", $tld["dns"]["rttUDP"]);
+			$xml_dns_udp_rtt->addAttribute("rttSLR", $slrs["dns-udp-rtt"]);
+			$xml_dns_udp_rtt->addAttribute("percentageSLR", $slrs["dns-udp-percentage"]);
+			$xml_dns_tcp_rtt = $xml_dns->addChild("rttTCP", $tld["dns"]["rttTCP"]);
+			$xml_dns_tcp_rtt->addAttribute("rttSLR", $slrs["dns-tcp-rtt"]);
+			$xml_dns_tcp_rtt->addAttribute("percentageSLR", $slrs["dns-tcp-percentage"]);
 
 			$xml_rdds = $xml->addChild("RDDS");
 
+			$xml_rdds_avail = null;
+			$xml_rdds_rtt = null;
 			if ($tld["rdds"]["enabled"])
 			{
-				$xml_rdds->addChild("serviceAvailability", $tld["rdds"]["availability"]);
-				$xml_rdds->addChild("rtt", $tld["rdds"]["rtt"]);
+				$xml_rdds_avail = $xml_rdds->addChild("serviceAvailability", $tld["rdds"]["availability"]);
+				$xml_rdds_rtt = $xml_rdds->addChild("rtt", $tld["rdds"]["rtt"]);
 			}
 			else
 			{
-				$xml_rdds->addChild("serviceAvailability", "disabled");
-				$xml_rdds->addChild("rtt", "disabled");
+				$xml_rdds_avail = $xml_rdds->addChild("serviceAvailability", "disabled");
+				$xml_rdds_rtt = $xml_rdds->addChild("rtt", "disabled");
 			}
+
+			$xml_rdds_avail->addAttribute("downtimeSLR", $slrs["rdds-avail"]);
+			$xml_rdds_rtt->addAttribute("rttSLR", $slrs["rdds-rtt"]);
+			$xml_rdds_rtt->addAttribute("percentageSLR", $slrs["rdds-percentage"]);
 
 			$dom = dom_import_simplexml($xml)->ownerDocument;
 			$dom->formatOutput = true;
@@ -662,6 +676,91 @@ class CSlaReport
 			" group by itemid";
 		$params = array_merge($itemids, [$from, $till]);
 		return self::dbSelect($sql, $params);
+	}
+
+	private static function getSlrValues($from)
+	{
+		$macro_names = array(
+				'RSM.SLV.DNS.DOWNTIME'	=> 'dns-avail',			// minutes
+				'RSM.SLV.NS.DOWNTIME'	=> 'ns-avail',			// minutes
+				'RSM.SLV.DNS.TCP.RTT'	=> 'dns-tcp-percentage',	// %
+				'RSM.DNS.TCP.RTT.LOW'	=> 'dns-tcp-rtt',		// ms
+				'RSM.SLV.DNS.UDP.RTT'	=> 'dns-udp-percentage',	// %
+				'RSM.DNS.UDP.RTT.LOW'	=> 'dns-udp-rtt',		// ms
+				'RSM.SLV.RDDS.DOWNTIME'	=> 'rdds-avail',		// minutes
+				'RSM.SLV.RDDS.RTT'	=> 'rdds-percentage',		// %
+				'RSM.RDDS.RTT.LOW'	=> 'rdds-rtt'			// ms
+		);
+
+		$keys = array();
+
+		foreach (array_keys($macro_names) as $key)
+		{
+			array_push($keys, "rsm.configvalue[{$key}]");
+		}
+
+		$keys_placeholder = substr(str_repeat("?,", count($keys)), 0, -1);
+		$sql = "select i.key_,hi.value" .
+			" from history_uint hi,items i,hosts ho" .
+			" where ho.hostid=i.hostid" .
+				" and i.itemid=hi.itemid" .
+				" and ho.host=?" .
+				" and hi.clock between ? and ?" .
+				" and i.key_ in ({$keys_placeholder})";
+
+		$params = array_merge(['Global macro history', $from, $from + 59], $keys);
+
+		$rows = self::dbSelect($sql, $params);
+
+		$slrs = array();
+
+		foreach ($rows as $row)
+		{
+			list($key, $value) = $row;
+
+			$macro_name = substr($key, strlen("rsm.configvalue["), -1);
+
+			// TODO: fix percentage SLR in the database and remove this code!
+			if ($macro_names[$macro_name] == 'dns-tcp-percentage' ||
+					$macro_names[$macro_name] == 'dns-udp-percentage' ||
+					$macro_names[$macro_name] == 'rdds-percentage')
+			{
+				$value = 100 - $value;
+			}
+
+			$slrs[$macro_names[$macro_name]] = $value;
+		}
+
+		// if SLR not found in history table, get from global macro
+		foreach ($macro_names as $macro_name => $service_name)
+		{
+			if (!array_key_exists($service_name, $slrs))
+			{
+				$sql = "select value from globalmacro where macro=?";
+				$rows = self::dbSelect($sql, ['{$' . $macro_name . '}']);
+
+				if (!$rows)
+				{
+					printf("(DEBUG) %s() macro $macro_name not found\n", __method__);
+
+					throw new Exception("no SLR value for $service_name");
+				}
+
+				$value = $rows[0][0];
+
+				// TODO: fix percentage SLR in the database and remove this code!
+				if ($service_name == 'dns-tcp-percentage' ||
+						$service_name == 'dns-udp-percentage' ||
+						$service_name == 'rdds-percentage')
+				{
+					$value = 100 - $value;
+				}
+
+				$slrs[$service_name] = $value;
+			}
+		}
+
+		return $slrs;
 	}
 
 	################################################################################
