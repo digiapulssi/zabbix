@@ -86,26 +86,6 @@ elseif ($data['filter_search']) {
 }
 
 if ($data['tld']) {
-	$macro_keys = [
-		RSM_SLV_DNS_DOWNTIME, RSM_SLV_DNS_TCP_RTT, RSM_DNS_TCP_RTT_LOW, RSM_SLV_DNS_UDP_RTT, RSM_SLV_NS_DOWNTIME,
-		RSM_DNS_UDP_RTT_LOW, RSM_SLV_MACRO_RDDS_DOWNTIME, RSM_SLV_RDDS_UPD, RSM_RDDS_UPDATE_TIME, RSM_RDDS_RTT_LOW,
-		RSM_SLV_MACRO_RDDS_RTT
-	];
-
-	$macros = API::UserMacro()->get([
-		'globalmacro' => true,
-		'output' => ['macro', 'value'],
-		'filter' => ['macro' => $macro_keys]
-	]);
-	$macros = zbx_toHash($macros, 'macro');
-	$macros = array_merge($macros, zbx_toHash($data['tld']['macros'], 'macro'));
-	unset($data['tld']['macros']);
-
-	$data['macro'] = [];
-	foreach ($macro_keys as $macro_key) {
-		$data['macro'][$macro_key] = $macros[$macro_key]['value'];
-	}
-
 	// Searching for pregenerated SLA report in database.
 	$report_row = DB::find('sla_reports', [
 		'hostid'	=> $data['tld']['hostid'],
@@ -162,7 +142,8 @@ if ($data['tld']) {
 				'to'	=> (int) $attrs->to,
 				'host'	=> (string) $attrs->hostname,
 				'ip'	=> (string) $attrs->ipAddress,
-				'slv'	=> (string) $ns_item[0]
+				'slv'	=> (string) $ns_item[0],
+				'slr'	=> (string) $attrs->downtimeSLR
 			];
 		}
 
@@ -173,11 +154,23 @@ if ($data['tld']) {
 				'to'		=> (int) $details->reportPeriodTo,
 				'generated'	=> (int) $details->generationDateTime
 			],
-			'slv_dns_downtime'		=> (string) $xml->DNS->serviceAvailability,
-			'slv_dns_tcp_pfailed'	=> (string) $xml->DNS->rttTCP,
-			'slv_dns_udp_pfailed'	=> (string) $xml->DNS->rttUDP,
-			'slv_rdds_downtime'		=> (string) $xml->RDDS->serviceAvailability,
-			'slv_rdds_rtt_downtime'	=> (string) $xml->RDDS->rtt
+			'slv_dns_downtime'			=> (string) $xml->DNS->serviceAvailability,
+			'slr_dns_downtime'			=> (string) $xml->DNS->serviceAvailability->attributes()->downtimeSLR,
+
+			'slv_dns_tcp_pfailed'		=> (string) $xml->DNS->rttTCP,
+			'slr_dns_tcp_pfailed'		=> (String) $xml->DNS->rttTCP->attributes()->percentageSLR,
+			'slr_dns_tcp_pfailed_ms'	=> (string) $xml->DNS->rttTCP->attributes()->rttSLR,
+
+			'slv_dns_udp_pfailed'		=> (string) $xml->DNS->rttUDP,
+			'slr_dns_udp_pfailed'		=> (string) $xml->DNS->rttUDP->attributes()->percentageSLR,
+			'slr_dns_udp_pfailed_ms'	=> (string) $xml->DNS->rttUDP->attributes()->rttSLR,
+
+			'slv_rdds_downtime'			=> (string) $xml->RDDS->serviceAvailability,
+			'slr_rdds_downtime'			=> (string) $xml->RDDS->serviceAvailability->attributes()->downtimeSLR,
+
+			'slv_rdds_rtt_downtime'		=> (string) $xml->RDDS->rtt,
+			'slr_rdds_rtt_downtime'		=> (string) $xml->RDDS->rtt->attributes()->percentageSLR,
+			'slr_rdds_rtt_downtime_ms'	=> (string) $xml->RDDS->rtt->attributes()->rttSLR
 		];
 
 		if ($data['tld']['host'] !== strval($details->id)) {
