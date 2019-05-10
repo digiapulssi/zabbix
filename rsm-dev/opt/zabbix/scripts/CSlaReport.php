@@ -677,6 +677,7 @@ class CSlaReport
 
 	private static function getSlrValues($from)
 	{
+		// map macro names with slr names
 		$macro_names = array(
 				'RSM.SLV.DNS.DOWNTIME'	=> 'dns-avail',				// minutes
 				'RSM.SLV.NS.DOWNTIME'	=> 'ns-avail',				// minutes
@@ -689,23 +690,23 @@ class CSlaReport
 				'RSM.RDDS.RTT.LOW'		=> 'rdds-rtt'				// ms
 		);
 
-		$keys = array();
+		$items = array();
 
-		foreach (array_keys($macro_names) as $key)
+		foreach (array_keys($macro_names) as $macro_name)
 		{
-			array_push($keys, "rsm.configvalue[{$key}]");
+			array_push($items, "rsm.configvalue[{$macro_name}]");
 		}
 
-		$keys_placeholder = substr(str_repeat("?,", count($keys)), 0, -1);
+		$items_placeholder = substr(str_repeat("?,", count($items)), 0, -1);
 		$sql = "select i.key_,hi.value" .
 			" from history_uint hi,items i,hosts ho" .
 			" where ho.hostid=i.hostid" .
 				" and i.itemid=hi.itemid" .
 				" and ho.host=?" .
 				" and hi.clock between ? and ?" .
-				" and i.key_ in ({$keys_placeholder})";
+				" and i.key_ in ({$items_placeholder})";
 
-		$params = array_merge(['Global macro history', $from, $from + 59], $keys);
+		$params = array_merge(['Global macro history', $from, $from + 59], $items);
 
 		$rows = self::dbSelect($sql, $params);
 
@@ -713,26 +714,26 @@ class CSlaReport
 
 		foreach ($rows as $row)
 		{
-			list($key, $value) = $row;
+			list($item, $value) = $row;
 
-			$macro_name = substr($key, strlen("rsm.configvalue["), -1);
-			$service_name = $macro_names[$macro_name];
+			$macro_name = substr($item, strlen("rsm.configvalue["), -1);
+			$slr_name = $macro_names[$macro_name];
 
 			// TODO: fix percentage SLR in the database and remove this code!
-			if ($service_name === 'dns-tcp-percentage' ||
-					$service_name === 'dns-udp-percentage' ||
-					$service_name === 'rdds-percentage')
+			if ($slr_name === 'dns-tcp-percentage' ||
+					$slr_name === 'dns-udp-percentage' ||
+					$slr_name === 'rdds-percentage')
 			{
 				$value = 100 - $value;
 			}
 
-			$slrs[$service_name] = $value;
+			$slrs[$slr_name] = $value;
 		}
 
 		// if SLR not found in history table, get from global macro
-		foreach ($macro_names as $macro_name => $service_name)
+		foreach ($macro_names as $macro_name => $slr_name)
 		{
-			if (!array_key_exists($service_name, $slrs))
+			if (!array_key_exists($slr_name, $slrs))
 			{
 				$sql = "select value from globalmacro where macro=?";
 				$rows = self::dbSelect($sql, ['{$' . $macro_name . '}']);
@@ -744,20 +745,20 @@ class CSlaReport
 						printf("(DEBUG) %s() macro $macro_name not found\n", __method__);
 					}
 
-					throw new Exception("no SLR value for $service_name");
+					throw new Exception("no SLR value for $slr_name");
 				}
 
 				$value = $rows[0][0];
 
 				// TODO: fix percentage SLR in the database and remove this code!
-				if ($service_name === 'dns-tcp-percentage' ||
-						$service_name === 'dns-udp-percentage' ||
-						$service_name === 'rdds-percentage')
+				if ($slr_name === 'dns-tcp-percentage' ||
+						$slr_name === 'dns-udp-percentage' ||
+						$slr_name === 'rdds-percentage')
 				{
 					$value = 100 - $value;
 				}
 
-				$slrs[$service_name] = $value;
+				$slrs[$slr_name] = $value;
 			}
 		}
 
