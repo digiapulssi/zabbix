@@ -16,6 +16,7 @@ use POSIX qw(floor);
 use Sys::Syslog;
 use Data::Dumper;
 use Time::HiRes;
+use Fcntl qw(:flock);	# for the LOCK_* constants, logging to stdout by multiple processes
 use RSM;
 use Pusher qw(push_to_trapper);
 use Fcntl qw(:flock);
@@ -137,6 +138,7 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		trim
 		parse_opts parse_slv_opts
 		opt getopt setopt unsetopt optkeys ts_str ts_full selected_period
+		write_file read_file
 		cycle_start
 		cycle_end
 		update_slv_rtt_monthly_stats
@@ -145,10 +147,6 @@ our @EXPORT = qw($result $dbh $tld $server_key
 
 # configuration, set in set_slv_config()
 my $config = undef;
-
-# this will be used for making sure only one copy of script runs (see function __is_already_running())
-my $pidfile;
-use constant PID_DIR => '/tmp';
 
 my $_sender_values;	# used to send values to Zabbix server
 
@@ -3419,9 +3417,18 @@ sub init_process
 	__reset_stats();
 }
 
+# this will be used for making sure only one copy of script runs (see function __is_already_running())
+my $pidfile;
+use constant PID_DIR => '/tmp';
+
 sub finalize_process
 {
 	my $rv = shift // SUCCESS;
+
+	if (defined($pidfile) && $pidfile->pid == $$)
+	{
+		$pidfile->remove() or wrn("cannot unlink pid file");
+	}
 
 	db_disconnect();
 
@@ -3663,6 +3670,48 @@ sub selected_period
 	return "from " . ts_str($from) . " till " . ts_str($till) if ($from and $till);
 
 	return "any time";
+}
+
+sub write_file
+{
+	my $file = shift;
+	my $text = shift;
+
+	my $OUTFILE;
+
+	return E_FAIL unless (open($OUTFILE, '>', $file));
+
+	my $rv = print { $OUTFILE } $text;
+
+	close($OUTFILE);
+
+	return E_FAIL unless ($rv);
+
+	return SUCCESS;
+}
+
+sub read_file($$;$)
+{
+	my $file = shift;
+	my $buf = shift;
+	my $error_buf = shift;
+
+	my $contents = do
+	{
+		local $/ = undef;
+
+		if (!open my $fh, "<", $file)
+		{
+			$$error_buf = "$!" if ($error_buf);
+			return E_FAIL;
+		}
+
+		<$fh>;
+	};
+
+	$$buf = $contents;
+
+	return SUCCESS;
 }
 
 sub cycle_start($$)
@@ -4572,6 +4621,27 @@ sub __func
 	return "";
 }
 
+sub __script
+{
+	my $script = $0;
+
+	$script =~ s,.*/([^/]*)$,$1,;
+
+	return $script;
+}
+
+# for clear output from child processes
+use constant STDOUT_LOCK_FILE	=> PID_DIR . '/' . __script() . '.stdout.lock';
+my $stdout_lock_handle;
+
+sub __init_stdout_lock
+{
+	if (!defined($stdout_lock_handle))
+	{
+		open($stdout_lock_handle, ">", STDOUT_LOCK_FILE) or die("cannot open \"" . STDOUT_LOCK_FILE . "\": $!");
+	}
+}
+
 sub __log
 {
 	my $syslog_priority = shift;
@@ -4608,7 +4678,14 @@ sub __log
 
 	if (opt('dry-run') or opt('nolog'))
 	{
+		__init_stdout_lock();
+
+		flock($stdout_lock_handle, LOCK_EX) or die("cannot lock \"" . STDOUT_LOCK_FILE . "\": $!");
+
 		print {$stdout ? *STDOUT : *STDERR} (sprintf("%6d:", $$), ts_str(), " [$priority] ", $server_str, ($cur_tld eq "" ? "" : "$cur_tld: "), __func(), "$msg\n");
+
+		flock($stdout_lock_handle, LOCK_UN) or die("cannot unlock \"" . STDOUT_LOCK_FILE . "\": $!");
+
 		return;
 	}
 
@@ -4662,15 +4739,6 @@ sub __get_dbl_values
 	}
 
 	return $result;
-}
-
-sub __script
-{
-	my $script = $0;
-
-	$script =~ s,.*/([^/]*)$,$1,;
-
-	return $script;
 }
 
 sub __get_pidfile

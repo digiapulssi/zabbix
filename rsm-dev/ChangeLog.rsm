@@ -4,6 +4,15 @@ New features:
 ..F.I..... [170] added support for Compliance SLA monitoring (dimir, yurii, asitals, miks, gcalenko)
 
 --------------------------------------------------------------------------------
+Changes for rsm1.2.3
+
+Bug fixes:
+....I..... [498] fixed potential error when last_update.txt file (SLA API) is removed during the check for file existence (dimir)
+....I..... [499] added more information on why sla-api-recent.pl process may hang at the end of script execution (dimir)
+....I..... [500] added code to remove the single-instance lock file after script is finished (dimir)
+....I..... [501] removed %config directive from rsyslog and logrotate config files to avoid duplicates (dimir)
+
+--------------------------------------------------------------------------------
 Changes for rsm1.2.2
 
 Bug fixes:

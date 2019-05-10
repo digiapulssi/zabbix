@@ -578,7 +578,7 @@ systemctl restart rsyslog
 %attr(0640,root,zabbix) %config(noreplace) %{_sysconfdir}/zabbix/zabbix_proxy_common.conf
 %attr(0640,root,zabbix) %config(noreplace) %{_sysconfdir}/zabbix/zabbix_proxy_N.conf
 %dir /usr/lib/zabbix/externalscripts
-%config(noreplace) %{_sysconfdir}/logrotate.d/zabbix-proxy
+%{_sysconfdir}/logrotate.d/zabbix-proxy
 %attr(0755,zabbix,zabbix) %dir %{_localstatedir}/log/zabbix
 %attr(0755,zabbix,zabbix) %dir %{_localstatedir}/run/zabbix
 %{_mandir}/man8/zabbix_proxy.8*
@@ -603,7 +603,7 @@ systemctl restart rsyslog
 %attr(0640,root,zabbix) %config(noreplace) %{_sysconfdir}/zabbix/zabbix_server.conf
 %dir /usr/lib/zabbix/alertscripts
 %dir /usr/lib/zabbix/externalscripts
-%config %{_sysconfdir}/logrotate.d/zabbix-server
+%{_sysconfdir}/logrotate.d/zabbix-server
 %attr(0755,zabbix,zabbix) %dir %{_localstatedir}/log/zabbix
 %attr(0755,zabbix,zabbix) %dir %{_localstatedir}/log/zabbix/slv
 %attr(0755,zabbix,zabbix) %dir %{_localstatedir}/run/zabbix
@@ -658,8 +658,8 @@ systemctl restart rsyslog
 /opt/zabbix/*
 %defattr(-,root,root,0755)
 /etc/cron.d/*
-%config %{_sysconfdir}/logrotate.d/zabbix-slv
-%config %{_sysconfdir}/rsyslog.d/rsm.slv.conf
+%{_sysconfdir}/logrotate.d/zabbix-slv
+%{_sysconfdir}/rsyslog.d/rsm.slv.conf
 
 %endif
 
