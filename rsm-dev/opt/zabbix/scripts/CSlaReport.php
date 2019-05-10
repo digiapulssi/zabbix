@@ -716,16 +716,17 @@ class CSlaReport
 			list($key, $value) = $row;
 
 			$macro_name = substr($key, strlen("rsm.configvalue["), -1);
+			$service_name = $macro_names[$macro_name];
 
 			// TODO: fix percentage SLR in the database and remove this code!
-			if ($macro_names[$macro_name] == 'dns-tcp-percentage' ||
-					$macro_names[$macro_name] == 'dns-udp-percentage' ||
-					$macro_names[$macro_name] == 'rdds-percentage')
+			if ($service_name === 'dns-tcp-percentage' ||
+					$service_name === 'dns-udp-percentage' ||
+					$service_name === 'rdds-percentage')
 			{
 				$value = 100 - $value;
 			}
 
-			$slrs[$macro_names[$macro_name]] = $value;
+			$slrs[$service_name] = $value;
 		}
 
 		// if SLR not found in history table, get from global macro
@@ -738,7 +739,10 @@ class CSlaReport
 
 				if (!$rows)
 				{
-					printf("(DEBUG) %s() macro $macro_name not found\n", __method__);
+					if (defined("DEBUG") && DEBUG === true)
+					{
+						printf("(DEBUG) %s() macro $macro_name not found\n", __method__);
+					}
 
 					throw new Exception("no SLR value for $service_name");
 				}
@@ -746,9 +750,9 @@ class CSlaReport
 				$value = $rows[0][0];
 
 				// TODO: fix percentage SLR in the database and remove this code!
-				if ($service_name == 'dns-tcp-percentage' ||
-						$service_name == 'dns-udp-percentage' ||
-						$service_name == 'rdds-percentage')
+				if ($service_name === 'dns-tcp-percentage' ||
+						$service_name === 'dns-udp-percentage' ||
+						$service_name === 'rdds-percentage')
 				{
 					$value = 100 - $value;
 				}
