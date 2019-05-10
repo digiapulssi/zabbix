@@ -515,9 +515,6 @@ class CSlaReport
 			$xml_dns_tcp_rtt->addAttribute("percentageSLR", $slrs["dns-tcp-percentage"]);
 
 			$xml_rdds = $xml->addChild("RDDS");
-
-			$xml_rdds_avail = null;
-			$xml_rdds_rtt = null;
 			if ($tld["rdds"]["enabled"])
 			{
 				$xml_rdds_avail = $xml_rdds->addChild("serviceAvailability", $tld["rdds"]["availability"]);
@@ -681,15 +678,15 @@ class CSlaReport
 	private static function getSlrValues($from)
 	{
 		$macro_names = array(
-				'RSM.SLV.DNS.DOWNTIME'	=> 'dns-avail',			// minutes
-				'RSM.SLV.NS.DOWNTIME'	=> 'ns-avail',			// minutes
+				'RSM.SLV.DNS.DOWNTIME'	=> 'dns-avail',				// minutes
+				'RSM.SLV.NS.DOWNTIME'	=> 'ns-avail',				// minutes
 				'RSM.SLV.DNS.TCP.RTT'	=> 'dns-tcp-percentage',	// %
-				'RSM.DNS.TCP.RTT.LOW'	=> 'dns-tcp-rtt',		// ms
+				'RSM.DNS.TCP.RTT.LOW'	=> 'dns-tcp-rtt',			// ms
 				'RSM.SLV.DNS.UDP.RTT'	=> 'dns-udp-percentage',	// %
-				'RSM.DNS.UDP.RTT.LOW'	=> 'dns-udp-rtt',		// ms
-				'RSM.SLV.RDDS.DOWNTIME'	=> 'rdds-avail',		// minutes
-				'RSM.SLV.RDDS.RTT'	=> 'rdds-percentage',		// %
-				'RSM.RDDS.RTT.LOW'	=> 'rdds-rtt'			// ms
+				'RSM.DNS.UDP.RTT.LOW'	=> 'dns-udp-rtt',			// ms
+				'RSM.SLV.RDDS.DOWNTIME'	=> 'rdds-avail',			// minutes
+				'RSM.SLV.RDDS.RTT'		=> 'rdds-percentage',		// %
+				'RSM.RDDS.RTT.LOW'		=> 'rdds-rtt'				// ms
 		);
 
 		$keys = array();
