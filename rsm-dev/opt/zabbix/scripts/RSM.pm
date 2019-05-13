@@ -261,11 +261,11 @@ sub get_db_tls_settings($)
 	return $db_tls_settings eq "" ? "mysql_ssl=0" : "mysql_ssl=1$db_tls_settings";
 }
 
-sub read_file($$$)
+sub read_file($$;$)
 {
 	my $file = shift;
 	my $buf = shift;
-	my $error = shift;
+	my $error_buf = shift;
 
 	my $contents = do
 	{
@@ -273,7 +273,7 @@ sub read_file($$$)
 
 		if (!open my $fh, "<", $file)
 		{
-			$$error = "$!";
+			$$error_buf = "$!" if ($error_buf);
 			return E_FAIL;
 		}
 
@@ -289,19 +289,19 @@ sub write_file($$;$)
 {
 	my $file = shift;
 	my $text = shift;
-	my $errbuf = shift;
+	my $error_buf = shift;
 
 	my $OUTFILE;
 
 	if (!open($OUTFILE, '>', $file))
 	{
-		$$errbuf = "cannot write to file \"$file\": $!" if (defined($errbuf));
+		$$error_buf = "cannot write to file \"$file\": $!" if (defined($error_buf));
 		return E_FAIL;
 	}
 
 	my $rv = print { $OUTFILE } $text;
 
-	$$errbuf = "cannot write to file \"$file\": $!" if (defined($errbuf));
+	$$error_buf = "cannot write to file \"$file\": $!" if (defined($error_buf));
 
 	close($OUTFILE);
 

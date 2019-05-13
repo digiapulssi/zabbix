@@ -138,7 +138,6 @@ our @EXPORT = qw($result $dbh $tld $server_key
 		trim
 		parse_opts parse_slv_opts
 		opt getopt setopt unsetopt optkeys ts_str ts_full selected_period
-		write_file read_file
 		cycle_start
 		cycle_end
 		update_slv_rtt_monthly_stats
@@ -3672,48 +3671,6 @@ sub selected_period
 	return "any time";
 }
 
-sub write_file
-{
-	my $file = shift;
-	my $text = shift;
-
-	my $OUTFILE;
-
-	return E_FAIL unless (open($OUTFILE, '>', $file));
-
-	my $rv = print { $OUTFILE } $text;
-
-	close($OUTFILE);
-
-	return E_FAIL unless ($rv);
-
-	return SUCCESS;
-}
-
-sub read_file($$;$)
-{
-	my $file = shift;
-	my $buf = shift;
-	my $error_buf = shift;
-
-	my $contents = do
-	{
-		local $/ = undef;
-
-		if (!open my $fh, "<", $file)
-		{
-			$$error_buf = "$!" if ($error_buf);
-			return E_FAIL;
-		}
-
-		<$fh>;
-	};
-
-	$$buf = $contents;
-
-	return SUCCESS;
-}
-
 sub cycle_start($$)
 {
 	my $now = shift;
@@ -4046,7 +4003,7 @@ sub update_slv_rtt_monthly_stats($$$$$$$$)
 					dbg("\$cycle_end                = $cycle_end");
 				}
 
-				fail("\$cycles_till_end_of_month must not be less than 0");
+				fail("\$cycles_till_end_of_month must not be less than 0, perhaps last value clock is older than beginning of previous month");
 			}
 
 			$last_performed_value += $rtt_stats->{'performed'};
@@ -4570,7 +4527,7 @@ sub __fp_generate_report($$)
 	my $server_id = get_rsm_server_id($server_key);
 	my ($year, $month) = split("-", ts_ym($ts));
 
-	my $cmd = "./sla-report.php";
+	my $cmd = "/opt/zabbix/scripts/sla-report.php";
 	my @args = ();
 
 	push(@args, "--debug") if opt("debug");
