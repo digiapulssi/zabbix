@@ -15,14 +15,6 @@ use TLD_constants qw(:api :groups);
 use Data::Dumper;
 use DateTime;
 
-parse_opts("year=i", "month=i");
-
-fail_if_running();
-
-my $config = get_rsm_config();
-
-set_slv_config($config);
-
 use constant SLV_ITEM_KEY_DNS_DOWNTIME    => "rsm.slv.dns.downtime";
 use constant SLV_ITEM_KEY_DNS_NS_DOWNTIME => "rsm.slv.dns.ns.downtime[%,%]";
 use constant SLV_ITEM_KEY_RDDS_DOWNTIME   => "rsm.slv.rdds.downtime";
@@ -32,57 +24,58 @@ use constant SLV_ITEM_KEY_RDDS_PFAILED    => "rsm.slv.rdds.rtt.pfailed";
 
 sub main()
 {
+	parse_opts("year=i", "month=i");
+	fail_if_running();
+	set_slv_config(get_rsm_config());
+
 	my ($from, $till) = get_time_limits();
 
 	my %tlds = ();
 
-	foreach my $server_key (get_rsm_server_keys($config))
+	db_connect();
+
+	my $slr = get_slrs();
+
+	my ($items, $itemids_float, $itemids_uint) = get_items($slr);
+
+	my $data_uint  = get_data($itemids_uint , "history_uint", $from, $till);
+	my $data_float = get_data($itemids_float, "history"     , $from, $till);
+
+	my @data = (@{$data_uint}, @{$data_float});
+
+	foreach my $row (@data)
 	{
-		db_connect($server_key);
+		my ($itemid, $value, $clock) = @{$row};
+		my ($tld, $itemkey) = @{$items->{$itemid}};
 
-		my $slr = get_slrs();
 
-		my ($items, $itemids_float, $itemids_uint) = get_items($slr);
-
-		my $data_uint  = get_data($itemids_uint , "history_uint", $from, $till);
-		my $data_float = get_data($itemids_float, "history"     , $from, $till);
-
-		my @data = (@{$data_uint}, @{$data_float});
-
-		foreach my $row (@data)
+		if ($itemkey eq SLV_ITEM_KEY_DNS_DOWNTIME)
 		{
-			my ($itemid, $value, $clock) = @{$row};
-			my ($tld, $itemkey) = @{$items->{$itemid}};
-
-
-			if ($itemkey eq SLV_ITEM_KEY_DNS_DOWNTIME)
-			{
-				push(@{$tlds{$tld}}, ["DNS Service Availability", $value, $clock]);
-			}
-			elsif ($itemkey eq SLV_ITEM_KEY_RDDS_DOWNTIME)
-			{
-				push(@{$tlds{$tld}}, ["RDDS availability", $value, $clock]);
-			}
-			elsif ($itemkey eq SLV_ITEM_KEY_DNS_UDP_PFAILED)
-			{
-				push(@{$tlds{$tld}}, ["UDP DNS Resolution RTT", 100 - $value, $clock]);
-			}
-			elsif ($itemkey eq SLV_ITEM_KEY_DNS_TCP_PFAILED)
-			{
-				push(@{$tlds{$tld}}, ["TCP DNS Resolution RTT", 100 - $value, $clock]);
-			}
-			elsif ($itemkey eq SLV_ITEM_KEY_RDDS_PFAILED)
-			{
-				push(@{$tlds{$tld}}, ["RDDS query RTT", 100 - $value, $clock]);
-			}
-			else # if ($itemkey eq SLV_ITEM_KEY_DNS_NS_DOWNTIME
-			{
-				push(@{$tlds{$tld}}, ["DNS name server availability ($itemkey)", $value, $clock]);
-			}
+			push(@{$tlds{$tld}}, ["DNS Service Availability", $value, $clock]);
 		}
-
-		db_disconnect();
+		elsif ($itemkey eq SLV_ITEM_KEY_RDDS_DOWNTIME)
+		{
+			push(@{$tlds{$tld}}, ["RDDS availability", $value, $clock]);
+		}
+		elsif ($itemkey eq SLV_ITEM_KEY_DNS_UDP_PFAILED)
+		{
+			push(@{$tlds{$tld}}, ["UDP DNS Resolution RTT", 100 - $value, $clock]);
+		}
+		elsif ($itemkey eq SLV_ITEM_KEY_DNS_TCP_PFAILED)
+		{
+			push(@{$tlds{$tld}}, ["TCP DNS Resolution RTT", 100 - $value, $clock]);
+		}
+		elsif ($itemkey eq SLV_ITEM_KEY_RDDS_PFAILED)
+		{
+			push(@{$tlds{$tld}}, ["RDDS query RTT", 100 - $value, $clock]);
+		}
+		else # if ($itemkey eq SLV_ITEM_KEY_DNS_NS_DOWNTIME
+		{
+			push(@{$tlds{$tld}}, ["DNS name server availability ($itemkey)", $value, $clock]);
+		}
 	}
+
+	db_disconnect();
 
 	foreach my $tld (keys(%tlds))
 	{
