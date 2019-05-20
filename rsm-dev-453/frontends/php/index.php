@@ -85,7 +85,7 @@ if (isset($_REQUEST['enter']) && $_REQUEST['enter'] == _('Sign in')) {
 			$url = CWebUser::$data['url'];
 		}
 		else {
-			if (CWebUser::$data['type'] == USER_TYPE_EBERO) {
+			if (CWebUser::$data['type'] == USER_TYPE_READ_ONLY) {
 				$url = 'rsm.rollingweekstatus.php';
 			}
 			else {
