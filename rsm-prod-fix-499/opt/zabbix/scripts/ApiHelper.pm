@@ -7,6 +7,7 @@ use DateTime::Format::RFC3339;
 use base 'Exporter';
 use JSON::XS;
 use Types::Serialiser;
+use File::Copy;
 
 use constant AH_SUCCESS => 0;
 use constant AH_FAIL => 1;
@@ -225,24 +226,31 @@ sub __write_file
 	my $clock = shift;
 
 	my $OUTFILE;
+	my $full_path_new = $full_path . ".new";
 
-	unless (open($OUTFILE, '>', $full_path))
+	unless (open($OUTFILE, '>', $full_path_new))
 	{
-		__set_error("cannot open file $full_path: $!");
+		__set_error("cannot open file \"$full_path_new\": $!");
 		return AH_FAIL;
 	}
 
-	unless (print { $OUTFILE } $text)
+	unless (print {$OUTFILE} $text)
 	{
-		__set_error("cannot write to file $full_path: $!");
+		__set_error("cannot write to \"$full_path_new\": $!");
 		return AH_FAIL;
 	}
+
+	utime($clock, $clock, $full_path_new) if (defined($clock));
 
 	close($OUTFILE);
 
-	RSMSLV::dbg("wrote file \"$full_path\"");
+	unless (move($full_path_new, $full_path))
+	{
+		__set_error("cannot create file \"$full_path\": $!");
+		return AH_FAIL;
+	}
 
-	utime($clock, $clock, $full_path) if (defined($clock));
+	RSMSLV::dbg("wrote file \"$full_path\"");
 
 	return AH_SUCCESS;
 }
