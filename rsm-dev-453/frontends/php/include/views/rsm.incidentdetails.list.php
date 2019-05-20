@@ -170,7 +170,7 @@ $widget->additem([$testsInfoTable]);
 $widget->addItem([$data['paging'], $table, $data['paging']]);
 
 if (CWebUser::getType() == USER_TYPE_ZABBIX_ADMIN || CWebUser::getType() == USER_TYPE_SUPER_ADMIN
-		|| CWebUser::getType() == USER_TYPE_TEHNICAL_SERVICE) {
+		|| CWebUser::getType() == USER_TYPE_POWER_USER) {
 	$widget->addItem((new CButton('mark_incident', $changeIncidentTypeName))
 		->onClick('javascript: location.href = "rsm.incidents.php?mark_incident='.$changeIncidentType.
 			'&eventid='.$data['eventid'].'&host='.$data['tld']['host'].'&type='.$data['type'].'";'
