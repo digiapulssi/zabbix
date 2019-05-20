@@ -34,8 +34,7 @@
  */
 function zbx_construct_menu(&$main_menu, &$sub_menus, &$page, $action = null) {
 	// Get current registrar and registry monitoring state.
-	$registry_monitoring_state = get_registry_monitoring_state();
-	$registrar_monitoring_state = get_registrar_monitoring_state();
+	$rsm_monitoring_type = get_rsm_monitoring_type();
 
 	$zbx_menu = [
 		'view' => [
@@ -133,7 +132,9 @@ function zbx_construct_menu(&$main_menu, &$sub_menus, &$page, $action = null) {
 			]
 		],
 		'rsm' => array(
-			'label'				=> $registrar_monitoring_state ? _('Registrar monitoring') : _('Registry monitoring'),
+			'label'				=> ($rsm_monitoring_type == RSM_MONITORING_TYPE_REGISTRAR)
+				? _('Registrar monitoring')
+				: _('Registry monitoring'),
 			'user_type'			=> [USER_TYPE_READ_ONLY, USER_TYPE_ZABBIX_USER, USER_TYPE_POWER_USER,
 				USER_TYPE_COMPLIANCE, USER_TYPE_ZABBIX_ADMIN, USER_TYPE_SUPER_ADMIN
 			],
@@ -358,8 +359,8 @@ function zbx_construct_menu(&$main_menu, &$sub_menus, &$page, $action = null) {
 	$page_exists = false;
 	$deny = true;
 
-	// Don't show Registry/Registrar monitoring menu if both are disabled or enabled at the same time.
-	if (!($registry_monitoring_state ^ $registrar_monitoring_state)) {
+	// Don't show Registry/Registrar monitoring menu if none of both modes are enabled.
+	if ($rsm_monitoring_type != RSM_MONITORING_TYPE_REGISTRY && $rsm_monitoring_type != RSM_MONITORING_TYPE_REGISTRAR) {
 		unset($zbx_menu['rsm']);
 	}
 
