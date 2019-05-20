@@ -182,7 +182,8 @@ foreach my $server_key (@server_keys)
 
 	$child_desc{$pid}->{'desc'} = "${server_key}_parent";
 	$child_desc{$pid}->{'from'} = time();
-	$child_desc{$pid}->{'stats-dumped'} = 0;
+	# $child_desc{$pid}->{'smaps-dumped'} = 0;
+
 	dbg("$child_desc{$pid}->{'desc'} (PID:$pid) STARTED");
 }
 
@@ -222,16 +223,17 @@ sub wait_for_children($)
 			{
 				wrn("$child_desc{$pid}->{'desc'} (PID:$pid) is swapping $swap_usage");
 
-				if (!$child_desc{$pid}->{'stats-dumped'})
-				{
-					mkdir("/tmp/sla-api-recent-smaps") unless (-d "/tmp/sla-api-recent-smaps");
-
-					copy("/proc/$pid/smaps","/tmp/sla-api-recent-smaps/$pid") or fail("cannot copy smaps file: $!");
-
-					$child_desc{$pid}->{'stats-dumped'} = 1;
-
-					wrn("$child_desc{$pid}->{'desc'} (PID:$pid) smaps file saved to /tmp/sla-api-recent-smaps/$pid");
-				}
+				# TODO: consider writing if is over 1000 kB, add date/time to the file name, write only if size changed
+				# if (!$child_desc{$pid}->{'smaps-dumped'})
+				# {
+				# 	mkdir("/tmp/sla-api-recent-smaps") unless (-d "/tmp/sla-api-recent-smaps");
+				#
+				# 	copy("/proc/$pid/smaps","/tmp/sla-api-recent-smaps/$pid") or fail("cannot copy smaps file: $!");
+				#
+				# 	$child_desc{$pid}->{'smaps-dumped'} = 1;
+				#
+				# 	wrn("$child_desc{$pid}->{'desc'} (PID:$pid) smaps file saved to /tmp/sla-api-recent-smaps/$pid");
+				# }
 			}
 			else
 			{
@@ -320,7 +322,8 @@ sub process_server($)
 
 		$child_desc{$pid}->{'desc'} = "${server_key}_child";
 		$child_desc{$pid}->{'from'} = time();
-		$child_desc{$pid}->{'stats-dumped'} = 0;
+		# $child_desc{$pid}->{'smaps-dumped'} = 0;
+
 		dbg("$child_desc{$pid}->{'desc'} (PID:$pid) STARTED");
 
 		$tldi_begin = $tldi_end;
