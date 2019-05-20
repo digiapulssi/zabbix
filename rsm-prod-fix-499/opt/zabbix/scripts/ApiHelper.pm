@@ -240,8 +240,6 @@ sub __write_file
 		return AH_FAIL;
 	}
 
-	utime($clock, $clock, $full_path_new) if (defined($clock));
-
 	close($OUTFILE);
 
 	unless (move($full_path_new, $full_path))
@@ -249,6 +247,8 @@ sub __write_file
 		__set_error("cannot create file \"$full_path\": $!");
 		return AH_FAIL;
 	}
+
+	utime($clock, $clock, $full_path) if (defined($clock));
 
 	RSMSLV::dbg("wrote file \"$full_path\"");
 
