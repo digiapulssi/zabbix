@@ -449,6 +449,8 @@ foreach (@server_keys)
 			next;
 		}
 
+		init_process();
+
 		$tld = $tld_for_a_child_to_process;
 
 		$tlds_processed++;

@@ -240,7 +240,7 @@ sub __write_file
 
 	close($OUTFILE);
 
-	dbg("wrote file \"$full_path\"");
+	RSMSLV::dbg("wrote file \"$full_path\"");
 
 	utime($clock, $clock, $full_path) if (defined($clock));
 
@@ -422,7 +422,7 @@ sub __read_inc_file($$$$$$)
 
 	$file = AH_SLA_API_DIR . '/' . __gen_inc_path($tld, $service, $eventid, $start) . '/' . $file;
 
-	dbg("file: $file");
+	RSMSLV::dbg("file: $file");
 
 	return __read_file($file, $buf_ref);
 }
@@ -475,7 +475,7 @@ sub ah_save_false_positive
 
 	if ($curr_false_positive != $false_positive)
 	{
-		dbg("false positiveness of $eventid changed: $false_positive");
+		RSMSLV::dbg("false positiveness of $eventid changed: $false_positive");
 
 		$json->{'incidents'}->[0]->{'falsePositive'} = ($false_positive ? Types::Serialiser::true : Types::Serialiser::false);
 
@@ -612,19 +612,6 @@ sub ah_get_recent_cache($$)
 	$$json_ref = decode_json($buf);
 
 	return AH_SUCCESS;
-}
-
-sub dbg
-{
-	return if ($_debug == 0);
-
-	my @args = @_;
-
-	my $depth = 1;
-
-	my $func = (caller($depth))[3];
-
-	print("${func}() ", join('', @args), "\n");
 }
 
 sub ah_get_continue_file
