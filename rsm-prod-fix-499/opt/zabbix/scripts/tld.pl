@@ -1559,7 +1559,9 @@ sub manage_tld_objects($$$$$$) {
 	    my $result = disable_hosts(\@tmp_hostids);
 
 	    if (scalar(%{$result})) {
-		compare_arrays(\@hostids_arr, \@{$result->{'hostids'}});
+		if (!compare_arrays(\@hostids_arr, \@{$result->{'hostids'}})) {
+		    pfail("en error occurred while disabling hosts!");
+		}
 	    }
 	    else {
 		pfail("en error occurred while disabling hosts!");
@@ -1624,22 +1626,26 @@ sub manage_tld_objects($$$$$$) {
     }
 }
 
-sub compare_arrays($$) {
-    my $array_A = shift;
-    my $array_B = shift;
+sub compare_arrays($$)
+{
+	my $array_A = shift;
+	my $array_B = shift;
 
-    my @result;
+	return false unless (scalar($array_A) == scalar($array_B));
 
-    foreach my $a (@{$array_A}) {
-	my $found = false;
-	foreach $b (@{$array_B}) {
-	    $found = true if $a eq $b;
+	foreach my $a (@{$array_A})
+	{
+		my $found = false;
+
+		foreach my $b (@{$array_B})
+		{
+			$found = true if ($a eq $b);
+		}
+
+		return false unless ($found);
 	}
 
-	push @result, $a if $found eq false;
-    }
-
-    return @result;
+	return true;
 }
 
 sub get_tld_list() {

@@ -141,7 +141,7 @@ my ($check_from, $check_till, $continue_file);
 
 if (opt('continue'))
 {
-	$continue_file = ah_get_continue_file();
+	$continue_file = ah_continue_file_name();
 
 	if (! -e $continue_file)
 	{

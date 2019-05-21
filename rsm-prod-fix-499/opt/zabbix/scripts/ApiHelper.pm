@@ -53,7 +53,7 @@ our @EXPORT = qw(
 	AH_SLA_API_DIR AH_SLA_API_RECENT_DIR
 	AH_SLA_API_TMP_DIR ah_set_debug ah_get_error ah_state_file_json ah_save_state
 	ah_save_alarmed ah_save_downtime ah_create_incident_json ah_save_incident
-	ah_save_false_positive ah_save_measurement ah_get_continue_file ah_get_api_tld ah_get_last_audit
+	ah_save_false_positive ah_save_measurement ah_continue_file_name ah_get_api_tld ah_get_last_audit
 	ah_get_recent_measurement ah_save_recent_measurement ah_save_recent_cache ah_get_recent_cache
 	ah_save_audit ah_save_continue_file ah_encode_pretty_json JSON_OBJECT_DISABLED_SERVICE
 	ah_get_dns_interface ah_get_rdds_interface ah_get_interface
@@ -622,7 +622,7 @@ sub ah_get_recent_cache($$)
 	return AH_SUCCESS;
 }
 
-sub ah_get_continue_file
+sub ah_continue_file_name
 {
 	return AH_SLA_API_DIR . '/' . AH_CONTINUE_FILE;
 }

@@ -15,6 +15,7 @@ use RSMSLV;
 use TLD_constants qw(:api :config :groups :items);
 use ApiHelper;
 use File::Copy;
+use sigtrap 'handler' => \&main_process_signal_handler, 'normal-signals';
 
 $Data::Dumper::Terse = 1;	# do not output names like "$VAR1 = "
 $Data::Dumper::Pair = " : ";	# use separator instead of " => "
@@ -32,6 +33,7 @@ use constant MYSQL_TIMEOUT => 30;	# timeout while attempt to connect/read/write 
 use constant DEFAULT_MAX_CHILDREN => 64;
 use constant DEFAULT_MAX_WAIT => 600;	# maximum seconds to wait befor terminating child process
 
+sub main_process_signal_handler();
 sub process_server($);
 sub process_tld_batch($$$$$$);
 sub process_tld($$$$$);
@@ -42,7 +44,7 @@ sub get_interfaces($$$);
 sub probe_online_at_init();
 sub get_history_by_itemid($$$);
 sub child_error($$$$$);
-sub save_child_lastvalues_cache($);
+sub update_lastvalues_cache($);
 sub set_on_finish($);
 sub wait_for_children($);
 sub terminate_children($);
@@ -182,14 +184,14 @@ foreach my $server_key (@server_keys)
 
 	$child_desc{$pid}->{'desc'} = "${server_key}_parent";
 	$child_desc{$pid}->{'from'} = time();
-	# $child_desc{$pid}->{'smaps-dumped'} = 0;
+	#$child_desc{$pid}->{'smaps-dumped'} = 0;
 
 	dbg("$child_desc{$pid}->{'desc'} (PID:$pid) STARTED");
 }
 
 wait_for_children($fm);
 
-slv_exit(SUCCESS);
+slv_exit($child_failed ? E_FAIL : SUCCESS);
 
 sub wait_for_children($)
 {
@@ -208,15 +210,6 @@ sub wait_for_children($)
 		# check wether there's long running process
 		foreach my $pid (@procs)
 		{
-			my $run_time = time() - $child_desc{$pid}->{'from'};
-
-			if ($run_time > $max_wait)
-			{
-				wrn("$child_desc{$pid}->{'desc'} (PID:$pid) is running for $run_time seconds, terminating");
-
-				kill('TERM', $pid);
-			}
-
 			my $swap_usage = get_swap_usage($pid);
 
 			if (defined($swap_usage) && ($swap_usage ne "0 kB"))
@@ -237,12 +230,18 @@ sub wait_for_children($)
 			}
 			else
 			{
-				dbg("$child_desc{$pid}->{'desc'} (PID:$pid), running for $run_time seconds");
+				dbg("$child_desc{$pid}->{'desc'} (PID:$pid), running for ", (time() - $child_desc{$pid}->{'from'}), " seconds");
 			}
 		}
 
 		sleep(1);
 	}
+}
+
+sub main_process_signal_handler()
+{
+	wrn("main process caught a signal: $!");
+	slv_exit(E_FAIL);
 }
 
 sub process_server($)
@@ -289,9 +288,8 @@ sub process_server($)
 
 	info("children/$server_key : $children_count") if (opt('stats'));
 
-	my $fm = new Parallel::ForkManager();
+	my $fm = new Parallel::ForkManager($children_count);
 	set_on_finish($fm);
-	$fm->set_max_procs($children_count);
 
 	my $tldi_begin = 0;
 	my $tldi_end;
@@ -313,6 +311,8 @@ sub process_server($)
 		{
 			init_process();
 
+			set_alarm($max_wait);
+
 			process_tld_batch($server_tlds, $tldi_begin, $tldi_end, \%child_data, \%probes, $all_probes_ref);
 
 			finalize_process();
@@ -322,7 +322,7 @@ sub process_server($)
 
 		$child_desc{$pid}->{'desc'} = "${server_key}_child";
 		$child_desc{$pid}->{'from'} = time();
-		# $child_desc{$pid}->{'smaps-dumped'} = 0;
+		#$child_desc{$pid}->{'smaps-dumped'} = 0;
 
 		dbg("$child_desc{$pid}->{'desc'} (PID:$pid) STARTED");
 
@@ -517,22 +517,29 @@ sub get_global_lastclock($$$)
 
 	# see if we have last_update.txt in SLA API directory
 
-	my $continue_file = ah_get_continue_file();
+	my $continue_file = ah_continue_file_name();
 
 	my $error;
 
-	if (read_file($continue_file, \$lastclock, \$error) == SUCCESS)
-	{
-		while (chomp($lastclock)) {}
+	# the continue file may sometimes be read at the time it's changed
+	my $attempts = 3;
 
-		dbg("using last clock from SLA API directory, file $continue_file: ", ts_str($lastclock));
-
-		return cycle_start($lastclock, $delay);
-	}
-	else
+	while ($attempts--)
 	{
-		wrn("cannot read \"$continue_file\": $error");
+		if (read_file($continue_file, \$lastclock, \$error) == SUCCESS)
+		{
+			while (chomp($lastclock)) {}
+
+			dbg("using last clock from SLA API directory, file $continue_file: ", ts_str($lastclock));
+
+			return cycle_start($lastclock, $delay);
+		}
+
+		# sleep for 0.2 seconds
+		select(undef, undef, undef, 0.2);
 	}
+
+	wrn("cannot read \"$continue_file\": $error");
 
 	# if not, get the oldest from the database
 
@@ -1598,6 +1605,20 @@ sub get_interfaces($$$)
 	return \@result;
 }
 
+sub set_alarm($)
+{
+	my $max_wait = shift;
+
+	$SIG{"ALRM"} = sub()
+	{
+		wrn("received ALARM signal");
+
+		slv_exit(E_FAIL);
+	};
+
+	alarm($max_wait);
+}
+
 sub terminate_children($)
 {
 	my $fm = shift;
@@ -1623,8 +1644,6 @@ sub terminate_children($)
 	);
 
 	$fm->wait_all_children();
-
-	slv_exit(E_FAIL);
 }
 
 sub child_error($$$$$)
@@ -1637,12 +1656,12 @@ sub child_error($$$$$)
 
 	if ($core_dump == 1)
 	{
-		info("$child_desc{$pid}->{'desc'} (PID:$pid) core dumped");
+		wrn("$child_desc{$pid}->{'desc'} (PID:$pid) core dumped");
 		return 1;
 	}
 	elsif ($exit_code != SUCCESS)
 	{
-		info("$child_desc{$pid}->{'desc'} (PID:$pid)",
+		wrn("$child_desc{$pid}->{'desc'} (PID:$pid)",
 			($exit_signal == 0 ? "" : " got signal " . sig_name($exit_signal) . " and"),
 			" exited with code $exit_code");
 		return 1;
@@ -1656,7 +1675,7 @@ sub child_error($$$$$)
 	return 0;
 }
 
-sub save_child_lastvalues_cache($)
+sub update_lastvalues_cache($)
 {
 	my $child_data_ref = shift;
 
@@ -1688,13 +1707,17 @@ sub set_on_finish($)
 				$child_failed = 1;
 
 				terminate_children($fm);
+
+				slv_exit(E_FAIL);
 			}
 			else
 			{
 				dbg("$child_desc{$pid}->{'desc'} (PID:$pid) exited successfully,",
 					" run time: ", time() - $child_desc{$pid}->{'from'}, " seconds");
 
-				save_child_lastvalues_cache($child_data) if (defined($child_data));
+				return unless (defined($child_data));
+
+				update_lastvalues_cache($child_data);
 			}
 		}
 	);
