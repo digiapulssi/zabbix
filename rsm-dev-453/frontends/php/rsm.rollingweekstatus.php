@@ -134,13 +134,13 @@ CProfile::update('web.rsm.rollingweekstatus.sortorder', $sort_order, PROFILE_TYP
 $data['sort'] = $sort_field;
 $data['sortorder'] = $sort_order;
 
-$macro = API::UserMacro()->get(array(
-	'globalmacro' => true,
+$macro = API::UserMacro()->get([
 	'output' => ['macro', 'value'],
-	'filter' => array(
-		'macro' => array(RSM_PAGE_SLV, RSM_ROLLWEEK_SECONDS)
-	)
-));
+	'filter' => [
+		'macro' => [RSM_PAGE_SLV, RSM_ROLLWEEK_SECONDS]
+	],
+	'globalmacro' => true
+]);
 
 foreach ($macro as $macros) {
 	if ($macros['macro'] === RSM_PAGE_SLV) {
@@ -163,12 +163,12 @@ if (!array_key_exists('rollWeekSeconds', $data)) {
 	exit;
 }
 
-$data['allowedGroups'] = array(
+$data['allowedGroups'] = [
 	RSM_CC_TLD_GROUP => false,
 	RSM_G_TLD_GROUP => false,
 	RSM_OTHER_TLD_GROUP => false,
 	RSM_TEST_GROUP => false
-);
+];
 
 $master = $DB;
 $data['tld'] = [];
@@ -184,65 +184,72 @@ else {
 foreach ($DB['SERVERS'] as $key => $value) {
 	if ($data['filter_cctld_group'] || $data['filter_gtld_group'] || $data['filter_othertld_group']
 			|| $data['filter_test_group']) {
-		if ($DB['SERVER'] !== $DB['SERVERS'][$key]['SERVER'] || $DB['PORT'] !== $DB['SERVERS'][$key]['PORT']
-				|| $DB['DATABASE'] !== $DB['SERVERS'][$key]['DATABASE'] || $DB['USER'] !== $DB['SERVERS'][$key]['USER']
+		if ($DB['SERVER'] !== $DB['SERVERS'][$key]['SERVER']
+				|| $DB['PORT'] !== $DB['SERVERS'][$key]['PORT']
+				|| $DB['DATABASE'] !== $DB['SERVERS'][$key]['DATABASE']
+				|| $DB['USER'] !== $DB['SERVERS'][$key]['USER']
 				|| $DB['PASSWORD'] !== $DB['SERVERS'][$key]['PASSWORD']) {
 			if (!multiDBconnect($DB['SERVERS'][$key], $error)) {
 				show_error_message(_($DB['SERVERS'][$key]['NAME'].': '.$error));
 				continue;
 			}
 		}
+		$db_nr = $DB['SERVERS'][$key]['NR'];
 
 		$where_condition = [];
 
-		// get "TLDs" groupId
-		$tldGroups = API::HostGroup()->get(array(
-			'output' => array('groupid', 'name'),
-			'filter' => array(
-				'name' => array(RSM_TLDS_GROUP, RSM_CC_TLD_GROUP, RSM_G_TLD_GROUP, RSM_OTHER_TLD_GROUP, RSM_TEST_GROUP)
-			)
-		));
+		// Get "TLDs" groups.
+		$tld_groups = API::HostGroup()->get([
+			'output' => ['groupid', 'name'],
+			'filter' => [
+				'name' => [RSM_TLDS_GROUP, RSM_CC_TLD_GROUP, RSM_G_TLD_GROUP, RSM_OTHER_TLD_GROUP, RSM_TEST_GROUP]
+			]
+		]);
 
-		$selectedGroups = [];
+		$selected_groupids = [];
 		$included_groupids = [];
 
-		foreach ($tldGroups as $tldGroup) {
-			switch ($tldGroup['name']) {
+		foreach ($tld_groups as $tld_group) {
+			switch ($tld_group['name']) {
 				case RSM_TLDS_GROUP:
-					$selectedGroups[$tldGroup['groupid']] = $tldGroup['groupid'];
+					$selected_groupids[$tld_group['groupid']] = $tld_group['groupid'];
 					break;
+
 				case RSM_CC_TLD_GROUP:
 					$data['allowedGroups'][RSM_CC_TLD_GROUP] = true;
 
 					if ($data['filter_cctld_group']) {
-						$included_groupids[$tldGroup['groupid']] = $tldGroup['groupid'];
+						$included_groupids[$tld_group['groupid']] = $tld_group['groupid'];
 					}
 					break;
+
 				case RSM_G_TLD_GROUP:
 					$data['allowedGroups'][RSM_G_TLD_GROUP] = true;
 
 					if ($data['filter_gtld_group']) {
-						$included_groupids[$tldGroup['groupid']] = $tldGroup['groupid'];
+						$included_groupids[$tld_group['groupid']] = $tld_group['groupid'];
 					}
 					break;
+
 				case RSM_OTHER_TLD_GROUP:
 					$data['allowedGroups'][RSM_OTHER_TLD_GROUP] = true;
 
 					if ($data['filter_othertld_group']) {
-						$included_groupids[$tldGroup['groupid']] = $tldGroup['groupid'];
+						$included_groupids[$tld_group['groupid']] = $tld_group['groupid'];
 					}
 					break;
+
 				case RSM_TEST_GROUP:
 					$data['allowedGroups'][RSM_TEST_GROUP] = true;
 
 					if ($data['filter_test_group']) {
-						$included_groupids[$tldGroup['groupid']] = $tldGroup['groupid'];
+						$included_groupids[$tld_group['groupid']] = $tld_group['groupid'];
 					}
 					break;
 			}
 		}
 
-		if (!$selectedGroups) {
+		if (!$selected_groupids) {
 			show_error_message(_s('No permissions to referred "%1$s" group or it doesn\'t not exist.', RSM_TLDS_GROUP));
 			require_once dirname(__FILE__).'/include/page_footer.php';
 			exit;
@@ -250,8 +257,8 @@ foreach ($DB['SERVERS'] as $key => $value) {
 
 		$where_host = '';
 		if (CUser::$userData['type'] == USER_TYPE_SUPER_ADMIN) {
-			$where_condition[] = dbConditionInt('hg.groupid', $selectedGroups);
-			$host_count = (count($selectedGroups) >= 2) ? 2 : 1;
+			$where_condition[] = dbConditionInt('hg.groupid', $selected_groupids);
+			$host_count = (count($selected_groupids) >= 2) ? 2 : 1;
 			if ($data['filter_search']) {
 				$where_host = ' AND h.name LIKE ('.zbx_dbstr('%'.$data['filter_search'].'%').')';
 			}
@@ -261,14 +268,13 @@ foreach ($DB['SERVERS'] as $key => $value) {
 				' FROM hosts h'.
 				' WHERE hostid IN ('.
 					'SELECT hg.hostid from hosts_groups hg'.
-					' WHERE '.dbConditionInt('hg.groupid', $selectedGroups).
+					' WHERE '.dbConditionInt('hg.groupid', $selected_groupids).
 					' GROUP BY hg.hostid HAVING COUNT(hg.hostid)>='.$host_count.')'.
 					$where_host
 			);
 		}
 		else {
-			$userid = CWebUser::$data['userid'];
-			$userGroups = getUserGroupsByUserId($userid);
+			$user_groupids = getUserGroupsByUserId(CWebUser::$data['userid']);
 			if ($data['filter_search']) {
 				$where_host = ' AND hh.name LIKE ('.zbx_dbstr('%'.$data['filter_search'].'%').')';
 			}
@@ -279,11 +285,11 @@ foreach ($DB['SERVERS'] as $key => $value) {
 				' WHERE hostid IN ('.
 					'SELECT hgg.hostid'.
 					' FROM hosts_groups hgg'.
-					' JOIN rights r ON r.id=hgg.groupid AND '.dbConditionInt('r.groupid', $userGroups).
+					' JOIN rights r ON r.id=hgg.groupid AND '.dbConditionInt('r.groupid', $user_groupids).
 					' WHERE hgg.hostid IN ('.
 						'SELECT hh.hostid'.
 						' FROM hosts hh,hosts_groups hg'.
-						' WHERE '.dbConditionInt('hg.groupid', $selectedGroups).
+						' WHERE '.dbConditionInt('hg.groupid', $selected_groupids).
 							' AND hh.hostid=hg.hostid'.
 							$where_host.
 					')'.
@@ -296,7 +302,7 @@ foreach ($DB['SERVERS'] as $key => $value) {
 			while ($db_tld = DBfetch($db_tlds)) {
 				$hostids[] = $db_tld['hostid'];
 
-				$data['tld'][$DB['SERVERS'][$key]['NR'].$db_tld['hostid']] = [
+				$data['tld'][$db_nr.$db_tld['hostid']] = [
 					'hostid' => $db_tld['hostid'],
 					'host' => $db_tld['host'],
 					'name' => $db_tld['name'],
@@ -311,42 +317,46 @@ foreach ($DB['SERVERS'] as $key => $value) {
 				];
 			}
 
-			$hostGroups = API::HostGroup()->get(array(
+			// Apply TLD type representing hostgroups.
+			$host_groups = API::HostGroup()->get([
 				'output' => ['groupid', 'name'],
 				'selectHosts' => ['hostid'],
 				'hostids' => $hostids,
 				'groupids' => $included_groupids
-			));
+			]);
 
-			foreach ($hostGroups as $hostGroup) {
-				foreach ($hostGroup['hosts'] as $hosts_array) {
-					if (array_key_exists($DB['SERVERS'][$key]['NR'].$hosts_array['hostid'], $data['tld'])) {
-						$data['tld'][$DB['SERVERS'][$key]['NR'].$hosts_array['hostid']]['type'] = $hostGroup['name'];
+			foreach ($host_groups as $host_group) {
+				foreach ($host_group['hosts'] as $host) {
+					if (array_key_exists($db_nr.$host['hostid'], $data['tld'])) {
+						$data['tld'][$db_nr.$host['hostid']]['type'] = $host_group['name'];
 					}
 				}
 			}
 		}
 	}
 	else {
-		// get "TLDs" groupId
-		$tldGroups = API::HostGroup()->get(array(
-			'output' => array('groupid', 'name'),
-			'filter' => array(
-				'name' => array(RSM_CC_TLD_GROUP, RSM_G_TLD_GROUP, RSM_OTHER_TLD_GROUP, RSM_TEST_GROUP)
-			)
-		));
+		// Get "TLDs" groups.
+		$tld_groups = API::HostGroup()->get([
+			'output' => ['groupid', 'name'],
+			'filter' => [
+				'name' => [RSM_CC_TLD_GROUP, RSM_G_TLD_GROUP, RSM_OTHER_TLD_GROUP, RSM_TEST_GROUP]
+			]
+		]);
 
-		foreach ($tldGroups as $tldGroup) {
-			switch ($tldGroup['name']) {
+		foreach ($tld_groups as $tld_group) {
+			switch ($tld_group['name']) {
 				case RSM_CC_TLD_GROUP:
 					$data['allowedGroups'][RSM_CC_TLD_GROUP] = true;
 					break;
+
 				case RSM_G_TLD_GROUP:
 					$data['allowedGroups'][RSM_G_TLD_GROUP] = true;
 					break;
+
 				case RSM_OTHER_TLD_GROUP:
 					$data['allowedGroups'][RSM_OTHER_TLD_GROUP] = true;
 					break;
+
 				case RSM_TEST_GROUP:
 					$data['allowedGroups'][RSM_TEST_GROUP] = true;
 					break;
@@ -522,13 +532,13 @@ foreach ($tlds_by_server as $key => $hosts) {
 					$hostIdByTemplateName['Template '.$host] = $hostid;
 				}
 
-				$templates = API::Template()->get(array(
-					'output' => array('templateid', 'host'),
-					'filter' => array(
+				$templates = API::Template()->get([
+					'output' => ['templateid', 'host'],
+					'filter' => [
 						'host' => $templateName
-					),
+					],
 					'preservekeys' => true
-				));
+				]);
 
 				$templateIds = array_keys($templates);
 
@@ -536,15 +546,15 @@ foreach ($tlds_by_server as $key => $hosts) {
 					$templateName[$template['host']] = $template['templateid'];
 				}
 
-				$templateMacros = API::UserMacro()->get(array(
+				$templateMacros = API::UserMacro()->get([
 					'output' => API_OUTPUT_EXTEND,
 					'hostids' => $templateIds,
-					'filter' => array(
-						'macro' => array(RSM_TLD_DNSSEC_ENABLED, RSM_TLD_EPP_ENABLED, RSM_TLD_RDDS43_ENABLED,
+					'filter' => [
+						'macro' => [RSM_TLD_DNSSEC_ENABLED, RSM_TLD_EPP_ENABLED, RSM_TLD_RDDS43_ENABLED,
 							RSM_TLD_RDDS80_ENABLED, RSM_RDAP_TLD_ENABLED, RSM_TLD_RDDS_ENABLED
-						)
-					)
-				));
+						]
+					]
+				]);
 
 				// Holds hostids with at least one disabled item detected.
 				$hosts_with_disabled_items = [];
