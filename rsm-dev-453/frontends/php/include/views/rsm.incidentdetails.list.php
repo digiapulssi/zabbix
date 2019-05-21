@@ -157,7 +157,6 @@ $object_name = ($data['rsm_monitoring_mode'] == RSM_MONITORING_TYPE_REGISTRAR)
 $testsInfoTable->addRow([
 	[
 		new CSpan([bold($object_name_label), ':', SPACE, $object_name]),
-		new CSpan([bold(_('TLD')), ':', SPACE, $this->data['tld']['name']]),
 		BR(),
 		new CSpan([bold(_('Service')), ':', SPACE, $data['slvItem']['name']]),
 		BR(),
