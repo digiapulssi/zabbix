@@ -21,7 +21,10 @@
 
 require_once dirname(__FILE__).'/js/rsm.rollingweekstatus.list.js.php';
 
-$widget = (new CWidget())->setTitle(_('TLD Rolling week status'));
+$page_title = ($data['rsm_monitoring_mode'] == RSM_MONITORING_TYPE_REGISTRAR)
+	? _('Registrar rolling week status')
+	: _('TLD Rolling week status');
+$widget = (new CWidget())->setTitle($page_title);
 
 // filter
 $filter = (new CFilter('web.rsm.rollingweekstatus.filter.state'))
@@ -32,16 +35,6 @@ $filter = (new CFilter('web.rsm.rollingweekstatus.filter.state'))
 
 $filterColumn1 = new CFormList();
 $filterColumn2 = new CFormList();
-$filterColumn3 = new CFormList();
-
-$filter_value = new CComboBox('filter_slv', isset($this->data['filter_slv']) ? $this->data['filter_slv'] : null);
-$slvs = explode(',', $this->data['slv']);
-$filter_value->addItem('', _('any'));
-$filter_value->addItem(SLA_MONITORING_SLV_FILTER_NON_ZERO, _('non-zero'));
-
-foreach ($slvs as $slv) {
-	$filter_value->addItem($slv, $slv.'%');
-}
 
 // set disabled for no permission elements
 // ccTLD's group
@@ -68,93 +61,135 @@ if (!$this->data['allowedGroups'][RSM_TEST_GROUP]) {
 	$filterTestGroup->setAttribute('disabled', true);
 }
 
-$filterColumn1
-	->addRow(_('TLD'), (new CTextBox('filter_search', $this->data['filter_search']))
-		->setWidth(ZBX_TEXTAREA_FILTER_SMALL_WIDTH)
-		->setAttribute('autocomplete', 'off')
-	)
-	->addRow(SPACE);
-$filterColumn2
-	->addRow((new CSpan(_('Services')))->addStyle('padding: 0 25px;'), [
-		[
-			(new CCheckBox('filter_dns'))->setChecked($this->data['filter_dns']),
-			SPACE,
-			_('DNS')
-		],
-		SPACE,
-		new CSpan([
-			(new CCheckBox('filter_dnssec'))->setChecked($this->data['filter_dnssec']),
-			SPACE,
-			_('DNSSEC')
-		], 'checkbox-block'),
-		SPACE,
-		new CSpan([
-			(new CCheckBox('filter_rdds'))->setChecked($this->data['filter_rdds']),
-			SPACE,
-			_('RDDS')
-		], 'checkbox-block'),
-		SPACE,
-		new CSpan([
-			(new CCheckBox('filter_epp'))->setChecked($this->data['filter_epp']),
-			SPACE,
-			_('EPP')
-		], 'checkbox-block'),
-		SPACE,
-		(new CButton('checkAllServices', _('All/Any')))->addClass(ZBX_STYLE_BTN_LINK)
-	])
-	->addRow((new CSpan(_('TLD types')))->addStyle('padding: 0 25px;'), [
-		[
-			$filterCctldGroup,
-			SPACE,
-			_(RSM_CC_TLD_GROUP)
-		],
-		SPACE,
-		new CSpan([
-			$filterGtldGroup,
-			SPACE,
-			_(RSM_G_TLD_GROUP)
-		], 'checkbox-block'),
-		SPACE,
-		new CSpan([
-			$filterOtherGroup,
-			SPACE,
-			_(RSM_OTHER_TLD_GROUP)
-		], 'checkbox-block'),
-		SPACE,
-		new CSpan([
-			$filterTestGroup,
-			SPACE,
-			_(RSM_TEST_GROUP)
-		], 'checkbox-block'),
-		SPACE,
-		(new CButton('checkAllGroups', _('All/Any')))->addClass(ZBX_STYLE_BTN_LINK)
-	])
-	->addRow((new CSpan(_('Enabled subservices')))->addStyle('padding: 0 25px;'), [
-		new CSpan([
-			(new CCheckBox('filter_rdds_subgroup'))->setChecked($this->data['filter_rdds_subgroup']),
-			SPACE,
-			_(RSM_RDDS_SUBSERVICE_RDDS)
-		], 'checkbox-block'),
-		SPACE,
-		new CSpan([
-			(new CCheckBox('filter_rdap_subgroup'))->setChecked($this->data['filter_rdap_subgroup']),
-			SPACE,
-			_(RSM_RDDS_SUBSERVICE_RDAP)
-		], 'checkbox-block'),
-		SPACE,
-		(new CButton('checkAllSubservices', _('All/Any')))->addClass(ZBX_STYLE_BTN_LINK)
-	]);
-
-$filterColumn3
-	->addRow(_('Exceeding or equal to'), $filter_value)
-	->addRow(_('Current status'),
-		(new CComboBox('filter_status',
-			array_key_exists('filter_status', $this->data) ? $this->data['filter_status'] : null)
+if ($data['rsm_monitoring_mode'] == RSM_MONITORING_TYPE_REGISTRAR) {
+	$filterColumn1
+		->addRow(_('Registrar ID'), (new CTextBox('filter_registrar_id', $data['filter_registrar_id']))
+			->setWidth(ZBX_TEXTAREA_FILTER_SMALL_WIDTH)
+			->setAttribute('autocomplete', 'off')
 		)
-			->addItem(0, _('all'))
-			->addItem(1, _('fail'))
-			->addItem(2, _('disabled'))
-	);
+		->addRow(_('Registrar name'), (new CTextBox('filter_registrar_name', $data['filter_registrar_name']))
+			->setWidth(ZBX_TEXTAREA_FILTER_SMALL_WIDTH)
+			->setAttribute('autocomplete', 'off')
+		)
+		->addRow(_('Registrar family'), (new CTextBox('filter_registrar_family', $data['filter_registrar_family']))
+			->setWidth(ZBX_TEXTAREA_FILTER_SMALL_WIDTH)
+			->setAttribute('autocomplete', 'off')
+		)
+		->addRow(SPACE);
+}
+else {
+	$filterColumn1
+		->addRow(_('TLD'), (new CTextBox('filter_search', $this->data['filter_search']))
+			->setWidth(ZBX_TEXTAREA_FILTER_SMALL_WIDTH)
+			->setAttribute('autocomplete', 'off')
+		)
+		->addRow(SPACE);
+}
+
+if ($data['rsm_monitoring_mode'] == RSM_MONITORING_TYPE_REGISTRY) {
+	$filterColumn2
+		->addRow((new CSpan(_('Services')))->addStyle('padding: 0 25px;'), [
+			[
+				(new CCheckBox('filter_dns'))->setChecked($this->data['filter_dns']),
+				SPACE,
+				_('DNS')
+			],
+			SPACE,
+			new CSpan([
+				(new CCheckBox('filter_dnssec'))->setChecked($this->data['filter_dnssec']),
+				SPACE,
+				_('DNSSEC')
+			], 'checkbox-block'),
+			SPACE,
+			new CSpan([
+				(new CCheckBox('filter_rdds'))->setChecked($this->data['filter_rdds']),
+				SPACE,
+				_('RDDS')
+			], 'checkbox-block'),
+			SPACE,
+			new CSpan([
+				(new CCheckBox('filter_epp'))->setChecked($this->data['filter_epp']),
+				SPACE,
+				_('EPP')
+			], 'checkbox-block'),
+			SPACE,
+			(new CButton('checkAllServices', _('All/Any')))->addClass(ZBX_STYLE_BTN_LINK)
+		])
+		->addRow((new CSpan(_('TLD types')))->addStyle('padding: 0 25px;'), [
+			[
+				$filterCctldGroup,
+				SPACE,
+				_(RSM_CC_TLD_GROUP)
+			],
+			SPACE,
+			new CSpan([
+				$filterGtldGroup,
+				SPACE,
+				_(RSM_G_TLD_GROUP)
+			], 'checkbox-block'),
+			SPACE,
+			new CSpan([
+				$filterOtherGroup,
+				SPACE,
+				_(RSM_OTHER_TLD_GROUP)
+			], 'checkbox-block'),
+			SPACE,
+			new CSpan([
+				$filterTestGroup,
+				SPACE,
+				_(RSM_TEST_GROUP)
+			], 'checkbox-block'),
+			SPACE,
+			(new CButton('checkAllGroups', _('All/Any')))->addClass(ZBX_STYLE_BTN_LINK)
+		])
+		->addRow((new CSpan(_('Enabled subservices')))->addStyle('padding: 0 25px;'), [
+			new CSpan([
+				(new CCheckBox('filter_rdds_subgroup'))->setChecked($this->data['filter_rdds_subgroup']),
+				SPACE,
+				_(RSM_RDDS_SUBSERVICE_RDDS)
+			], 'checkbox-block'),
+			SPACE,
+			new CSpan([
+				(new CCheckBox('filter_rdap_subgroup'))->setChecked($this->data['filter_rdap_subgroup']),
+				SPACE,
+				_(RSM_RDDS_SUBSERVICE_RDAP)
+			], 'checkbox-block'),
+			SPACE,
+			(new CButton('checkAllSubservices', _('All/Any')))->addClass(ZBX_STYLE_BTN_LINK)
+		]);
+}
+else {
+	$filterColumn2 = null;
+}
+
+if ($data['rsm_monitoring_mode'] == RSM_MONITORING_TYPE_REGISTRY) {
+	$filterColumn3 = new CFormList();
+
+	// Make Filter values.
+	$filter_value = new CComboBox('filter_slv', isset($data['filter_slv']) ? $data['filter_slv'] : null);
+	$slvs = explode(',', $data['slv']);
+	$filter_value->addItem('', _('any'));
+	$filter_value->addItem(SLA_MONITORING_SLV_FILTER_NON_ZERO, _('non-zero'));
+
+	foreach ($slvs as $slv) {
+		$filter_value->addItem($slv, $slv.'%');
+	}
+
+	// Add filter fields to third column.
+	$filterColumn3
+		->addRow(_('Exceeding or equal to'), $filter_value)
+		->addRow(_('Current status'),
+			(new CComboBox('filter_status',
+					array_key_exists('filter_status', $data) ? $data['filter_status'] : null)
+			)
+				->addItem(0, _('all'))
+				->addItem(1, _('fail'))
+				->addItem(2, _('disabled'))
+		);
+}
+else {
+	$filterColumn3 = null;
+}
 
 $filter
 	->addColumn($filterColumn1)
@@ -167,8 +202,16 @@ $widget->addItem($filter);
 $form = (new CForm())
 	->setName('rollingweek');
 
-$table = (new CTableInfo())
-	->setHeader([
+if ($data['rsm_monitoring_mode'] == RSM_MONITORING_TYPE_REGISTRAR) {
+	$header_columns = [
+		make_sorting_header(_('Registrar ID'), 'name', $data['sort'], $data['sortorder']),
+		make_sorting_header(_('Registrar name'), 'registrar_name', $data['sort'], $data['sortorder']),
+		make_sorting_header(_('Registrar family'), 'registrar_family', $data['sort'], $data['sortorder']),
+		make_sorting_header(_('RDDS (24Hrs)'), 'rdds_lastvalue', $data['sort'], $data['sortorder'])
+	];
+}
+else {
+	$header_columns = [
 		make_sorting_header(_('TLD'), 'name', $data['sort'], $data['sortorder']),
 		make_sorting_header(_('Type'), 'type', $data['sort'], $data['sortorder']),
 		make_sorting_header(_('DNS (4Hrs)'), 'dns_lastvalue', $data['sort'], $data['sortorder']),
@@ -176,15 +219,36 @@ $table = (new CTableInfo())
 		make_sorting_header(_('RDDS (24Hrs)'), 'rdds_lastvalue', $data['sort'], $data['sortorder']),
 		make_sorting_header(_('EPP (24Hrs)'), 'epp_lastvalue', $data['sort'], $data['sortorder']),
 		make_sorting_header(_('Server'), 'server', $data['sort'], $data['sortorder'])
-]);
+	];
+}
 
-if ($this->data['tld']) {
+$table = (new CTableInfo())->setHeader($header_columns);
+
+if ($data['tld']) {
 	$serverTime = time() - RSM_ROLLWEEK_SHIFT_BACK;
-	$from = date('YmdHis', $serverTime - $this->data['rollWeekSeconds']);
+	$from = date('YmdHis', $serverTime - $data['rollWeekSeconds']);
 	$till = date('YmdHis', $serverTime);
-	foreach ($this->data['tld'] as $key => $tld) {
+
+	foreach ($data['tld'] as $key => $tld) {
+		// REGISTRAR type.
+		if ($data['rsm_monitoring_mode'] == RSM_MONITORING_TYPE_REGISTRAR) {
+			$row = [
+				$tld['name'],
+				$tld['registrar_name'],
+				$tld['registrar_family']
+			];
+		}
+		// TLD type.
+		else {
+			$row = [
+				$tld['name'],
+				$tld['type']
+			];
+		}
+
 		// DNS
-		if (isset($tld[RSM_DNS]) && array_key_exists('trigger', $tld[RSM_DNS])) {
+		if ($data['rsm_monitoring_mode'] == RSM_MONITORING_TYPE_REGISTRY && array_key_exists(RSM_DNS, $tld)
+				&& array_key_exists('trigger', $tld[RSM_DNS])) {
 			if ($tld[RSM_DNS]['trigger'] && $tld[RSM_DNS]['incident']) {
 				if (array_key_exists('availItemId', $tld[RSM_DNS]) && array_key_exists('itemid', $tld[RSM_DNS])) {
 					$dnsStatus =  new CLink(
@@ -218,16 +282,17 @@ if ($this->data['tld']) {
 				? new CLink('graph', $tld['url'].'history.php?action=showgraph&period='.$this->data['rollWeekSeconds'].
 					'&itemids[]='.$tld[RSM_DNS]['itemid'].'&sid='.$this->data['sid'].'&set_sid=1', 'cell-value')
 				: null;
-			$dns = [(new CSpan($dnsValue))->addClass('right'), $dnsStatus, SPACE, $dnsGraph];
+			$row[] = [(new CSpan($dnsValue))->addClass('right'), $dnsStatus, SPACE, $dnsGraph];
 		}
-		else {
-			$dns = (new CDiv(null))
+		elseif ($data['rsm_monitoring_mode'] == RSM_MONITORING_TYPE_REGISTRY) {
+			$row[] = (new CDiv(null))
 				->addClass('service-icon status_icon_extra iconrollingweekdisabled disabled-service')
 				->setHint('Incorrect TLD configuration.', '', 'on');
 		}
 
 		// DNSSEC
-		if (isset($tld[RSM_DNSSEC]) && array_key_exists('trigger', $tld[RSM_DNSSEC])) {
+		if ($data['rsm_monitoring_mode'] == RSM_MONITORING_TYPE_REGISTRY && array_key_exists(RSM_DNSSEC, $tld)
+				&& array_key_exists('trigger', $tld[RSM_DNSSEC])) {
 			if ($tld[RSM_DNSSEC]['trigger'] && $tld[RSM_DNSSEC]['incident']) {
 				if (array_key_exists('availItemId', $tld[RSM_DNSSEC]) && array_key_exists('itemid', $tld[RSM_DNSSEC])) {
 					$dnssecStatus =  new CLink(
@@ -262,16 +327,17 @@ if ($this->data['tld']) {
 						$tld[RSM_DNSSEC]['itemid'], 'cell-value'
 				)
 				: null;
-			$dnssec = [(new CSpan($dnssecValue))->addClass('right'), $dnssecStatus, SPACE, $dnssecGraph];
+			$row[] = [(new CSpan($dnssecValue))->addClass('right'), $dnssecStatus, SPACE, $dnssecGraph];
 		}
-		else {
-			$dnssec = (new CDiv(null))
+		elseif ($data['rsm_monitoring_mode'] == RSM_MONITORING_TYPE_REGISTRY) {
+			$row[] = (new CDiv(null))
 				->addClass('service-icon status_icon_extra iconrollingweekdisabled disabled-service')
 				->setHint('DNSSEC is disabled.', '', 'on');
 		}
 
 		// RDDS
-		if (isset($tld[RSM_RDDS]) && array_key_exists('trigger', $tld[RSM_RDDS])) {
+		// RDDS column is shown in registrar monitoring as well.
+		if (array_key_exists(RSM_RDDS, $tld) && array_key_exists('trigger', $tld[RSM_RDDS])) {
 			if ($tld[RSM_RDDS]['trigger'] && $tld[RSM_RDDS]['incident']) {
 				if (array_key_exists('availItemId', $tld[RSM_RDDS]) && array_key_exists('itemid', $tld[RSM_RDDS])) {
 					$rddsStatus =  new CLink(
@@ -316,18 +382,20 @@ if ($this->data['tld']) {
 			}
 
 			$rdds_services = implode(' / ', $ok_rdds_services);
-			$rdds = [(new CSpan($rddsValue))->addClass('right'), $rddsStatus, SPACE, $rddsGraph, [SPACE,SPACE,SPACE],
+
+			$row[] = [(new CSpan($rddsValue))->addClass('right'), $rddsStatus, SPACE, $rddsGraph, [SPACE,SPACE,SPACE],
 				new CSpan($rdds_services, 'bold')
 			];
 		}
 		else {
-			$rdds = (new CDiv(null))
+			$row[] = (new CDiv(null))
 				->addClass('service-icon status_icon_extra iconrollingweekdisabled disabled-service')
 				->setHint('RDDS is disabled.', '', 'on');
 		}
 
 		// EPP
-		if (isset($tld[RSM_EPP]) && array_key_exists('trigger', $tld[RSM_EPP])) {
+		if ($data['rsm_monitoring_mode'] == RSM_MONITORING_TYPE_REGISTRY && array_key_exists(RSM_EPP, $tld)
+				&& array_key_exists('trigger', $tld[RSM_EPP])) {
 			if ($tld[RSM_EPP]['trigger'] && $tld[RSM_EPP]['incident']) {
 				if (array_key_exists('availItemId', $tld[RSM_EPP]) && array_key_exists('itemid', $tld[RSM_EPP])) {
 					$eppStatus = new CLink(
@@ -361,23 +429,16 @@ if ($this->data['tld']) {
 				? new CLink('graph', $tld['url'].'history.php?action=showgraph&period='.$this->data['rollWeekSeconds'].
 					'&itemids[]='.$tld[RSM_EPP]['itemid'].'&sid='.$this->data['sid'].'&set_sid=1', 'cell-value')
 				: null;
-			$epp = [(new CSpan($eppValue))->addClass('right'), $eppStatus, SPACE, $eppGraph];
+
+			$row[] = [(new CSpan($eppValue))->addClass('right'), $eppStatus, SPACE, $eppGraph];
 		}
-		else {
-			$epp = (new CDiv(null))
+		elseif ($data['rsm_monitoring_mode'] == RSM_MONITORING_TYPE_REGISTRY) {
+			$row[] = (new CDiv(null))
 				->addClass('service-icon status_icon_extra iconrollingweekdisabled disabled-service')
 				->setHint('EPP is disabled.', '', 'on');
-		}
 
-		$row = [
-			$tld['name'],
-			$tld['type'],
-			$dns,
-			$dnssec,
-			$rdds,
-			$epp,
-			new CLink($tld['server'], $tld['url'].'rsm.rollingweekstatus.php?sid='.$this->data['sid'].'&set_sid=1')
-		];
+			$row[] = new CLink($tld['server'], $tld['url'].'rsm.rollingweekstatus.php?sid='.$data['sid'].'&set_sid=1');
+		}
 
 		$table->addRow($row);
 	}

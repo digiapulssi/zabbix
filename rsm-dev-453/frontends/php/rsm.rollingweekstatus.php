@@ -22,7 +22,9 @@
 require_once dirname(__FILE__).'/include/config.inc.php';
 require_once dirname(__FILE__).'/include/rollingweekstatus.inc.php';
 
-$page['title'] = _('TLD Rolling week status');
+$page['title'] = (get_rsm_monitoring_type() == RSM_MONITORING_TYPE_REGISTRAR)
+	? _('Registrar rolling week status')
+	: _('TLD Rolling week status');
 $page['file'] = 'rsm.rollingweekstatus.php';
 $page['hist_arg'] = array('groupid', 'hostid');
 $page['type'] = detect_page_type(PAGE_TYPE_HTML);
@@ -51,12 +53,15 @@ $fields = [
 	'filter_test_group' =>		[T_ZBX_STR, O_OPT,  null,	null,		null],
 	'filter_rdap_subgroup' =>	[T_ZBX_STR, O_OPT,  null,	null,		null],
 	'filter_rdds_subgroup' =>	[T_ZBX_STR, O_OPT,  null,	null,		null],
+	'filter_registrar_id' =>		[T_ZBX_STR, O_OPT,  null,	null,		null],
+	'filter_registrar_name' =>		[T_ZBX_STR, O_OPT,  null,	null,		null],
+	'filter_registrar_family' =>	[T_ZBX_STR, O_OPT,  null,	null,		null],
 	// ajax
 	'favobj' =>					[T_ZBX_STR, O_OPT, P_ACT,	null,		null],
 	'favref' =>					[T_ZBX_STR, O_OPT, P_ACT,  NOT_EMPTY,	'isset({favobj})'],
 	'favstate' =>				[T_ZBX_INT, O_OPT, P_ACT,  NOT_EMPTY,	'isset({favobj})&&("filter"=={favobj})'],
 	// sort and sortorder
-	'sort' =>			[T_ZBX_STR, O_OPT, P_SYS, IN('"name","type","server","dns_lastvalue","dnssec_lastvalue","rdds_lastvalue","epp_lastvalue"'),	null],
+	'sort' =>			[T_ZBX_STR, O_OPT, P_SYS, IN('"name","registrar_name","registrar_family","type","server","dns_lastvalue","dnssec_lastvalue","rdds_lastvalue","epp_lastvalue"'),	null],
 	'sortorder' =>		[T_ZBX_STR, O_OPT, P_SYS, IN('"'.ZBX_SORT_DOWN.'","'.ZBX_SORT_UP.'"'),	null]
 ];
 
@@ -92,6 +97,9 @@ if (hasRequest('filter_set')) {
 	CProfile::update('web.rsm.rollingweekstatus.filter_test_group', getRequest('filter_test_group', 0), PROFILE_TYPE_INT);
 	CProfile::update('web.rsm.rollingweekstatus.filter_rdap_subgroup', getRequest('filter_rdap_subgroup', 0), PROFILE_TYPE_INT);
 	CProfile::update('web.rsm.rollingweekstatus.filter_rdds_subgroup', getRequest('filter_rdds_subgroup', 0), PROFILE_TYPE_INT);
+	CProfile::update('web.rsm.rollingweekstatus.filter_registrar_id', getRequest('filter_registrar_id'), PROFILE_TYPE_STR);
+	CProfile::update('web.rsm.rollingweekstatus.filter_registrar_name', getRequest('filter_registrar_name'), PROFILE_TYPE_STR);
+	CProfile::update('web.rsm.rollingweekstatus.filter_registrar_family', getRequest('filter_registrar_family'), PROFILE_TYPE_STR);
 }
 elseif (hasRequest('filter_rst')) {
 	DBStart();
@@ -108,6 +116,9 @@ elseif (hasRequest('filter_rst')) {
 	CProfile::delete('web.rsm.rollingweekstatus.filter_test_group');
 	CProfile::delete('web.rsm.rollingweekstatus.filter_rdap_subgroup');
 	CProfile::delete('web.rsm.rollingweekstatus.filter_rdds_subgroup');
+	CProfile::delete('web.rsm.rollingweekstatus.filter_registrar_id');
+	CProfile::delete('web.rsm.rollingweekstatus.filter_registrar_name');
+	CProfile::delete('web.rsm.rollingweekstatus.filter_registrar_family');
 	DBend();
 }
 
@@ -124,6 +135,9 @@ $data['filter_othertld_group'] = CProfile::get('web.rsm.rollingweekstatus.filter
 $data['filter_test_group'] = CProfile::get('web.rsm.rollingweekstatus.filter_test_group');
 $data['filter_rdap_subgroup'] = CProfile::get('web.rsm.rollingweekstatus.filter_rdap_subgroup');
 $data['filter_rdds_subgroup'] = CProfile::get('web.rsm.rollingweekstatus.filter_rdds_subgroup');
+$data['filter_registrar_id'] = CProfile::get('web.rsm.rollingweekstatus.filter_registrar_id');
+$data['filter_registrar_name'] = CProfile::get('web.rsm.rollingweekstatus.filter_registrar_name');
+$data['filter_registrar_family'] = CProfile::get('web.rsm.rollingweekstatus.filter_registrar_family');
 
 $sort_field = getRequest('sort', CProfile::get('web.rsm.rollingweekstatus.sort', 'name'));
 $sort_order = getRequest('sortorder', CProfile::get('web.rsm.rollingweekstatus.sortorder', ZBX_SORT_UP));
@@ -133,7 +147,37 @@ CProfile::update('web.rsm.rollingweekstatus.sortorder', $sort_order, PROFILE_TYP
 
 $data['sort'] = $sort_field;
 $data['sortorder'] = $sort_order;
+$data['rsm_monitoring_mode'] = get_rsm_monitoring_type();
 
+// Erase fields that are not supported in particular mode.
+if ($data['rsm_monitoring_mode'] == RSM_MONITORING_TYPE_REGISTRAR) {
+	$data['filter_search'] = '';
+	$data['filter_dns'] = '';
+	$data['filter_dnssec'] = '';
+	$data['filter_epp'] = '';
+	$data['filter_slv'] = '';
+	$data['filter_status'] = '';
+	$data['filter_gtld_group'] = '';
+	$data['filter_cctld_group'] = '';
+	$data['filter_othertld_group'] = '';
+	$data['filter_test_group'] = '';
+	if (!$data['filter_registrar_id']) {
+		$data['filter_registrar_id'] = '';
+	}
+	if (!$data['filter_registrar_name']) {
+		$data['filter_registrar_name'] = '';
+	}
+	if (!$data['filter_registrar_family']) {
+		$data['filter_registrar_family'] = '';
+	}
+}
+else {
+	$data['filter_registrar_id'] = '';
+	$data['filter_registrar_name'] = '';
+	$data['filter_registrar_family'] = '';
+}
+
+// Get global macros necessary for further calculation.
 $macro = API::UserMacro()->get([
 	'output' => ['macro', 'value'],
 	'filter' => [
@@ -182,8 +226,15 @@ else {
 }
 
 foreach ($DB['SERVERS'] as $key => $value) {
-	if ($data['filter_cctld_group'] || $data['filter_gtld_group'] || $data['filter_othertld_group']
-			|| $data['filter_test_group']) {
+	/**
+	 * If registrar mode is ON, there are no check-boxes to filter records by TLD type. That's why we assume that they
+	 * all are checked. Later we will make more precise conditions to limit results received from database.
+	 */
+	$filter_by_tlds = ($data['filter_cctld_group'] || $data['filter_gtld_group'] || $data['filter_othertld_group']
+		|| $data['filter_test_group']);
+
+	if ($data['rsm_monitoring_mode'] == RSM_MONITORING_TYPE_REGISTRAR || $filter_by_tlds) {
+		// Check if new database connection should be made.
 		if ($DB['SERVER'] !== $DB['SERVERS'][$key]['SERVER']
 				|| $DB['PORT'] !== $DB['SERVERS'][$key]['PORT']
 				|| $DB['DATABASE'] !== $DB['SERVERS'][$key]['DATABASE']
@@ -196,8 +247,6 @@ foreach ($DB['SERVERS'] as $key => $value) {
 		}
 		$db_nr = $DB['SERVERS'][$key]['NR'];
 
-		$where_condition = [];
-
 		// Get "TLDs" groups.
 		$tld_groups = API::HostGroup()->get([
 			'output' => ['groupid', 'name'],
@@ -207,7 +256,7 @@ foreach ($DB['SERVERS'] as $key => $value) {
 		]);
 
 		$selected_groupids = [];
-		$included_groupids = [];
+		$included_groupids = []; // Groups selected in filter as TLD types. In case of registrar mode, there will be all available groups.
 
 		foreach ($tld_groups as $tld_group) {
 			switch ($tld_group['name']) {
@@ -218,7 +267,7 @@ foreach ($DB['SERVERS'] as $key => $value) {
 				case RSM_CC_TLD_GROUP:
 					$data['allowedGroups'][RSM_CC_TLD_GROUP] = true;
 
-					if ($data['filter_cctld_group']) {
+					if ($data['rsm_monitoring_mode'] == RSM_MONITORING_TYPE_REGISTRAR || $data['filter_cctld_group']) {
 						$included_groupids[$tld_group['groupid']] = $tld_group['groupid'];
 					}
 					break;
@@ -226,7 +275,7 @@ foreach ($DB['SERVERS'] as $key => $value) {
 				case RSM_G_TLD_GROUP:
 					$data['allowedGroups'][RSM_G_TLD_GROUP] = true;
 
-					if ($data['filter_gtld_group']) {
+					if ($data['rsm_monitoring_mode'] == RSM_MONITORING_TYPE_REGISTRAR || $data['filter_gtld_group']) {
 						$included_groupids[$tld_group['groupid']] = $tld_group['groupid'];
 					}
 					break;
@@ -234,7 +283,7 @@ foreach ($DB['SERVERS'] as $key => $value) {
 				case RSM_OTHER_TLD_GROUP:
 					$data['allowedGroups'][RSM_OTHER_TLD_GROUP] = true;
 
-					if ($data['filter_othertld_group']) {
+					if ($data['rsm_monitoring_mode'] == RSM_MONITORING_TYPE_REGISTRAR || $data['filter_othertld_group']) {
 						$included_groupids[$tld_group['groupid']] = $tld_group['groupid'];
 					}
 					break;
@@ -242,7 +291,7 @@ foreach ($DB['SERVERS'] as $key => $value) {
 				case RSM_TEST_GROUP:
 					$data['allowedGroups'][RSM_TEST_GROUP] = true;
 
-					if ($data['filter_test_group']) {
+					if ($data['rsm_monitoring_mode'] == RSM_MONITORING_TYPE_REGISTRAR || $data['filter_test_group']) {
 						$included_groupids[$tld_group['groupid']] = $tld_group['groupid'];
 					}
 					break;
@@ -255,13 +304,78 @@ foreach ($DB['SERVERS'] as $key => $value) {
 			exit;
 		}
 
-		$where_host = '';
-		if (CUser::$userData['type'] == USER_TYPE_SUPER_ADMIN) {
-			$where_condition[] = dbConditionInt('hg.groupid', $selected_groupids);
-			$host_count = (count($selected_groupids) >= 2) ? 2 : 1;
-			if ($data['filter_search']) {
-				$where_host = ' AND h.name LIKE ('.zbx_dbstr('%'.$data['filter_search'].'%').')';
+		// Use filter values to find matching hosts (TLDs/Registrars).
+		$where_host = [];
+		$matching_hostsids = [];
+		$hosts_table_alias = (CUser::$userData['type'] == USER_TYPE_SUPER_ADMIN) ? 'h' : 'hh';
+		$filter_in_use = false;
+
+		// Search by exact matching registrar id.
+		if ($data['filter_registrar_id'] !== '') {
+			$where_host[] = dbConditionString($hosts_table_alias.'.name ', [$data['filter_registrar_id']]);
+		}
+
+		// Search by partial matching registrar name.
+		if ($data['filter_registrar_name'] !== '') {
+			$filter_in_use = true;
+
+			$registrar_name_matching_hosts = API::UserMacro()->get([
+				'output' => [],
+				'selectHosts' => ['hostid'],
+				'filter' => [
+					'macro' => REGISTRAR_NAME_MACROS
+				],
+				'search' => [
+					'value' => $data['filter_registrar_name']
+				],
+				'usermacros' => true
+			]);
+
+			if ($registrar_name_matching_hosts) {
+				$matching_hostsids = zbx_objectValues($registrar_name_matching_hosts[0]['hosts'], 'hostid');
 			}
+			unset($registrar_name_matching_hosts);
+		}
+
+		// Search by partial matching registrar family.
+		if ($data['filter_registrar_family'] !== '') {
+			$filter_in_use = true;
+
+			$registrar_family_matching_hosts = API::UserMacro()->get([
+				'output' => [],
+				'selectHosts' => ['hostid'],
+				'filter' => [
+					'macro' => REGISTRAR_FAMILY_MACROS
+				],
+				'search' => [
+					'value' => $data['filter_registrar_family']
+				],
+				'usermacros' => true
+			]);
+
+			$registrar_family_matching_hosts = $registrar_family_matching_hosts
+				? zbx_objectValues($registrar_family_matching_hosts[0]['hosts'], 'hostid')
+				: [];
+			$matching_hostsids = array_merge($matching_hostsids, $registrar_family_matching_hosts);
+
+			unset($registrar_family_matching_hosts);
+		}
+
+		// Search by partial matching TLD name.
+		if ($data['filter_search']) {
+			$where_host[] = $hosts_table_alias.'.name LIKE ('.zbx_dbstr('%'.$data['filter_search'].'%').')';
+		}
+
+		if ($matching_hostsids || $filter_in_use) {
+			$where_host[] = dbConditionInt($hosts_table_alias.'.hostid ', array_keys(array_flip($matching_hostsids)));
+		}
+
+		// Stringify query where conditions.
+		$where_host = $where_host ? ' AND ('.implode(' AND ', $where_host).')' : '';
+
+		// Select TLD hosts.
+		if (CUser::$userData['type'] == USER_TYPE_SUPER_ADMIN) {
+			$host_count = (count($selected_groupids) >= 2) ? 2 : 1;
 
 			$db_tlds = DBselect(
 				'SELECT h.hostid,h.host,h.name,h.status'.
@@ -275,9 +389,6 @@ foreach ($DB['SERVERS'] as $key => $value) {
 		}
 		else {
 			$user_groupids = getUserGroupsByUserId(CWebUser::$data['userid']);
-			if ($data['filter_search']) {
-				$where_host = ' AND hh.name LIKE ('.zbx_dbstr('%'.$data['filter_search'].'%').')';
-			}
 
 			$db_tlds = DBselect(
 				'SELECT h.hostid,h.host,h.name,h.status'.
@@ -299,6 +410,10 @@ foreach ($DB['SERVERS'] as $key => $value) {
 
 		if ($db_tlds) {
 			$hostids = [];
+			$extra_fields = ($data['rsm_monitoring_mode'] == RSM_MONITORING_TYPE_REGISTRAR)
+				? ['registrar_name' => '', 'registrar_family' => '']
+				: [];
+
 			while ($db_tld = DBfetch($db_tlds)) {
 				$hostids[] = $db_tld['hostid'];
 
@@ -313,8 +428,9 @@ foreach ($DB['SERVERS'] as $key => $value) {
 					'epp_lastvalue' => 0,
 					'server' => $DB['SERVERS'][$key]['NAME'],
 					'url' => $DB['SERVERS'][$key]['URL'],
+					'type' => null,
 					'db' => $key
-				];
+				] + $extra_fields;
 			}
 
 			// Apply TLD type representing hostgroups.
@@ -332,12 +448,41 @@ foreach ($DB['SERVERS'] as $key => $value) {
 					}
 				}
 			}
+
+			// Unset TLD hosts without type specified.
+			$hostids = array_flip($hostids);
+			foreach ($data['tld'] as $key => $value) {
+				if ($value['type'] === null) {
+					unset($data['tld'][$key], $hostids[$value['hostid']]);
+				}
+			}
+
+			// Apply registrer details representing macros.
+			if ($data['rsm_monitoring_mode'] == RSM_MONITORING_TYPE_REGISTRAR) {
+				$hosts_macros = API::UserMacro()->get([
+					'output' => ['macro', 'value', 'hostid'],
+					'hostids' => array_keys($hostids),
+					'filter' => [
+						'macro' => [REGISTRAR_FAMILY_MACROS, REGISTRAR_NAME_MACROS]
+					],
+					'usermacros' => true
+				]);
+
+				foreach ($hosts_macros as $macro) {
+					if ($macro['macro'] === REGISTRAR_FAMILY_MACROS) {
+						$data['tld'][$db_nr.$macro['hostid']]['registrar_family'] = $macro['value'];
+					}
+					elseif ($macro['macro'] === REGISTRAR_NAME_MACROS) {
+						$data['tld'][$db_nr.$macro['hostid']]['registrar_name'] = $macro['value'];
+					}
+				}
+			}
 		}
 	}
 	else {
 		// Get "TLDs" groups.
 		$tld_groups = API::HostGroup()->get([
-			'output' => ['groupid', 'name'],
+			'output' => ['name'],
 			'filter' => [
 				'name' => [RSM_CC_TLD_GROUP, RSM_G_TLD_GROUP, RSM_OTHER_TLD_GROUP, RSM_TEST_GROUP]
 			]
@@ -365,12 +510,6 @@ foreach ($DB['SERVERS'] as $key => $value) {
 	}
 }
 
-foreach ($data['tld'] as $key => $value) {
-	if (!array_key_exists('type', $data['tld'][$key])) {
-		unset($data['tld'][$key]);
-	}
-}
-
 if ($data['tld']) {
 	order_result($data['tld'], 'name');
 	$data['sid'] = CWebUser::getSessionCookie();
@@ -394,7 +533,9 @@ foreach ($tlds_by_server as $key => $hosts) {
 
 	if ($hosts) {
 		// get items
-		$item_keys = [RSM_SLV_DNS_ROLLWEEK, RSM_SLV_DNSSEC_ROLLWEEK, RSM_SLV_RDDS_ROLLWEEK, RSM_SLV_EPP_ROLLWEEK];
+		$item_keys = ($data['rsm_monitoring_mode'] == RSM_MONITORING_TYPE_REGISTRAR)
+			? [RSM_SLV_RDDS_ROLLWEEK]
+			: [RSM_SLV_DNS_ROLLWEEK, RSM_SLV_DNSSEC_ROLLWEEK, RSM_SLV_RDDS_ROLLWEEK, RSM_SLV_EPP_ROLLWEEK];
 
 		$items = [];
 		$db_items = DBselect(
