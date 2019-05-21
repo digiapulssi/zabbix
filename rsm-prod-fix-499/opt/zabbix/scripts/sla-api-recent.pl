@@ -50,7 +50,7 @@ sub wait_for_children($);
 sub terminate_children($);
 sub get_swap_usage($);
 
-parse_opts('tld=s', 'service=s', 'server-id=i', 'now=i', 'period=i', 'print-period!', 'max-children=i', 'max-wait=i', 'debug2!', 'debug-delayed=i');
+parse_opts('tld=s', 'service=s', 'server-id=i', 'now=i', 'period=i', 'print-period!', 'max-children=i', 'max-wait=i', 'debug2!');
 
 setopt('nolog');
 
@@ -59,7 +59,6 @@ usage() if (opt('help'));
 exit_if_running();	# exit with 0 exit code
 
 my $max_wait = getopt('max-wait') // DEFAULT_MAX_WAIT;
-my $debug_start = opt('debug-delayed') ? time() + getopt('debug-delayed') : undef;
 
 if (opt('debug'))
 {
@@ -409,13 +408,6 @@ sub process_tld($$$$$)
 	my $all_probes_ref = shift;
 	my $lastvalues_db_tld = shift;
 	my $lastvalues_cache_tld = shift;
-
-	# enable debug if requested and child is running for too long
-	if (defined($debug_start) && !opt('debug') && time() >= $debug_start)
-	{
-		setopt('debug');
-		ah_set_debug(1);
-	}
 
 	foreach my $service (sort(keys(%{$lastvalues_db_tld})))
 	{
