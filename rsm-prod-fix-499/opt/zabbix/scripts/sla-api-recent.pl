@@ -159,9 +159,9 @@ my $fm = new Parallel::ForkManager($server_count);
 set_on_finish($fm);
 
 # {
-#     PID => {'desc' => 'server_#_parent', 'from' => 1234324235},
+#     PID => {'desc' => 'server_#_parent', 'from' => 1234324235, 'swap-usage' => '0 kB'},
 #     ...
-#     PID => {'desc' => 'server_#_child', 'from' => 1234324235},
+#     PID => {'desc' => 'server_#_child', 'from' => 1234324235, 'swap-usage' => '4 kB'},
 #     ...
 # }
 my %child_desc;
@@ -181,8 +181,11 @@ foreach my $server_key (@server_keys)
 		$fm->finish(SUCCESS);
 	}
 
-	$child_desc{$pid}->{'desc'} = "${server_key}_parent";
-	$child_desc{$pid}->{'from'} = time();
+	$child_desc{$pid} = {
+		'desc' => "${server_key}_parent",
+		'from' => time(),
+		'swap-usage' => '0 kB'
+	};
 	#$child_desc{$pid}->{'smaps-dumped'} = 0;
 
 	dbg("$child_desc{$pid}->{'desc'} (PID:$pid) STARTED");
@@ -211,9 +214,11 @@ sub wait_for_children($)
 		{
 			my $swap_usage = get_swap_usage($pid);
 
-			if (defined($swap_usage) && ($swap_usage ne "0 kB"))
+			if (defined($swap_usage) && ($swap_usage ne $child_desc{$pid}->{'swap-usage'}))
 			{
 				wrn("$child_desc{$pid}->{'desc'} (PID:$pid) is swapping $swap_usage");
+
+				$child_desc{$pid}->{'swap-usage'} = $swap_usage;
 
 				# TODO: consider writing if is over 1000 kB, add date/time to the file name, write only if size changed
 				# if (!$child_desc{$pid}->{'smaps-dumped'})
@@ -319,8 +324,11 @@ sub process_server($)
 			$fm->finish(SUCCESS, \%child_data);
 		}
 
-		$child_desc{$pid}->{'desc'} = "${server_key}_child";
-		$child_desc{$pid}->{'from'} = time();
+		$child_desc{$pid} = {
+			'desc' => "${server_key}_child",
+			'from' => time(),
+			'swap-usage' => '0 kB'
+		};
 		#$child_desc{$pid}->{'smaps-dumped'} = 0;
 
 		dbg("$child_desc{$pid}->{'desc'} (PID:$pid) STARTED");
