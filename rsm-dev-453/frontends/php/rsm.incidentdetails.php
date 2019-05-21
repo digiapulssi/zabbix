@@ -147,6 +147,32 @@ $tld = API::Host()->get(array(
 
 if ($tld) {
 	$data['tld'] = reset($tld);
+	$data['rsm_monitoring_mode'] = get_rsm_monitoring_type();
+
+	if ($data['rsm_monitoring_mode'] == RSM_MONITORING_TYPE_REGISTRAR) {
+		$data['tld'] += [
+			'registrar_name' => '',
+			'registrar_family' => ''
+		];
+
+		$host_macros = API::UserMacro()->get([
+			'output' => ['macro', 'value'],
+			'hostids' => $data['tld']['hostid'],
+			'filter' => [
+				'macro' => [REGISTRAR_FAMILY_MACROS, REGISTRAR_NAME_MACROS]
+			],
+			'usermacros' => true
+		]);
+
+		foreach ($host_macros as $macro) {
+			if ($macro['macro'] === REGISTRAR_FAMILY_MACROS) {
+				$data['tld']['registrar_family'] = $macro['value'];
+			}
+			elseif ($macro['macro'] === REGISTRAR_NAME_MACROS) {
+				$data['tld']['registrar_name'] = $macro['value'];
+			}
+		}
+	}
 }
 else {
 	access_deny();

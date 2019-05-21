@@ -44,7 +44,8 @@ $data = [
 	'sid' => CWebUser::getSessionCookie(),
 	'filter_search' => getRequest('filter_search'),
 	'filter_year' => (int) getRequest('filter_year', date('Y')),
-	'filter_month' => (int) getRequest('filter_month', date('n'))
+	'filter_month' => (int) getRequest('filter_month', date('n')),
+	'rsm_monitoring_mode' => get_rsm_monitoring_type()
 ];
 
 /*

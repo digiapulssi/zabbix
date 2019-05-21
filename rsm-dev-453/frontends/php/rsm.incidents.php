@@ -23,7 +23,9 @@ require_once dirname(__FILE__).'/include/config.inc.php';
 require_once dirname(__FILE__).'/include/incidents.inc.php';
 require_once dirname(__FILE__).'/include/incidentdetails.inc.php';
 
-$page['title'] = _('TLD Rolling week status');
+$page['title'] = (get_rsm_monitoring_type() == RSM_MONITORING_TYPE_REGISTRAR)
+	? _('Registrar rolling week status')
+	: _('TLD Rolling week status');
 $page['file'] = 'rsm.incidents.php';
 $page['hist_arg'] = array('groupid', 'hostid');
 $page['scripts'] = array('class.calendar.js');
@@ -145,6 +147,7 @@ if (isset($_REQUEST['mark_incident']) && (CWebUser::getType() == USER_TYPE_ZABBI
 $data = [];
 $data['url'] = '';
 $data['sid'] = CWebUser::getSessionCookie();
+$data['rsm_monitoring_mode'] = get_rsm_monitoring_type();
 
 $macro = API::UserMacro()->get(array(
 	'globalmacro' => true,
@@ -243,13 +246,42 @@ if ($host || $data['filter_search']) {
 			continue;
 		}
 		else {
+			// Get registrar details.
+			if ($data['rsm_monitoring_mode'] == RSM_MONITORING_TYPE_REGISTRAR) {
+				$data['tld'] += [
+					'registrar_name' => '',
+					'registrar_family' => ''
+				];
+
+				$host_macros = API::UserMacro()->get([
+					'output' => ['macro', 'value'],
+					'hostids' => $data['tld']['hostid'],
+					'filter' => [
+						'macro' => [REGISTRAR_FAMILY_MACROS, REGISTRAR_NAME_MACROS]
+					],
+					'usermacros' => true
+				]);
+
+				foreach ($host_macros as $macro) {
+					if ($macro['macro'] === REGISTRAR_FAMILY_MACROS) {
+						$data['tld']['registrar_family'] = $macro['value'];
+					}
+					elseif ($macro['macro'] === REGISTRAR_NAME_MACROS) {
+						$data['tld']['registrar_name'] = $macro['value'];
+					}
+				}
+			}
+
+			// Update profile.
 			if ($host && $data['filter_search'] != $data['tld']['name']) {
 				$data['filter_search'] = $data['tld']['name'];
 				CProfile::update('web.rsm.incidents.filter_search', $data['tld']['name'], PROFILE_TYPE_STR);
 			}
 
 			// get items
-			$item_keys = [RSM_SLV_DNS_ROLLWEEK, RSM_SLV_DNSSEC_ROLLWEEK, RSM_SLV_RDDS_ROLLWEEK, RSM_SLV_EPP_ROLLWEEK];
+			$item_keys = ($data['rsm_monitoring_mode'] == RSM_MONITORING_TYPE_REGISTRAR)
+				? [RSM_SLV_RDDS_ROLLWEEK]
+				: [RSM_SLV_DNS_ROLLWEEK, RSM_SLV_DNSSEC_ROLLWEEK, RSM_SLV_RDDS_ROLLWEEK, RSM_SLV_EPP_ROLLWEEK];
 
 			$items = [];
 			$db_items = DBselect(
@@ -285,16 +317,16 @@ if ($host || $data['filter_search']) {
 				}
 			}
 
-			$avail_items = API::Item()->get(array(
+			$avail_items = API::Item()->get([
+				'output' => ['itemid', 'hostid', 'key_'],
 				'hostids' => [$data['tld']['hostid']],
-				'filter' => array(
-					'key_' => array(
-						RSM_SLV_DNS_AVAIL, RSM_SLV_DNSSEC_AVAIL, RSM_SLV_RDDS_AVAIL, RSM_SLV_EPP_AVAIL
-					)
-				),
-				'output' => array('itemid', 'hostid', 'key_'),
+				'filter' => [
+					'key_' => ($data['rsm_monitoring_mode'] == RSM_MONITORING_TYPE_REGISTRAR)
+						? [RSM_SLV_RDDS_AVAIL]
+						: [RSM_SLV_DNS_AVAIL, RSM_SLV_DNSSEC_AVAIL, RSM_SLV_RDDS_AVAIL, RSM_SLV_EPP_AVAIL]
+				],
 				'preservekeys' => true
-			));
+			]);
 
 			$items += $avail_items;
 
@@ -317,42 +349,49 @@ if ($host || $data['filter_search']) {
 							$data['dns']['slvTestTime'] = sprintf('%.3f', $item['lastclock']);
 							$data['dns']['events'] = [];
 							break;
+
 						case RSM_SLV_DNSSEC_ROLLWEEK:
 							$data['dnssec']['itemid'] = $item['itemid'];
 							$data['dnssec']['slv'] = sprintf('%.3f', $item['lastvalue']);
 							$data['dnssec']['slvTestTime'] = sprintf('%.3f', $item['lastclock']);
 							$data['dnssec']['events'] = [];
 							break;
+
 						case RSM_SLV_RDDS_ROLLWEEK:
 							$data['rdds']['itemid'] = $item['itemid'];
 							$data['rdds']['slv'] = sprintf('%.3f', $item['lastvalue']);
 							$data['rdds']['slvTestTime'] = sprintf('%.3f', $item['lastclock']);
 							$data['rdds']['events'] = [];
 							break;
+
 						case RSM_SLV_EPP_ROLLWEEK:
 							$data['epp']['itemid'] = $item['itemid'];
 							$data['epp']['slv'] = sprintf('%.3f', $item['lastvalue']);
 							$data['epp']['slvTestTime'] = sprintf('%.3f', $item['lastclock']);
 							$data['epp']['events'] = [];
 							break;
+
 						case RSM_SLV_DNS_AVAIL:
 							$data['dns']['availItemId'] = $item['itemid'];
 							$dnsAvailItem = $item['itemid'];
 							$dnsItems[] = $item['itemid'];
 							$itemIds[] = $item['itemid'];
 							break;
+
 						case RSM_SLV_DNSSEC_AVAIL:
 							$data['dnssec']['availItemId'] = $item['itemid'];
 							$dnssecAvailItem = $item['itemid'];
 							$dnssecItems[] = $item['itemid'];
 							$itemIds[] = $item['itemid'];
 							break;
+
 						case RSM_SLV_RDDS_AVAIL:
 							$data['rdds']['availItemId'] = $item['itemid'];
 							$rddsAvailItem = $item['itemid'];
 							$rddsItems[] = $item['itemid'];
 							$itemIds[] = $item['itemid'];
 							break;
+
 						case RSM_SLV_EPP_AVAIL:
 							$data['epp']['availItemId'] = $item['itemid'];
 							$eppAvailItem = $item['itemid'];

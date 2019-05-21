@@ -24,11 +24,13 @@ $widget = (new CWidget())->setTitle(_('SLA report'));
 $months = range(1, 12);
 $years = range(SLA_MONITORING_START_YEAR, date('Y', time()));
 
+$object_name = ($data['rsm_monitoring_mode'] == RSM_MONITORING_TYPE_REGISTRAR) ? _('Registrar ID') : _('TLD');
+
 $widget->addItem(
 	(new CFilter('web.rsm.slareports.filter.state'))->addColumn(
 		(new CFormList())
 			->addVar('filter_set', 1)
-			->addRow(_('TLD'), (new CTextBox('filter_search', $data['filter_search']))
+			->addRow($object_name, (new CTextBox('filter_search', $data['filter_search']))
 				->setWidth(ZBX_TEXTAREA_FILTER_STANDARD_WIDTH)
 				->setAttribute('autocomplete', 'off')
 			)

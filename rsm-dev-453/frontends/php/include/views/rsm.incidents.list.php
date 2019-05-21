@@ -31,8 +31,9 @@ $filterColumn2 = new CFormList();
 $filterColumn3 = new CFormList();
 $filterColumn4 = new CFormList();
 
+$object_name_label = ($data['rsm_monitoring_mode'] == RSM_MONITORING_TYPE_REGISTRAR) ? _('Registrar ID') : _('TLD');
 $filterColumn1
-	->addRow(_('TLD'), (new CTextBox('filter_search', $this->data['filter_search']))
+	->addRow($object_name_label, (new CTextBox('filter_search', $data['filter_search']))
 		->setWidth(ZBX_TEXTAREA_FILTER_SMALL_WIDTH)
 		->setAttribute('autocomplete', 'off')
 	);
@@ -55,15 +56,20 @@ $filter
 
 $widget->addItem($filter);
 
-if (isset($this->data['tld'])) {
+if (isset($data['tld'])) {
 	$infoBlock = new CTable(null, 'filter info-block');
-	$dateFrom = date(DATE_TIME_FORMAT, zbxDateToTime($this->data['filter_from']));
-	$dateTill = date(DATE_TIME_FORMAT, zbxDateToTime($this->data['filter_to']));
+	$dateFrom = date(DATE_TIME_FORMAT, zbxDateToTime($data['filter_from']));
+	$dateTill = date(DATE_TIME_FORMAT, zbxDateToTime($data['filter_to']));
+
+	$object_name = ($data['rsm_monitoring_mode'] == RSM_MONITORING_TYPE_REGISTRAR)
+		? (new CSpan($data['tld']['name']))->setHint(getRegistrarDetailsHint($data['tld']))
+		: $data['tld']['name'];
+
 	$infoBlock->addRow([[
-		bold(_('TLD')),
+		bold($object_name_label),
 		':',
 		SPACE,
-		$this->data['tld']['name'],
+		$object_name,
 		BR(),
 		_s('From %1$s till %2$s', $dateFrom, $dateTill),
 		BR(),
@@ -99,7 +105,10 @@ if (isset($this->data['tld'])) {
 	}
 
 	// DNS
-	if (isset($this->data['dns']['events'])) {
+	if ($data['rsm_monitoring_mode'] == RSM_MONITORING_TYPE_REGISTRAR) {
+		$dnsTab = null;
+	}
+	elseif (isset($this->data['dns']['events'])) {
 		$dnsInfoTable = (new CTable(null))->addClass('incidents-info');
 
 		$dnsTable = new CTableInfo($noData);
@@ -183,7 +192,10 @@ if (isset($this->data['tld'])) {
 	}
 
 	// DNSSEC
-	if (isset($this->data['dnssec']['events'])) {
+	if ($data['rsm_monitoring_mode'] == RSM_MONITORING_TYPE_REGISTRAR) {
+		$dnssecTab = null;
+	}
+	elseif (isset($this->data['dnssec']['events'])) {
 		$dnssecInfoTable = (new CTable(null))->addClass('incidents-info');
 
 		$dnssecTable = new CTableInfo($noData);
@@ -351,7 +363,10 @@ if (isset($this->data['tld'])) {
 	}
 
 	// EPP
-	if (isset($this->data['epp']['events'])) {
+	if ($data['rsm_monitoring_mode'] == RSM_MONITORING_TYPE_REGISTRAR) {
+		$eppTab = null;
+	}
+	elseif (isset($this->data['epp']['events'])) {
 		$eppInfoTable = (new CTable(null))->addClass('incidents-info');
 
 		$eppTable = new CTableInfo($noData);
@@ -434,11 +449,15 @@ if (isset($this->data['tld'])) {
 		$eppTab->additem(new CDiv(bold(_('EPP is disabled.')), 'red center'));
 	}
 
-	$incidentPage->addTab('dnsTab', _('DNS'), $dnsTab);
-	$incidentPage->addTab('dnssecTab', _('DNSSEC'), $dnssecTab);
-	$incidentPage->addTab('rddsTab', _('RDDS'), $rddsTab);
-	$incidentPage->addTab('eppTab', _('EPP'), $eppTab);
-
+	if ($data['rsm_monitoring_mode'] == RSM_MONITORING_TYPE_REGISTRAR) {
+		$incidentPage->addTab('rddsTab', _('RDDS'), $rddsTab);
+	}
+	else {
+		$incidentPage->addTab('dnsTab', _('DNS'), $dnsTab);
+		$incidentPage->addTab('dnssecTab', _('DNSSEC'), $dnssecTab);
+		$incidentPage->addTab('rddsTab', _('RDDS'), $rddsTab);
+		$incidentPage->addTab('eppTab', _('EPP'), $eppTab);
+	}
 }
 else {
 	$incidentPage = new CTableInfo(_('No TLD defined.'));
