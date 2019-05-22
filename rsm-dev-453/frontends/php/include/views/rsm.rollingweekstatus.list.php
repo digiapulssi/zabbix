@@ -87,34 +87,44 @@ else {
 }
 
 if ($data['rsm_monitoring_mode'] == RSM_MONITORING_TYPE_REGISTRY) {
-	$filterColumn2
-		->addRow((new CSpan(_('Services')))->addStyle('padding: 0 25px;'), [
+	$services_filter = [];
+
+	// Show DNS checkbox only if {$DNS.TLD.ENABLED} is enabled.
+	if ($data['dns_tld_enabled']) {
+		$services_filter = array_merge($services_filter, [
 			[
 				(new CCheckBox('filter_dns'))->setChecked($this->data['filter_dns']),
 				SPACE,
 				_('DNS')
 			],
+			SPACE
+		]);
+	}
+
+	$services_filter = array_merge($services_filter, [
+		new CSpan([
+			(new CCheckBox('filter_dnssec'))->setChecked($this->data['filter_dnssec']),
 			SPACE,
-			new CSpan([
-				(new CCheckBox('filter_dnssec'))->setChecked($this->data['filter_dnssec']),
-				SPACE,
-				_('DNSSEC')
-			], 'checkbox-block'),
+			_('DNSSEC')
+		], 'checkbox-block'),
+		SPACE,
+		new CSpan([
+			(new CCheckBox('filter_rdds'))->setChecked($this->data['filter_rdds']),
 			SPACE,
-			new CSpan([
-				(new CCheckBox('filter_rdds'))->setChecked($this->data['filter_rdds']),
-				SPACE,
-				_('RDDS')
-			], 'checkbox-block'),
+			_('RDDS')
+		], 'checkbox-block'),
+		SPACE,
+		new CSpan([
+			(new CCheckBox('filter_epp'))->setChecked($this->data['filter_epp']),
 			SPACE,
-			new CSpan([
-				(new CCheckBox('filter_epp'))->setChecked($this->data['filter_epp']),
-				SPACE,
-				_('EPP')
-			], 'checkbox-block'),
-			SPACE,
-			(new CButton('checkAllServices', _('All/Any')))->addClass(ZBX_STYLE_BTN_LINK)
-		])
+			_('EPP')
+		], 'checkbox-block'),
+		SPACE,
+		(new CButton('checkAllServices', _('All/Any')))->addClass(ZBX_STYLE_BTN_LINK)
+	]);
+
+	$filterColumn2
+		->addRow((new CSpan(_('Services')))->addStyle('padding: 0 25px;'), $services_filter)
 		->addRow((new CSpan(_('TLD types')))->addStyle('padding: 0 25px;'), [
 			[
 				$filterCctldGroup,
@@ -213,13 +223,20 @@ if ($data['rsm_monitoring_mode'] == RSM_MONITORING_TYPE_REGISTRAR) {
 else {
 	$header_columns = [
 		make_sorting_header(_('TLD'), 'name', $data['sort'], $data['sortorder']),
-		make_sorting_header(_('Type'), 'type', $data['sort'], $data['sortorder']),
-		make_sorting_header(_('DNS (4Hrs)'), 'dns_lastvalue', $data['sort'], $data['sortorder']),
+		make_sorting_header(_('Type'), 'type', $data['sort'], $data['sortorder'])
+	];
+
+	// Show DNS checkbox only if {$DNS.TLD.ENABLED} is enabled.
+	if ($data['dns_tld_enabled']) {
+		$header_columns[] = make_sorting_header(_('DNS (4Hrs)'), 'dns_lastvalue', $data['sort'], $data['sortorder']);
+	}
+
+	$header_columns = array_merge($header_columns, [
 		make_sorting_header(_('DNSSEC (4Hrs)'), 'dnssec_lastvalue', $data['sort'], $data['sortorder']),
 		make_sorting_header(_('RDDS (24Hrs)'), 'rdds_lastvalue', $data['sort'], $data['sortorder']),
 		make_sorting_header(_('EPP (24Hrs)'), 'epp_lastvalue', $data['sort'], $data['sortorder']),
 		make_sorting_header(_('Server'), 'server', $data['sort'], $data['sortorder'])
-	];
+	]);
 }
 
 $table = (new CTableInfo())->setHeader($header_columns);
@@ -247,7 +264,7 @@ if ($data['tld']) {
 		}
 
 		// DNS
-		if ($data['rsm_monitoring_mode'] == RSM_MONITORING_TYPE_REGISTRY && array_key_exists(RSM_DNS, $tld)
+		if ($data['dns_tld_enabled'] && array_key_exists(RSM_DNS, $tld)
 				&& array_key_exists('trigger', $tld[RSM_DNS])) {
 			if ($tld[RSM_DNS]['trigger'] && $tld[RSM_DNS]['incident']) {
 				if (array_key_exists('availItemId', $tld[RSM_DNS]) && array_key_exists('itemid', $tld[RSM_DNS])) {
@@ -284,7 +301,7 @@ if ($data['tld']) {
 				: null;
 			$row[] = [(new CSpan($dnsValue))->addClass('right'), $dnsStatus, SPACE, $dnsGraph];
 		}
-		elseif ($data['rsm_monitoring_mode'] == RSM_MONITORING_TYPE_REGISTRY) {
+		elseif ($data['dns_tld_enabled']) {
 			$row[] = (new CDiv(null))
 				->addClass('service-icon status_icon_extra iconrollingweekdisabled disabled-service')
 				->setHint('Incorrect TLD configuration.', '', 'on');

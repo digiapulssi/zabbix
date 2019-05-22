@@ -105,7 +105,7 @@ if (isset($this->data['tld'])) {
 	}
 
 	// DNS
-	if ($data['rsm_monitoring_mode'] == RSM_MONITORING_TYPE_REGISTRAR) {
+	if ($data['rsm_monitoring_mode'] == RSM_MONITORING_TYPE_REGISTRAR || $data['dns_tld_enabled'] === false) {
 		$dnsTab = null;
 	}
 	elseif (isset($this->data['dns']['events'])) {
@@ -453,7 +453,9 @@ if (isset($this->data['tld'])) {
 		$incidentPage->addTab('rddsTab', _('RDDS'), $rddsTab);
 	}
 	else {
-		$incidentPage->addTab('dnsTab', _('DNS'), $dnsTab);
+		if ($data['dns_tld_enabled']) {
+			$incidentPage->addTab('dnsTab', _('DNS'), $dnsTab);
+		}
 		$incidentPage->addTab('dnssecTab', _('DNSSEC'), $dnssecTab);
 		$incidentPage->addTab('rddsTab', _('RDDS'), $rddsTab);
 		$incidentPage->addTab('eppTab', _('EPP'), $eppTab);

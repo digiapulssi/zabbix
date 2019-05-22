@@ -148,23 +148,38 @@ $data = [];
 $data['url'] = '';
 $data['sid'] = CWebUser::getSessionCookie();
 $data['rsm_monitoring_mode'] = get_rsm_monitoring_type();
+$data['dns_tld_enabled'] = false;
+$rollWeekSeconds = null;
 
-$macro = API::UserMacro()->get(array(
+$macros = API::UserMacro()->get([
 	'globalmacro' => true,
 	'output' => API_OUTPUT_EXTEND,
-	'filter' => array(
-		'macro' => RSM_ROLLWEEK_SECONDS
-	)
-));
+	'filter' => [
+		'macro' => [RSM_ROLLWEEK_SECONDS, DNS_TLD_ENABLED]
+	]
+]);
 
-if (!$macro) {
+foreach ($macros as $macro) {
+	if ($macro['macro'] === RSM_ROLLWEEK_SECONDS) {
+		$rollWeekSeconds = $macro;
+	}
+	elseif ($macro['macro'] === DNS_TLD_ENABLED) {
+		$data['dns_tld_enabled'] = (bool) $macro['value'];
+	}
+}
+
+if (!$rollWeekSeconds) {
 	show_error_message(_s('Macro "%1$s" doesn\'t not exist.', RSM_ROLLWEEK_SECONDS));
 	require_once dirname(__FILE__).'/include/page_footer.php';
 	exit;
 }
 
-$rollWeekSeconds = reset($macro);
 $serverTime = time() - RSM_ROLLWEEK_SHIFT_BACK;
+
+// Unset to avoid redundant validation later.
+if ($data['rsm_monitoring_mode'] == RSM_MONITORING_TYPE_REGISTRAR) {
+	$data['dns_tld_enabled'] = false;
+}
 
 /*
  * Filter
@@ -281,7 +296,15 @@ if ($host || $data['filter_search']) {
 			// get items
 			$item_keys = ($data['rsm_monitoring_mode'] == RSM_MONITORING_TYPE_REGISTRAR)
 				? [RSM_SLV_RDDS_ROLLWEEK]
-				: [RSM_SLV_DNS_ROLLWEEK, RSM_SLV_DNSSEC_ROLLWEEK, RSM_SLV_RDDS_ROLLWEEK, RSM_SLV_EPP_ROLLWEEK];
+				: [RSM_SLV_DNSSEC_ROLLWEEK, RSM_SLV_RDDS_ROLLWEEK, RSM_SLV_EPP_ROLLWEEK];
+			$avail_item_keys = ($data['rsm_monitoring_mode'] == RSM_MONITORING_TYPE_REGISTRAR)
+				? [RSM_SLV_RDDS_AVAIL]
+				: [RSM_SLV_DNSSEC_AVAIL, RSM_SLV_RDDS_AVAIL, RSM_SLV_EPP_AVAIL];
+
+			if ($data['dns_tld_enabled']) {
+				$item_keys[] = RSM_SLV_DNS_ROLLWEEK;
+				$avail_item_keys[] = RSM_SLV_DNS_AVAIL;
+			}
 
 			$items = [];
 			$db_items = DBselect(
@@ -321,9 +344,7 @@ if ($host || $data['filter_search']) {
 				'output' => ['itemid', 'hostid', 'key_'],
 				'hostids' => [$data['tld']['hostid']],
 				'filter' => [
-					'key_' => ($data['rsm_monitoring_mode'] == RSM_MONITORING_TYPE_REGISTRAR)
-						? [RSM_SLV_RDDS_AVAIL]
-						: [RSM_SLV_DNS_AVAIL, RSM_SLV_DNSSEC_AVAIL, RSM_SLV_RDDS_AVAIL, RSM_SLV_EPP_AVAIL]
+					'key_' => $avail_item_keys
 				],
 				'preservekeys' => true
 			]);
@@ -402,15 +423,15 @@ if ($host || $data['filter_search']) {
 				}
 
 				// get triggers
-				$triggers = API::Trigger()->get(array(
+				$triggers = API::Trigger()->get([
 					'output' => ['triggerids'],
 					'selectItems' => ['itemid'],
 					'itemids' => $itemIds,
-					'filter' => array(
+					'filter' => [
 						'priority' => TRIGGER_SEVERITY_NOT_CLASSIFIED
-					),
+					],
 					'preservekeys' => true
-				));
+				]);
 
 				$triggerIds = array_keys($triggers);
 

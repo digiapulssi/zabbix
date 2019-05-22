@@ -178,21 +178,30 @@ else {
 }
 
 // Get global macros necessary for further calculation.
-$macro = API::UserMacro()->get([
+$macros = API::UserMacro()->get([
 	'output' => ['macro', 'value'],
 	'filter' => [
-		'macro' => [RSM_PAGE_SLV, RSM_ROLLWEEK_SECONDS]
+		'macro' => [RSM_PAGE_SLV, RSM_ROLLWEEK_SECONDS, DNS_TLD_ENABLED]
 	],
 	'globalmacro' => true
 ]);
 
-foreach ($macro as $macros) {
-	if ($macros['macro'] === RSM_PAGE_SLV) {
-		$data['slv'] = $macros['value'];
+foreach ($macros as $macro) {
+	if ($macro['macro'] === RSM_PAGE_SLV) {
+		$data['slv'] = $macro['value'];
+	}
+	elseif ($macro['macro'] === DNS_TLD_ENABLED) {
+		$data['dns_tld_enabled'] = (bool) $macro['value'];
 	}
 	else {
-		$data['rollWeekSeconds'] = $macros['value'];
+		$data['rollWeekSeconds'] = $macro['value'];
 	}
+}
+
+// Unset to avoid redundant validation later.
+if ($data['rsm_monitoring_mode'] == RSM_MONITORING_TYPE_REGISTRAR) {
+	$data['dns_tld_enabled'] = false;
+	$data['filter_dns'] = 0;
 }
 
 if (!array_key_exists('slv', $data)) {
@@ -535,7 +544,15 @@ foreach ($tlds_by_server as $key => $hosts) {
 		// get items
 		$item_keys = ($data['rsm_monitoring_mode'] == RSM_MONITORING_TYPE_REGISTRAR)
 			? [RSM_SLV_RDDS_ROLLWEEK]
-			: [RSM_SLV_DNS_ROLLWEEK, RSM_SLV_DNSSEC_ROLLWEEK, RSM_SLV_RDDS_ROLLWEEK, RSM_SLV_EPP_ROLLWEEK];
+			: [RSM_SLV_DNSSEC_ROLLWEEK, RSM_SLV_RDDS_ROLLWEEK, RSM_SLV_EPP_ROLLWEEK];
+		$avail_items = ($data['rsm_monitoring_mode'] == RSM_MONITORING_TYPE_REGISTRY)
+			? [RSM_SLV_DNSSEC_AVAIL, RSM_SLV_RDDS_AVAIL, RSM_SLV_EPP_AVAIL]
+			: [];
+
+		if ($data['dns_tld_enabled']) {
+			$item_keys[] = RSM_SLV_DNS_ROLLWEEK;
+			$avail_items[] = RSM_SLV_DNS_AVAIL;
+		}
 
 		$items = [];
 		$db_items = DBselect(
@@ -569,16 +586,14 @@ foreach ($tlds_by_server as $key => $hosts) {
 			}
 		}
 
-		$avail_items = API::Item()->get(array(
+		$avail_items = API::Item()->get([
+			'output' => ['itemid', 'hostid', 'key_'],
 			'hostids' => array_keys($hosts),
-			'filter' => array(
-				'key_' => array(
-					RSM_SLV_DNS_AVAIL, RSM_SLV_DNSSEC_AVAIL, RSM_SLV_RDDS_AVAIL, RSM_SLV_EPP_AVAIL
-				)
-			),
-			'output' => array('itemid', 'hostid', 'key_'),
+			'filter' => [
+				'key_' => $avail_items
+			],
 			'preservekeys' => true
-		));
+		]);
 
 		if ($items) {
 			foreach ($items as $item) {
