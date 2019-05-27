@@ -456,11 +456,12 @@ sub get_lastclock($$$)
 # E_FAIL - if item was not found
 # undef  - if history table is empty
 # *      - lastclock
-sub get_oldest_clock($$$)
+sub get_oldest_clock($$$$)
 {
 	my $host = shift;
 	my $key = shift;
 	my $value_type = shift;
+	my $clock_limit = shift;
 
 	my $rows_ref = db_select(
 		"select i.itemid".
@@ -478,7 +479,8 @@ sub get_oldest_clock($$$)
 	$rows_ref = db_select(
 		"select min(clock)".
 		" from " . history_table($value_type).
-		" where itemid=$itemid"
+		" where itemid=$itemid".
+			" and clock>$clock_limit"
 	);
 
 	return $rows_ref->[0]->[0];

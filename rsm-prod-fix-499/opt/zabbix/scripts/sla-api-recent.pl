@@ -33,6 +33,9 @@ use constant MYSQL_TIMEOUT => 30;	# timeout while attempt to connect/read/write 
 use constant DEFAULT_MAX_CHILDREN => 64;
 use constant DEFAULT_MAX_WAIT => 600;	# maximum seconds to wait befor terminating child process
 
+use constant DEFAULT_INCIDENT_MEASUREMENTS_LIMIT => 3600;	# seconds, maximum period back from current time to look
+								# back for recent measurement files for an incident
+
 sub main_process_signal_handler();
 sub process_server($);
 sub process_tld_batch($$$$$$);
@@ -72,6 +75,10 @@ my $config = get_rsm_config();
 
 set_slv_config($config);
 
+my $incident_measurements_limit = (defined($config->{'sla_api'}->{'incident_measurements_limit'}) ?
+		$config->{'sla_api'}->{'incident_measurements_limit'} :
+		DEFAULT_INCIDENT_MEASUREMENTS_LIMIT);
+
 my @server_keys;
 
 if (opt('server-id'))
@@ -105,6 +112,10 @@ fail("number of required working Name Servers is configured as $cfg_minns") if (
 my %delays;
 $delays{'dns'} = $delays{'dnssec'} = get_dns_udp_delay($now);
 $delays{'rdds'} = get_rdds_delay($now);
+
+my %clock_limits;
+$clock_limits{'dns'} = $clock_limits{'dnssec'} = cycle_start(time() - $incident_measurements_limit, $delays{'dnssec'});
+$clock_limits{'rdds'} = cycle_start(time() - $incident_measurements_limit, $delays{'rdds'});
 
 db_disconnect();
 
@@ -498,10 +509,11 @@ sub process_tld($$$$$)
 	}
 }
 
-sub get_global_lastclock($$$)
+sub get_global_lastclock($$$$)
 {
 	my $tld = shift;
 	my $service_key = shift;
+	my $service = shift;
 	my $delay = shift;
 
 	my $lastclock;
@@ -543,7 +555,7 @@ sub get_global_lastclock($$$)
 
 	# if not, get the oldest from the database
 
-	$lastclock = get_oldest_clock($tld, $service_key, ITEM_VALUE_TYPE_UINT64);
+	$lastclock = get_oldest_clock($tld, $service_key, ITEM_VALUE_TYPE_UINT64, $clock_limits{$service});
 
 	if (!defined($lastclock))
 	{
@@ -642,7 +654,7 @@ sub cycles_to_calculate($$$$$$$$)
 			if (opt('now'))
 			{
 				# time bounds were specified on the command line
-				$global_lastclock //= get_global_lastclock($tld, $service_key, $delay);
+				$global_lastclock //= get_global_lastclock($tld, $service_key, $service, $delay);
 
 				$lastclock = $global_lastclock;
 			}
@@ -651,7 +663,7 @@ sub cycles_to_calculate($$$$$$$$)
 				dbg("$service: itemid $itemid from probe \"$probe\" not in cache yet");
 
 				# this partilular item is not in cache yet, get the time starting point for it
-				$global_lastclock //= get_global_lastclock($tld, $service_key, $delay);
+				$global_lastclock //= get_global_lastclock($tld, $service_key, $service, $delay);
 
 				if (!defined($global_lastclock))
 				{
