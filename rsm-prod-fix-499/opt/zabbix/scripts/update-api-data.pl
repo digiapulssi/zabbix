@@ -56,13 +56,8 @@ if (!opt('dry-run') && (my $error = rsm_targets_prepare(AH_SLA_API_TMP_DIR, AH_S
 my $config = get_rsm_config();
 set_slv_config($config);
 
-my $incident_measurements_limit = (defined($config->{'sla_api'}->{'incident_measurements_limit'}) ?
-		$config->{'sla_api'}->{'incident_measurements_limit'} :
-		DEFAULT_INCIDENT_MEASUREMENTS_LIMIT);
-
-my $allow_missing_measurements = (defined($config->{'sla_api'}->{'allow_missing_measurements'}) ?
-		$config->{'sla_api'}->{'allow_missing_measurements'} :
-		DEFAULT_ALLOW_MISSING_MEASUREMENTS);
+my $incident_measurements_limit = $config->{'sla_api'}->{'incident_measurements_limit'} // DEFAULT_INCIDENT_MEASUREMENTS_LIMIT;
+my $allow_missing_measurements = $config->{'sla_api'}->{'allow_missing_measurements'} // DEFAULT_ALLOW_MISSING_MEASUREMENTS;
 
 if ($allow_missing_measurements >= $incident_measurements_limit)
 {

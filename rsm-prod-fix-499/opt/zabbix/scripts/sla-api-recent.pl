@@ -75,9 +75,7 @@ my $config = get_rsm_config();
 
 set_slv_config($config);
 
-my $incident_measurements_limit = (defined($config->{'sla_api'}->{'incident_measurements_limit'}) ?
-		$config->{'sla_api'}->{'incident_measurements_limit'} :
-		DEFAULT_INCIDENT_MEASUREMENTS_LIMIT);
+my $incident_measurements_limit = $config->{'sla_api'}->{'incident_measurements_limit'} // DEFAULT_INCIDENT_MEASUREMENTS_LIMIT;
 
 my @server_keys;
 
