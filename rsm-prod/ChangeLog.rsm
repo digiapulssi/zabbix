@@ -1,3 +1,9 @@
+Changes for rsm1.2.4
+
+Bug fixes:
+....I..... [sub-499] improved handling of last_update.txt file, add option --max-wait to sla-api-recent.pl, improve debugging and logging of child processes, use ALARM to stop long-running processes (dimir)
+--------------------------------------------------------------------------------
+
 Changes for rsm1.2.3
 
 Bug fixes:

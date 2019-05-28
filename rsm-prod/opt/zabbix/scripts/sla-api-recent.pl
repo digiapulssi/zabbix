@@ -14,6 +14,8 @@ use RSM;
 use RSMSLV;
 use TLD_constants qw(:api :config :groups :items);
 use ApiHelper;
+use File::Copy;
+use sigtrap 'handler' => \&main_process_signal_handler, 'normal-signals';
 
 $Data::Dumper::Terse = 1;	# do not output names like "$VAR1 = "
 $Data::Dumper::Pair = " : ";	# use separator instead of " => "
@@ -26,9 +28,15 @@ use constant MAX_PERIOD => 30 * 60;	# 30 minutes
 
 use constant SUBSTR_KEY_LEN => 20;	# for logging
 
+use constant MYSQL_TIMEOUT => 30;	# timeout while attempt to connect/read/write to/from MySQL server
+
 use constant DEFAULT_MAX_CHILDREN => 64;
 use constant DEFAULT_MAX_WAIT => 600;	# maximum seconds to wait befor terminating child process
 
+use constant DEFAULT_INCIDENT_MEASUREMENTS_LIMIT => 3600;	# seconds, maximum period back from current time to look
+								# back for recent measurement files for an incident
+
+sub main_process_signal_handler();
 sub process_server($);
 sub process_tld_batch($$$$$$);
 sub process_tld($$$$$);
@@ -38,9 +46,12 @@ sub calculate_cycle($$$$$$$$$);
 sub get_interfaces($$$);
 sub probe_online_at_init();
 sub get_history_by_itemid($$$);
-sub child_error($$$$$$);
-sub save_child_lastvalues_cache($);
+sub child_error($$$$$);
+sub update_lastvalues_cache($);
 sub set_on_finish($);
+sub wait_for_children($);
+sub terminate_children($);
+sub get_swap_usage($);
 
 parse_opts('tld=s', 'service=s', 'server-id=i', 'now=i', 'period=i', 'print-period!', 'max-children=i', 'max-wait=i', 'debug2!');
 
@@ -63,6 +74,8 @@ ah_set_debug(getopt('debug'));
 my $config = get_rsm_config();
 
 set_slv_config($config);
+
+my $incident_measurements_limit = $config->{'sla_api'}->{'incident_measurements_limit'} // DEFAULT_INCIDENT_MEASUREMENTS_LIMIT;
 
 my @server_keys;
 
@@ -87,7 +100,7 @@ my $now = (getopt('now') // $real_now);
 
 my $max_period = (opt('period') ? getopt('period') * 60 : MAX_PERIOD);
 
-db_connect();
+db_connect(undef, MYSQL_TIMEOUT);
 
 my $cfg_minonline = get_macro_dns_probe_online();
 my $cfg_minns = get_macro_minns();
@@ -97,6 +110,10 @@ fail("number of required working Name Servers is configured as $cfg_minns") if (
 my %delays;
 $delays{'dns'} = $delays{'dnssec'} = get_dns_udp_delay($now);
 $delays{'rdds'} = get_rdds_delay($now);
+
+my %clock_limits;
+$clock_limits{'dns'} = $clock_limits{'dnssec'} = cycle_start(time() - $incident_measurements_limit, $delays{'dnssec'});
+$clock_limits{'rdds'} = cycle_start(time() - $incident_measurements_limit, $delays{'rdds'});
 
 db_disconnect();
 
@@ -151,9 +168,9 @@ my $fm = new Parallel::ForkManager($server_count);
 set_on_finish($fm);
 
 # {
-#     PID => {'desc' => 'server_#_parent', 'from' => 1234324235},
+#     PID => {'desc' => 'server_#_parent', 'from' => 1234324235, 'swap-usage' => '0 kB'},
 #     ...
-#     PID => {'desc' => 'server_#_child', 'from' => 1234324235},
+#     PID => {'desc' => 'server_#_child', 'from' => 1234324235, 'swap-usage' => '4 kB'},
 #     ...
 # }
 my %child_desc;
@@ -171,19 +188,74 @@ foreach my $server_key (@server_keys)
 		finalize_process();
 
 		$fm->finish(SUCCESS);
-		last;
 	}
-	else
+
+	$child_desc{$pid} = {
+		'desc' => "${server_key}_parent",
+		'from' => time(),
+		'swap-usage' => '0 kB'
+	};
+	#$child_desc{$pid}->{'smaps-dumped'} = 0;
+
+	dbg("$child_desc{$pid}->{'desc'} (PID:$pid) STARTED");
+}
+
+wait_for_children($fm);
+
+slv_exit($child_failed ? E_FAIL : SUCCESS);
+
+sub wait_for_children($)
+{
+	my $fm = shift;
+
+	for (;;)
 	{
-		$child_desc{$pid}->{'desc'} = "${server_key}__parent";
-		$child_desc{$pid}->{'from'} = time();
-		dbg("$child_desc{$pid}->{'desc'} (PID:$pid) STARTED");
+		$fm->reap_finished_children();
+
+		my @procs = $fm->running_procs();
+
+		return unless (scalar(@procs));
+
+		dbg("waiting for ", scalar(@procs), " children:");
+
+		# check wether there's long running process
+		foreach my $pid (@procs)
+		{
+			my $swap_usage = get_swap_usage($pid);
+
+			if (defined($swap_usage) && ($swap_usage ne $child_desc{$pid}->{'swap-usage'}))
+			{
+				wrn("$child_desc{$pid}->{'desc'} (PID:$pid) is swapping $swap_usage");
+
+				$child_desc{$pid}->{'swap-usage'} = $swap_usage;
+
+				# TODO: consider writing if is over 1000 kB, add date/time to the file name, write only if size changed
+				# if (!$child_desc{$pid}->{'smaps-dumped'})
+				# {
+				# 	mkdir("/tmp/sla-api-recent-smaps") unless (-d "/tmp/sla-api-recent-smaps");
+				#
+				# 	copy("/proc/$pid/smaps","/tmp/sla-api-recent-smaps/$pid") or fail("cannot copy smaps file: $!");
+				#
+				# 	$child_desc{$pid}->{'smaps-dumped'} = 1;
+				#
+				# 	wrn("$child_desc{$pid}->{'desc'} (PID:$pid) smaps file saved to /tmp/sla-api-recent-smaps/$pid");
+				# }
+			}
+			else
+			{
+				dbg("$child_desc{$pid}->{'desc'} (PID:$pid), running for ", (time() - $child_desc{$pid}->{'from'}), " seconds");
+			}
+		}
+
+		sleep(1);
 	}
 }
 
-$fm->wait_all_children();
-
-slv_exit(SUCCESS);
+sub main_process_signal_handler()
+{
+	wrn("main process caught a signal: $!");
+	slv_exit(E_FAIL);
+}
 
 sub process_server($)
 {
@@ -204,7 +276,7 @@ sub process_server($)
 	my %probes;
 	my $server_tlds;
 
-	db_connect($server_key);
+	db_connect($server_key, MYSQL_TIMEOUT);
 
 	my $all_probes_ref = get_probes();
 
@@ -229,10 +301,8 @@ sub process_server($)
 
 	info("children/$server_key : $children_count") if (opt('stats'));
 
-	my $fm = new Parallel::ForkManager();
+	my $fm = new Parallel::ForkManager($children_count);
 	set_on_finish($fm);
-	$fm->set_max_procs($children_count);
-	$fm->run_on_wait(sub() {dbg("max children reached, please wait...");});
 
 	my $tldi_begin = 0;
 	my $tldi_end;
@@ -241,8 +311,6 @@ sub process_server($)
 
 	while ($children_count)
 	{
-		terminate_children() if ($child_failed);
-
 		$tldi_end = $tldi_begin + $tlds_per_child;
 
 		# add one extra from remainder
@@ -256,53 +324,32 @@ sub process_server($)
 		{
 			init_process();
 
+			set_alarm($max_wait);
+
 			process_tld_batch($server_tlds, $tldi_begin, $tldi_end, \%child_data, \%probes, $all_probes_ref);
 
 			finalize_process();
 
 			$fm->finish(SUCCESS, \%child_data);
-			last;
 		}
-		else
-		{
-			$child_desc{$pid}->{'desc'} = "${server_key}_child";
-			$child_desc{$pid}->{'from'} = time();
-			dbg("$child_desc{$pid}->{'desc'} (PID:$pid) STARTED");
-		}
+
+		$child_desc{$pid} = {
+			'desc' => "${server_key}_child",
+			'from' => time(),
+			'swap-usage' => '0 kB'
+		};
+		#$child_desc{$pid}->{'smaps-dumped'} = 0;
+
+		dbg("$child_desc{$pid}->{'desc'} (PID:$pid) STARTED");
 
 		$tldi_begin = $tldi_end;
 
 		$children_count--;
 	}
 
-	$fm->run_on_wait(
-		sub()
-		{
-			dbg("waiting for children, one of:");
-			foreach my $pid (keys(%child_desc))
-			{
-				my $run_time = time() - $child_desc{$pid}->{'from'};
-				if ($run_time > $max_wait)
-				{
-					wrn("$child_desc{$pid}->{'desc'} (PID:$pid) is running for $run_time seconds, terminating");
-
-					kill('TERM', $pid);
-
-					last;
-				}
-
-				dbg("    $child_desc{$pid}->{'desc'} (PID:$pid), run time $run_time seconds");
-
-			}
-		},
-		5	# every 5 seconds
-	);
-
-	$fm->wait_all_children();
+	wait_for_children($fm);
 
 	# Do not update cache if something happened.
-	terminate_children() if ($child_failed);
-
 	if (!opt('dry-run') && !opt('now'))
 	{
 		if (ah_save_recent_cache($server_key, $lastvalues_cache) != AH_SUCCESS)
@@ -321,7 +368,7 @@ sub process_tld_batch($$$$$$)
 	my $probes_ref = shift;		# probes by services
 	my $all_probes_ref = shift;	# all available probes in the system
 
-	db_connect($server_key);
+	db_connect($server_key, MYSQL_TIMEOUT);
 
 	for (my $tldi = $tldi_begin; $tldi != $tldi_end; $tldi++)
 	{
@@ -369,8 +416,6 @@ sub process_tld_batch($$$$$$)
 	}
 
 	db_disconnect();
-
-	sleep(2);
 }
 
 sub process_tld($$$$$)
@@ -462,10 +507,11 @@ sub process_tld($$$$$)
 	}
 }
 
-sub get_global_lastclock($$$)
+sub get_global_lastclock($$$$)
 {
 	my $tld = shift;
 	my $service_key = shift;
+	my $service = shift;
 	my $delay = shift;
 
 	my $lastclock;
@@ -481,26 +527,33 @@ sub get_global_lastclock($$$)
 
 	# see if we have last_update.txt in SLA API directory
 
-	my $continue_file = ah_get_continue_file();
+	my $continue_file = ah_continue_file_name();
 
 	my $error;
 
-	if (read_file($continue_file, \$lastclock, \$error) == SUCCESS)
-	{
-		while (chomp($lastclock)) {}
+	# the continue file may sometimes be read at the time it's changed
+	my $attempts = 3;
 
-		dbg("using last clock from SLA API directory, file $continue_file: ", ts_str($lastclock));
-
-		return cycle_start($lastclock, $delay);
-	}
-	else
+	while ($attempts--)
 	{
-		wrn("cannot read \"$continue_file\": $error");
+		if (read_file($continue_file, \$lastclock, \$error) == SUCCESS)
+		{
+			while (chomp($lastclock)) {}
+
+			dbg("using last clock from SLA API directory, file $continue_file: ", ts_str($lastclock));
+
+			return cycle_start($lastclock, $delay);
+		}
+
+		# sleep for 0.2 seconds
+		select(undef, undef, undef, 0.2);
 	}
+
+	wrn("cannot read \"$continue_file\": $error");
 
 	# if not, get the oldest from the database
 
-	$lastclock = get_oldest_clock($tld, $service_key, ITEM_VALUE_TYPE_UINT64);
+	$lastclock = get_oldest_clock($tld, $service_key, ITEM_VALUE_TYPE_UINT64, $clock_limits{$service});
 
 	if (!defined($lastclock))
 	{
@@ -599,7 +652,7 @@ sub cycles_to_calculate($$$$$$$$)
 			if (opt('now'))
 			{
 				# time bounds were specified on the command line
-				$global_lastclock //= get_global_lastclock($tld, $service_key, $delay);
+				$global_lastclock //= get_global_lastclock($tld, $service_key, $service, $delay);
 
 				$lastclock = $global_lastclock;
 			}
@@ -608,7 +661,7 @@ sub cycles_to_calculate($$$$$$$$)
 				dbg("$service: itemid $itemid from probe \"$probe\" not in cache yet");
 
 				# this partilular item is not in cache yet, get the time starting point for it
-				$global_lastclock //= get_global_lastclock($tld, $service_key, $delay);
+				$global_lastclock //= get_global_lastclock($tld, $service_key, $service, $delay);
 
 				if (!defined($global_lastclock))
 				{
@@ -1562,8 +1615,24 @@ sub get_interfaces($$$)
 	return \@result;
 }
 
-sub terminate_children
+sub set_alarm($)
 {
+	my $max_wait = shift;
+
+	$SIG{"ALRM"} = sub()
+	{
+		wrn("received ALARM signal");
+
+		slv_exit(E_FAIL);
+	};
+
+	alarm($max_wait);
+}
+
+sub terminate_children($)
+{
+	my $fm = shift;
+
 	$fm->run_on_wait(
 		sub ()
 		{
@@ -1585,27 +1654,24 @@ sub terminate_children
 	);
 
 	$fm->wait_all_children();
-
-	slv_exit(E_FAIL);
 }
 
-sub child_error($$$$$$)
+sub child_error($$$$$)
 {
 	my $pid = shift;
 	my $exit_code = shift;
 	my $id = shift;
 	my $exit_signal = shift;
 	my $core_dump = shift;
-	my $child_data_ref = shift;
 
 	if ($core_dump == 1)
 	{
-		info("$child_desc{$pid}->{'desc'} (PID:$pid) core dumped");
+		wrn("$child_desc{$pid}->{'desc'} (PID:$pid) core dumped");
 		return 1;
 	}
 	elsif ($exit_code != SUCCESS)
 	{
-		info("$child_desc{$pid}->{'desc'} (PID:$pid)",
+		wrn("$child_desc{$pid}->{'desc'} (PID:$pid)",
 			($exit_signal == 0 ? "" : " got signal " . sig_name($exit_signal) . " and"),
 			" exited with code $exit_code");
 		return 1;
@@ -1619,7 +1685,7 @@ sub child_error($$$$$$)
 	return 0;
 }
 
-sub save_child_lastvalues_cache($)
+sub update_lastvalues_cache($)
 {
 	my $child_data_ref = shift;
 
@@ -1643,11 +1709,14 @@ sub set_on_finish($)
 			my $core_dump = shift;
 			my $child_data = shift;
 
-			if (child_error($pid, $exit_code, $id, $exit_signal, $core_dump, $child_data))
+			if (child_error($pid, $exit_code, $id, $exit_signal, $core_dump))
 			{
 				wrn("$child_desc{$pid}->{'desc'} (PID:$pid) failed,",
 					" run time: ", time() - $child_desc{$pid}->{'from'}, " seconds");
+
 				$child_failed = 1;
+
+				terminate_children($fm);
 
 				slv_exit(E_FAIL);
 			}
@@ -1656,10 +1725,36 @@ sub set_on_finish($)
 				dbg("$child_desc{$pid}->{'desc'} (PID:$pid) exited successfully,",
 					" run time: ", time() - $child_desc{$pid}->{'from'}, " seconds");
 
-				save_child_lastvalues_cache($child_data) if (defined($child_data));
+				return unless (defined($child_data));
+
+				update_lastvalues_cache($child_data);
 			}
 		}
 	);
+}
+
+sub get_swap_usage($)
+{
+	my $pid = shift;
+
+	my $status_file = "/proc/$pid/status";
+
+	my $swap_usage;
+
+	open(my $status, '<', $status_file) or fail("cannot open \"$status_file\": $!");
+
+	while (<$status>)
+	{
+		if (/^VmSwap:\s+(\d*.*)/)
+		{
+			$swap_usage = $1;
+			last;
+		}
+	}
+
+	close($status);
+
+	return $swap_usage;
 }
 
 __END__

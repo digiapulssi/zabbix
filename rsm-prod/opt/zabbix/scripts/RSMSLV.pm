@@ -456,11 +456,12 @@ sub get_lastclock($$$)
 # E_FAIL - if item was not found
 # undef  - if history table is empty
 # *      - lastclock
-sub get_oldest_clock($$$)
+sub get_oldest_clock($$$$)
 {
 	my $host = shift;
 	my $key = shift;
 	my $value_type = shift;
+	my $clock_limit = shift;
 
 	my $rows_ref = db_select(
 		"select i.itemid".
@@ -478,7 +479,8 @@ sub get_oldest_clock($$$)
 	$rows_ref = db_select(
 		"select min(clock)".
 		" from " . history_table($value_type).
-		" where itemid=$itemid"
+		" where itemid=$itemid".
+			" and clock>$clock_limit"
 	);
 
 	return $rows_ref->[0]->[0];
@@ -1014,6 +1016,7 @@ sub handle_db_error
 sub db_connect
 {
 	$server_key = shift;
+	my $timeout = shift;
 
 	dbg("server_key:", ($server_key ? $server_key : "UNDEF"));
 
@@ -1039,12 +1042,21 @@ sub db_connect
 
 	dbg($_global_sql);
 
-	$dbh = DBI->connect($_global_sql, $section->{'db_user'}, $section->{'db_password'},
-		{
-			PrintError  => 0,
-			HandleError => \&handle_db_error,
-			mysql_auto_reconnect => 1
-		}) or handle_db_error(DBI->errstr);
+	my $connect_opts = {
+		PrintError		=> 0,
+		HandleError		=> \&handle_db_error,
+		mysql_auto_reconnect	=> 1
+	};
+
+	if (defined($timeout))
+	{
+		$connect_opts->{mysql_connect_timeout} = $timeout;
+		$connect_opts->{mysql_write_timeout} = $timeout;
+		$connect_opts->{mysql_read_timeout} = $timeout;
+	}
+
+	$dbh = DBI->connect($_global_sql, $section->{'db_user'}, $section->{'db_password'}, $connect_opts)
+		or handle_db_error(DBI->errstr);
 
 	# verify that established database connection uses TLS if there was any hint that it is required in the config
 	unless ($db_tls_settings eq "mysql_ssl=0")
@@ -3022,6 +3034,9 @@ sub init_process
 my $pidfile;
 use constant PID_DIR => '/tmp';
 
+# avoid messed up output from parallel processes
+my ($stdout_lock_handle, $stdout_lock_file);;
+
 sub finalize_process
 {
 	my $rv = shift // SUCCESS;
@@ -3045,6 +3060,8 @@ sub finalize_process
 
 		info($prefix, "PID ($$), total: $total_str, sql: $sql_str");
 	}
+
+	unlink($stdout_lock_file) if (defined($stdout_lock_file));
 
 	closelog();
 }
@@ -3347,15 +3364,16 @@ sub __script
 	return $script;
 }
 
-# for clear output from child processes
-use constant STDOUT_LOCK_FILE	=> PID_DIR . '/' . __script() . '.stdout.lock';
-my $stdout_lock_handle;
 
 sub __init_stdout_lock
 {
 	if (!defined($stdout_lock_handle))
 	{
-		open($stdout_lock_handle, ">", STDOUT_LOCK_FILE) or die("cannot open \"" . STDOUT_LOCK_FILE . "\": $!");
+		my $username = $ENV{LOGNAME} || $ENV{USER} || getpwuid($<) || getlogin() || 'unknown';
+
+		$stdout_lock_file = PID_DIR . '/' . __script() . ".${username}.stdout.lock";
+
+		open($stdout_lock_handle, ">", $stdout_lock_file) or die("cannot open \"$stdout_lock_file\": $!");
 	}
 }
 
@@ -3397,11 +3415,14 @@ sub __log
 	{
 		__init_stdout_lock();
 
-		flock($stdout_lock_handle, LOCK_EX) or die("cannot lock \"" . STDOUT_LOCK_FILE . "\": $!");
+		flock($stdout_lock_handle, LOCK_EX) or die("cannot lock \"$stdout_lock_file\": $!");
 
 		print {$stdout ? *STDOUT : *STDERR} (sprintf("%6d:", $$), ts_str(), " [$priority] ", $server_str, ($cur_tld eq "" ? "" : "$cur_tld: "), __func(), "$msg\n");
 
-		flock($stdout_lock_handle, LOCK_UN) or die("cannot unlock \"" . STDOUT_LOCK_FILE . "\": $!");
+		# flush stdout
+		select()->flush();
+
+		flock($stdout_lock_handle, LOCK_UN) or die("cannot unlock \"$stdout_lock_file\": $!");
 
 		return;
 	}

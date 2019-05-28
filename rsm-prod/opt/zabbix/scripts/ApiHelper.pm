@@ -7,6 +7,7 @@ use DateTime::Format::RFC3339;
 use base 'Exporter';
 use JSON::XS;
 use Types::Serialiser;
+use File::Copy;
 
 use constant AH_SUCCESS => 0;
 use constant AH_FAIL => 1;
@@ -52,7 +53,7 @@ our @EXPORT = qw(
 	AH_SLA_API_DIR AH_SLA_API_RECENT_DIR
 	AH_SLA_API_TMP_DIR ah_set_debug ah_get_error ah_state_file_json ah_save_state
 	ah_save_alarmed ah_save_downtime ah_create_incident_json ah_save_incident
-	ah_save_false_positive ah_save_measurement ah_get_continue_file ah_get_api_tld ah_get_last_audit
+	ah_save_false_positive ah_save_measurement ah_continue_file_name ah_get_api_tld ah_get_last_audit
 	ah_get_recent_measurement ah_save_recent_measurement ah_save_recent_cache ah_get_recent_cache
 	ah_save_audit ah_save_continue_file ah_encode_pretty_json JSON_OBJECT_DISABLED_SERVICE
 	ah_get_dns_interface ah_get_rdds_interface ah_get_interface
@@ -225,24 +226,31 @@ sub __write_file
 	my $clock = shift;
 
 	my $OUTFILE;
+	my $full_path_new = $full_path . ".new";
 
-	unless (open($OUTFILE, '>', $full_path))
+	unless (open($OUTFILE, '>', $full_path_new))
 	{
-		__set_error("cannot open file $full_path: $!");
+		__set_error("cannot open file \"$full_path_new\": $!");
 		return AH_FAIL;
 	}
 
-	unless (print { $OUTFILE } $text)
+	unless (print {$OUTFILE} $text)
 	{
-		__set_error("cannot write to file $full_path: $!");
+		__set_error("cannot write to \"$full_path_new\": $!");
 		return AH_FAIL;
 	}
 
 	close($OUTFILE);
 
-	dbg("wrote file \"$full_path\"");
+	unless (move($full_path_new, $full_path))
+	{
+		__set_error("cannot create file \"$full_path\": $!");
+		return AH_FAIL;
+	}
 
 	utime($clock, $clock, $full_path) if (defined($clock));
+
+	RSMSLV::dbg("wrote file \"$full_path\"");
 
 	return AH_SUCCESS;
 }
@@ -422,7 +430,7 @@ sub __read_inc_file($$$$$$)
 
 	$file = AH_SLA_API_DIR . '/' . __gen_inc_path($tld, $service, $eventid, $start) . '/' . $file;
 
-	dbg("file: $file");
+	RSMSLV::dbg("file: $file");
 
 	return __read_file($file, $buf_ref);
 }
@@ -475,7 +483,7 @@ sub ah_save_false_positive
 
 	if ($curr_false_positive != $false_positive)
 	{
-		dbg("false positiveness of $eventid changed: $false_positive");
+		RSMSLV::dbg("false positiveness of $eventid changed: $false_positive");
 
 		$json->{'incidents'}->[0]->{'falsePositive'} = ($false_positive ? Types::Serialiser::true : Types::Serialiser::false);
 
@@ -614,20 +622,7 @@ sub ah_get_recent_cache($$)
 	return AH_SUCCESS;
 }
 
-sub dbg
-{
-	return if ($_debug == 0);
-
-	my @args = @_;
-
-	my $depth = 1;
-
-	my $func = (caller($depth))[3];
-
-	print("${func}() ", join('', @args), "\n");
-}
-
-sub ah_get_continue_file
+sub ah_continue_file_name
 {
 	return AH_SLA_API_DIR . '/' . AH_CONTINUE_FILE;
 }
